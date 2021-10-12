@@ -10,4 +10,3 @@ def download_lwm_data():
         lwm_dataset = wget.download(url, out=save_to)
         with zipfile.ZipFile(lwm_dataset) as zip_ref:
             zip_ref.extractall(save_to)
-    return True
