@@ -14,3 +14,8 @@ def test_lwm_dataframe_notempty():
     import pandas as pd
     df = pd.read_csv("outputs/data/lwm_df.tsv", sep="\t")
     assert df.empty == False
+
+def test_lwm_dataframe_shape():
+    import pandas as pd
+    df = pd.read_csv("outputs/data/lwm_df.tsv", sep="\t")
+    assert df.shape == (3348, 12)

@@ -48,4 +48,6 @@ for fid in glob.glob(tsv_topres_path + "*"):
             df = df.append(row, ignore_index=True)
 
 Path(output_path).mkdir(parents=True, exist_ok=True)
-df.to_csv(output_path + "lwm_df.tsv", sep="\t")
+df.to_csv(output_path + "lwm_df.tsv", sep="\t", index=False)
+
+print(df.shape)
