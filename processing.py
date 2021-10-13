@@ -2,6 +2,7 @@ import glob
 import pandas as pd
 from pathlib import Path
 from utils import get_data
+from utils import process_data
 
 # Path for the output dataset dataframes:
 output_path = "outputs/data/"
@@ -31,15 +32,15 @@ for fid in glob.glob(tsv_topres_path + "*"):
     
     # Dictionary that maps each token in a document with its
     # positional information and associated annotations:
-    dTokens = get_data.process_tsv(tsv_topres_path + filename)
+    dTokens = process_data.process_tsv(tsv_topres_path + filename)
     
     # Dictionary of reconstructed sentences:
-    dSentences = get_data.reconstruct_sentences(dTokens)
+    dSentences = process_data.reconstruct_sentences(dTokens)
     
     for k in dTokens:
         # For each token, create the list that will become the dataframe
         # row, if the token has been annotated:
-        row = get_data.create_lwmdf_row(dTokens[k], file_id, publ_place, publ_decade, mention_counter, dSentences)
+        row = process_data.create_lwmdf_row(dTokens[k], file_id, publ_place, publ_decade, mention_counter, dSentences)
         # If a row has been created:
         if row:
             # Convert the row into a pd.Series:
