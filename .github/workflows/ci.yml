@@ -17,5 +17,5 @@ jobs:
         $CONDA/bin/pip install -r requirements.txt
     - name: Test with pytest
       run: |
-        $CONDA/bin/python process_data.py
+        $CONDA/bin/python processing.py
         $CONDA/bin/pytest 
