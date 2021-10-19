@@ -211,3 +211,11 @@ def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_c
         return row
     
     return False
+
+
+# ------------------------------
+# Add columns to the LwM dataframe containing other mentions of toponyms in the sentence or document:
+def add_cotoponyms(df, article_id, sent_id):
+    sentence_toponyms = list(df[df["article_id"] == article_id].mention)
+    document_toponyms = list(df[(df["article_id"] == article_id) & (df["sent_id"] == sent_id)].mention)
+    return pd.Series([sentence_toponyms, document_toponyms])
