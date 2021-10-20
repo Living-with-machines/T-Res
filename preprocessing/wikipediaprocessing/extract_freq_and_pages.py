@@ -11,7 +11,7 @@ parser.add_argument("-t", "--test", dest="test",
 
 args = parser.parse_args()
 
-# we setup these folders for acquiring the output of this script
+# this is where we have stored the output of the WikiExtractor
 if args.test:
     path = '/resources/wikipedia/test-extractedResources/'
     processed_docs = '/resources/wikipedia/test-processedWiki/'
@@ -19,10 +19,9 @@ else:
     path = '/resources/wikipedia/extractedResources/'
     processed_docs = '/resources/wikipedia/processedWiki/'
 
+# we setup these folders for acquiring the output of this script
 pathlib.Path(path+'Pages/').mkdir(parents=True, exist_ok=True)
 pathlib.Path(path+'Store-Counts/').mkdir(parents=True, exist_ok=True)
-
-# this is where we have stored the output of the WikiExtractor
 
 # the number of cpus
 N= mp.cpu_count()
