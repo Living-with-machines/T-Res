@@ -37,4 +37,4 @@ Finally, to align the Wikipedia pages extracted from the dump to Wikidata you ca
 ```
 map_wikidata_wikipedia.py
 ```
-This script relies on the use of the WikiMapper and in particular to create a specific Wikipedia/Wikidata index, which we have done following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021.
+This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021.
