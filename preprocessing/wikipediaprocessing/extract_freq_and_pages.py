@@ -1,4 +1,5 @@
 import hashlib
+from tqdm import tqdm
 import os, json,pathlib
 from utils import process_wikipedia
 import multiprocessing as mp
@@ -31,9 +32,10 @@ out = open(path+'hashed_duplicates.csv','w')
 
 if __name__ == '__main__':
     
-    step = 1
     # a Wikipedia dump is divided in subparts, which the WikiExtractor maps to different folders
-    for folder in os.listdir(processed_docs):
+    folders = list(os.listdir(processed_docs))
+    for i in tqdm(range(len(folders))):
+        folder = folders[i]
         # we set up multiple processes to go through all files in each folder
         with mp.Pool(processes = N) as p:
             paths = [processed_docs+folder+"/"+filename for filename in os.listdir(processed_docs+folder)]
@@ -64,10 +66,7 @@ if __name__ == '__main__':
                 json.dump(sections, fp)
     
         # storing counts, still divided in folders       
-        with open(path+'Store-Counts/'+str(step)+".json", 'w') as fp:
+        with open(path+'Store-Counts/'+str(i)+".json", 'w') as fp:
             json.dump(freq_counts, fp)
         
-        print("Done %s folders over %s" % (step, len(os.listdir(processed_docs))))
-        step+=1
-
 out.close()

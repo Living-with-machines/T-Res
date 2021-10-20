@@ -3,21 +3,33 @@ from tqdm import tqdm
 import os, pickle, json
 from wikimapper import WikiMapper
 
+from argparse import ArgumentParser
 
-with open("/resources/wikipedia/extractedResources/overall_entity_freq.pickle", "rb") as f:
+parser = ArgumentParser()
+parser.add_argument("-t", "--test", dest="test",
+                    help="run in test mode",action='store_true')
+
+args = parser.parse_args()
+
+if args.test:
+    path = '/resources/wikipedia/test-extractedResources/'
+else:
+    path = '/resources/wikipedia/extractedResources/'
+
+with open(path+'overall_entity_freq.pickle', 'rb') as f:
     overall_entity_freq = pickle.load(f)
 
-mapper = WikiMapper("/resources/wikidata2wikipedia/index_enwiki-20190420.db")
+mapper = WikiMapper('/resources/wikidata2wikipedia/index_enwiki-20190420.db')
 
 wikidata2wikipedia = {}
 
 wikipedia2wikidata = {}
 
-folder = os.listdir("/resources/wikipedia/extractedResources/Pages/")
+folder = os.listdir(path+'Pages/')
 
 for i in tqdm(range(len(folder))):
     page = folder[i]
-    title = page.replace(".json","")
+    title = page.replace('.json','')
     freq = overall_entity_freq[title]
     wikidata_id = mapper.title_to_id(title.replace(" ","_"))
     if wikidata_id is None:
@@ -33,9 +45,9 @@ for i in tqdm(range(len(folder))):
 
         wikipedia2wikidata[page] = wikidata_id
 
-with open('/resources/wikipedia/extractedResources/wikidata2wikipedia.json', 'w') as fp:
+with open(path+'wikidata2wikipedia.json', 'w') as fp:
     json.dump(wikidata2wikipedia, fp)
 
-with open('/resources/wikipedia/extractedResources/wikipedia2wikidata.json', 'w') as fp:
+with open(path+'wikipedia2wikidata.json', 'w') as fp:
     json.dump(wikipedia2wikidata, fp)
 
