@@ -1,4 +1,4 @@
-The scripts here process a Wikipedia dump, extracting and structuring pages, mention/entity statistics and in- /out-link information.
+These scripts process a Wikipedia dump, extracting and structuring pages, mention/entity statistics and in- /out-link information and provides an alignment between Wikipedia pages and Wikidata IDs.
 
 
 ### 1. Pre-process a Wikipedia Dump
