@@ -19,7 +19,7 @@ else:
 with open(path+'overall_entity_freq.pickle', 'rb') as f:
     overall_entity_freq = pickle.load(f)
 
-mapper = WikiMapper('/resources/wikidata2wikipedia/index_enwiki-20190420.db')
+mapper = WikiMapper('/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db')
 
 wikidata2wikipedia = {}
 
@@ -32,6 +32,8 @@ for i in tqdm(range(len(folder))):
     title = page.replace('.json','')
     freq = overall_entity_freq[title]
     wikidata_id = mapper.title_to_id(title.replace(" ","_"))
+
+    # just to be sure we also check whether the id is missing in the DB but exists through the API
     if wikidata_id is None:
         try:
             wikidata_id = wptools.page(title,silent=True,verbose=False).get_wikidata().data["wikibase"]
