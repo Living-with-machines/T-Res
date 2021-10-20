@@ -29,43 +29,43 @@ N= mp.cpu_count()
 # this is just to doublecheck in case we have duplicatec hashed files (it shouldn't happen)
 out = open(path+'hashed_duplicates.csv','w')
 
-if __name__ == '__main__':
+
+# a Wikipedia dump is divided in subparts, which the WikiExtractor maps to different folders
+folders = list(os.listdir(processed_docs))
+
+for i in tqdm(range(len(folders))):
+    folder = folders[i]
+    # we set up multiple processes to go through all files in each folder
+    with mp.Pool(processes = N) as p:
+        paths = [processed_docs+folder+"/"+filename for filename in os.listdir(processed_docs+folder)]
+        pages = p.map(process_wikipedia.process_doc, paths)
+
+    pages = [page for group in pages for page in group]
     
-    # a Wikipedia dump is divided in subparts, which the WikiExtractor maps to different folders
-    folders = list(os.listdir(processed_docs))
-    for i in tqdm(range(len(folders))):
-        folder = folders[i]
-        # we set up multiple processes to go through all files in each folder
-        with mp.Pool(processes = N) as p:
-            paths = [processed_docs+folder+"/"+filename for filename in os.listdir(processed_docs+folder)]
-            pages = p.map(process_wikipedia.process_doc, paths)
-
-        pages = [page for group in pages for page in group]
-        
-        # separating frequency counts from aspects
-        freq_counts = [x[0][:-1] for x in pages]
-        pages_with_sections = [x[0][-1] for x in pages]
-        
-        # saving pages with sections
-        for page_with_sect in pages_with_sections:
-            # hashing the title and checking if too long or containing /
-            if "/" in page_with_sect["title"] or len(page_with_sect["title"])>200:
-                pagetitle = hashlib.sha224(page_with_sect["title"].encode('utf-8')).hexdigest()
-                # just checking if there are multiple titles with the same hash (it should not happen)
-                if pagetitle+".json" in set(os.listdir(path+'Pages/')):
-                    out.write(page_with_sect["title"]+","+pagetitle+"\n")
-                    continue
-            else:
-                pagetitle = page_with_sect["title"]
-
-            sections = page_with_sect["sections"]
-
-            # saving the page with sections
-            with open(path+'Pages/'+pagetitle+".json", 'w') as fp:
-                json.dump(sections, fp)
+    # separating frequency counts from aspects
+    freq_counts = [x[0][:-1] for x in pages]
+    pages_with_sections = [x[0][-1] for x in pages]
     
-        # storing counts, still divided in folders       
-        with open(path+'Store-Counts/'+str(i)+".json", 'w') as fp:
-            json.dump(freq_counts, fp)
+    # saving pages with sections
+    for page_with_sect in pages_with_sections:
+        # hashing the title and checking if too long or containing /
+        if "/" in page_with_sect["title"] or len(page_with_sect["title"])>200:
+            pagetitle = hashlib.sha224(page_with_sect["title"].encode('utf-8')).hexdigest()
+            # just checking if there are multiple titles with the same hash (it should not happen)
+            if pagetitle+".json" in set(os.listdir(path+'Pages/')):
+                out.write(page_with_sect["title"]+","+pagetitle+"\n")
+                continue
+        else:
+            pagetitle = page_with_sect["title"]
+
+        sections = page_with_sect["sections"]
+
+        # saving the page with sections
+        with open(path+'Pages/'+pagetitle+".json", 'w') as fp:
+            json.dump(sections, fp)
+
+    # storing counts, still divided in folders       
+    with open(path+'Store-Counts/'+str(i)+".json", 'w') as fp:
+        json.dump(freq_counts, fp)
         
 out.close()
