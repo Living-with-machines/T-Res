@@ -308,6 +308,7 @@ def parse_record(record):
 
 ### Uncomment the following to run this script (WARNING: This will take days to run, 40 hours on a machine with 64GiB of RAM):
 
+"""
 path = output_path
 pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
@@ -337,3 +338,4 @@ for record in tqdm(wikidata(input_path + 'latest-all.json.bz2')):
 pd.DataFrame.to_csv(df_record_all, path_or_buf=path + 'final_csv_till_'+record['id']+'_item.csv')
 print('i = '+str(i)+' item '+record['id']+'  Done!')
 print('All items finished, final CSV exported!')
+"""
