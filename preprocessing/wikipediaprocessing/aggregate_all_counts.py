@@ -1,5 +1,5 @@
 import pickle
-import time,os,json
+import time,os,json,pathlib
 from tqdm import tqdm
 from utils import process_wikipedia
 from collections import Counter
@@ -13,6 +13,9 @@ args = parser.parse_args()
 
 if args.test:
     path = '/resources/wikipedia/test-extractedResources/'
+    if pathlib.Path(path).is_dir() == False:
+        print ("Error! To run in test mode, you need to have extracted entity and mention counts in "+path)
+        exit()
 else:
     path = '/resources/wikipedia/extractedResources/'
 
