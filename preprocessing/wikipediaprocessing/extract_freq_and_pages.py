@@ -16,7 +16,7 @@ if args.test:
     path = '/resources/wikipedia/test-extractedResources/'
     processed_docs = '/resources/wikipedia/test-processedWiki/'
     if pathlib.Path(processed_docs).is_dir() == False:
-        print ("Error! To run in test mode, you need to have a processed dump in "+processed_docs)
+        print ("Error! To run in test mode, you need a processed dump in "+processed_docs)
         exit()
 
 else:
