@@ -20,10 +20,20 @@ else:
     path = '/resources/wikipedia/extractedResources/'
 
 # start by defining the objects you'll be filling with counts
+
+# these first two objects are simply mentions and entity counters. 
+# For each entity as key (say the entity "London"), we have as value how many times this entity appears mentioned in Wikipedia.
+# The same for each mention, say "NYC", we have as value how many times this appears as a mention (i.e., the text of a hyperlink) of an entity.
+
 overall_mentions_freq = Counter()
 overall_entity_freq = Counter()
+
+# This third dictionary maps a mention to a Counter object containing all entities associated with it, for instance for the mention "London":
+# 'London': 76511, 'London%2C%20Ontario': 790, 'London%2C%20England': 350, 'London%20GAA': 321, 'City%20of%20London': 144, etc
 mention_overall_dict = {}
-entity_overall_dict = {}
+
+# in case of entity_inlink_dict, the dictionary maps an entity, say "London", with a list of all other entities which link to it
+entity_inlink_dict = {}
 
 json_folder = path+'Store-Counts/'
 jsons = [filename for filename in os.listdir(json_folder) if '.json' in filename]
@@ -43,7 +53,7 @@ for i in tqdm(range(len(jsons))):
         
         # we update the dictionaries and the local counters
         for entity_count in entity_counts:
-            mentions_freq, entity_freq, mention_overall_dict,entity_overall_dict= process_wikipedia.fill_dicts(entity_count,mentions_freq, entity_freq, mention_overall_dict,entity_overall_dict)
+            mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict= process_wikipedia.fill_dicts(entity_count,mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict)
     
     # we then update the overall counts
     overall_mentions_freq += mentions_freq
@@ -67,8 +77,8 @@ with open(path+'overall_entity_freq.pickle', 'wb') as fp:
 with open(path+'mention_overall_dict.pickle', 'wb') as fp:
     pickle.dump(mention_overall_dict, fp)
 
-with open(path+'entity_overall_dict.pickle', 'wb') as fp:
-    pickle.dump(entity_overall_dict, fp)
+with open(path+'entity_inlink_dict.pickle', 'wb') as fp:
+    pickle.dump(entity_inlink_dict, fp)
 
 print ('all done.')
 
