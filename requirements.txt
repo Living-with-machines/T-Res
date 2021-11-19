@@ -3,4 +3,3 @@ pytest==6.2.5
 tqdm==4.62.3
 wget==3.2
 wikimapper==0.1.5
-wptools==0.4.17
