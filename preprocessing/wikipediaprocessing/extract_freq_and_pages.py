@@ -1,4 +1,4 @@
-import hashlib
+import hashlib,urllib
 from tqdm import tqdm
 import os, json,pathlib
 from utils import process_wikipedia
@@ -53,19 +53,21 @@ for i in tqdm(range(len(folders))):
     # saving pages with sections
     for page_with_sect in pages_with_sections:
         # hashing the title and checking if too long or containing /
-        if "/" in page_with_sect["title"] or len(page_with_sect["title"])>200:
-            pagetitle = hashlib.sha224(page_with_sect["title"].encode('utf-8')).hexdigest()
+
+        # we % encode the title, so it's consistent with the entities formats in the stored pickle files
+        percent_encoded_title = urllib.parse.quote(page_with_sect["title"])
+
+        if "/" in percent_encoded_title or len(percent_encoded_title)>200:
+            percent_encoded_title = hashlib.sha224(percent_encoded_title.encode('utf-8')).hexdigest()
             # just checking if there are multiple titles with the same hash (it should not happen)
-            if pagetitle+".json" in set(os.listdir(path+'Pages/')):
-                out.write(page_with_sect["title"]+","+pagetitle+"\n")
+            if percent_encoded_title+".json" in set(os.listdir(path+'Pages/')):
+                out.write(page_with_sect["title"]+","+percent_encoded_title+"\n")
                 continue
-        else:
-            pagetitle = page_with_sect["title"]
 
         sections = page_with_sect["sections"]
 
         # saving the page with sections
-        with open(path+'Pages/'+pagetitle+".json", 'w') as fp:
+        with open(path+'Pages/'+percent_encoded_title+".json", 'w') as fp:
             json.dump(sections, fp)
 
     # storing counts, still divided in folders       
