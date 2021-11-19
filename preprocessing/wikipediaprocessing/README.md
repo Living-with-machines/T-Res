@@ -36,7 +36,7 @@ python preprocessing/wikipediaprocessing/extract_freq_and_pages.py
 ```
 Note that if you have set up the `test` mode, you can run the script using the flag `-t`, which will consider only a sub-part of the corpus.
 
-Next, you can aggregate all entity and mention counts in single .pickle file and save them in the `extractedResources/` folder by running:
+Next, you can aggregate all entity and mention counts in single `.json` file and save them in the `extractedResources/` folder by running:
 ```
 python preprocessing/wikipediaprocessing/aggregate_all_counts.py
 ```
@@ -58,10 +58,10 @@ In the
 - A `Pages/` folder, containing a `.json` file for each page available in the input Wikipedia dump. Note that due to the presence of specific characters of to the length of some pages titles, some titles have been hashed.
 - `hashed_duplicates.csv`: just to check in case there are issues with duplicate hashed filenames. This file should remain empty.  
 - A `Store-Counts/` folder, containing partial counts as `.json` files.
-- `entities_overall_dict.pickle`: this is a dictionary which maps each entity to a `Counter` object of all possible mentions  
-- `mention_overall_dict.pickle`: this is a dictionary which maps each mention to a `Counter` object of all possible associated entities.
-- `overall_entity_freq.pickle`: this is a dictionary which simply maps an entity to its overall frequency in the Wikipedia corpus.
-- `overall_mentions_freq.pickle`: this is a dictionary which simply maps a mention to its overall frequency in the Wikipedia corpus.
-- `entity_inlink_dict.pickle`: this dictionary gives you a list of pages linking to each Wikipedia page.
+- `entities_overall_dict.json`: this is a dictionary which maps each entity to a `Counter` object of all possible mentions  
+- `mention_overall_dict.json`: this is a dictionary which maps each mention to a `Counter` object of all possible associated entities.
+- `overall_entity_freq.json`: this is a dictionary which simply maps an entity to its overall frequency in the Wikipedia corpus.
+- `overall_mentions_freq.json`: this is a dictionary which simply maps a mention to its overall frequency in the Wikipedia corpus.
+- `entity_inlink_dict.json`: this dictionary gives you a list of pages linking to each Wikipedia page.
 - `wikipedia2wikidata.json`: a dictionary mapping Wikipedia pages to Wikidata ids.
 - `wikidata2wikipedia.json`: a dictionary mapping Wikidata ids to a list of Wikipedia pages with associated frequency.
