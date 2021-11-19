@@ -65,5 +65,6 @@ In the
 - `overall_entity_freq.json`: this is a dictionary which simply maps an entity to its overall frequency in the Wikipedia corpus.
 - `overall_mentions_freq.json`: this is a dictionary which simply maps a mention to its overall frequency in the Wikipedia corpus.
 - `entity_inlink_dict.json`: this dictionary gives you a list of pages linking to each Wikipedia page.
+- `entity_outlink_dict.json`: this dictionary gives you a list of pages linked from each Wikipedia page.
 - `wikipedia2wikidata.json`: a dictionary mapping Wikipedia pages to Wikidata ids.
 - `wikidata2wikipedia.json`: a dictionary mapping Wikidata ids to a list of Wikipedia pages with associated frequency.
