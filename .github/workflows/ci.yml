@@ -13,7 +13,7 @@ jobs:
       with:
         python-version: 3.9.7
     - name: Install Poetry
-        uses: dschep/install-poetry-action@v1.2
+        uses: snok/install-poetry@v1.1.7
       run: |
         cd toponym-resolution
         poetry install
