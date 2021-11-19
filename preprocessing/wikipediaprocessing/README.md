@@ -53,6 +53,8 @@ This script relies on the use of the WikiMapper and in particular to the availab
 ### Final outputs
 
 These scripts will produce the following outputs (note that entities are percent encoded across all files):
+
+In the 
 - A `Pages/` folder, containing a `.json` file for each page available in the input Wikipedia dump. Note that due to the presence of specific characters of to the length of some pages titles, some titles have been hashed.
 - `hashed_duplicates.csv`: just to check in case there are issues with duplicate hashed filenames. This file should remain empty.  
 - A `Store-Counts/` folder, containing partial counts as `.json` files.
@@ -61,3 +63,5 @@ These scripts will produce the following outputs (note that entities are percent
 - `overall_entity_freq.pickle`: this is a dictionary which simply maps an entity to its overall frequency in the Wikipedia corpus.
 - `overall_mentions_freq.pickle`: this is a dictionary which simply maps a mention to its overall frequency in the Wikipedia corpus.
 - `entity_inlink_dict.pickle`: this dictionary gives you a list of pages linking to each Wikipedia page.
+- `wikipedia2wikidata.json`: a dictionary mapping Wikipedia pages to Wikidata ids.
+- `wikidata2wikipedia.json`: a dictionary mapping Wikidata ids to a list of Wikipedia pages with associated frequency.
