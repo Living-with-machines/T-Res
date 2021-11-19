@@ -1,6 +1,6 @@
 name: Continuous integration
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build-linux:
@@ -20,5 +20,5 @@ jobs:
 
     - name: Test with pytest
       run: |
-        $CONDA/bin/python process_data.py
+        $CONDA/bin/python processing.py
         $CONDA/bin/pytest 
