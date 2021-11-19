@@ -54,7 +54,7 @@ for i in tqdm(range(len(folders))):
     for page_with_sect in pages_with_sections:
         # hashing the title and checking if too long or containing /
 
-        # we % encode the title, so it's consistent with the entities formats in the stored pickle files
+        # we % encode the title, so it's consistent with the entities formats in the stored json files
         percent_encoded_title = urllib.parse.quote(page_with_sect["title"])
 
         if "/" in percent_encoded_title or len(percent_encoded_title)>200:

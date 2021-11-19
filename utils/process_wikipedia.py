@@ -1,4 +1,4 @@
-
+import urllib
 from bs4 import BeautifulSoup
 from collections import Counter
 
@@ -48,17 +48,21 @@ def process_doc(filename):
 
 ### Aggregating statistics pages ####
 
-def fill_dicts(res,mentions_freq, entity_freq, mention_overall_dict,entity_overall_dict):    
+def fill_dicts(res,mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict,entity_outlink_dict):    
 
-    url,box_mentions, box_entities, mentions_dict = res[0],res[1],res[2],res[3]
+    title,box_mentions, box_entities, mentions_dict = res[0],res[1],res[2],res[3]
+    # to make it percent encoded as the other references to the same entity
+    title = urllib.parse.quote(title)
     mentions_freq+= box_mentions
     entity_freq+= box_entities
+
+    entity_outlink_dict[title] = box_entities
     
     for k,v in box_entities.items():
-        if k in entity_overall_dict:
-            entity_overall_dict[k].append(url)
+        if k in entity_inlink_dict:
+            entity_inlink_dict[k].append(title)
         else:
-            entity_overall_dict[k] = [url]
+            entity_inlink_dict[k] = [title]
     
     for k,v in mentions_dict.items():
         if k in mention_overall_dict:
@@ -66,4 +70,4 @@ def fill_dicts(res,mentions_freq, entity_freq, mention_overall_dict,entity_overa
         else:
             mention_overall_dict[k] = Counter()
             mention_overall_dict[k]+= v
-    return mentions_freq, entity_freq, mention_overall_dict,entity_overall_dict
+    return mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict,entity_outlink_dict

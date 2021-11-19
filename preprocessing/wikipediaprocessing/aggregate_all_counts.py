@@ -1,4 +1,3 @@
-import pickle
 import time,os,json,pathlib
 from tqdm import tqdm
 from utils import process_wikipedia
@@ -32,9 +31,10 @@ overall_entity_freq = Counter()
 # 'London': 76511, 'London%2C%20Ontario': 790, 'London%2C%20England': 350, 'London%20GAA': 321, 'City%20of%20London': 144, etc
 mention_overall_dict = {}
 
-# in case of entity_inlink_dict, the dictionary maps an entity, say "London", with a list of all other entities which link to it
-# we can easily obtain entity outlink (so which entities are linked from an entity page) using the json of the entity page
+# in case of entity_inlink_dict, the dictionary maps an entity, say "London", with a Counter of all other entities which link to it
 entity_inlink_dict = {}
+# in case of entity_outlink_dict, the dictionary maps an entity, say "London", with a Counter of all other entities which are linked from its page
+entity_outlink_dict = {}
 
 json_folder = path+'Store-Counts/'
 jsons = [filename for filename in os.listdir(json_folder) if '.json' in filename]
@@ -54,7 +54,7 @@ for i in tqdm(range(len(jsons))):
         
         # we update the dictionaries and the local counters
         for entity_count in entity_counts:
-            mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict= process_wikipedia.fill_dicts(entity_count,mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict)
+            mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict, entity_outlink_dict= process_wikipedia.fill_dicts(entity_count,mentions_freq, entity_freq, mention_overall_dict,entity_inlink_dict,entity_outlink_dict)
     
     # we then update the overall counts
     overall_mentions_freq += mentions_freq
@@ -68,24 +68,29 @@ for i in tqdm(range(len(jsons))):
     #print('Since beginning: %s, Last step: %s' % (since_beginning,last_step))
     previous = time.time()
 
-with open(path+'overall_mentions_freq.pickle', 'wb') as fp:
-    pickle.dump(overall_mentions_freq, fp)
+
+with open(path+'overall_mentions_freq.json', 'w') as fp:
+    json.dump(overall_mentions_freq, fp)
                 
-with open(path+'overall_entity_freq.pickle', 'wb') as fp:
-    pickle.dump(overall_entity_freq, fp)
+with open(path+'overall_entity_freq.json', 'w') as fp:
+    json.dump(overall_entity_freq, fp)
 
 # we just convert the dictionaries of counts to a Counter 
 mention_overall_dict = {x:Counter(y) for x,y in mention_overall_dict.items()}
 
-with open(path+'mention_overall_dict.pickle', 'wb') as fp:
-    pickle.dump(mention_overall_dict, fp)
+with open(path+'mention_overall_dict.json', 'w') as fp:
+    json.dump(mention_overall_dict, fp)
 
-with open(path+'entity_inlink_dict.pickle', 'wb') as fp:
-    pickle.dump(entity_inlink_dict, fp)
+# we just convert the dictionaries of counts to a Counter 
+entity_inlink_dict = {x:Counter(y) for x,y in entity_inlink_dict.items()}
 
+with open(path+'entity_inlink_dict.json', 'w') as fp:
+    json.dump(entity_inlink_dict, fp)
+
+with open(path+'entity_outlink_dict.json', 'w') as fp:
+    json.dump(entity_outlink_dict, fp)
 
 # finally, we create a dictionary, mapping each entity to a Counter of the frequency of associated mentions
-
 entities_overall_dict = {x:dict() for x in overall_entity_freq.keys()}
 
 for mention, entities in tqdm(mention_overall_dict.items()):
@@ -94,8 +99,8 @@ for mention, entities in tqdm(mention_overall_dict.items()):
 
 entities_overall_dict = {x:Counter(y) for x,y in entities_overall_dict.items()}
 
-with open(path+'entities_overall_dict.pickle', 'wb') as fp:
-    pickle.dump(entities_overall_dict, fp)
+with open(path+'entities_overall_dict.json', 'w') as fp:
+    json.dump(entities_overall_dict, fp)
 
 print ('all done.')
 
