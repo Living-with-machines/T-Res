@@ -1,4 +1,8 @@
-These scripts process a Wikipedia dump, extracting and structuring pages, mention/entity statistics and in- /out-link information and provides an alignment between Wikipedia pages and Wikidata IDs.
+These scripts process a Wikipedia dump, extracting and structuring:
+- pages
+- mention/entity statistics 
+- in- /out-link information 
+- and provides an alignment between Wikipedia pages and Wikidata IDs.
 
 
 ### 1. Pre-process a Wikipedia Dump
@@ -30,11 +34,11 @@ Having the Wiki dump processed by the WikiExtractor in the `../resources/wikiped
 ```
 python preprocessing/wikipediaprocessing/extract_freq_and_pages.py
 ```
-Note that if you have set up the `test` mode, a you can run the script using the flag `-t`, which will consider only a sub-part of the corpus.
+Note that if you have set up the `test` mode, you can run the script using the flag `-t`, which will consider only a sub-part of the corpus.
 
 Next, you can aggregate all entity and mention counts in single .pickle file and save them in the `extractedResources/` folder by running:
 ```
-preprocessing/wikipediaprocessing/aggregate_all_counts.py
+python preprocessing/wikipediaprocessing/aggregate_all_counts.py
 ```
 As above, you can run the script in test mode using the flag `-t`, if you have set it up.
 
@@ -42,6 +46,6 @@ As above, you can run the script in test mode using the flag `-t`, if you have s
 
 Finally, to align the Wikipedia pages extracted from the dump to Wikidata you can use:
 ```
-map_wikidata_wikipedia.py
+python preprocessing/wikipediaprocessing/map_wikidata_wikipedia.py
 ```
-This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021.
+This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. It will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, if you have set this up.
