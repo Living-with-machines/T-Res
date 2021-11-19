@@ -49,3 +49,15 @@ Finally, to align the Wikipedia pages extracted from the dump to Wikidata you ca
 python preprocessing/wikipediaprocessing/map_wikidata_wikipedia.py
 ```
 This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. It will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, if you have set this up.
+
+### Final outputs
+
+These scripts will produce the following outputs (note that entities are percent encoded across all files):
+- A `Pages/` folder, containing a `.json` file for each page available in the input Wikipedia dump. Note that due to the presence of specific characters of to the length of some pages titles, some titles have been hashed.
+- `hashed_duplicates.csv`: just to check in case there are issues with duplicate hashed filenames. This file should remain empty.  
+- A `Store-Counts/` folder, containing partial counts as `.json` files.
+- `entities_overall_dict.pickle`: this is a dictionary which maps each entity to a `Counter` object of all possible mentions  
+- `mention_overall_dict.pickle`: this is a dictionary which maps each mention to a `Counter` object of all possible associated entities.
+- `overall_entity_freq.pickle`: this is a dictionary which simply maps an entity to its overall frequency in the Wikipedia corpus.
+- `overall_mentions_freq.pickle`: this is a dictionary which simply maps a mention to its overall frequency in the Wikipedia corpus.
+- `entity_inlink_dict.pickle`: this dictionary gives you a list of pages linking to each Wikipedia page.
