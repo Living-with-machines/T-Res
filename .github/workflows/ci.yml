@@ -20,4 +20,4 @@ jobs:
     - name: Test with pytest
       run: |
         poetry run python processing.py
-        pytest 
+        poetry run pytest 
