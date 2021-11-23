@@ -1,8 +1,12 @@
 import time,os,json,pathlib
 from tqdm import tqdm
-from utils import process_wikipedia
 from collections import Counter
 from argparse import ArgumentParser
+
+# Add "../.." to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.pardir, os.path.pardir)))
+
+from utils import process_wikipedia
 
 parser = ArgumentParser()
 parser.add_argument("-t", "--test", dest="test",

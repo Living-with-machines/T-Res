@@ -1,9 +1,13 @@
 import hashlib,urllib
 from tqdm import tqdm
 import os, json,pathlib
-from utils import process_wikipedia
 import multiprocessing as mp
 from argparse import ArgumentParser
+import sys
+
+# Add "../.." to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.pardir, os.path.pardir)))
+from utils import process_wikipedia
 
 parser = ArgumentParser()
 parser.add_argument("-t", "--test", dest="test",
