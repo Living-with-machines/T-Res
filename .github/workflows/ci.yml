@@ -5,6 +5,9 @@ on: [pull_request]
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
 
     steps:
     - uses: actions/checkout@v2
@@ -16,7 +19,6 @@ jobs:
       run: |
         $CONDA/bin/pip install -r requirements.txt
     - name: Test with pytest
-      working-directory: ./
       run: |
         $CONDA/bin/python processing.py
         $CONDA/bin/python preprocessing/wikipediaprocessing/extract_freq_and_pages.py -t
