@@ -16,6 +16,7 @@ jobs:
       run: |
         $CONDA/bin/pip install -r requirements.txt
     - name: Test with pytest
+      working-directory: ./
       run: |
         $CONDA/bin/python processing.py
         $CONDA/bin/python preprocessing/wikipediaprocessing/extract_freq_and_pages.py -t
