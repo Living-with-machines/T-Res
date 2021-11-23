@@ -1,7 +1,7 @@
 import hashlib,urllib
 from tqdm import tqdm
 import os, json,pathlib
-from utils import process_wikipedia
+from tools import process_wikipedia
 import multiprocessing as mp
 from argparse import ArgumentParser
 
