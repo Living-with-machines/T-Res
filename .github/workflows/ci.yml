@@ -17,8 +17,7 @@ jobs:
         $CONDA/bin/pip install -r requirements.txt
     - name: Test with pytest
       run: |
-        cd /home/runner/work/toponym-resolution
-        $CONDA/bin/python ./processing.py
-        $CONDA/bin/python ./preprocessing/wikipediaprocessing/extract_freq_and_pages.py -t
-        $CONDA/bin/python ./preprocessing/wikipediaprocessing/aggregate_all_counts.py -t
+        $CONDA/bin/python processing.py
+        $CONDA/bin/python preprocessing/wikipediaprocessing/extract_freq_and_pages.py -t
+        $CONDA/bin/python preprocessing/wikipediaprocessing/aggregate_all_counts.py -t
         $CONDA/bin/pytest 
