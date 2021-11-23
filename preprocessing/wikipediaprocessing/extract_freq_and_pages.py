@@ -7,6 +7,8 @@ import sys
 
 # Add "../.." to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.pardir, os.path.pardir)))
+print(sys.path)
+
 from utils import process_wikipedia
 
 parser = ArgumentParser()
