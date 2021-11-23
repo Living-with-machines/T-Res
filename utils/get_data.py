@@ -1,7 +1,16 @@
 import wget
-import pathlib
 import zipfile
+import pathlib
 
+
+# ------------------------------
+# LwM data
+# ------------------------------
+
+
+# ------------------------------
+# Download data from BL repository and unzip it.
+# Output will be stored in resources/
 def download_lwm_data():
     url = "https://bl.iro.bl.uk/downloads/ff44881f-97ca-4c68-97f8-097324bdba94?locale=en"
     save_to = "resources"
