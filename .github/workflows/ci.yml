@@ -21,6 +21,7 @@ jobs:
     - name: Test with pytest
       run: |
         $CONDA/bin/python processing.py
-        $CONDA/bin/python preprocessing/wikipediaprocessing/extract_freq_and_pages.py -t
-        $CONDA/bin/python preprocessing/wikipediaprocessing/aggregate_all_counts.py -t
+        cd preprocessing/wikipediaprocessing/
+        $CONDA/bin/python extract_freq_and_pages.py -t
+        $CONDA/bin/python aggregate_all_counts.py -t
         $CONDA/bin/pytest 
