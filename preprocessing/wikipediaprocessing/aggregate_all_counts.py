@@ -1,6 +1,6 @@
 import time,os,json,pathlib
 from tqdm import tqdm
-from tools import process_wikipedia
+from utils import process_wikipedia
 from collections import Counter
 from argparse import ArgumentParser
 
