@@ -6,8 +6,7 @@ from argparse import ArgumentParser
 import sys
 
 # Add "../.." to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.pardir)))
-print(sys.path)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.pardir, os.path.pardir)))
 
 from utils import process_wikipedia
 
@@ -19,8 +18,8 @@ args = parser.parse_args()
 
 # this is where we have stored the output of the WikiExtractor
 if args.test:
-    path = 'resources/wikipedia/test-extractedResources/'
-    processed_docs = 'resources/wikipedia/test-processedWiki/'
+    path = '../../resources/wikipedia/test-extractedResources/'
+    processed_docs = '../../resources/wikipedia/test-processedWiki/'
     if pathlib.Path(processed_docs).is_dir() == False:
         print ("Error! To run in test mode, you need a processed dump in "+processed_docs)
         exit()
