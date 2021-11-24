@@ -8,11 +8,11 @@ def clean_page(page):
         
     entities = [x for x in page.findAll("a") if x.has_attr("href")]
     box_mentions = Counter([x.text for x in entities])
-    box_entities = Counter([urllib.parse.quote(x["href"]) for x in entities])
+    box_entities = Counter([x["href"] for x in entities])
         
     mentions_dict = {x:[] for x in box_mentions}
     for e in entities:
-        mentions_dict[e.text].append(urllib.parse.quote(e["href"]))
+        mentions_dict[e.text].append(e["href"])
     
     mentions_dict = {x:Counter(y) for x,y in mentions_dict.items()} 
     
