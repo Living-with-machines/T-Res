@@ -25,10 +25,6 @@ python WikiExtractor.py -l -s -o ../resources/wikipedia/processedWiki/ [here put
 
 Note that the flag -s will keep the sections and the flag -l the links.
 
-### Run the code in test mode
-
-If you want to run the scripts in `test` mode you should download first only one batch of .xml.bz2 articles (instead of a full dump). In our setting we used `enwiki-20211001-pages-articles-multistream27.xml-p68475910p68864378.bz2` (which is around 200MB instead of over 18GB). You should process it the same way we describe above for the full dump and store it in `../resources/wikipedia/test-processedWiki/`.
-
 ## 2. Extract entities/mentions frequency counts and pages
 
 Having the Wiki dump processed by the WikiExtractor in the `../resources/wikipedia/processedWiki/` folder, the first step is to extract entity and mention statistics (e.g., how many times the mention `London` is pointing to Wikipedia page of the capital of the UK and how many times to `London,_Ontario`). Statistics are still divided in the n-folders consituting the output of the WikiExtractor and will be saved in the `../resources/wikipedia/extractedResources/Store-Counts/` folder as json files. The script will also store a .json file for each entity, with all its aspects (i.e., sections, see [here](https://madoc.bib.uni-mannheim.de/49596/1/EAL.pdf) to know more about Entity-Aspect Linking) in the `Pages/` folder. You should run the script as:
@@ -36,13 +32,13 @@ Having the Wiki dump processed by the WikiExtractor in the `../resources/wikiped
 ```
 python extract_freq_and_pages.py
 ```
-Note that if you have set up the `test` mode, you can run the script using the flag `-t`, which will consider only a sub-part of the corpus.
+Note that you can run the script in `test` mode using the flag `-t`, which will consider only a sub-part of the corpus.
 
 Next, you can aggregate all entity and mention counts in single `.json` file and save them in the `extractedResources/` folder by running:
 ```
 python aggregate_all_counts.py
 ```
-As above, you can run the script in test mode using the flag `-t`, if you have set it up.
+As above, you can run the script in test mode using the flag `-t`.
 
 ## 3. Map Wikipedia and Wikidata
 
@@ -50,7 +46,7 @@ Finally, to align the Wikipedia pages extracted from the dump to Wikidata you ca
 ```
 python map_wikidata_wikipedia.py
 ```
-This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. It will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, if you have set this up.
+This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. It will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, using the flag `-t`.
 
 ## Final outputs
 
