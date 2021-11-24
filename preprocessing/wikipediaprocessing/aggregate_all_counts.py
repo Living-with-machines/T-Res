@@ -17,11 +17,12 @@ args = parser.parse_args()
 
 if args.test:
     path = '../../resources/wikipedia/test-extractedResources/'
-    if pathlib.Path(path).is_dir() == False:
-        print ("Error! To run in test mode, you need to have extracted entity and mention counts in "+path)
-        exit()
 else:
     path = '/resources/wikipedia/extractedResources/'
+
+if pathlib.Path(path).is_dir() == False:
+    print ("Error! You need to have extracted entity and mention counts in "+path)
+    exit()
 
 # start by defining the objects you'll be filling with counts
 

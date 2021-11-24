@@ -20,13 +20,14 @@ args = parser.parse_args()
 if args.test:
     path = '../../resources/wikipedia/test-extractedResources/'
     processed_docs = '../../resources/wikipedia/test-processedWiki/'
-    if pathlib.Path(processed_docs).is_dir() == False:
-        print ("Error! To run in test mode, you need a processed dump in "+processed_docs)
-        exit()
 
 else:
     path = '/resources/wikipedia/extractedResources/'
     processed_docs = '/resources/wikipedia/processedWiki/'
+
+if pathlib.Path(processed_docs).is_dir() == False:
+    print ("Error! You need a processed dump in "+processed_docs)
+    exit()
 
 # we setup these folders for acquiring the output of this script
 pathlib.Path(path+'Pages/').mkdir(parents=True, exist_ok=True)
@@ -35,7 +36,7 @@ pathlib.Path(path+'Store-Counts/').mkdir(parents=True, exist_ok=True)
 # the number of cpus
 N= mp.cpu_count()
 
-# this is just to doublecheck in case we have duplicatec hashed files (it shouldn't happen)
+# this is just to doublecheck in case we have duplicate hashed files (it shouldn't happen)
 out = open(path+'hashed_duplicates.csv','w')
 
 

@@ -13,11 +13,13 @@ args = parser.parse_args()
 
 if args.test:
     path = '../../resources/wikipedia/test-extractedResources/'
-    if pathlib.Path(path).is_dir() == False:
-        print ("Error! To run in test mode, you need to have extracted entity and mention counts in "+path)
-        exit()
 else:
     path = '/resources/wikipedia/extractedResources/'
+
+if pathlib.Path(path).is_dir() == False:
+    print ("Error! TYou need to have extracted entity and mention counts in "+path)
+    exit()
+
 
 # we take the list of available entities
 with open(path+'overall_entity_freq.json', 'r') as f:
