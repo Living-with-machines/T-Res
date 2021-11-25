@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 
-resources/
+resources/topRes19th*
+resources/wikipedia/test-extractedResources
 outputs/
