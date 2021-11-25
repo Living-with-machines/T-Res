@@ -26,14 +26,14 @@ if pathlib.Path(path).is_dir() == False:
 
 # start by defining the objects you'll be filling with counts
 
-# these first two objects are simply mentions and entity counters. 
+# overall_mentions_freq and overall_entity_freq are simply mentions and entity counters. 
 # For each entity as key (say the entity "London"), we have as value how many times this entity appears mentioned in Wikipedia.
 # The same for each mention, say "NYC", we have as value how many times this appears as a mention (i.e., the text of a hyperlink) of an entity.
 
 overall_mentions_freq = Counter()
 overall_entity_freq = Counter()
 
-# This third dictionary maps a mention to a Counter object containing all entities associated with it, for instance for the mention "London":
+# mention_overall_dict maps a mention to a Counter object containing all entities associated with it, for instance for the mention "London":
 # 'London': 76511, 'London%2C%20Ontario': 790, 'London%2C%20England': 350, 'London%20GAA': 321, 'City%20of%20London': 144, etc
 mention_overall_dict = {}
 
