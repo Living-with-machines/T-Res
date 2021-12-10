@@ -337,7 +337,6 @@ def parse_record(record):
 # Parse all WikiData
 # ==========================================
 
-### Uncomment the following to run this script (WARNING: This will take days to run, 40 hours on a machine with 64GiB of RAM):
 path = output_path
 pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
