@@ -4,21 +4,52 @@ import pandas as pd
 import pydash
 from tqdm import tqdm
 import pathlib
+import glob
 import re
+from argparse import ArgumentParser
 
+parser = ArgumentParser()
+
+parser.add_argument('-t',
+                    dest="test",
+                    choices=('True','False'),
+                    help='Run in test mode.',
+                    default='True')
+
+args = parser.parse_args()
 
 # ------------------------------------------
 # Wikidata input dump file and output processed files:
 input_path = r"/resources/wikidata/"
 output_path = r"/resources/wikidata/extracted/"
+wikimapper_path = r"/resources/wikipedia/extractedResources/"
+
+if args.test == 'True':
+    output_path = r"/resources/wikidata/test-extracted/"
+    print("Running in test mode, set -t to False to disable the test mode.")
 
 pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
+
+
+# Check whether necessary input files exist:
+if not glob.glob(input_path + "*.json.bz2"):
+    print ("Error! You need a Wikidata dump in "+input_path)
+    exit()
+if not glob.glob(wikimapper_path + "/wikidata2wikipedia.json"):
+    print ("Error! You need the Wikidata to Wikipedia mapper in "+wikimapper_path)
+    exit()
+    
+    
+# Load wikidata2wikipedia mapper:
+with open(wikimapper_path + 'wikidata2wikipedia.json', 'r') as f:
+    wikidata2wikipedia = json.load(f)
+    
 
 # Disable chained assignments
 pd.options.mode.chained_assignment = None
 
 languages = ['en', 'cy', 'sco', 'gd', 'ga', 'kw', # Main languages native to Ireland and GB
-             'de', 'fr', 'it', 'es', 'uk', 'pl', 'pt', 'tr'] # Most spoken languages in Latin alphabet
+             'de', 'fr', 'it', 'es', 'uk', 'pl', 'pt', 'tr', 'ro', 'nl'] # Most spoken European languages in Latin alphabet
 
 
 # ==========================================
@@ -307,8 +338,6 @@ def parse_record(record):
 # ==========================================
 
 ### Uncomment the following to run this script (WARNING: This will take days to run, 40 hours on a machine with 64GiB of RAM):
-
-"""
 path = output_path
 pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
@@ -318,24 +347,32 @@ header=True
 i = 0
 for record in tqdm(wikidata(input_path + 'latest-all.json.bz2')):
     
-    # Only extract items with geographical coordinates (P625)
-    if pydash.has(record, 'claims.P625'):
+    # Only extract items that have a wikipedia mapping:
+    if record["id"] in wikidata2wikipedia:
+    
+        # Only extract items with geographical coordinates (P625)
+        if pydash.has(record, 'claims.P625'):
+
+            # ==========================================
+            # Store records in a csv
+            # ==========================================
+            df_record = parse_record(record)
+            df_record_all = df_record_all.append(df_record, ignore_index=True)
+            i += 1
+            if (i % 5000 == 0):
+                pd.DataFrame.to_csv(df_record_all, path_or_buf=path + '/till_'+record['id']+'_item.csv')
+                print('i = '+str(i)+' item '+record['id']+'  Done!')
+                print('CSV exported')
+                df_record_all = pd.DataFrame(columns=['wikidata_id', 'english_label', 'instance_of', 'description_set', 'alias_dict', 'nativelabel', 'population_dict', 'area', 'hcounties', 'date_opening', 'date_closing', 'inception_date', 'dissolved_date', 'follows', 'replaces', 'adm_regions', 'countries', 'continents', 'capital_of', 'borders', 'near_water', 'latitude', 'longitude', 'wikititle', 'geonamesIDs', 'connectswith', 'street_address', 'street_located', 'postal_code'])
+                
+                # If we are in test mode, exit the loop after having created the first file:
+                if args.test == "True":
+                    break
         
-        # ==========================================
-        # Store records in a csv
-        # ==========================================
-        df_record = parse_record(record)
-        df_record_all = df_record_all.append(df_record, ignore_index=True)
-        i += 1
-        if (i % 5000 == 0):
-            pd.DataFrame.to_csv(df_record_all, path_or_buf=path + '/till_'+record['id']+'_item.csv')
-            print('i = '+str(i)+' item '+record['id']+'  Done!')
-            print('CSV exported')
-            df_record_all = pd.DataFrame(columns=['wikidata_id', 'english_label', 'instance_of', 'description_set', 'alias_dict', 'nativelabel', 'population_dict', 'area', 'hcounties', 'date_opening', 'date_closing', 'inception_date', 'dissolved_date', 'follows', 'replaces', 'adm_regions', 'countries', 'continents', 'capital_of', 'borders', 'near_water', 'latitude', 'longitude', 'wikititle', 'geonamesIDs', 'connectswith', 'street_address', 'street_located', 'postal_code'])
-        else:
-            continue
+            else:
+                continue
+                
             
 pd.DataFrame.to_csv(df_record_all, path_or_buf=path + 'final_csv_till_'+record['id']+'_item.csv')
 print('i = '+str(i)+' item '+record['id']+'  Done!')
 print('All items finished, final CSV exported!')
-"""
