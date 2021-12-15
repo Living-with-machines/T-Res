@@ -34,7 +34,7 @@ def test_lwm_dataframe_notempty():
 
 def test_lwm_dataframe_shape():
     df = pd.read_csv("outputs/data/lwm_df.tsv", sep="\t")
-    assert df.shape == (3348, 14)
+    assert df.shape == (3348, 15)
     
 def test_lwm_sentences_files():
     # The number of files with processed sentences is the same as the number of annotated documents:
