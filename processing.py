@@ -20,7 +20,7 @@ tsv_topres_path = "resources/topRes19th/annotated_tsv/"
 
 # Create the dataframe where we will store our annotated
 # data in a format that works better for us:
-df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikiid"])
+df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid"])
 
 # Populate the dataframe of toponyms and annotations:
 mention_counter = 0

@@ -1,11 +1,20 @@
 import re
+import json
+import urllib
+import hashlib
 import pandas as pd
+
+
+# Load wikipedia2wikidata mapper:
+path = "/resources/wikipedia/extractedResources/"
+with open(path+'wikipedia2wikidata.json', 'r') as f:
+    wikipedia2wikidata = json.load(f)
 
 
 # ------------------------------
 # LwM data
 # ------------------------------
-
+    
 
 # ------------------------------
 # This function takes a .tsv (webanno 3.0) file and parses it.
@@ -180,6 +189,21 @@ def reconstruct_sentences(dTokens):
 
 
 # ------------------------------
+# Get wikidata ID from wikipedia URL:
+def turn_wikipedia2wikidata(wikipedia_title):
+    if not wikipedia_title == "*":
+        wikipedia_title = wikipedia_title.split("/wiki/")[-1]
+        wikipedia_title = urllib.parse.unquote(wikipedia_title)
+        wikipedia_title = wikipedia_title.replace("_", " ")
+        wikipedia_title = urllib.parse.quote(wikipedia_title)
+        print(wikipedia_title)
+        if "/" in wikipedia_title or len(wikipedia_title)>200:
+            wikipedia_title = hashlib.sha224(wikipedia_title.encode('utf-8')).hexdigest()
+        return wikipedia2wikidata.get(wikipedia_title)
+    return None
+
+
+# ------------------------------
 # Populate dataframe rows:
 def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_counter, dSentences):
 
@@ -205,8 +229,11 @@ def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_c
         next_sentence = ""
         if sent_pos+1 in dSentences:
             next_sentence = dSentences[sent_pos+1][0]
+            
+        wkpd = wkpd.replace("\\", "")
+        wkdt = turn_wikipedia2wikidata(wkpd)
 
-        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd]
+        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt]
         
         return row
     
