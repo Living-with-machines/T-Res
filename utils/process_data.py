@@ -3,12 +3,17 @@ import json
 import urllib
 import hashlib
 import pandas as pd
+from pathlib import Path
 
 
 # Load wikipedia2wikidata mapper:
 path = "/resources/wikipedia/extractedResources/"
-with open(path+'wikipedia2wikidata.json', 'r') as f:
-    wikipedia2wikidata = json.load(f)
+wikipedia2wikidata = dict()
+if Path(path+'wikipedia2wikidata.json').exists():
+    with open(path+'wikipedia2wikidata.json', 'r') as f:
+        wikipedia2wikidata = json.load(f)
+else:
+    print("Warning: wikipedia2wikidata.json does not exist.")
 
 
 # ------------------------------
