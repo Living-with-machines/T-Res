@@ -45,7 +45,7 @@ gru_lstm:
   # hstates_subtract, hstates_l2_distance, hstates_cosine
   # average, max
   # attention
-  pooling_mode: 'hstates_layers_simple'    
+  pooling_mode: 'hstates_l2_distance'    
   # rnn_dropout:
   # if non-zero, introduces a Dropout layer on the outputs of each RNN/LSTM/GRU layer except the last layer,
   #   with dropout probability equal to rnn_dropout.
