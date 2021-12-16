@@ -201,7 +201,6 @@ def turn_wikipedia2wikidata(wikipedia_title):
         wikipedia_title = urllib.parse.unquote(wikipedia_title)
         wikipedia_title = wikipedia_title.replace("_", " ")
         wikipedia_title = urllib.parse.quote(wikipedia_title)
-        print(wikipedia_title)
         if "/" in wikipedia_title or len(wikipedia_title)>200:
             wikipedia_title = hashlib.sha224(wikipedia_title.encode('utf-8')).hexdigest()
         return wikipedia2wikidata.get(wikipedia_title)
@@ -237,6 +236,12 @@ def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_c
             
         wkpd = wkpd.replace("\\", "")
         wkdt = turn_wikipedia2wikidata(wkpd)
+        
+        # In mentions attached to next token through a dash,
+        # keep only the true mention (this has to do with
+        # the annotation format)
+        if "—" in mention:
+            mention = mention.split("—")[0]
 
         row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt]
         
