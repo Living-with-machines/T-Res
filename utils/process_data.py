@@ -1,5 +1,6 @@
 import re
 import json
+import glob
 import urllib
 import hashlib
 import pandas as pd
@@ -45,21 +46,26 @@ def process_tsv(filepath):
 
     multiple_mention = 0
     prev_multmention = 0
-    complete_token = ""
-    complete_label = ""
-    complete_wkpd = ""
-    dTokens = dict()
-    sent_pos = 0
-    tok_pos = 0
-    tok_start = 0
-    tok_end = 0
-    prev_endchar = 0
+    complete_token = "" # Here we will build the multitoken if toponym has multiple tokens, otherwise keep the token.
+    complete_label = "" # Label corresponding to complete_token
+    complete_wkpd = "" # Wikidata ID corresponding to complete_token
+    dMTokens = dict() # Dictionary of tokens in which multitoken toponyms are joined into one token
+    dTokens = dict() # Dictionary of tokens in which multitoken toponyms remain as separated tokens (BIO scheme)
+    sent_pos = 0 # Sentence position
+    tok_pos = 0 # Token position
+    tok_start = 0 # Token start char
+    tok_end = 0 # Token end char
+    mtok_start = 0 # Multitoken start char
+    mtok_end = 0 # Multitoken end char
+    prev_endchar = 0 # Previous token end char
     
     # Loop over all lines in the file:
     for line in lines:
         
         # If the line is a token-line:
         if re.match(regex_annline, line):
+            
+            bio_label = "O"
             
             # If the token-line has no annotations, automatically provide
             # them empty annotations:
@@ -76,13 +82,14 @@ def process_tsv(filepath):
             else:
                 sent_tmp, tok_tmp, token, wkpd, label = line.strip().split("\t")
                 
-            # If the annotation corresponds to a multi-token annotation:
+            # If the annotation corresponds to a multi-token annotation (i.e. WikipediaID string
+            # ends with a number enclosed in square brackets, as in "San[1]" and "Francisco[1]"):
             if re.match(regex_multmention, wkpd):
                 
                 # This code basically collates multi-token mentions in annotations
                 # together. "complete_token" is the resulting multi-token mention,
                 # "sent_pos" is the sentence position in the file, "tok_pos" is the
-                # token position in the sentence, "tok_start" is the multi-token
+                # token position in the sentence, "mtok_start" is the multi-token
                 # character start position in the document, and "tok_end" is the
                 # multi-token character end position in the document.
                 multiple_mention = int(re.match(regex_multmention, wkpd).group(2))
@@ -98,14 +105,18 @@ def process_tsv(filepath):
                     complete_token += token
                     # The complete_token end character will be considered to be the end of
                     # the latest token in the multi-token:
-                    tok_end = tok_tmp.split("-")[1]
+                    tok_start, tok_end = tok_tmp.split("-")
+                    mtok_end = tok_tmp.split("-")[1]
                     # Here we keep the end position of the previous token:
                     prev_endchar = int(tok_tmp.split("-")[1])
+                    bio_label = "I-" + label
                 else:
                     sent_pos, tok_pos = sent_tmp.split("-")
                     tok_start, tok_end = tok_tmp.split("-")
+                    mtok_start, mtok_end = tok_tmp.split("-")
                     prev_endchar = int(tok_end)
                     complete_token = token
+                    bio_label = "B-" + label
                 prev_multmention = multiple_mention
 
             # If the annotation does not correspond to a multi-token annotation,
@@ -113,18 +124,27 @@ def process_tsv(filepath):
             else:
                 sent_pos, tok_pos = sent_tmp.split("-")
                 tok_start, tok_end = tok_tmp.split("-")
+                mtok_start, mtok_end = tok_tmp.split("-")
                 complete_token = token
                 complete_label = label
                 complete_wkpd = wkpd
+                if label and label != "_" and label != "*":
+                    bio_label = "B-" + label
 
             sent_pos = int(sent_pos)
             tok_pos = int(tok_pos)
             tok_start = int(tok_start)
+            mtok_start = int(mtok_start)
             tok_end = int(tok_end)
+            mtok_end = int(mtok_end)
+                
+            bio_label = bio_label.split("[")[0]
+            wkpd = wkpd.split("[")[0]
 
-            dTokens[(sent_pos, tok_start)] = (complete_token, complete_wkpd, complete_label, sent_pos, tok_start, tok_end)
+            dMTokens[(sent_pos, mtok_start)] = (complete_token, complete_wkpd, complete_label, sent_pos, mtok_start, mtok_end)
+            dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
     
-    return dTokens
+    return dMTokens, dTokens
 
 
 # ------------------------------
@@ -256,3 +276,97 @@ def add_cotoponyms(df, article_id, sent_id):
     sentence_toponyms = list(df[df["article_id"] == article_id].mention)
     document_toponyms = list(df[(df["article_id"] == article_id) & (df["sent_id"] == sent_id)].mention)
     return pd.Series([sentence_toponyms, document_toponyms])
+
+
+# ------------------------------
+# Process data for training a NER model, where each sentence has an id,
+# and a list of tokens and assigned ner_tags using the BIO scheme, e.g.:
+# > id: 10813493_1 # document_id + "_" + sentence_id 
+# > ner_tags: ['B-LOCWiki', 'O']
+# > tokens: ['INDIA', '.']
+def process_for_ner(tsv_topres_path):
+    lwm_data = []
+
+    for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
+
+        filename = fid.split("/")[-1] # Full document name
+        file_id = filename.split("_")[0] # Document id
+
+        # Dictionary that maps each token in a document with its
+        # positional information and associated annotations:
+        dMTokens, dTokens = process_tsv(tsv_topres_path + "annotated_tsv/" + filename)
+
+        ner_tags = []
+        tokens = []
+        prev_sent = 0
+        for t in dTokens:
+            curr_sent = t[0]
+            if curr_sent == prev_sent:
+                ner_tags.append(dTokens[t][2])
+                tokens.append(dTokens[t][0])
+            else:
+                if tokens and ner_tags:
+                    lwm_data.append({"id": file_id + "_" + str(prev_sent),
+                               "ner_tags": ner_tags,
+                               "tokens": tokens})
+                ner_tags = [dTokens[t][2]]
+                tokens = [dTokens[t][0]]
+            prev_sent = curr_sent
+
+        # Now append the tokens and ner_tags of the last sentence:
+        lwm_data.append({"id": file_id + "_" + str(prev_sent),
+                   "ner_tags": ner_tags,
+                   "tokens": tokens})
+
+    lwm_df = pd.DataFrame(lwm_data)
+
+    return lwm_df
+
+
+# ------------------------------
+# Process data for performing entity linking, resulting in a dataframe with
+# one toponym per row and its annotation and resolution in columns.
+def process_for_linking(tsv_topres_path, output_path):
+    # # Create the dataframe where we will store our annotated
+    # data in a format that works better for us:
+    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid"])
+
+    # Populate the dataframe of toponyms and annotations:
+    mention_counter = 0
+    for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
+
+        filename = fid.split("/")[-1] # Full document name
+        file_id = filename.split("_")[0] # Document id
+        publ_place = filename.split("_")[1][:-8] # Publication place
+        publ_decade = filename[-8:-4] # Publication decade
+
+        # Dictionary that maps each token in a document with its
+        # positional information and associated annotations:
+        dMTokens, dTokens = process_tsv(tsv_topres_path + "annotated_tsv/" + filename)
+
+        # Dictionary of reconstructed sentences:
+        dSentences = reconstruct_sentences(dTokens)
+
+        for k in dMTokens:
+            # For each token, create the list that will become the dataframe
+            # row, if the token has been annotated:
+            row = create_lwmdf_row(dMTokens[k], file_id, publ_place, publ_decade, mention_counter, dSentences)
+            # If a row has been created:
+            if row:
+                # Convert the row into a pd.Series:
+                row = pd.Series(row, index=df.columns)
+                # And append it to the main dataframe:
+                df = df.append(row, ignore_index=True)
+
+        # Store the sentences as a json so that:
+        # * The key is an index indicating the order of the sentence.
+        # * The value is a list of two elements: the first element is the text of the sentence,
+        # while the second element is the character position of the first character of the
+        # sentence in the document.
+        Path(output_path + "lwm_sentences/").mkdir(parents=True, exist_ok=True)
+        with open(output_path + "lwm_sentences/" + filename + '.json', 'w') as fp:
+            json.dump(dSentences, fp)
+
+    df[['sentence_toponyms', 'document_toponyms']] = df.apply(lambda x: pd.Series(add_cotoponyms(df, x["article_id"], x["sent_id"])), axis=1)
+    
+    return df
