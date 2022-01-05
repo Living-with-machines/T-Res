@@ -55,7 +55,7 @@ Finally, to extract locations from Wikidata (and their relevant properties) if t
 python entity_extraction.py -t ['True'|'False']
 ```
 
-This script is partially based on https://akbaritabar.netlify.app/how_to_use_a_wikidata_dump.
+This script is partially based on [this code](https://akbaritabar.netlify.app/how_to_use_a_wikidata_dump).
 
 The script assumes that you have already downloaded a full Wikidata dump (`latest-all.json.bz2`) from [here](https://dumps.wikimedia.org/wikidatawiki/entities/). We assume the downloaded `bz2` file is stored in `../resources/wikidata/`.
 
