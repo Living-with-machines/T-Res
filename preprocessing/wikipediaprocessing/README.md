@@ -52,7 +52,7 @@ This script relies on the use of the WikiMapper and in particular to the availab
 
 Finally, to extract locations from Wikidata (and their relevant properties) if they have a corresponding page on Wikipedia, you can use:
 ```
-python entity_extraction.py -t ['True'|'False']
+python wikidata_extraction.py -t ['True'|'False']
 ```
 
 This script is partially based on [this code](https://akbaritabar.netlify.app/how_to_use_a_wikidata_dump).
