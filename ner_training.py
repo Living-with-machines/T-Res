@@ -4,13 +4,55 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from transformers import AutoTokenizer, DataCollatorForTokenClassification, AutoModelForTokenClassification, TrainingArguments, Trainer
+from argparse import ArgumentParser
 
 # Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb
 
-output_ner_model = "outputs/models/"
+
+# -------------------
+# Input and output parameters:
+output_ner_model = "outputs/models/" # Path where NER model will be stored.
+model_name = "lwm-ner" # NER model name.
+base_model_path = "/resources/models/bert/bert_1760_1900/" # Path where base models are stored (it can be
+                                                           # a pretrained Huggingface model as well, such
+                                                           # as 'distilbert-base-uncased'. The 'bert_1760_1900'
+                                                           # model can be obtained following instructions in
+                                                           # https://github.com/Living-with-machines/histLM).
+ner_data_path = "outputs/data/" # Path where preprocessed NER data is stored.
+train_dataset = 'ner_lwm_df_train.json' # NER training set (0.80 of LwM training set).
+test_dataset = 'ner_lwm_df_test.json' # NER test set (0.20 of LwM training set).
+
+
 Path(output_ner_model).mkdir(parents=True, exist_ok=True)
 task = "ner"
+metric = load_metric("seqeval")
 
+
+# -------------------
+# Test option
+parser = ArgumentParser()
+
+parser.add_argument('-t',
+                    dest="test",
+                    choices=('True','False'),
+                    help='Run in test mode. Options are "True" or "False", default is "True".',
+                    default='True')
+
+args = parser.parse_args()
+
+
+# -------------------
+# Fine-tuning for NER
+
+if args.test == 'True':
+    # If test is True, train on 5% of the train and test sets, and add "_test" to the model name.
+    model_name = model_name + "_test"
+    lwm_train = load_dataset('json', data_files=ner_data_path + train_dataset, split='train[:5%]')
+    lwm_test = load_dataset('json', data_files=ner_data_path + test_dataset, split='train[:5%]')
+else:
+    lwm_train = load_dataset('json', data_files=ner_data_path + train_dataset, split='train')
+    lwm_test = load_dataset('json', data_files=ner_data_path + test_dataset, split='train')
+    
 
 label_encoding_dict = {'O': 0,
                        'B-LOC': 1,
@@ -82,17 +124,9 @@ def compute_metrics(p):
     }
 
 
-# !TODO: Document BERT models origin, change path accordingly:
-model = AutoModelForTokenClassification.from_pretrained("/resources/models/bert/bert_1760_1900/", num_labels=len(label_list))
-tokenizer = AutoTokenizer.from_pretrained("/resources/models/bert/bert_1760_1900/")
+model = AutoModelForTokenClassification.from_pretrained(base_model_path, num_labels=len(label_list))
+tokenizer = AutoTokenizer.from_pretrained(base_model_path)
 data_collator = DataCollatorForTokenClassification(tokenizer)
-
-metric = load_metric("seqeval")
-
-ner_data_path = "outputs/data/"
-
-lwm_train = load_dataset('json', data_files=ner_data_path + 'ner_lwm_df_train.json', split='train')
-lwm_test = load_dataset('json', data_files=ner_data_path + 'ner_lwm_df_test.json', split='train')
 
 lwm_train_tok = lwm_train.map(tokenize_and_align_labels, batched=True)
 lwm_test_tok = lwm_test.map(tokenize_and_align_labels, batched=True)
@@ -100,7 +134,7 @@ lwm_test_tok = lwm_test.map(tokenize_and_align_labels, batched=True)
 training_args = TrainingArguments(
     output_dir=output_ner_model,
     evaluation_strategy="epoch",
-    logging_dir=output_ner_model + "runs/lwm_ner",
+    logging_dir=output_ner_model + "runs/" + model_name,
     learning_rate=5e-5,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
@@ -124,4 +158,4 @@ trainer.train()
 
 trainer.evaluate()
 
-trainer.save_model(output_ner_model + 'lwm-ner.model')
+trainer.save_model(output_ner_model + model_name + '.model')
