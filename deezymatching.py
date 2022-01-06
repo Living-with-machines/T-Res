@@ -9,6 +9,12 @@ import time
 import json
 import re
 
+
+candidates = "wkdtalts"
+dm_model = "ocr_faiss_cur"
+inputfile = "input_dfm"
+
+
 Path('outputs/deezymatch/').mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------
@@ -16,11 +22,11 @@ Path('outputs/deezymatch/').mkdir(parents=True, exist_ok=True)
 # --------------------------------------
 
 # If model does not exist already, train a new model:
-if not Path('outputs/deezymatch/models/ocr_faiss/ocr_faiss.model').is_file():
+if not Path('outputs/deezymatch/models/' + dm_model + '/' + dm_model + '.model').is_file():
     # train a new model
     dm_train(input_file_path="resources/deezymatch/input_dfm.yaml",
          dataset_path="resources/ocr/ocr_string_pairs.txt",
-         model_name="ocr_faiss")
+         model_name=dm_model)
     
 
 # --------------------------------------
@@ -72,10 +78,6 @@ def findcandidates(candidates, dm_model, inputfile):
 
 # --------------
 # Generate candidate vectors for the Wikidata gazetteer altnames:
-
-candidates = "wkdtalts"
-dm_model = "ocr_faiss"
-inputfile = "input_dfm"
 
 wikidata_path = '/resources/wikidata/'
 with open(wikidata_path + 'mentions_to_wikidata_normalized.json', 'r') as f:
