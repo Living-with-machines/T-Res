@@ -11,7 +11,7 @@ import re
 
 
 candidates = "wkdtalts"
-dm_model = "ocr_faiss_cur"
+dm_model = "ocr_faiss_cur085_l2"
 inputfile = "input_dfm"
 
 

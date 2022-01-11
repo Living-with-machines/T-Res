@@ -37,7 +37,7 @@ for i, row in df.iterrows():
     for a in alignments:
         ocr_token = ocrText[a[0]:a[1]]
         human_token = humanText[a[2]:a[3]]
-        if acceptable(ocr_token, human_token, 0.75, [5,15]):
+        if acceptable(ocr_token, human_token, 0.82, [5,15]):
             if human_token in human_to_ocr:
                 human_to_ocr[human_token].append(ocr_token)
             else:
@@ -48,8 +48,8 @@ for x in human_to_ocr:
     # Artificially add s<->f conversion:
     if "s" in x[:-1]:
         human_to_ocr[x].append(x[:-1].replace("s", "f", 1) + x[-1])
-    # Artificially add white space, hyphen or dot (1/100 chances)
-    spc = [" ", ".", "-"] + [""] * 97
+    # Artificially add white space, hyphen or dot (1/500 chances)
+    spc = [" ", ".", "-"] + [""] * 497
     randomch = random.choice(spc)
     randompos = random.randint(0, len(x) - 1)
     newx = x[:randompos] + randomch + x[randompos:]
@@ -104,7 +104,7 @@ random.shuffle(false_pairs)
 
 
 # Store the dataset in the format required by DeezyMatch
-with open("../../resources/ocr/ocr_string_pairs.txt", "w") as fw:
+with open("../../resources/ocr/ocr_string_pairs_085.txt", "w") as fw:
     for t in true_pairs:
         fw.write(t[0] + "\t" + t[1] + "\t" + t[2] + "\n")
     for f in false_pairs:

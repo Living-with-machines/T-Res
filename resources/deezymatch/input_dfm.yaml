@@ -62,7 +62,7 @@ gru_lstm:
   embedding_dim: 60
   output_dim: 2
 
-  learning_rate: 0.001    # 3e-4
+  learning_rate: 3e-5
   optimizer: adam
   epochs: 20
   batch_size: 64
