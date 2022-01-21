@@ -17,6 +17,13 @@ Then you can install `pyenv` with the `pyenv-installer`:
 ```
 curl https://pyenv.run | bash
 ```
+Then to properly configure pyenv for use on the system, you need:
+
+```
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init -)"\nfi' >> ~/.bashrc
+```
 
 Install Python 3.9.7 and set it as the global Python version:
 
