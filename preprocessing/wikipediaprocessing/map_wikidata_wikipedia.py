@@ -1,4 +1,5 @@
 import pathlib
+import urllib
 from tqdm import tqdm
 import json
 from wikimapper import WikiMapper
@@ -12,12 +13,14 @@ parser.add_argument("-t", "--test", dest="test",
 args = parser.parse_args()
 
 if args.test:
-    path = '/resources/wikipedia/test-extractedResources/'
-    if pathlib.Path(path).is_dir() == False:
-        print ("Error! To run in test mode, you need to have extracted entity and mention counts in "+path)
-        exit()
+    path = '../../resources/wikipedia/test-extractedResources/'
 else:
     path = '/resources/wikipedia/extractedResources/'
+
+if pathlib.Path(path).is_dir() == False:
+    print ("Error! You need to have extracted entity and mention counts in "+path)
+    exit()
+
 
 # we take the list of available entities
 with open(path+'overall_entity_freq.json', 'r') as f:
@@ -33,7 +36,7 @@ wikipedia2wikidata = {}
 for entity in tqdm(overall_entity_freq.keys()):
     # we also take the entity frequency in wikipedia in case of multiple wikipedia pages for a single wikidata id
     freq = overall_entity_freq[entity]
-    wikidata_id = mapper.title_to_id(entity.replace("%20","_"))
+    wikidata_id = mapper.title_to_id(urllib.parse.unquote(entity).replace(" ","_"))
 
     # for each wikidata id we save a list of related wikipedia pages, with their frequency (they are probably multiple redicteds of the same entry)
     if wikidata_id:

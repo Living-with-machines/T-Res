@@ -8,11 +8,11 @@ def clean_page(page):
         
     entities = [x for x in page.findAll("a") if x.has_attr("href")]
     box_mentions = Counter([x.text for x in entities])
-    box_entities = Counter([x["href"] for x in entities])
+    box_entities = Counter([x["href"] for x in entities]) # this is the issue, some of them have the URL lowercased, like states%20of%20germany (for States%20of%20Germany)
         
     mentions_dict = {x:[] for x in box_mentions}
     for e in entities:
-        mentions_dict[e.text].append(e["href"])
+        mentions_dict[e.text].append(e["href"]) #and here is where we add the (from time to time) partially lowercased URL to the mention dictionary
     
     mentions_dict = {x:Counter(y) for x,y in mentions_dict.items()} 
     
@@ -40,7 +40,7 @@ def process_doc(filename):
     content = BeautifulSoup(content,"html.parser").findAll("doc")
     pages = []
     for page in content:
-        title = page["title"]
+        title = urllib.parse.quote(page["title"])
         sections = {"title":title,"sections": get_sections(page)}
         r = [title]+ clean_page(page) + [sections]
         pages.append([r])
@@ -52,7 +52,6 @@ def fill_dicts(res,mentions_freq, entity_freq, mention_overall_dict,entity_inlin
 
     title,box_mentions, box_entities, mentions_dict = res[0],res[1],res[2],res[3]
     # to make it percent encoded as the other references to the same entity
-    title = urllib.parse.quote(title)
     mentions_freq+= box_mentions
     entity_freq+= box_entities
 

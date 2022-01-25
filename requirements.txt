@@ -1,7 +1,11 @@
+wikimapper==0.1.5
 beautifulsoup4==4.10.0
-wget==3.2
 pandas==1.3.3
+scikit_learn==1.0.2
+pydash==5.1.0
 pytest==6.2.5
 tqdm==4.62.3
+numpy==1.21.2
 wget==3.2
-wikimapper==0.1.5
+datasets==1.17.0
+transformers==4.15.0
