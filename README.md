@@ -25,7 +25,12 @@ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init --path)"\nfi' >> ~/.bashrc
 ```
 
-Restart the terminal and check that `pyenv` is correctly installed by typing:
+Restart the terminal:
+```
+source ~/.bashrc
+```
+
+Check that `pyenv` is correctly installed by typing:
 ```
 pyenv
 ```
@@ -43,6 +48,21 @@ Now you can install `poetry` the following way:
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 ```
 
+To configure poetry for use in the system:
+```
+echo 'export PATH=$PATH:$HOME/.poetry/bin' >> ~/.bashrc
+```
+
+Restart the terminal:
+```
+source ~/.bashrc
+```
+
+And check whether `poetry` works:
+```
+poetry
+```
+
 ## Project Installation
 
 You can now clone the repo and `cd` into it:
@@ -50,6 +70,12 @@ You can now clone the repo and `cd` into it:
 ```
 git clone https://github.com/Living-with-machines/toponym-resolution.git
 cd toponym-resolution
+```
+
+Explicitly tell poetry to use the python version defined above:
+
+```
+poetry env use python
 ```
 
 Install all dependencies using `poetry`:
