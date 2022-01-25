@@ -6,6 +6,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
 
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.9.7
@@ -14,10 +15,5 @@ jobs:
         python-version: 3.9.7
     - name: Install Poetry
       run: |
-        pip install poetry
-        poetry install
+        $CONDA/bin/pip install -r requirements.txt
 
-    - name: Test with pytest
-      run: |
-        poetry run python processing.py
-        poetry run pytest 
