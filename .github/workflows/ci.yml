@@ -50,7 +50,4 @@ jobs:
         shell: bash  
         run: |  
           python -m poetry install
-  
-      - name: Test with pytest  
-        run: |  
-          poetry run pytest ./tests
+
