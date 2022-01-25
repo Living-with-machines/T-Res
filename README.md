@@ -25,6 +25,11 @@ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init --path)"\nfi' >> ~/.bashrc
 ```
 
+Restart the terminal and check that `pyenv` is correctly installed by typing:
+```
+pyenv
+```
+
 Install Python 3.9.7 and set it as the global Python version:
 
 ```
