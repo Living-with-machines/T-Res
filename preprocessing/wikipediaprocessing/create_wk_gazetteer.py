@@ -38,7 +38,7 @@ else:
 # Collect altnames and mentions and link them to Wikidata locations.
 # ---------------
 
-if not Path(wikidata_path + 'mentions_to_wikidata_normalized.json').exists():
+if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
     
     # ---------------
     # Load resources
@@ -179,6 +179,10 @@ if not Path(wikidata_path + 'mentions_to_wikidata_normalized.json').exists():
     with open(wikidata_path + 'wikidata_to_mentions_normalized.json', 'w') as fp:
         json.dump(wikidata_to_mentions_normalized, fp)
 
+    with open(wikidata_path + 'mentions_to_wikidata.json', 'w') as fp:
+        json.dump(mentions_to_wikidata, fp)
+    with open(wikidata_path + 'wikidata_to_mentions.json', 'w') as fp:
+        json.dump(wikidata_to_mentions, fp)
     
 # ---------------
 # 3. RELEVANCE
