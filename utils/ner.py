@@ -87,8 +87,6 @@ def find_grouped_entities(sentence, ner_pipe):
         # Remove not needed keys:
         del entity["entity_group"]
         del entity["word"]
-        del entity["start"]
-        del entity["end"]
         
         lEntitiesInText.append(entity)
     
