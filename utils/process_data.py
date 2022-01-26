@@ -263,7 +263,7 @@ def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_c
         if "—" in mention:
             mention = mention.split("—")[0]
 
-        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt]
+        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt, mention_start, mention_start + len(mention)]
         
         return row
     
@@ -329,7 +329,7 @@ def process_for_ner(tsv_topres_path):
 def process_for_linking(tsv_topres_path, output_path):
     # # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
-    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid"])
+    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid", "start", "end"])
 
     # Populate the dataframe of toponyms and annotations:
     mention_counter = 0
