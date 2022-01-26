@@ -20,8 +20,6 @@ else:
 # ------------------------------
 # LwM data
 # ------------------------------
-    
-
 # ------------------------------
 # This function takes a .tsv (webanno 3.0) file and parses it.
 # It returns a dictionary (dTokens) that maps each token with
@@ -58,6 +56,7 @@ def process_tsv(filepath):
     mtok_start = 0 # Multitoken start char
     mtok_end = 0 # Multitoken end char
     prev_endchar = 0 # Previous token end char
+
     
     # Loop over all lines in the file:
     for line in lines:
@@ -84,12 +83,14 @@ def process_tsv(filepath):
                 
             # If the annotation corresponds to a multi-token annotation (i.e. WikipediaID string
             # ends with a number enclosed in square brackets, as in "San[1]" and "Francisco[1]"):
+
             if re.match(regex_multmention, wkpd):
                 
                 # This code basically collates multi-token mentions in annotations
                 # together. "complete_token" is the resulting multi-token mention,
                 # "sent_pos" is the sentence position in the file, "tok_pos" is the
                 # token position in the sentence, "mtok_start" is the multi-token
+
                 # character start position in the document, and "tok_end" is the
                 # multi-token character end position in the document.
                 multiple_mention = int(re.match(regex_multmention, wkpd).group(2))
@@ -131,6 +132,7 @@ def process_tsv(filepath):
                 if label and label != "_" and label != "*":
                     bio_label = "B-" + label
 
+
             sent_pos = int(sent_pos)
             tok_pos = int(tok_pos)
             tok_start = int(tok_start)
@@ -145,6 +147,7 @@ def process_tsv(filepath):
             dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
     
     return dMTokens, dTokens
+
 
 
 # ------------------------------
@@ -228,6 +231,7 @@ def turn_wikipedia2wikidata(wikipedia_title):
 
 
 # ------------------------------
+
 # Populate dataframe rows:
 def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_counter, dSentences):
 
@@ -370,3 +374,4 @@ def process_for_linking(tsv_topres_path, output_path):
     df[['sentence_toponyms', 'document_toponyms']] = df.apply(lambda x: pd.Series(add_cotoponyms(df, x["article_id"], x["sent_id"])), axis=1)
     
     return df
+
