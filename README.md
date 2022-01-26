@@ -84,6 +84,16 @@ Install all dependencies using `poetry`:
 poetry install
 ```
 
+To use Jupyter notebooks, you will need to add the Jupyter package:
+```
+poetry add -D jupyter
+```
+
+Create a kernel:
+```
+poetry run ipython kernel install --user --name=<KERNEL_NAME>
+```
+
 ### How to use poetry
 
 To activate the environment:
@@ -110,4 +120,8 @@ Run the Python tests:
 poetry run pytest
 ```
 
+If you want to use Jupyter notebook, run it as usual, and then select the created kernel in "Kernel" > "Change kernel".
 
+```
+jupyter notebook
+```
