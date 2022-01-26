@@ -37,3 +37,4 @@ test_df = process_data.process_for_linking(topres_path_test, output_path)
 # Store dataframes:
 train_df.to_csv(output_path + "linking_lwm_df_train.tsv", sep="\t", index=False)
 test_df.to_csv(output_path + "linking_lwm_df_test.tsv", sep="\t", index=False)
+

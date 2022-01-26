@@ -129,7 +129,6 @@ dmypy.json
 .pyre/
 
 
-resources/topRes19th*
-resources/wikipedia/test-extractedResources
 outputs/
-resources/ocr/
+resources/
+poetry.lock
