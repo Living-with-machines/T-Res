@@ -19,8 +19,7 @@ true_mentions_sents = ner.aggregate_mentions(trues)
 cand_select_method = 'deezy_match' # either perfect_match or deezy_match
 mentions = list(set([mention['mention'] for sent in pred_mentions_sents for mention in sent]))
 
-if mentions:
-    cands = candidate_selection.select(mentions,cand_select_method)
+cands = candidate_selection.select(mentions,cand_select_method)
 
 ### resolution
 for s in range(len(pred_mentions_sents)):
@@ -29,6 +28,7 @@ for s in range(len(pred_mentions_sents)):
         text_mention = mention['mention']
         start_offset = mention['start_offset']
         end_offset = mention['end_offset']
+
         # to be extended so that it can include multiple features and can consider sentence / document context
         res = linking.select(cands[text_mention],'most_popular')
         if res:
@@ -73,7 +73,7 @@ print (" ")
 # for res,scores in results_agg["STREET"].items():
 #     print (res,"p:",scores["precision"],"r:",scores["recall"])
 
-# Assessment of candidate selection
+# Assessment of candidate selection (this sets the skiline for EL recall)
 cand_sel_score = eval.eval_selection(true_mentions_sents,trues,preds)
 
 print ('Only in {perc_cand}% of the cases we have retrieved the correct entity among the candidates.\n'.format(perc_cand=cand_sel_score*100))
