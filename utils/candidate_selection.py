@@ -17,7 +17,7 @@ dm_output = "deezymatch_on_the_fly"
 def select(queries,approach):
 
     if approach == 'perfect_match':
-        return perfect_match(queries,mentions_to_wikidata)
+        return perfect_match(queries)
 
     if approach == 'deezy_match':
         return deezy_on_the_fly(queries, dm_cands, dm_model,
@@ -26,10 +26,10 @@ def select(queries,approach):
 
 #### PerfectMatch ####
 
-def perfect_match(queries,knowledge_base):
+def perfect_match(queries):
     candidates = {}
     for query in queries:
-        if query in knowledge_base:
+        if query in mentions_to_wikidata:
             candidates[query] = {query:1.0}
         else:
             candidates[query] = {}
@@ -42,8 +42,15 @@ def filter_by_length(q, lfd, cdiff):
     return OrderedDict([(x, lfd[x]) for x in lfd if abs(len(q) - len(x)) <= cdiff])
 
 def deezy_on_the_fly(queries, dm_cands, dm_model, dm_output, dm_path, thr, cands, cdiff):
+
+    # first we fill in the perfect matches
+    cands_dict = perfect_match(queries)
+
+    # the rest go through deezymatch
+    remainers = [x for x,y in cands_dict.items() if len(y)==0]
+
     candidates = candidate_ranker(candidate_scenario=dm_path + "combined/" + dm_cands + "_" + dm_model,
-                         query=queries,
+                         query=remainers,
                          ranking_metric="faiss", 
                          selection_threshold=thr, 
                          num_candidates=cands, 
@@ -51,8 +58,6 @@ def deezy_on_the_fly(queries, dm_cands, dm_model, dm_output, dm_path, thr, cands
                          output_path= './outputs/deezymatch/' + dm_output, 
                          pretrained_model_path=dm_path + "models/" + dm_model + "/" + dm_model + ".model", 
                          pretrained_vocab_path=dm_path + "models/" + dm_model + "/" + dm_model + ".vocab")
-
-    cands_dict = {}
 
     for idx,row in candidates.iterrows():
         cands_dict[row['query']] = row['pred_score']
