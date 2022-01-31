@@ -1,12 +1,28 @@
 from utils import ner, candidate_selection, linking, eval
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
 
 # Path to NER Model:
 ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/lwm-ner.model"
 
-# use NER and obtain the following output (to be added)
+# Path to test dataframe:
+df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_lwm_df_test.tsv", sep="\t")
 
-preds = [[['mr', 'O', 'O'], ['.', 'O', 'O'], ['oldham', 'O', 'O'], [',', 'O', 'O'], ['ol', 'O', 'O'], ['London', 'B-LOC', 'O'], [',', 'O', 'O'], ['in', 'O', 'O'], ['stafford', 'B-LOC', 'O'], ['(', 'I-LOC', 'O'], ['hire', 'I-LOC', 'O'], [',', 'O', 'O'], ['to', 'O', 'O'], ['mils', 'O', 'O'], ['oldlcaa', 'O', 'O'], [',', 'O', 'O'], ['lie', 'O', 'O'], ['of', 'O', 'O'], ['this', 'O', 'O'], ['town', 'O', 'O'], ['.', 'O', 'O']], [['glo', 'O', 'O'], ['uc', 'O', 'O'], ['est', 'O', 'O'], ['ers', 'O', 'O'], ['h1', 'O', 'O'], ['re', 'O', 'O'], ['.', 'O', 'O']], [['golden', 'B-BUILDING', 'O'], ['lion', 'I-BUILDING', 'O'], ['inn', 'O', 'O'], [',', 'O', 'O'], ['wei', 'B-LOC', 'O'], ['mouth', 'I-LOC', 'O'], ['.', 'O', 'O']], [['mr', 'O', 'O'], ['armit', 'O', 'O'], ['«', 'O', 'O'], ['t', 'O', 'O'], ['.', 'O', 'O'], ['ad', 'O', 'O'], [',', 'O', 'O'], ['of', 'O', 'O'], ['gre', 'B-LOC', 'O'], ['>', 'I-LOC', 'O'], ['s', 'I-LOC', 'O'], [';', 'I-LOC', 'O'], ['nglia', 'I-LOC', 'O'], [',', 'O', 'O'], ['in', 'O', 'O'], ['this', 'O', 'O'], ['county', 'O', 'O'], ['.', 'O', 'O']]]
-trues = [[['mr', 'O', 'O'], ['.', 'O', 'O'], ['oldham', 'O', 'O'], [',', 'O', 'O'], ['ol', 'O', 'O'], ['London', 'B-LOC', 'B-Q84'], [',', 'O', 'O'], ['in', 'O', 'O'], ['stafford', 'B-LOC', 'O'], ['(', 'I-LOC', 'O'], ['hire', 'I-LOC', 'O'], [',', 'O', 'O'], ['to', 'O', 'O'], ['mils', 'O', 'O'], ['oldlcaa', 'O', 'O'], [',', 'O', 'O'], ['lie', 'O', 'O'], ['of', 'O', 'O'], ['this', 'O', 'O'], ['town', 'O', 'O'], ['.', 'O', 'O']], [['glo', 'B-LOC', 'B-Q23165'], ['uc', 'I-LOC', 'I-Q23165'], ['est', 'I-LOC', 'I-Q23165'], ['ers', 'I-LOC', 'I-Q23165'], ['h1', 'I-LOC', 'I-Q23165'], ['re', 'I-LOC', 'I-Q23165'], ['.', 'O', 'O']], [['golden', 'B-BUILDING', 'O'], ['lion', 'I-BUILDING', 'O'], ['inn', 'I-BUILDING', 'O'], [',', 'O', 'O'], ['wei', 'B-LOC', 'B-Q661619'], ['mouth', 'I-LOC', 'I-Q661619'], ['.', 'O', 'O']], [['mr', 'O', 'O'], ['armit', 'O', 'O'], ['«', 'O', 'O'], ['t', 'O', 'O'], ['.', 'O', 'O'], ['ad', 'O', 'O'], [',', 'O', 'O'], ['of', 'O', 'O'], ['gre', 'B-LOC', 'B-Q100'], ['>', 'I-LOC', 'I-Q100'], ['s', 'I-LOC', 'I-Q100'], [';', 'I-LOC', 'I-Q100'], ['nglia', 'I-LOC', 'I-Q100'], [',', 'O', 'O'], ['in', 'O', 'O'], ['this', 'O', 'O'], ['county', 'O', 'O'], ['.', 'O', 'O']]]
+# Split test set into dev and test set:
+dev, test = train_test_split(df, test_size=0.5, random_state=42)
+
+dGoldStandard, dPredictions = ner.ner_predict(dev, ner_model)
+
+preds = []
+trues = []
+for sent_id in dPredictions:
+    preds.append([[x["word"], x["entity"], "O"] for x in dPredictions[sent_id]])
+    trues.append([[x["word"], x["entity"], x["link"]] for x in dGoldStandard[sent_id]])
+
+# # use NER and obtain the following output (to be added)
+# preds = [[['mr', 'O', 'O'], ['.', 'O', 'O'], ['oldham', 'O', 'O'], [',', 'O', 'O'], ['ol', 'O', 'O'], ['London', 'B-LOC', 'O'], [',', 'O', 'O'], ['in', 'O', 'O'], ['stafford', 'B-LOC', 'O'], ['(', 'I-LOC', 'O'], ['hire', 'I-LOC', 'O'], [',', 'O', 'O'], ['to', 'O', 'O'], ['mils', 'O', 'O'], ['oldlcaa', 'O', 'O'], [',', 'O', 'O'], ['lie', 'O', 'O'], ['of', 'O', 'O'], ['this', 'O', 'O'], ['town', 'O', 'O'], ['.', 'O', 'O']], [['glo', 'O', 'O'], ['uc', 'O', 'O'], ['est', 'O', 'O'], ['ers', 'O', 'O'], ['h1', 'O', 'O'], ['re', 'O', 'O'], ['.', 'O', 'O']], [['golden', 'B-BUILDING', 'O'], ['lion', 'I-BUILDING', 'O'], ['inn', 'O', 'O'], [',', 'O', 'O'], ['wei', 'B-LOC', 'O'], ['mouth', 'I-LOC', 'O'], ['.', 'O', 'O']], [['mr', 'O', 'O'], ['armit', 'O', 'O'], ['«', 'O', 'O'], ['t', 'O', 'O'], ['.', 'O', 'O'], ['ad', 'O', 'O'], [',', 'O', 'O'], ['of', 'O', 'O'], ['gre', 'B-LOC', 'O'], ['>', 'I-LOC', 'O'], ['s', 'I-LOC', 'O'], [';', 'I-LOC', 'O'], ['nglia', 'I-LOC', 'O'], [',', 'O', 'O'], ['in', 'O', 'O'], ['this', 'O', 'O'], ['county', 'O', 'O'], ['.', 'O', 'O']]]
+# trues = [[['mr', 'O', 'O'], ['.', 'O', 'O'], ['oldham', 'O', 'O'], [',', 'O', 'O'], ['ol', 'O', 'O'], ['London', 'B-LOC', 'B-Q84'], [',', 'O', 'O'], ['in', 'O', 'O'], ['stafford', 'B-LOC', 'O'], ['(', 'I-LOC', 'O'], ['hire', 'I-LOC', 'O'], [',', 'O', 'O'], ['to', 'O', 'O'], ['mils', 'O', 'O'], ['oldlcaa', 'O', 'O'], [',', 'O', 'O'], ['lie', 'O', 'O'], ['of', 'O', 'O'], ['this', 'O', 'O'], ['town', 'O', 'O'], ['.', 'O', 'O']], [['glo', 'B-LOC', 'B-Q23165'], ['uc', 'I-LOC', 'I-Q23165'], ['est', 'I-LOC', 'I-Q23165'], ['ers', 'I-LOC', 'I-Q23165'], ['h1', 'I-LOC', 'I-Q23165'], ['re', 'I-LOC', 'I-Q23165'], ['.', 'O', 'O']], [['golden', 'B-BUILDING', 'O'], ['lion', 'I-BUILDING', 'O'], ['inn', 'I-BUILDING', 'O'], [',', 'O', 'O'], ['wei', 'B-LOC', 'B-Q661619'], ['mouth', 'I-LOC', 'I-Q661619'], ['.', 'O', 'O']], [['mr', 'O', 'O'], ['armit', 'O', 'O'], ['«', 'O', 'O'], ['t', 'O', 'O'], ['.', 'O', 'O'], ['ad', 'O', 'O'], [',', 'O', 'O'], ['of', 'O', 'O'], ['gre', 'B-LOC', 'B-Q100'], ['>', 'I-LOC', 'I-Q100'], ['s', 'I-LOC', 'I-Q100'], [';', 'I-LOC', 'I-Q100'], ['nglia', 'I-LOC', 'I-Q100'], [',', 'O', 'O'], ['in', 'O', 'O'], ['this', 'O', 'O'], ['county', 'O', 'O'], ['.', 'O', 'O']]]
 
 ner_trues = [[x[1] for x in x] for x in trues]
 ner_preds = [[x[1] for x in x] for x in preds]
