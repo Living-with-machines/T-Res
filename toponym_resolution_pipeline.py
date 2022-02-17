@@ -2,6 +2,7 @@ from utils import ner, candidate_selection, linking, eval
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 import pandas as pd
+import tqdm
 
 
 # Path to NER Model:
@@ -19,8 +20,8 @@ dAnnotated, dSentences = ner.format_for_ner(dev)
 
 preds = []
 trues = []
-for sent_id in dSentences:
 
+for sent_id,v in tqdm.tqdm(dSentences.items()):
     # Toponym recognition
     gold_standard, predictions = ner.ner_predict(dSentences[sent_id], dAnnotated[sent_id], ner_pipe)
     sentence_preds = [[x["word"], x["entity"], "O"] for x in predictions]
@@ -34,8 +35,7 @@ for sent_id in dSentences:
     cands = candidate_selection.select(mentions,cand_select_method)
     
     # # Toponym resolution
-    sent = pred_mentions_sents
-    for mention in sent:
+    for mention in pred_mentions_sents:
         text_mention = mention['mention']
         start_offset = mention['start_offset']
         end_offset = mention['end_offset']
