@@ -360,7 +360,7 @@ def process_for_linking(tsv_topres_path, output_path):
                 # Convert the row into a pd.Series:
                 row = pd.Series(row, index=df.columns)
                 # And append it to the main dataframe:
-                df = df.append(row, ignore_index=True)
+                df = pd.concat([df, row.to_frame().T], ignore_index=True)
 
         # Store the sentences as a json so that:
         # * The key is an index indicating the order of the sentence.
