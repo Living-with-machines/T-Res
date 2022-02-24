@@ -1,4 +1,4 @@
-from utils import ner, candidate_selection, linking, eval
+from utils import ner, candidate_selection, linking
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 import pandas as pd
@@ -63,75 +63,18 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
     dTrues[sent_id] = sentence_trues
 
 
-### Assessment of NER
-
-#The SemEval’13 introduced four different ways to measure precision/recall/f1-score results based on the metrics defined by MUC.
-
-#Strict: exact boundary surface string match and entity type;
-
-#Exact: exact boundary match over the surface string, regardless of the type;
-
-#Partial: partial boundary match over the surface string, regardless of the type;
-
-#Type: some overlap between the system tagged entity and the gold annotation is required;
-
-####
-print ("\nNER Evaluation")
-
-ner_trues = [[x[1] for x in x] for x in trues]
-ner_preds = [[x[1] for x in x] for x in preds]
-
-ner_labels = ['LOC', 'STREET', 'BUILDING']
-
-evaluator = eval.Evaluator(ner_trues, ner_preds, ner_labels)
-results = evaluator.evaluate()
-
-for res,scores in results[0].items():
-    print (res,"p:",scores["precision"],"r:",scores["recall"])
-print ()
-
-print ("LOC")
-for res,scores in results[1]["LOC"].items():
-    print (res,"p:",scores["precision"],"r:",scores["recall"])
-print ()
-
-print ("BUILDING")
-for res,scores in results[1]["BUILDING"].items():
-    print (res,"p:",scores["precision"],"r:",scores["recall"])
-print ()
-
-print ("STREET")
-for res,scores in results[1]["STREET"].items():
-    print (res,"p:",scores["precision"],"r:",scores["recall"])
-print ()
-
-# Assessment of candidate selection (this sets the skiline for EL recall)
-# cand_sel_score = eval.eval_selection(true_mentions_sents,trues,preds)
-
-# print ('Only in {perc_cand}% of the cases we have retrieved the correct entity among the candidates.\n'.format(perc_cand=cand_sel_score*100))
-
-# Assessment of resolution
-print ("EL Evaluation")
-
-all_ids = [y[2] for x in trues for y in x] + [y[2] for x in preds for y in x]
-all_ids = list(set([x.split("-")[1] if "-" in x else x for x in all_ids]))
-all_ids.remove('O')
-
-el_trues = [[x[2] for x in x] for x in trues]
-el_preds = [[x[2] for x in x] for x in preds]
-
-evaluator = eval.Evaluator(el_trues, el_preds, all_ids)
-results = evaluator.evaluate()
-
-for res,scores in results[0].items():
-    print (res,"p:",scores["precision"],"r:",scores["recall"])
-
-
 # Storing results for evaluation using the CLEF-HIPE scorer
 def store_results_hipe(dataset, dataresults, dresults):
     """
     Store results in the right format to be used by the CLEF-HIPE
     scorer: https://github.com/impresso/CLEF-HIPE-2020-scorer.
+
+    Assuming the CLEF-HIPE scorer is stored in ../CLEF-HIPE-2020-scorer/,
+    run scorer as follows:
+    For NER:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nerc_coarse --outdir outputs/results/
+    For EL:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
     """
     pathlib.Path("outputs/results/").mkdir(parents=True, exist_ok=True)
     # Bundle 2 associated tasks: NERC-coarse and NEL
