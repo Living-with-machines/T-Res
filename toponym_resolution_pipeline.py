@@ -2,8 +2,11 @@ from utils import ner, candidate_selection, linking, eval
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 import pandas as pd
+import pathlib
 import tqdm
 
+# Dataset:
+dataset = "lwm"
 
 # Path to NER Model:
 ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/lwm-ner.model"
@@ -23,7 +26,8 @@ dAnnotated, dSentences = ner.format_for_ner(dev)
 
 preds = []
 trues = []
-
+dPreds = dict()
+dTrues = dict()
 for sent_id in tqdm.tqdm(dSentences.keys()):
     # Toponym recognition
     gold_standard, predictions = ner.ner_predict(dSentences[sent_id], dAnnotated[sent_id], ner_pipe)
@@ -54,6 +58,9 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
 
     preds.append(sentence_preds)
     trues.append(sentence_trues)
+
+    dPreds[sent_id] = sentence_preds
+    dTrues[sent_id] = sentence_trues
 
 
 ### Assessment of NER
@@ -118,3 +125,30 @@ results = evaluator.evaluate()
 
 for res,scores in results[0].items():
     print (res,"p:",scores["precision"],"r:",scores["recall"])
+
+
+# Storing results for evaluation using the CLEF-HIPE scorer
+def store_results_hipe(dataset, dataresults, dresults):
+    """
+    Store results in the right format to be used by the CLEF-HIPE
+    scorer: https://github.com/impresso/CLEF-HIPE-2020-scorer.
+    """
+    pathlib.Path("outputs/results/").mkdir(parents=True, exist_ok=True)
+    # Bundle 2 associated tasks: NERC-coarse and NEL
+    with open("outputs/results/" + dataset + "-" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
+        fw.write("TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n")
+        for sent_id in dresults:
+            fw.write("# sentence_id = " + sent_id + "\n")
+            for t in dresults[sent_id]:
+                elink = t[2]
+                if t[2].startswith("B-"):
+                    elink = t[2].replace("B-", "")
+                elif t[2].startswith("I-"):
+                    elink = t[2].replace("I-", "")
+                elif t[1] != "O":
+                    elink = "NIL"
+                fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
+            fw.write("\n")
+    
+store_results_hipe(dataset, "pred", dPreds)
+store_results_hipe(dataset, "true", dTrues)
