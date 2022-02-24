@@ -1,4 +1,3 @@
-# from utils.eval import collect_named_entities, Entity
 from collections import namedtuple
 
 
