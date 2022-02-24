@@ -229,8 +229,8 @@ def compute_metrics(true_named_entities, pred_named_entities, tags):
 
             for true in true_named_entities:
 
-                pred_range = range(pred.start_offset, pred.end_offset)
-                true_range = range(true.start_offset, true.end_offset)
+                pred_range = range(pred.start_offset, pred.end_offset + 1)
+                true_range = range(true.start_offset, true.end_offset + 1)
 
                 # Scenario IV: Offsets match, but entity type is wrong
 

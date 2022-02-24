@@ -11,8 +11,11 @@ ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/l
 # Path to test dataframe:
 df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_lwm_df_test.tsv", sep="\t")
 
-# Split test set into dev and test set:
-dev, test = train_test_split(df, test_size=0.5, random_state=42)
+# Split test set into dev and test set (by article, not sentence):
+dev_ids, test_ids = train_test_split(df.article_id.unique(), test_size=0.5, random_state=42)
+dev = df[df["article_id"].isin(dev_ids)]
+test = df[df["article_id"].isin(test_ids)]
+
 ner_pipe = pipeline("ner", model=ner_model)
 cand_select_method = 'perfect_match' # either perfect_match or deezy_match
 
