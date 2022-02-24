@@ -1,4 +1,5 @@
-from utils.eval import collect_named_entities, Entity
+# from utils.eval import collect_named_entities, Entity
+from collections import namedtuple
 
 
 # Dictionary mapping NER model label with GS label:
@@ -232,6 +233,8 @@ def collect_named_entities(tokens):
     start_offset = None
     end_offset = None
     ent_type = None
+
+    Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
