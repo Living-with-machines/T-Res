@@ -24,7 +24,7 @@ dAnnotated, dSentences = ner.format_for_ner(dev)
 preds = []
 trues = []
 
-for sent_id,v in tqdm.tqdm(dSentences.items()):
+for sent_id in tqdm.tqdm(dSentences.keys()):
     # Toponym recognition
     gold_standard, predictions = ner.ner_predict(dSentences[sent_id], dAnnotated[sent_id], ner_pipe)
     sentence_preds = [[x["word"], x["entity"], "O"] for x in predictions]
@@ -81,26 +81,28 @@ results = evaluator.evaluate()
 
 for res,scores in results[0].items():
     print (res,"p:",scores["precision"],"r:",scores["recall"])
-print (" ")
+print ()
 
-# print ("LOC")
-# for res,scores in results_agg["LOC"].items():
-#     print (res,"p:",scores["precision"],"r:",scores["recall"])
+print ("LOC")
+for res,scores in results[1]["LOC"].items():
+    print (res,"p:",scores["precision"],"r:",scores["recall"])
+print ()
 
-# print ("BUILDING")
-# for res,scores in results_agg["BUILDING"].items():
-#     print (res,"p:",scores["precision"],"r:",scores["recall"])
+print ("BUILDING")
+for res,scores in results[1]["BUILDING"].items():
+    print (res,"p:",scores["precision"],"r:",scores["recall"])
+print ()
 
-# print ("STREET")
-# for res,scores in results_agg["STREET"].items():
-#     print (res,"p:",scores["precision"],"r:",scores["recall"])
+print ("STREET")
+for res,scores in results[1]["STREET"].items():
+    print (res,"p:",scores["precision"],"r:",scores["recall"])
+print ()
 
 # Assessment of candidate selection (this sets the skiline for EL recall)
 # cand_sel_score = eval.eval_selection(true_mentions_sents,trues,preds)
 
 # print ('Only in {perc_cand}% of the cases we have retrieved the correct entity among the candidates.\n'.format(perc_cand=cand_sel_score*100))
 
-"""
 # Assessment of resolution
 print ("EL Evaluation")
 
@@ -116,4 +118,3 @@ results = evaluator.evaluate()
 
 for res,scores in results[0].items():
     print (res,"p:",scores["precision"],"r:",scores["recall"])
-"""
