@@ -100,6 +100,7 @@ print (" ")
 
 # print ('Only in {perc_cand}% of the cases we have retrieved the correct entity among the candidates.\n'.format(perc_cand=cand_sel_score*100))
 
+"""
 # Assessment of resolution
 print ("EL Evaluation")
 
@@ -115,3 +116,4 @@ results = evaluator.evaluate()
 
 for res,scores in results[0].items():
     print (res,"p:",scores["precision"],"r:",scores["recall"])
+"""
