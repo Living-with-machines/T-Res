@@ -2,7 +2,6 @@ from utils import process_data, ner, candidate_selection, linking
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 import pandas as pd
-import pathlib
 import tqdm
 
 # Dataset:

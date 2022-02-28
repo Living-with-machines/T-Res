@@ -2,6 +2,7 @@ import re
 import json
 import glob
 import urllib
+import pathlib
 import hashlib
 import pandas as pd
 from pathlib import Path

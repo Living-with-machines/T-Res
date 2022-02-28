@@ -19,6 +19,7 @@ numpy = "^1.22.1"
 scikit-learn = "^1.0.2"
 sklearn = "^0.0"
 docopt = "^0.6.2"
+seqeval = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
