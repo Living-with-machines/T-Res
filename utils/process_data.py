@@ -2,6 +2,7 @@ import re
 import json
 import glob
 import urllib
+import pathlib
 import hashlib
 import pandas as pd
 from pathlib import Path
@@ -267,8 +268,7 @@ def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_c
         if "—" in mention:
             mention = mention.split("—")[0]
 
-        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt]
-
+        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt, mention_start, mention_start + len(mention)]
         
         return row
     
@@ -334,7 +334,7 @@ def process_for_ner(tsv_topres_path):
 def process_for_linking(tsv_topres_path, output_path):
     # # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
-    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid"])
+    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid", "start", "end"])
 
     # Populate the dataframe of toponyms and annotations:
     mention_counter = 0
@@ -361,7 +361,7 @@ def process_for_linking(tsv_topres_path, output_path):
                 # Convert the row into a pd.Series:
                 row = pd.Series(row, index=df.columns)
                 # And append it to the main dataframe:
-                df = df.append(row, ignore_index=True)
+                df = pd.concat([df, row.to_frame().T], ignore_index=True)
 
         # Store the sentences as a json so that:
         # * The key is an index indicating the order of the sentence.
@@ -376,3 +376,34 @@ def process_for_linking(tsv_topres_path, output_path):
     
     return df
 
+
+# Storing results for evaluation using the CLEF-HIPE scorer
+def store_results_hipe(dataset, dataresults, dresults):
+    """
+    Store results in the right format to be used by the CLEF-HIPE
+    scorer: https://github.com/impresso/CLEF-HIPE-2020-scorer.
+
+    Assuming the CLEF-HIPE scorer is stored in ../CLEF-HIPE-2020-scorer/,
+    run scorer as follows:
+    For NER:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nerc_coarse --outdir outputs/results/
+    For EL:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
+    """
+    pathlib.Path("outputs/results/").mkdir(parents=True, exist_ok=True)
+    # Bundle 2 associated tasks: NERC-coarse and NEL
+    with open("outputs/results/" + dataset + "-" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
+        fw.write("TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n")
+        for sent_id in dresults:
+            fw.write("# sentence_id = " + sent_id + "\n")
+            for t in dresults[sent_id]:
+                elink = t[2]
+                if t[2].startswith("B-"):
+                    elink = t[2].replace("B-", "")
+                elif t[2].startswith("I-"):
+                    elink = t[2].replace("I-", "")
+                elif t[1] != "O":
+                    elink = "NIL"
+                fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
+            fw.write("\n")
+    

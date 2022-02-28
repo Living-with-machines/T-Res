@@ -26,7 +26,7 @@ topres_path_test = "/resources/newsdataset/fmp_lwm/test/"
 lwm_df = process_data.process_for_ner(topres_path_train)
 
 # Split training set into train and set, for development, and store them:
-train, test = train_test_split(lwm_df, test_size=0.2)
+train, test = train_test_split(lwm_df, test_size=0.2, random_state=42)
 train.to_json(output_path + 'ner_lwm_df_train.json', orient="records", lines=True)
 test.to_json(output_path + 'ner_lwm_df_test.json', orient="records", lines=True)
 
