@@ -2,6 +2,7 @@ import re
 import json
 import glob
 import urllib
+import pathlib
 import hashlib
 import pandas as pd
 from pathlib import Path
@@ -375,3 +376,34 @@ def process_for_linking(tsv_topres_path, output_path):
     
     return df
 
+
+# Storing results for evaluation using the CLEF-HIPE scorer
+def store_results_hipe(dataset, dataresults, dresults):
+    """
+    Store results in the right format to be used by the CLEF-HIPE
+    scorer: https://github.com/impresso/CLEF-HIPE-2020-scorer.
+
+    Assuming the CLEF-HIPE scorer is stored in ../CLEF-HIPE-2020-scorer/,
+    run scorer as follows:
+    For NER:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nerc_coarse --outdir outputs/results/
+    For EL:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
+    """
+    pathlib.Path("outputs/results/").mkdir(parents=True, exist_ok=True)
+    # Bundle 2 associated tasks: NERC-coarse and NEL
+    with open("outputs/results/" + dataset + "-" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
+        fw.write("TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n")
+        for sent_id in dresults:
+            fw.write("# sentence_id = " + sent_id + "\n")
+            for t in dresults[sent_id]:
+                elink = t[2]
+                if t[2].startswith("B-"):
+                    elink = t[2].replace("B-", "")
+                elif t[2].startswith("I-"):
+                    elink = t[2].replace("I-", "")
+                elif t[1] != "O":
+                    elink = "NIL"
+                fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
+            fw.write("\n")
+    
