@@ -390,9 +390,9 @@ def store_results_hipe(dataset, dataresults, dresults):
     For EL:
     > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
     """
-    pathlib.Path("outputs/results/").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("outputs/results/"+dataset+'/').mkdir(parents=True, exist_ok=True)
     # Bundle 2 associated tasks: NERC-coarse and NEL
-    with open("outputs/results/" + dataset + "-" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
+    with open("outputs/results/" + dataset + "/" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
         fw.write("TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n")
         for sent_id in dresults:
             fw.write("# sentence_id = " + sent_id + "\n")
@@ -406,4 +406,9 @@ def store_results_hipe(dataset, dataresults, dresults):
                     elink = "NIL"
                 fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
             fw.write("\n")
-    
+
+def store_resolution_skyline(dataset,approach,value):
+    pathlib.Path("outputs/results/"+dataset+'/').mkdir(parents=True, exist_ok=True)
+    skyline = open("outputs/results/"+dataset+'/'+approach+'.skyline','w')
+    skyline.write(str(value))
+    skyline.close()

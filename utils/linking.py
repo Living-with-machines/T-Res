@@ -9,7 +9,7 @@ with open(wikidata_path + 'mentions_to_wikidata.json', 'r') as f:
 
 def select(cands,method):
     if cands:
-        if method == "most_popular":
+        if method == "mostpopular":
             link, score, other_cands = most_popular(cands)
             return (link,score,other_cands)
 
