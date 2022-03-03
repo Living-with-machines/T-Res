@@ -133,3 +133,4 @@ outputs/
 resources/
 poetry.lock
 .vscode/launch.json
+evaluation/results/*
