@@ -5,7 +5,11 @@ sys.path.insert(0, os.path.abspath('CLEF-HIPE-2020-scorer/'))
 import clef_evaluation
 
 dataset = 'lwm'
-approach = 'perfectmatch+mostpopular'
+
+# Approach:
+cand_select_method = 'perfectmatch' # either perfectmatch or deezymatch
+top_res_method = 'mostpopularnormalised'
+approach = cand_select_method+'+'+top_res_method
 
 pred = '../experiments/outputs/results/'+dataset+'/'+approach+'_bundle2_en_1.tsv'
 true = '../experiments/outputs/results/'+dataset+'/true_bundle2_en_1.tsv'
