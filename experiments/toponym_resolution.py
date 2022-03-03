@@ -11,11 +11,12 @@ import tqdm
 dataset = "lwm"
 
 # Approach:
+ner_model_id = 'lwm'
 cand_select_method = 'perfectmatch' # either perfectmatch or deezymatch
-top_resol_method = 'mostpopular'
+top_res_method = 'mostpopular'
 
 # Path to NER Model:
-ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/lwm-ner.model"
+ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/"+ner_model_id+"-ner.model"
 
 # Path to test dataframe:
 df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_lwm_df_test.tsv", sep="\t")
@@ -53,7 +54,7 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
         end_offset = mention['end_offset']
 
         # to be extended so that it can include multiple features and can consider sentence / document context
-        res = linking.select(cands[text_mention],top_resol_method)
+        res = linking.select(cands[text_mention],top_res_method)
         if res:
             link,score,other_cands = res
             for x in range(start_offset,end_offset+1):
@@ -65,7 +66,7 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
     dTrues[sent_id] = sentence_trues
     true_mentions_sents[sent_id] = true_mentions_sent
 
-process_data.store_results_hipe(dataset,cand_select_method+'+'+top_resol_method,  dPreds)
+process_data.store_results_hipe(dataset,ner_model_id+'+'+cand_select_method+'+'+top_res_method,  dPreds)
 process_data.store_results_hipe(dataset,'true', dTrues)
 skyline = eval.eval_selection(true_mentions_sents,dTrues,dPreds)
-process_data.store_resolution_skyline(dataset,cand_select_method+'+'+top_resol_method,skyline)
+process_data.store_resolution_skyline(dataset,ner_model_id+'+'+cand_select_method+'+'+top_res_method,skyline)
