@@ -5,7 +5,9 @@ from utils import process_data, ner, candidate_selection, linking, eval
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 import pandas as pd
+import glob
 import tqdm
+import json
 
 # Dataset:
 dataset = "lwm"
@@ -19,24 +21,37 @@ top_res_method = 'mostpopular'
 ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/"+ner_model_id+"-ner.model"
 
 # Path to test dataframe:
-df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_lwm_df_test.tsv", sep="\t")
+df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_" + dataset + "_df_test.tsv", sep="\t")
+
+# Path to processed data:
+processed_path = "outputs/data/"
+
+# Load all sentences in test:
+dSentences = dict()
+for fid in glob.glob(processed_path + "test_" + dataset + "_sentences/*"):
+    file_id = fid.split("/")[-1].split("_")[0] # Document id
+    with open(fid) as json_file:
+        data = json.load(json_file)
+        dSentences[file_id] = data
 
 # Split test set into dev and test set (by article, not sentence):
-dev_ids, test_ids = train_test_split(df.article_id.unique(), test_size=0.5, random_state=42)
-dev = df[df["article_id"].isin(dev_ids)]
-test = df[df["article_id"].isin(test_ids)]
+dev_ids, test_ids = train_test_split(list(dSentences.keys()), test_size=0.5, random_state=42)
+dev = df[df["article_id"].astype(str).isin(dev_ids)]
+test = df[df["article_id"].astype(str).isin(test_ids)]
 
 ner_pipe = pipeline("ner", model=ner_model)
 
-dAnnotated, dSentences = ner.format_for_ner(dev)
+dAnnotated, dSentencesDev = ner.format_for_ner(dev, dSentences, dev_ids)
 
 true_mentions_sents = dict()
 dPreds = dict()
 dTrues = dict()
 
-for sent_id in tqdm.tqdm(dSentences.keys()):
+for sent_id in tqdm.tqdm(dSentencesDev.keys()):
+
     # Toponym recognition
-    gold_standard, predictions = ner.ner_predict(dSentences[sent_id], dAnnotated[sent_id], ner_pipe)
+    gold_standard, predictions = ner.ner_predict(dSentencesDev[sent_id], dAnnotated[sent_id], ner_pipe)
+
     sentence_preds = [[x["word"], x["entity"], "O"] for x in predictions]
     sentence_trues = [[x["word"], x["entity"], x["link"]] for x in gold_standard]
 

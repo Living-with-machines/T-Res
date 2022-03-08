@@ -1,3 +1,6 @@
+import sys,os
+# Add "../" to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.pardir))
 from datasets import load_metric
 from datasets import load_dataset
 import numpy as np
