@@ -284,12 +284,147 @@ def add_cotoponyms(df, article_id, sent_id):
 
 
 # ------------------------------
-# Process data for training a NER model, where each sentence has an id,
+# Process HIPE data for training a NER model, where each sentence has an id,
 # and a list of tokens and assigned ner_tags using the BIO scheme, e.g.:
 # > id: 10813493_1 # document_id + "_" + sentence_id 
 # > ner_tags: ['B-LOCWiki', 'O']
 # > tokens: ['INDIA', '.']
-def process_for_ner(tsv_topres_path):
+def process_hipe_for_linking(hipe_path, output_path, data_split):
+    article_id = ""
+    new_sentence = ""
+    new_document = []
+    dSentences = dict()
+    dAnnotations = dict()
+    dMetadata = dict()
+    char_index = 0
+    sent_index = 0
+    newspaper_id = ""
+    date = ""
+    end_sentence = False
+    start_document = False
+    with open(hipe_path) as fr:
+        lines = fr.readlines()
+        for line in lines[1:]:
+            if line.startswith("# newspaper"):
+                newspaper_id = line.split("= ")[-1].strip()
+            elif line.startswith("# date"):
+                date = int(line.split("= ")[-1].strip()[:4])
+            elif line.startswith("# document_id"):
+                if new_sentence:
+                    new_document.append(new_sentence)
+                    sent_index = 0
+                new_document = []
+                new_sentence = ""
+                article_id = line.split("= ")[-1].strip()
+                start_document = True
+                dMetadata[article_id] = {"newspaper_id": newspaper_id, "date": date}
+            elif not line.startswith("#"):
+                line = line.strip().split()
+                if len(line) == 10:
+                    token = line[0]
+                    start_char = char_index
+                    end_char = start_char + len(token)
+                    etag = line[1]
+                    elink = line[7]
+                    comment = line[-1]
+
+                    if "PySBDSegment" in comment:
+                        if end_sentence == True:
+                            if start_document == False:
+                                new_document.append(new_sentence)
+                                sent_index += 1
+                            new_sentence = token
+                        else:
+                            new_sentence += token
+                        char_index = 0
+                        end_sentence = True
+                        
+                    elif "NoSpaceAfter" in comment:
+                        if end_sentence == True:
+                            if start_document == False:
+                                new_document.append(new_sentence)
+                                sent_index += 1
+                            new_sentence = token
+                        else:
+                            new_sentence += token
+                        char_index = end_char
+                        end_sentence = False
+
+                    else:
+                        if end_sentence == True:
+                            if start_document == False:
+                                new_document.append(new_sentence)
+                                sent_index += 1
+                            new_sentence = token
+                        else:
+                            new_sentence += token
+                        new_sentence += " "
+                        char_index = end_char + 1
+                        end_sentence = False
+
+                    start_document = False        
+
+                    if article_id in dAnnotations:
+                        if sent_index in dAnnotations[article_id]:
+                            dAnnotations[article_id][sent_index].append((token, etag, elink, start_char, end_char))
+                        else:
+                            dAnnotations[article_id][sent_index] = [(token, etag, elink, start_char, end_char)]
+                    else:
+                        dAnnotations[article_id] = {sent_index : [(token, etag, elink, start_char, end_char)]}
+            
+            if article_id and new_document:
+                dSentences[article_id] = new_document
+
+    hipe_ner_data = []
+    dAllSentences = dict()
+    for k in dSentences:
+        # Store the sentences as a json so that:
+        # * The key is an index indicating the order of the sentence.
+        # * The value is a list of two elements: the first element is the text of the sentence,
+        # while the second element is in this case a dummy element (to keep coherence with the
+        # other dataset).
+        Path(output_path + "hipe_" + data_split + "_sentences/").mkdir(parents=True, exist_ok=True)
+        dSentsxDoc = dict()
+        with open(output_path + "hipe_" + data_split + "_sentences/" + k + '.json', 'w') as fp:
+            for s in range(len(dSentences[k])):
+                dSentsxDoc[str(s)] = [dSentences[k][s], 0]
+            json.dump(dSentsxDoc, fp)
+        dAllSentences[k] = dSentsxDoc
+        # print(dAnnotations[k])
+        for sentid in range(len(dAnnotations[k])):
+            ner_tags = [x[1] for x in dAnnotations[k][sentid]]
+            tokens = [x[0] for x in dAnnotations[k][sentid]]
+            hipe_ner_data.append({"id": k + "_" + str(sentid),
+                                    "ner_tags": ner_tags,
+                                    "tokens": tokens})
+
+    hipe_ner_data = pd.DataFrame(hipe_ner_data)
+    hipe_ner_data.to_json(output_path + 'ner_hipe_df_' + data_split + '.json', orient="records", lines=True)
+        
+    # # Create the dataframe where we will store our annotated
+    # data in a format that works better for us:
+    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "year", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid", "start", "end"])
+    for k in dAllSentences:
+        article_id = k
+        publ_place = ""
+        publ_year = dMetadata[k]["date"]
+
+        for anns in dAnnotations[k]:
+            current_sentence = ""
+            prev_sentence = ""
+            if str(anns) in dAllSentences[k]:
+                current_sentence = dAllSentences[k][str(anns)][0]
+                if anns >= 1:
+                    prev_sentence = dAllSentences[k][str(anns - 1)][0]
+                
+
+# ------------------------------
+# Process LwM data for training a NER model, where each sentence has an id,
+# and a list of tokens and assigned ner_tags using the BIO scheme, e.g.:
+# > id: 10813493_1 # document_id + "_" + sentence_id 
+# > ner_tags: ['B-LOC', 'O']
+# > tokens: ['INDIA', '.']
+def process_lwm_for_ner(tsv_topres_path):
     lwm_data = []
 
     for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
@@ -331,7 +466,7 @@ def process_for_ner(tsv_topres_path):
 # ------------------------------
 # Process data for performing entity linking, resulting in a dataframe with
 # one toponym per row and its annotation and resolution in columns.
-def process_for_linking(tsv_topres_path, output_path):
+def process_lwm_for_linking(tsv_topres_path, output_path):
     # # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
     df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid", "start", "end"])

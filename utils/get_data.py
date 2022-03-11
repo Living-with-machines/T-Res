@@ -19,3 +19,8 @@ def download_lwm_data():
         lwm_dataset = wget.download(url, out=save_to)
         with zipfile.ZipFile(lwm_dataset) as zip_ref:
             zip_ref.extractall(save_to)
+
+# ------------------------------
+# Download data from CLEF-HIPE-2020 repository, v1.4
+# dev: https://raw.githubusercontent.com/impresso/CLEF-HIPE-2020/master/data/v1.4/en/HIPE-data-v1.4-dev-en.tsv
+# test: https://raw.githubusercontent.com/impresso/CLEF-HIPE-2020/master/data/v1.4/en/HIPE-data-v1.4-test-en.tsv
