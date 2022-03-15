@@ -9,7 +9,7 @@ dataset = 'lwm'
 # Approach:
 ner_model_id = 'lwm'
 cand_select_method = 'perfectmatch' # either perfectmatch or deezymatch
-top_res_method = 'mostpopularnormalised'
+top_res_method = 'mostpopular'
 
 approach = ner_model_id+'+'+cand_select_method+'+'+top_res_method
 

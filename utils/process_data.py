@@ -332,6 +332,8 @@ def process_for_ner(tsv_topres_path):
 # Process data for performing entity linking, resulting in a dataframe with
 # one toponym per row and its annotation and resolution in columns.
 def process_for_linking(tsv_topres_path, output_path):
+    data_split = tsv_topres_path.split("/")[-2]
+
     # # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
     df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid", "start", "end"])
@@ -368,8 +370,8 @@ def process_for_linking(tsv_topres_path, output_path):
         # * The value is a list of two elements: the first element is the text of the sentence,
         # while the second element is the character position of the first character of the
         # sentence in the document.
-        Path(output_path + "lwm_sentences/").mkdir(parents=True, exist_ok=True)
-        with open(output_path + "lwm_sentences/" + filename + '.json', 'w') as fp:
+        Path(output_path + data_split + "_lwm_sentences/").mkdir(parents=True, exist_ok=True)
+        with open(output_path + data_split + "_lwm_sentences/" + filename + '.json', 'w') as fp:
             json.dump(dSentences, fp)
 
     df[['sentence_toponyms', 'document_toponyms']] = df.apply(lambda x: pd.Series(add_cotoponyms(df, x["article_id"], x["sent_id"])), axis=1)
@@ -404,7 +406,7 @@ def store_results_hipe(dataset, dataresults, dresults):
                     elink = t[2].replace("I-", "")
                 elif t[1] != "O":
                     elink = "NIL"
-                fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
+                fw.write(t[0] + "\t" + t[1] + "\t" + t[1] + "\tO\tO\tO\tO\t" + elink + "\t" + elink + "\tO\n")
             fw.write("\n")
 
 def store_resolution_skyline(dataset,approach,value):
