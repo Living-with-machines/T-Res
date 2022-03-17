@@ -1,4 +1,5 @@
 import re
+import csv
 import json
 import glob
 import urllib
@@ -412,3 +413,33 @@ def store_resolution_skyline(dataset,approach,value):
     skyline = open("outputs/results/"+dataset+'/'+approach+'.skyline','w')
     skyline.write(str(value))
     skyline.close()
+
+def read_gold_standard(path):
+    if Path(path).is_file():
+        with open(path) as csvfile:
+            csvreader = csv.DictReader(csvfile, delimiter="\t", quoting=csv.QUOTE_NONE, quotechar="")
+            fieldnames = csvreader.fieldnames
+            
+            gold_tok_sents = {}
+            sentence_id = None
+
+            for row in csvreader:
+                first_item = row[fieldnames[0]]
+                # skip empty lines
+                if first_item.startswith("#") and "=" in first_item:
+                    if sentence_id:
+                        gold_tok_sents[sentence_id] = tok_sent
+                        sentence_id = first_item.split("= ")[1].strip()
+                        tok_sent = []
+                    else:
+                        sentence_id = first_item.split("= ")[1].strip()
+                        tok_sent = []
+
+                else:
+                    tok_sent.append(first_item)
+            gold_tok_sents[sentence_id] = tok_sent
+            
+            return gold_tok_sents
+    else:
+        print ('The gold standard is missing')
+        exit()
