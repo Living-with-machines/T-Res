@@ -1,6 +1,6 @@
 import json
 import sys,os
-import urllib
+from pathlib import Path
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 # to read the gold standard for rel
@@ -28,6 +28,13 @@ if ner_model_id == 'lwm':
     gold_tokenisation = {}
 
 if ner_model_id == 'rel':
+    rel_end_to_end = "outputs/results/" + dataset + "/rel_end_to_end.json"
+    if Path(rel_end_to_end).is_file():
+         with open(rel_end_to_end) as f:
+            rel_preds = json.load(f)
+    else:
+        rel_preds = {}
+
     gold_path = "outputs/results/" + dataset + "/lwm_gold_tokenisation.json"
     gold_standard = process_data.read_gold_standard(gold_path)
     cand_select_method = 'rel' # either perfectmatch or deezymatch
@@ -54,7 +61,11 @@ with open(path+'wikipedia2wikidata.json') as f:
 for sent_id in tqdm.tqdm(dSentences.keys()):
 
     if ner_model_id == 'rel':
-        pred_ents = linking.rel_end_to_end(dSentences[sent_id])
+        if Path(rel_end_to_end).is_file():
+            pred_ents = rel_preds[sent_id]
+        else:
+            pred_ents = linking.rel_end_to_end(dSentences[sent_id])
+            rel_preds[sent_id] = pred_ents
         sentence_preds = []
         for token in gold_standard[sent_id]:
             start = token['start']
@@ -103,5 +114,10 @@ if ner_model_id == 'lwm':
     process_data.store_resolution_skyline(dataset,ner_model_id+'+'+cand_select_method+'+'+top_res_method,skyline)
     with open("outputs/results/"+dataset+'/lwm_gold_tokenisation.json', 'w') as fp:
         json.dump(gold_tokenisation, fp)
+
+if ner_model_id == 'rel':
+    if not Path(rel_end_to_end).is_file():
+        with open(rel_end_to_end, 'w') as fp:
+            json.dump(rel_preds, fp)
 
 process_data.store_results_hipe(dataset,ner_model_id+'+'+cand_select_method+'+'+top_res_method,  dPreds)
