@@ -416,30 +416,35 @@ def store_resolution_skyline(dataset,approach,value):
 
 def read_gold_standard(path):
     if Path(path).is_file():
-        with open(path) as csvfile:
-            csvreader = csv.DictReader(csvfile, delimiter="\t", quoting=csv.QUOTE_NONE, quotechar="")
-            fieldnames = csvreader.fieldnames
-            
-            gold_tok_sents = {}
-            sentence_id = None
-
-            for row in csvreader:
-                first_item = row[fieldnames[0]]
-                # skip empty lines
-                if first_item.startswith("#") and "=" in first_item:
-                    if sentence_id:
-                        gold_tok_sents[sentence_id] = tok_sent
-                        sentence_id = first_item.split("= ")[1].strip()
-                        tok_sent = []
-                    else:
-                        sentence_id = first_item.split("= ")[1].strip()
-                        tok_sent = []
-
-                else:
-                    tok_sent.append(first_item)
-            gold_tok_sents[sentence_id] = tok_sent
-            
-            return gold_tok_sents
+        with open(path) as f:
+            d = json.load(f)
+            return d
     else:
-        print ('The gold standard is missing')
+        print ('The tokenised gold standard is missing')
         exit()
+
+# check NER labels in REL
+accepted_labels = {'LOC','STREET','BUILDING','OTHER','FICTION'}
+
+def match_ent(pred_ents,start,end,prev_ann):
+    for ent in pred_ents:
+        if ent[-1] in accepted_labels:
+            st_ent = ent[0]
+            if st_ent>= start and st_ent<=end:
+                if prev_ann == ent[-1]:
+                    ent_pos = 'I-'
+                else:
+                    ent_pos = 'B-'
+                    prev_ann = ent[-1]
+
+                n = ent_pos+ent[-1]
+                el =  urllib.parse.quote(ent[3].replace("_"," "))
+                try:
+                    el = ent_pos+wikipedia2wikidata[el]
+                except Exception:
+                    # to be checked but it seems some Wikipedia pages are not in our Wikidata
+                    # see for instance Zante%2C%20California
+                    return n, 'O',''
+                    #print (el)
+                return n,el,prev_ann
+    return 'O','O',''
