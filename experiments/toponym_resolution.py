@@ -1,23 +1,20 @@
+import tqdm
 import json
 import sys,os
+import pandas as pd
 from pathlib import Path
+from transformers import pipeline
+from sklearn.model_selection import train_test_split
+from utils import process_data, ner, candidate_selection, linking, eval
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-# to read the gold standard for rel
-#sys.path.insert(0,os.path.abspath(os.path.pardir+'/evaluation/CLEF-HIPE-2020-scorer/'))
-#import ner_evaluation.utils
-
-from utils import process_data, ner, candidate_selection, linking, eval
-from sklearn.model_selection import train_test_split
-from transformers import pipeline
-import pandas as pd
-import tqdm
 
 # Dataset:
 dataset = "lwm"
 
 # Approach:
-ner_model_id = 'rel' # or rel
+ner_model_id = 'rel' # lwm or rel
 
 if ner_model_id == 'lwm':
     # Path to NER Model:
@@ -37,7 +34,9 @@ if ner_model_id == 'rel':
 
     gold_path = "outputs/results/" + dataset + "/lwm_gold_tokenisation.json"
     gold_standard = process_data.read_gold_standard(gold_path)
-    cand_select_method = 'rel' # either perfectmatch or deezymatch
+    # currently it's all based on REL 
+    # but we could for instance use our pipeline and rely on REL only for disambiguation
+    cand_select_method = 'rel'
     top_res_method = 'rel'
 
 # Path to test dataframe:
@@ -54,10 +53,6 @@ true_mentions_sents = dict()
 dPreds = dict()
 dTrues = dict()
 
-path = '/resources/wikipedia/extractedResources/'
-with open(path+'wikipedia2wikidata.json') as f:
-    wikipedia2wikidata = json.load(f)
-
 for sent_id in tqdm.tqdm(dSentences.keys()):
 
     if ner_model_id == 'rel':
@@ -66,6 +61,7 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
         else:
             pred_ents = linking.rel_end_to_end(dSentences[sent_id])
             rel_preds[sent_id] = pred_ents
+
         sentence_preds = []
         for token in gold_standard[sent_id]:
             start = token['start']
@@ -74,6 +70,7 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
             prev_ann = ''
             n,el,prev_ann = process_data.match_ent(pred_ents,start,end,prev_ann)
             sentence_preds.append([word,n,el])
+            
         dPreds[sent_id] = sentence_preds
 
     else:
