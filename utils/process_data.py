@@ -445,6 +445,5 @@ def match_ent(pred_ents,start,end,prev_ann):
                     # to be checked but it seems some Wikipedia pages are not in our Wikidata
                     # see for instance Zante%2C%20California
                     return n, 'O',''
-                    #print (el)
                 return n,el,prev_ann
     return 'O','O',''

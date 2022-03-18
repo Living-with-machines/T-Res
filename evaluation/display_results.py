@@ -8,7 +8,7 @@ dataset = 'lwm'
 
 # Approach:
 ner_model_id = 'rel'
-cand_select_method = 'rel' # either perfectmatch or deezymatch
+cand_select_method = 'rel' 
 top_res_method = 'rel'
 
 approach = ner_model_id+'+'+cand_select_method+'+'+top_res_method
