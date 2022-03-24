@@ -13,7 +13,7 @@ from utils import candidate_selection, eval, linking, ner, process_data
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 # Dataset:
-dataset = "lwm"
+dataset = "lwm" # lwm or hipe
 
 # Approach:
 ner_model_id = "rel"  # lwm or rel
@@ -31,7 +31,7 @@ if ner_model_id == "lwm":
     gold_tokenisation = {}
 
 if ner_model_id == "rel":
-    rel_end_to_end = "outputs/results/" + dataset + "/rel_end_to_end.json"
+    rel_end_to_end = "/resources/develop/fnanni/toponym-resolution/experiments/outputs/results/" + dataset + "/rel_end_to_end.json"
     if Path(rel_end_to_end).is_file():
         with open(rel_end_to_end) as f:
             rel_preds = json.load(f)
@@ -47,7 +47,7 @@ if ner_model_id == "rel":
 
 # Path to test dataframe:
 df = pd.read_csv(
-    "/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_lwm_df_test.tsv",
+    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/linking_lwm_df_test.tsv",
     sep="\t",
 )
 
@@ -72,11 +72,11 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
             rel_preds[sent_id] = pred_ents
 
         sentence_preds = []
+        prev_ann = ""
         for token in gold_standard[sent_id]:
             start = token["start"]
             end = token["end"]
             word = token["word"]
-            prev_ann = ""
             n, el, prev_ann = process_data.match_ent(pred_ents, start, end, prev_ann)
             sentence_preds.append([word, n, el])
 

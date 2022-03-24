@@ -430,7 +430,8 @@ def match_ent(pred_ents,start,end,prev_ann):
     for ent in pred_ents:
         if ent[-1] in accepted_labels:
             st_ent = ent[0]
-            if st_ent>= start and st_ent<=end:
+            len_ent = ent[1]
+            if start >= st_ent and end <= (st_ent + len_ent):
                 if prev_ann == ent[-1]:
                     ent_pos = 'I-'
                 else:
