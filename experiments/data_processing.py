@@ -25,27 +25,33 @@ topres_path_test = "/resources/newsdataset/fmp_lwm/test/"
 # Process data for training a named entity recognition model:
 lwm_df = process_data.process_lwm_for_ner(topres_path_train)
 
-# Split training set into train and set, for development, and store them:
-train, test = train_test_split(lwm_df, test_size=0.2, random_state=42)
-train.to_json(output_path + 'ner_lwm_df_train.json', orient="records", lines=True)
-test.to_json(output_path + 'ner_lwm_df_test.json', orient="records", lines=True)
+# Split NER-formatted training set into train and dev, and store them.
+# They will be used by the ner_training.py script:
+train_ner, dev_ner = train_test_split(lwm_df, test_size=0.2, random_state=42)
+train_ner.to_json(output_path + 'ner_df_train.json', orient="records", lines=True)
+dev_ner.to_json(output_path + 'ner_df_dev.json', orient="records", lines=True)
 
 # Process data for resolution:
-train_df = process_data.process_lwm_for_linking(topres_path_train, output_path)
-test_df = process_data.process_lwm_for_linking(topres_path_test, output_path)
+train_df = process_data.process_lwm_for_linking(topres_path_train)
+test_df = process_data.process_lwm_for_linking(topres_path_test)
+
+# Split test set into dev and test set, by article:
+dev_df, test_df = train_test_split(test_df, test_size=0.5, random_state=42)
 
 # Store dataframes:
-train_df.to_csv(output_path + "linking_lwm_df_train.tsv", sep="\t", index=False)
-test_df.to_csv(output_path + "linking_lwm_df_test.tsv", sep="\t", index=False)
+train_df.to_csv(output_path + "linking_df_train.tsv", sep="\t", index=False)
+dev_df.to_csv(output_path + "linking_df_dev.tsv", sep="\t", index=False)
+test_df.to_csv(output_path + "linking_df_test.tsv", sep="\t", index=False)
 
 # ------------------------------------------------------
 # CLEF HIPE dataset
 # ------------------------------------------------------
 
 # Path for the output dataset dataframes:
-output_path = "outputs/data/"
+output_path = "outputs/data/hipe/"
 Path(output_path).mkdir(parents=True, exist_ok=True)
 
+# Path to folder with HIPE original data (v1.4):
 hipe_path = "/resources/newsdataset/clef_hipe/"
 
 # Process data for training a named entity recognition model:

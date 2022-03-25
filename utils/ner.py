@@ -13,31 +13,6 @@ label_dict = {"LABEL_0": "O",
               "LABEL_8": "I-OTHER",
               "LABEL_9": "B-FICTION",
               "LABEL_10": "I-FICTION"}
-              
-
-def format_for_ner(df):
-
-    # In the dAnnotatedClasses dictionary, we keep, for each article/sentence,
-    # a dictionary that maps the position of an annotated named entity (i.e.
-    # its start and end character, as a tuple, as the key of the inner dictionary)
-    # and another tuple as its value, with the class of named entity (such as LOC
-    # or BUILDING, and its annotated link).
-    dAnnotated = dict()
-    dSentences = dict()
-    for i, row in df.iterrows():
-        # sent_id is the unique identifier for the article/sentence pair
-        sent_id = str(row["article_id"]) + "_" + str(row["sent_id"])
-        position = (int(row["start"]), int(row["end"]))
-        wqlink = row["place_wqid"]
-        dSentences[sent_id] = row["current_sentence"]
-        if not isinstance(wqlink, str):
-            wqlink = "*"
-        if sent_id in dAnnotated:
-            dAnnotated[sent_id][position] = (row["place_class"], row['mention'], wqlink)
-        else:
-            dAnnotated[sent_id] = {position: (row["place_class"], row['mention'], wqlink)}
-    
-    return dAnnotated, dSentences
 
 
 def fix_capitalization(entity, sentence):

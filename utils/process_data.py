@@ -6,6 +6,7 @@ import pathlib
 import hashlib
 import pandas as pd
 from pathlib import Path
+from ast import literal_eval
 
 
 # Load wikipedia2wikidata mapper:
@@ -144,7 +145,7 @@ def process_tsv(filepath):
             bio_label = bio_label.split("[")[0]
             wkpd = wkpd.split("[")[0]
 
-            dMTokens[(sent_pos, mtok_start)] = (complete_token, complete_wkpd, complete_label, sent_pos, mtok_start, mtok_end)
+            dMTokens[(sent_pos, mtok_start)] = (complete_token, complete_wkpd, complete_label, sent_pos, mtok_start)
             dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
     
     return dMTokens, dTokens
@@ -220,67 +221,17 @@ def reconstruct_sentences(dTokens):
 # ------------------------------
 # Get wikidata ID from wikipedia URL:
 def turn_wikipedia2wikidata(wikipedia_title):
-    if not wikipedia_title == "*":
+    if not wikipedia_title == "NIL" and not wikipedia_title == "*":
         wikipedia_title = wikipedia_title.split("/wiki/")[-1]
         wikipedia_title = urllib.parse.unquote(wikipedia_title)
         wikipedia_title = wikipedia_title.replace("_", " ")
         wikipedia_title = urllib.parse.quote(wikipedia_title)
         if "/" in wikipedia_title or len(wikipedia_title)>200:
             wikipedia_title = hashlib.sha224(wikipedia_title.encode('utf-8')).hexdigest()
+        if not wikipedia_title in wikipedia2wikidata:
+            print("Warning: " + wikipedia_title + " is not in wikipedia2wikidata, the wkdt_qid will be None.")
         return wikipedia2wikidata.get(wikipedia_title)
     return None
-
-
-# ------------------------------
-
-# Populate dataframe rows:
-def create_lwmdf_row(mention_values, file_id, publ_place, publ_decade, mention_counter, dSentences):
-
-    mention, wkpd, label, sent_pos, tok_start, tok_end = mention_values
-    if not wkpd == "_" and not label == "_":
-        mention_counter += 1
-        current_sentence, sentence_start = dSentences[sent_pos]
-        mention_start = tok_start - sentence_start
-        marked_sentence = current_sentence
-        # We try to match the mention to the position in the sentence, and mask the mention
-        # based on the positional information:
-        if marked_sentence[mention_start:mention_start + len(mention)] == mention:
-            marked_sentence = marked_sentence[:mention_start] + " [MASK] " + marked_sentence[mention_start + len(mention):]
-        # But there's one document that has some weird indices, and one sentence in particular
-        # in which it is not possible to match the mention with the positional information we
-        # got. In this case, we mask based on string matching:
-        else:
-            marked_sentence = marked_sentence.replace(mention, " [MASK] ")
-        marked_sentence = re.sub(' +', ' ', marked_sentence)
-        prev_sentence = ""
-        if sent_pos-1 in dSentences:
-            prev_sentence = dSentences[sent_pos-1][0]
-        next_sentence = ""
-        if sent_pos+1 in dSentences:
-            next_sentence = dSentences[sent_pos+1][0]
-            
-        wkpd = wkpd.replace("\\", "")
-        wkdt = turn_wikipedia2wikidata(wkpd)
-        
-        # In mentions attached to next token through a dash,
-        # keep only the true mention (this has to do with
-        # the annotation format)
-        if "—" in mention:
-            mention = mention.split("—")[0]
-
-        row = [mention_counter, sent_pos, file_id, publ_place, publ_decade, prev_sentence, current_sentence, marked_sentence, next_sentence, mention, label, wkpd, wkdt, mention_start, mention_start + len(mention)]
-        
-        return row
-    
-    return False
-
-
-# ------------------------------
-# Add columns to the LwM dataframe containing other mentions of toponyms in the sentence or document:
-def add_cotoponyms(df, article_id, sent_id):
-    sentence_toponyms = list(df[df["article_id"] == article_id].mention)
-    document_toponyms = list(df[(df["article_id"] == article_id) & (df["sent_id"] == sent_id)].mention)
-    return pd.Series([sentence_toponyms, document_toponyms])
 
 
 # ------------------------------
@@ -466,52 +417,114 @@ def process_lwm_for_ner(tsv_topres_path):
 # ------------------------------
 # Process data for performing entity linking, resulting in a dataframe with
 # one toponym per row and its annotation and resolution in columns.
-def process_lwm_for_linking(tsv_topres_path, output_path):
-    # # Create the dataframe where we will store our annotated
+def process_lwm_for_linking(tsv_topres_path):
+
+    # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
-    df = pd.DataFrame(columns = ["mention_id", "sent_id", "article_id", "place", "decade", "prev_sentence", "current_sentence", "marked_sentence", "next_sentence", "mention", "place_class", "place_wikititle", "place_wqid", "start", "end"])
+    df = pd.DataFrame(columns = ["article_id",
+                                 "sentences", 
+                                 "annotations", 
+                                 "place", 
+                                 "decade", 
+                                 "year",
+                                 "ocr_quality_mean",
+                                 "ocr_quality_sd",
+                                 "publication_title"])
 
-    # Populate the dataframe of toponyms and annotations:
-    mention_counter = 0
+    metadata_df = pd.read_csv(tsv_topres_path + "metadata.tsv", sep="\t", index_col="fname")
+
     for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
+        filename = fid.split("/")[-1].split(".tsv")[0] # Full document name
 
-        filename = fid.split("/")[-1] # Full document name
-        file_id = filename.split("_")[0] # Document id
-        publ_place = filename.split("_")[1][:-8] # Publication place
-        publ_decade = filename[-8:-4] # Publication decade
+        # Fields to fill:
+        article_id = filename.split("_")[0]
+        sentences = []
+        annotations = []
+        place_publication = metadata_df.loc[filename]["place_publication"]
+        decade = int(metadata_df.loc[filename]["issue_date"][:3] + "0")
+        year = int(metadata_df.loc[filename]["issue_date"][:4])
+        ocr_quality_mean = float(metadata_df.loc[filename]["ocr_quality_mean"])
+        ocr_quality_sd = float(metadata_df.loc[filename]["ocr_quality_sd"])
+        publication_title = metadata_df.loc[filename]["publication_title"]
 
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
-        dMTokens, dTokens = process_tsv(tsv_topres_path + "annotated_tsv/" + filename)
+        dMTokens, dTokens = process_tsv(tsv_topres_path + "annotated_tsv/" + filename + ".tsv")
 
         # Dictionary of reconstructed sentences:
         dSentences = reconstruct_sentences(dTokens)
 
+        # List of annotation dictionaries:
+        mention_counter = 0
         for k in dMTokens:
-            # For each token, create the list that will become the dataframe
-            # row, if the token has been annotated:
-            row = create_lwmdf_row(dMTokens[k], file_id, publ_place, publ_decade, mention_counter, dSentences)
-            # If a row has been created:
-            if row:
-                # Convert the row into a pd.Series:
-                row = pd.Series(row, index=df.columns)
-                # And append it to the main dataframe:
-                df = pd.concat([df, row.to_frame().T], ignore_index=True)
+            # For each annotated token:
+            mention, wkpd, label, sent_pos, tok_start = dMTokens[k]
+            if not wkpd == "_" and not label == "_":
+                current_sentence, sentence_start = dSentences[sent_pos]
+                mention_start = tok_start - sentence_start
+                marked_sentence = current_sentence
+                # We try to match the mention to the position in the sentence, and mask the mention
+                # based on the positional information:
+                if marked_sentence[mention_start:mention_start + len(mention)] == mention:
+                    marked_sentence = marked_sentence[:mention_start] + " [MASK] " + marked_sentence[mention_start + len(mention):]
+                # But there's one document that has some weird indices, and one sentence in particular
+                # in which it is not possible to match the mention with the positional information we
+                # got. In this case, we mask based on string matching:
+                else:
+                    marked_sentence = marked_sentence.replace(mention, " [MASK] ")
+                marked_sentence = re.sub(' +', ' ', marked_sentence)
 
-        # Store the sentences as a json so that:
-        # * The key is an index indicating the order of the sentence.
-        # * The value is a list of two elements: the first element is the text of the sentence,
-        # while the second element is the character position of the first character of the
-        # sentence in the document.
-        Path(output_path + "lwm_sentences/").mkdir(parents=True, exist_ok=True)
-        with open(output_path + "lwm_sentences/" + filename + '.json', 'w') as fp:
-            json.dump(dSentences, fp)
+                # Clean Wikidata URL:
+                wkpd = wkpd.replace("\\", "")
 
-    df[['sentence_toponyms', 'document_toponyms']] = df.apply(lambda x: pd.Series(add_cotoponyms(df, x["article_id"], x["sent_id"])), axis=1)
-    
+                # Get Wikidata ID:
+                wkdt = turn_wikipedia2wikidata(wkpd)
+
+                # In mentions attached to next token through a dash,
+                # keep only the true mention (this has to do with
+                # the annotation format)
+                if "—" in mention:
+                    mention = mention.split("—")[0]
+
+                annotations.append({"mention_pos": mention_counter,
+                                    "mention": mention,
+                                    "toponym_type": label,
+                                    "wkpd_url": wkpd,
+                                    "wkdt_qid": wkdt,
+                                    "mention_start": mention_start,
+                                    "mention_end": mention_start + len(mention),
+                                    "sent_pos": sent_pos})
+
+                mention_counter += 1
+
+        for s_index in dSentences:
+            # We keep only the sentence, we don't need the character offset of the sentence
+            # going forward:
+            sentences.append({"sentence_pos": s_index,
+                              "sentence_text": dSentences[s_index][0]})
+
+        df_columns_row = [article_id,
+                          sentences,
+                          annotations,
+                          place_publication,
+                          decade,
+                          year,
+                          ocr_quality_mean,
+                          ocr_quality_sd,
+                          publication_title]
+
+        # Convert the row into a pd.Series:
+        row = pd.Series(df_columns_row, index=df.columns)
+
+        # And append it to the main dataframe:
+        df = pd.concat([df, row.to_frame().T], ignore_index=True)
+        
     return df
 
 
+# ------------------------------
+# HIPE data
+# ------------------------------
 # Storing results for evaluation using the CLEF-HIPE scorer
 def store_results_hipe(dataset, dataresults, dresults):
     """
@@ -542,8 +555,57 @@ def store_results_hipe(dataset, dataresults, dresults):
                 fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
             fw.write("\n")
 
+
+# ------------------------------
+# SKYLINE
+# ------------------------------
 def store_resolution_skyline(dataset,approach,value):
     pathlib.Path("outputs/results/"+dataset+'/').mkdir(parents=True, exist_ok=True)
     skyline = open("outputs/results/"+dataset+'/'+approach+'.skyline','w')
     skyline.write(str(value))
     skyline.close()
+
+
+# ------------------------------
+# NER
+# ------------------------------
+def format_for_ner(df):
+
+    # In the dAnnotatedClasses dictionary, we keep, for each article/sentence,
+    # a dictionary that maps the position of an annotated named entity (i.e.
+    # its start and end character, as a tuple, as the key of the inner dictionary)
+    # and another tuple as its value, with the class of named entity (such as LOC
+    # or BUILDING, and its annotated link).
+    dAnnotated = dict()
+    dSentences = dict()
+    for i, row in df.iterrows():
+
+        sentences = literal_eval(row["sentences"])
+        annotations = literal_eval(row["annotations"])
+        
+        for s in sentences:
+            # Sentence position:
+            s_pos = s["sentence_pos"]
+            # Article-sentence pair unique identifier:
+            artsent_id = str(row["article_id"]) + "_" + str(s_pos)
+            # Sentence text:
+            dSentences[artsent_id] = s["sentence_text"]
+            # Annotations in NER-required format:
+            for a in annotations:
+                if a["sent_pos"] == s_pos:
+                    position = (int(a["mention_start"]), int(a["mention_end"]))
+                    wqlink = a["wkdt_qid"]
+                    if not isinstance(wqlink, str):
+                        wqlink = "NIL"
+                    elif wqlink == "*":
+                        wqlink = "NIL"
+                    if artsent_id in dAnnotated:
+                        dAnnotated[artsent_id][position] = (a["toponym_type"], a['mention'], wqlink)
+                    else:
+                        dAnnotated[artsent_id] = {position: (a["toponym_type"], a['mention'], wqlink)}
+
+    for artsent_id in dSentences:
+        if not artsent_id in dAnnotated:
+            dAnnotated[artsent_id] = dict()
+
+    return dAnnotated, dSentences

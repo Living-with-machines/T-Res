@@ -19,16 +19,11 @@ top_res_method = 'mostpopular'
 ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/"+ner_model_id+"-ner.model"
 
 # Path to test dataframe:
-df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/outputs/data/linking_lwm_df_test.tsv", sep="\t")
-
-# Split test set into dev and test set (by article, not sentence):
-dev_ids, test_ids = train_test_split(df.article_id.unique(), test_size=0.5, random_state=42)
-dev = df[df["article_id"].isin(dev_ids)]
-test = df[df["article_id"].isin(test_ids)]
+df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_dev.tsv", sep="\t")
 
 ner_pipe = pipeline("ner", model=ner_model)
 
-dAnnotated, dSentences = ner.format_for_ner(dev)
+dAnnotated, dSentences = process_data.format_for_ner(df)
 
 true_mentions_sents = dict()
 dPreds = dict()

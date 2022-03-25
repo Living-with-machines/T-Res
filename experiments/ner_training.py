@@ -18,9 +18,9 @@ base_model_path = "/resources/models/bert/bert_1760_1900/" # Path where base mod
                                                            # as 'distilbert-base-uncased'. The 'bert_1760_1900'
                                                            # model can be obtained following instructions in
                                                            # https://github.com/Living-with-machines/histLM).
-ner_data_path = "outputs/data/" # Path where preprocessed NER data is stored.
-train_dataset = 'ner_lwm_df_train.json' # NER training set (0.80 of LwM training set).
-test_dataset = 'ner_lwm_df_test.json' # NER test set (0.20 of LwM training set).
+ner_data_path = "outputs/data/lwm/" # Path where preprocessed NER data is stored.
+train_dataset = 'ner_df_train.json' # NER training set (0.80 of LwM training set).
+test_dataset = 'ner_df_dev.json' # NER test set (0.20 of LwM training set).
 
 
 Path(output_ner_model).mkdir(parents=True, exist_ok=True)
