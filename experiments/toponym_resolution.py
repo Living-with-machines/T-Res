@@ -16,12 +16,32 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 dataset = "lwm" # lwm or hipe
 
 # Approach:
-ner_model_id = "rel"  # lwm or rel
+ner_model_id = "lwm"  # lwm or rel
+
+# Path to dev dataframe:
+dev = pd.read_csv(
+    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/" + dataset + "/linking_df_dev.tsv",
+    sep="\t",
+)
+
+# Path where to store gold tokenization:
+gold_path = (
+    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/results/"
+    + dataset 
+    + "/lwm_gold_tokenisation.json"
+)
+
+# Path where to store REL API output:
+rel_end_to_end = (
+    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/results/" 
+    + dataset 
+    + "/rel_end_to_end.json"
+)
 
 if ner_model_id == "lwm":
     # Path to NER Model:
     ner_model = (
-        "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/"
+        "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/models/"
         + ner_model_id
         + "-ner.model"
     )
@@ -31,30 +51,17 @@ if ner_model_id == "lwm":
     gold_tokenisation = {}
 
 if ner_model_id == "rel":
-    rel_end_to_end = "/resources/develop/fnanni/toponym-resolution/experiments/outputs/results/" + dataset + "/rel_end_to_end.json"
     if Path(rel_end_to_end).is_file():
         with open(rel_end_to_end) as f:
             rel_preds = json.load(f)
     else:
         rel_preds = {}
 
-    gold_path = "outputs/results/" + dataset + "/lwm_gold_tokenisation.json"
     gold_standard = process_data.read_gold_standard(gold_path)
     # currently it's all based on REL
     # but we could for instance use our pipeline and rely on REL only for disambiguation
     cand_select_method = "rel"
     top_res_method = "rel"
-
-# Path to test dataframe:
-df = pd.read_csv(
-    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/linking_lwm_df_test.tsv",
-    sep="\t",
-)
-
-# Split test set into dev and test set (by article, not sentence):
-dev_ids, test_ids = train_test_split(df.article_id.unique(), test_size=0.5, random_state=42)
-dev = df[df["article_id"].isin(dev_ids)]
-test = df[df["article_id"].isin(test_ids)]
 
 dAnnotated, dSentences = ner.format_for_ner(dev)
 
@@ -122,7 +129,7 @@ if ner_model_id == "lwm":
     process_data.store_resolution_skyline(
         dataset, ner_model_id + "+" + cand_select_method + "+" + top_res_method, skyline
     )
-    with open("outputs/results/" + dataset + "/lwm_gold_tokenisation.json", "w") as fp:
+    with open(gold_path, "w") as fp:
         json.dump(gold_tokenisation, fp)
 
 if ner_model_id == "rel":
