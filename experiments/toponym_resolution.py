@@ -16,14 +16,14 @@ cand_select_method = 'perfectmatch' # either perfectmatch or deezymatch
 top_res_method = 'mostpopular'
 
 # Path to NER Model:
-ner_model = "/resources/develop/mcollardanuy/toponym-resolution/outputs/models/"+ner_model_id+"-ner.model"
+ner_model = "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/models/" + ner_model_id + "-ner.model"
 
 # Path to test dataframe:
-df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_dev.tsv", sep="\t")
+df = pd.read_csv("/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/" + dataset + "/linking_df_dev.tsv", sep="\t")
 
 ner_pipe = pipeline("ner", model=ner_model)
 
-dAnnotated, dSentences = process_data.format_for_ner(df)
+dAnnotated, dSentences = ner.format_for_ner(df)
 
 true_mentions_sents = dict()
 dPreds = dict()
