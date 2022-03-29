@@ -634,3 +634,38 @@ def store_results_hipe(dataset, dataresults, dresults):
                 fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
             fw.write("\n")
 
+def read_gold_standard(path):
+    if Path(path).is_file():
+        with open(path) as f:
+            d = json.load(f)
+            return d
+    else:
+        print("The tokenised gold standard is missing. You should first run the LwM baselines.")
+        exit()
+
+# check NER labels in REL
+accepted_labels = {"LOC"}
+
+
+def match_ent(pred_ents, start, end, prev_ann):
+    for ent in pred_ents:
+        if ent[-1] in accepted_labels:
+            st_ent = ent[0]
+            len_ent = ent[1]
+            if start >= st_ent and end <= (st_ent + len_ent):
+                if prev_ann == ent[-1]:
+                    ent_pos = "I-"
+                else:
+                    ent_pos = "B-"
+                    prev_ann = ent[-1]
+
+                n = ent_pos + ent[-1]
+                el = urllib.parse.quote(ent[3].replace("_", " "))
+                try:
+                    el = ent_pos + wikipedia2wikidata[el]
+                except Exception:
+                    # to be checked but it seems some Wikipedia pages are not in our Wikidata
+                    # see for instance Zante%2C%20California
+                    return n, "O", ""
+                return n, el, prev_ann
+    return "O", "O", ""

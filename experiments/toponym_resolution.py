@@ -3,50 +3,37 @@ import os
 import sys
 from pathlib import Path
 
+# Add "../" to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+
 import pandas as pd
-import glob
 import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 from utils import candidate_selection, eval, linking, ner, process_data
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-
 # Dataset:
-dataset = "lwm" # lwm or hipe
+dataset = "hipe"  # lwm or hipe
 
 # Approach:
-ner_model_id = "lwm"  # lwm or rel
+ner_model_id = "rel"  # lwm or rel
 
 # Path to dev dataframe:
 dev = pd.read_csv(
-    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/" + dataset + "/linking_df_dev.tsv",
+    "outputs/data/" + dataset + "/linking_df_dev.tsv",
     sep="\t",
 )
 
 # Path where to store gold tokenization:
-gold_path = (
-    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/results/"
-    + dataset 
-    + "/lwm_gold_tokenisation.json"
-)
+gold_path = "outputs/results/" + dataset + "/lwm_gold_tokenisation.json"
 
 
 # Path where to store REL API output:
-rel_end_to_end = (
-    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/results/" 
-    + dataset 
-    + "/rel_end_to_end.json"
-)
+rel_end_to_end = "outputs/results/" + dataset + "/rel_end_to_end.json"
 
 if ner_model_id == "lwm":
     # Path to NER Model:
-    ner_model = (
-        "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/models/"
-        + ner_model_id
-        + "-ner.model"
-    )
+    ner_model = "outputs/models/" + ner_model_id + "-ner.model"
     ner_pipe = pipeline("ner", model=ner_model)
     cand_select_method = "perfectmatch"  # either perfectmatch or deezymatch
     top_res_method = "mostpopular"
@@ -112,7 +99,7 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
             start_offset = mention["start_offset"]
             end_offset = mention["end_offset"]
 
-            # to be extended so that it can include multiple features 
+            # to be extended so that it can include multiple features
             res = linking.select(cands[text_mention], top_res_method)
             if res:
                 link, score, other_cands = res
