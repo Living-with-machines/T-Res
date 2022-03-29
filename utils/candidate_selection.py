@@ -16,10 +16,10 @@ dm_output = "deezymatch_on_the_fly"
 
 def select(queries,approach):
 
-    if approach == 'perfect_match':
+    if approach == 'perfectmatch':
         return perfect_match(queries)
 
-    if approach == 'deezy_match':
+    if approach == 'deezymatch':
         return deezy_on_the_fly(queries, dm_cands, dm_model,
                                                 dm_output, dm_path, thr=10, cands=10,
                                                 cdiff=2)

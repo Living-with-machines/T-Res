@@ -1,8 +1,10 @@
 from collections import namedtuple
+from ast import literal_eval
 
 
 # Dictionary mapping NER model label with GS label:
-label_dict = {"LABEL_0": "O",
+label_dict = dict()
+label_dict["lwm"] = {"LABEL_0": "O",
               "LABEL_1": "B-LOC",
               "LABEL_2": "I-LOC",
               "LABEL_3": "B-STREET",
@@ -13,31 +15,18 @@ label_dict = {"LABEL_0": "O",
               "LABEL_8": "I-OTHER",
               "LABEL_9": "B-FICTION",
               "LABEL_10": "I-FICTION"}
-              
+label_dict["hipe"] = {"LABEL_0": "O",
+              "LABEL_1": "B-LOC",
+              "LABEL_2": "I-LOC",
+              "LABEL_3": "B-LOC",
+              "LABEL_4": "I-LOC",
+              "LABEL_5": "B-LOC",
+              "LABEL_6": "I-LOC",
+              "LABEL_7": "B-LOC",
+              "LABEL_8": "I-LOC",
+              "LABEL_9": "B-LOC",
+              "LABEL_10": "I-LOC"}
 
-def format_for_ner(df):
-
-    # In the dAnnotatedClasses dictionary, we keep, for each article/sentence,
-    # a dictionary that maps the position of an annotated named entity (i.e.
-    # its start and end character, as a tuple, as the key of the inner dictionary)
-    # and another tuple as its value, with the class of named entity (such as LOC
-    # or BUILDING, and its annotated link).
-    dAnnotated = dict()
-    dSentences = dict()
-    for i, row in df.iterrows():
-        # sent_id is the unique identifier for the article/sentence pair
-        sent_id = str(row["article_id"]) + "_" + str(row["sent_id"])
-        position = (int(row["start"]), int(row["end"]))
-        wqlink = row["place_wqid"]
-        dSentences[sent_id] = row["current_sentence"]
-        if not isinstance(wqlink, str):
-            wqlink = "*"
-        if sent_id in dAnnotated:
-            dAnnotated[sent_id][position] = (row["place_class"], row['mention'], wqlink)
-        else:
-            dAnnotated[sent_id] = {position: (row["place_class"], row['mention'], wqlink)}
-    
-    return dAnnotated, dSentences
 
 
 def fix_capitalization(entity, sentence):
@@ -157,7 +146,7 @@ def aggregate_entities(entity, lEntities):
     return lEntities
 
 
-def ner_predict(sentence, annotations, ner_pipe):
+def ner_predict(sentence, annotations, ner_pipe, dataset):
     """
     This function reads a dataset dataframe and the NER pipeline and returns
     two dictionaries:
@@ -174,7 +163,7 @@ def ner_predict(sentence, annotations, ner_pipe):
     lEntities = []
     for pred_ent in ner_preds:
         prev_tok = pred_ent["word"]
-        pred_ent["entity"] = label_dict[pred_ent["entity"]]
+        pred_ent["entity"] = label_dict[dataset][pred_ent["entity"]]
         pred_ent = fix_capitalization(pred_ent, sentence)
         if prev_tok.lower() != pred_ent["word"].lower():
             print("Token processing error.")
@@ -266,3 +255,45 @@ def collect_named_entities(tokens):
         named_entities.append(Entity(ent_type, start_offset, len(tokens)-1))
 
     return named_entities
+
+
+def format_for_ner(df):
+
+    # In the dAnnotatedClasses dictionary, we keep, for each article/sentence,
+    # a dictionary that maps the position of an annotated named entity (i.e.
+    # its start and end character, as a tuple, as the key of the inner dictionary)
+    # and another tuple as its value, with the class of named entity (such as LOC
+    # or BUILDING, and its annotated link).
+    dAnnotated = dict()
+    dSentences = dict()
+    for i, row in df.iterrows():
+
+        sentences = literal_eval(row["sentences"])
+        annotations = literal_eval(row["annotations"])
+        
+        for s in sentences:
+            # Sentence position:
+            s_pos = s["sentence_pos"]
+            # Article-sentence pair unique identifier:
+            artsent_id = str(row["article_id"]) + "_" + str(s_pos)
+            # Sentence text:
+            dSentences[artsent_id] = s["sentence_text"]
+            # Annotations in NER-required format:
+            for a in annotations:
+                if a["sent_pos"] == s_pos:
+                    position = (int(a["mention_start"]), int(a["mention_end"]))
+                    wqlink = a["wkdt_qid"]
+                    if not isinstance(wqlink, str):
+                        wqlink = "NIL"
+                    elif wqlink == "*":
+                        wqlink = "NIL"
+                    if artsent_id in dAnnotated:
+                        dAnnotated[artsent_id][position] = (a["entity_type"], a['mention'], wqlink)
+                    else:
+                        dAnnotated[artsent_id] = {position: (a["entity_type"], a['mention'], wqlink)}
+
+    for artsent_id in dSentences:
+        if not artsent_id in dAnnotated:
+            dAnnotated[artsent_id] = dict()
+
+    return dAnnotated, dSentences
