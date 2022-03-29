@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import glob
 import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
@@ -63,7 +64,7 @@ if ner_model_id == "rel":
     cand_select_method = "rel"
     top_res_method = "rel"
 
-dAnnotated, dSentences = ner.format_for_ner(dev)
+dAnnotated, dSentencesDev = ner.format_for_ner(dev, dSentences, dev_ids)
 
 true_mentions_sents = dict()
 dPreds = dict()

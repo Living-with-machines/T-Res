@@ -373,6 +373,8 @@ def process_for_ner(tsv_topres_path):
 # Process data for performing entity linking, resulting in a dataframe with
 # one toponym per row and its annotation and resolution in columns.
 def process_for_linking(tsv_topres_path, output_path):
+    data_split = tsv_topres_path.split("/")[-2]
+
     # # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
     df = pd.DataFrame(
@@ -469,7 +471,7 @@ def store_results_hipe(dataset, dataresults, dresults):
                     elink = t[2].replace("I-", "")
                 elif t[1] != "O":
                     elink = "NIL"
-                fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
+                fw.write(t[0] + "\t" + t[1] + "\t" + t[1] + "\tO\tO\tO\tO\t" + elink + "\t" + elink + "\tO\n")
             fw.write("\n")
 
 

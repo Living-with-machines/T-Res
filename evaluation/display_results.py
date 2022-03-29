@@ -7,9 +7,9 @@ import clef_evaluation
 dataset = 'lwm'
 
 # Approach:
-ner_model_id = 'rel'
-cand_select_method = 'rel' 
-top_res_method = 'rel'
+ner_model_id = 'lwm'
+cand_select_method = 'perfectmatch' # either perfectmatch or deezymatch
+top_res_method = 'mostpopular'
 
 approach = ner_model_id+'+'+cand_select_method+'+'+top_res_method
 print (approach)
