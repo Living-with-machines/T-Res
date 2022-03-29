@@ -16,6 +16,7 @@ label_dict = {"LABEL_0": "O",
               "LABEL_10": "I-FICTION"}
 
 
+
 def fix_capitalization(entity, sentence):
     """
     These entities are the output of the NER prediction, which returns

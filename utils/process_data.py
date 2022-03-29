@@ -1,12 +1,13 @@
-import re
-import json
+import csv
 import glob
-import urllib
-import pathlib
 import hashlib
-import pandas as pd
+import json
+import pathlib
+import re
+import urllib
 from pathlib import Path
 
+import pandas as pd
 
 # ------------------------------
 # Wiki2Wiki conversion
@@ -16,8 +17,8 @@ from pathlib import Path
 # Load wikipedia2wikidata mapper:
 path = "/resources/wikipedia/extractedResources/"
 wikipedia2wikidata = dict()
-if Path(path+'wikipedia2wikidata.json').exists():
-    with open(path+'wikipedia2wikidata.json', 'r') as f:
+if Path(path + "wikipedia2wikidata.json").exists():
+    with open(path + "wikipedia2wikidata.json", "r") as f:
         wikipedia2wikidata = json.load(f)
 else:
     print("Warning: wikipedia2wikidata.json does not exist.")
@@ -54,40 +55,43 @@ def turn_wikipedia2wikidata(wikipedia_title):
 # position of a token in the document, and the character end
 # position of a token in the document).
 def process_tsv(filepath):
-    
+
     with open(filepath) as fr:
         lines = fr.readlines()
 
     # This regex identifies a token-line in the WebAnno 3.0 format:
-    regex_annline = r'^[0-9]+\-[0-9]+\t[0-9]+\-[0-9]+\t.*$'
-    
+    regex_annline = r"^[0-9]+\-[0-9]+\t[0-9]+\-[0-9]+\t.*$"
+
     # This regex identifies annotations that span multiple tokens:
-    regex_multmention = r'^(.*)\[([0-9]+)\]'
+    regex_multmention = r"^(.*)\[([0-9]+)\]"
 
     multiple_mention = 0
     prev_multmention = 0
-    complete_token = "" # Here we will build the multitoken if toponym has multiple tokens, otherwise keep the token.
-    complete_label = "" # Label corresponding to complete_token
-    complete_wkpd = "" # Wikidata ID corresponding to complete_token
-    dMTokens = dict() # Dictionary of tokens in which multitoken toponyms are joined into one token
-    dTokens = dict() # Dictionary of tokens in which multitoken toponyms remain as separated tokens (BIO scheme)
-    sent_pos = 0 # Sentence position
-    tok_pos = 0 # Token position
-    tok_start = 0 # Token start char
-    tok_end = 0 # Token end char
-    mtok_start = 0 # Multitoken start char
-    mtok_end = 0 # Multitoken end char
-    prev_endchar = 0 # Previous token end char
+    complete_token = ""  # Here we will build the multitoken if toponym has multiple tokens, otherwise keep the token.
+    complete_label = ""  # Label corresponding to complete_token
+    complete_wkpd = ""  # Wikidata ID corresponding to complete_token
+    dMTokens = (
+        dict()
+    )  # Dictionary of tokens in which multitoken toponyms are joined into one token
+    dTokens = (
+        dict()
+    )  # Dictionary of tokens in which multitoken toponyms remain as separated tokens (BIO scheme)
+    sent_pos = 0  # Sentence position
+    tok_pos = 0  # Token position
+    tok_start = 0  # Token start char
+    tok_end = 0  # Token end char
+    mtok_start = 0  # Multitoken start char
+    mtok_end = 0  # Multitoken end char
+    prev_endchar = 0  # Previous token end char
 
-    
     # Loop over all lines in the file:
     for line in lines:
-        
+
         # If the line is a token-line:
         if re.match(regex_annline, line):
-            
+
             bio_label = "O"
-            
+
             # If the token-line has no annotations, automatically provide
             # them empty annotations:
             if len(line.strip().split("\t")) == 3:
@@ -102,12 +106,12 @@ def process_tsv(filepath):
             # * label is the toponym class annotation
             else:
                 sent_tmp, tok_tmp, token, wkpd, label = line.strip().split("\t")
-                
+
             # If the annotation corresponds to a multi-token annotation (i.e. WikipediaID string
             # ends with a number enclosed in square brackets, as in "San[1]" and "Francisco[1]"):
 
             if re.match(regex_multmention, wkpd):
-                
+
                 # This code basically collates multi-token mentions in annotations
                 # together. "complete_token" is the resulting multi-token mention,
                 # "sent_pos" is the sentence position in the file, "tok_pos" is the
@@ -118,7 +122,7 @@ def process_tsv(filepath):
                 multiple_mention = int(re.match(regex_multmention, wkpd).group(2))
                 complete_label = re.match(regex_multmention, label).group(1)
                 complete_wkpd = re.match(regex_multmention, wkpd).group(1)
-                
+
                 # If we identify that we're dealing with a multi-token mention:
                 if multiple_mention == prev_multmention:
                     # Preappend as many white spaces as the distance between the end of the
@@ -154,22 +158,21 @@ def process_tsv(filepath):
                 if label and label != "_" and label != "*":
                     bio_label = "B-" + label
 
-
             sent_pos = int(sent_pos)
             tok_pos = int(tok_pos)
             tok_start = int(tok_start)
             mtok_start = int(mtok_start)
             tok_end = int(tok_end)
             mtok_end = int(mtok_end)
-                
+
             bio_label = bio_label.split("[")[0]
             wkpd = wkpd.split("[")[0]
 
             dMTokens[(sent_pos, mtok_start)] = (complete_token, complete_wkpd, complete_label, sent_pos, mtok_start)
-            dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
-    
-    return dMTokens, dTokens
 
+            dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
+
+    return dMTokens, dTokens
 
 
 # ------------------------------
@@ -178,18 +181,22 @@ def process_tsv(filepath):
 # in the document (taking into account white spaces to make sure character
 # positions match).
 def reconstruct_sentences(dTokens):
-    
-    complete_sentence = "" # In this variable we keep each complete sentence
-    sentence_id = 0 # In this variable we keep the sentence id
-    start_ids = [k[1] for k in dTokens] # Ordered list of token character start positions.
-    dSentences = dict() # In this variable we'll map the sentence id with the complete sentence
-    prev_sentid = 0 # Keeping track of previous sentence id (to know when a new sentence is starting)
-    dSentenceCharstart = dict() # In this variable we will map the sentence id with the start character
-                                # position of the sentence in question
-    
-    dIndices = dict() # In this dictionary we map the token start character in the document with 
-                      # the full mention, the sentence id, and the end character of the mention.
-    
+
+    complete_sentence = ""  # In this variable we keep each complete sentence
+    sentence_id = 0  # In this variable we keep the sentence id
+    start_ids = [k[1] for k in dTokens]  # Ordered list of token character start positions.
+    dSentences = dict()  # In this variable we'll map the sentence id with the complete sentence
+    prev_sentid = (
+        0  # Keeping track of previous sentence id (to know when a new sentence is starting)
+    )
+    dSentenceCharstart = (
+        dict()
+    )  # In this variable we will map the sentence id with the start character
+    # position of the sentence in question
+
+    dIndices = dict()  # In this dictionary we map the token start character in the document with
+    # the full mention, the sentence id, and the end character of the mention.
+
     # In this for-loop, we populate dSentenceCharstart and dIndices:
     for k in dTokens:
         sentence_id = k[0]
@@ -199,12 +206,12 @@ def reconstruct_sentences(dTokens):
         dIndices[tok_startchar] = [mention, sentence_id, tok_endchar]
         if not sentence_id in dSentenceCharstart:
             dSentenceCharstart[sentence_id] = tok_startchar
-    
+
     # In this for loop, we reconstruct the sentences, tanking into account
     # the different positional informations (and adding white spaces when
     # required):
     for i in range(start_ids[0], len(start_ids) + 1):
-        
+
         if i < len(start_ids) - 1:
 
             mention = dIndices[start_ids[i]][0]
@@ -213,28 +220,28 @@ def reconstruct_sentences(dTokens):
 
             if sentence_id != prev_sentid:
                 complete_sentence = ""
-            
+
             if mention_endchar < start_ids[i + 1]:
                 complete_sentence += mention + (" " * (start_ids[i + 1] - mention_endchar))
             elif mention_endchar == start_ids[i + 1]:
                 complete_sentence += mention
-                
+
             i = start_ids[i]
-            
+
         elif i == len(start_ids) - 1:
             if sentence_id != prev_sentid:
                 complete_sentence = dIndices[start_ids[-1]][0]
             else:
                 complete_sentence += dIndices[start_ids[-1]][0]
-        
+
         # dSentences is a dictionary where the key is the sentence id (i.e. position)
         # in the document, and the value is a two-element list: the first element is
         # the complete reconstructed sentence, and the second element is the character
         # start position of the sentence in the document:
         dSentences[sentence_id] = [complete_sentence, dSentenceCharstart[sentence_id]]
-        
+
         prev_sentid = sentence_id
-    
+
     return dSentences
                 
 
@@ -249,8 +256,8 @@ def process_lwm_for_ner(tsv_topres_path):
 
     for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
 
-        filename = fid.split("/")[-1] # Full document name
-        file_id = filename.split("_")[0] # Document id
+        filename = fid.split("/")[-1]  # Full document name
+        file_id = filename.split("_")[0]  # Document id
 
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
@@ -266,17 +273,21 @@ def process_lwm_for_ner(tsv_topres_path):
                 tokens.append(dTokens[t][0])
             else:
                 if tokens and ner_tags:
-                    lwm_data.append({"id": file_id + "_" + str(prev_sent),
-                               "ner_tags": ner_tags,
-                               "tokens": tokens})
+                    lwm_data.append(
+                        {
+                            "id": file_id + "_" + str(prev_sent),
+                            "ner_tags": ner_tags,
+                            "tokens": tokens,
+                        }
+                    )
                 ner_tags = [dTokens[t][2]]
                 tokens = [dTokens[t][0]]
             prev_sent = curr_sent
 
         # Now append the tokens and ner_tags of the last sentence:
-        lwm_data.append({"id": file_id + "_" + str(prev_sent),
-                   "ner_tags": ner_tags,
-                   "tokens": tokens})
+        lwm_data.append(
+            {"id": file_id + "_" + str(prev_sent), "ner_tags": ner_tags, "tokens": tokens}
+        )
 
     lwm_df = pd.DataFrame(lwm_data)
 
@@ -302,6 +313,7 @@ def process_lwm_for_linking(tsv_topres_path):
 
     metadata_df = pd.read_csv(tsv_topres_path + "metadata.tsv", sep="\t", index_col="fname")
 
+
     for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
         filename = fid.split("/")[-1].split(".tsv")[0] # Full document name
 
@@ -315,6 +327,7 @@ def process_lwm_for_linking(tsv_topres_path):
         ocr_quality_mean = float(metadata_df.loc[filename]["ocr_quality_mean"])
         ocr_quality_sd = float(metadata_df.loc[filename]["ocr_quality_sd"])
         publication_title = metadata_df.loc[filename]["publication_title"]
+
 
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
@@ -602,10 +615,12 @@ def store_results_hipe(dataset, dataresults, dresults):
     For EL:
     > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
     """
-    pathlib.Path("outputs/results/"+dataset+'/').mkdir(parents=True, exist_ok=True)
+    pathlib.Path("outputs/results/" + dataset + "/").mkdir(parents=True, exist_ok=True)
     # Bundle 2 associated tasks: NERC-coarse and NEL
     with open("outputs/results/" + dataset + "/" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
-        fw.write("TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n")
+        fw.write(
+            "TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n"
+        )
         for sent_id in dresults:
             fw.write("# sentence_id = " + sent_id + "\n")
             for t in dresults[sent_id]:
@@ -618,3 +633,4 @@ def store_results_hipe(dataset, dataresults, dresults):
                     elink = "NIL"
                 fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
             fw.write("\n")
+

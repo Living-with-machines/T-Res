@@ -1,5 +1,6 @@
-import glob
-import json
+import sys,os
+# Add "../" to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.pardir))
 import pandas as pd
 from pathlib import Path
 from utils import get_data
