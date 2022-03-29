@@ -81,7 +81,7 @@ for sent_id in tqdm.tqdm(dSentences.keys()):
     else:
         # Toponym recognition
         gold_standard, predictions = ner.ner_predict(
-            dSentences[sent_id], dAnnotated[sent_id], ner_pipe
+            dSentences[sent_id], dAnnotated[sent_id], ner_pipe, dataset
         )
         gold_tokenisation[sent_id] = gold_standard
         sentence_preds = [[x["word"], x["entity"], "O"] for x in predictions]

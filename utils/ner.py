@@ -3,7 +3,8 @@ from ast import literal_eval
 
 
 # Dictionary mapping NER model label with GS label:
-label_dict = {"LABEL_0": "O",
+label_dict = dict()
+label_dict["lwm"] = {"LABEL_0": "O",
               "LABEL_1": "B-LOC",
               "LABEL_2": "I-LOC",
               "LABEL_3": "B-STREET",
@@ -14,6 +15,17 @@ label_dict = {"LABEL_0": "O",
               "LABEL_8": "I-OTHER",
               "LABEL_9": "B-FICTION",
               "LABEL_10": "I-FICTION"}
+label_dict["hipe"] = {"LABEL_0": "O",
+              "LABEL_1": "B-LOC",
+              "LABEL_2": "I-LOC",
+              "LABEL_3": "B-LOC",
+              "LABEL_4": "I-LOC",
+              "LABEL_5": "B-LOC",
+              "LABEL_6": "I-LOC",
+              "LABEL_7": "B-LOC",
+              "LABEL_8": "I-LOC",
+              "LABEL_9": "B-LOC",
+              "LABEL_10": "I-LOC"}
 
 
 
@@ -134,7 +146,7 @@ def aggregate_entities(entity, lEntities):
     return lEntities
 
 
-def ner_predict(sentence, annotations, ner_pipe):
+def ner_predict(sentence, annotations, ner_pipe, dataset):
     """
     This function reads a dataset dataframe and the NER pipeline and returns
     two dictionaries:
@@ -151,7 +163,7 @@ def ner_predict(sentence, annotations, ner_pipe):
     lEntities = []
     for pred_ent in ner_preds:
         prev_tok = pred_ent["word"]
-        pred_ent["entity"] = label_dict[pred_ent["entity"]]
+        pred_ent["entity"] = label_dict[dataset][pred_ent["entity"]]
         pred_ent = fix_capitalization(pred_ent, sentence)
         if prev_tok.lower() != pred_ent["word"].lower():
             print("Token processing error.")
