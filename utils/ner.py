@@ -1,4 +1,5 @@
 from collections import namedtuple
+from ast import literal_eval
 
 
 # Dictionary mapping NER model label with GS label:
@@ -13,35 +14,6 @@ label_dict = {"LABEL_0": "O",
               "LABEL_8": "I-OTHER",
               "LABEL_9": "B-FICTION",
               "LABEL_10": "I-FICTION"}
-              
-
-def format_for_ner(df, dSentences, dev_ids):
-
-    # In the dAnnotatedClasses dictionary, we keep, for each article/sentence,
-    # a dictionary that maps the position of an annotated named entity (i.e.
-    # its start and end character, as a tuple, as the key of the inner dictionary)
-    # and another tuple as its value, with the class of named entity (such as LOC
-    # or BUILDING, and its annotated link).
-    dAnnotated = dict()
-    dSents = dict()
-    for article_id in dev_ids:
-        for sent_id in dSentences[article_id]:
-            art_sent_id = str(article_id) + "_" + str(sent_id)
-            dSents[art_sent_id] = dSentences[article_id][sent_id][0]
-            dAnnotated[art_sent_id] = dict()
-            tmp_df = df[(df["article_id"].astype(str) == article_id) & (df["sent_id"].astype(str) == sent_id)]
-            for i, row in tmp_df.iterrows():
-                position = (int(row["start"]), int(row["end"]))
-                wqlink = row["place_wqid"]
-                if not isinstance(wqlink, str):
-                    wqlink = "NIL"
-                # We do not expect any linking for toponyms that are not LOC:
-                if not row["place_class"] in ["LOC"]:
-                    wqlink = "O"
-                dAnnotated[art_sent_id][position] = (row["place_class"], row['mention'], wqlink)
-
-    return dAnnotated, dSents
-
 
 def fix_capitalization(entity, sentence):
     """
@@ -269,3 +241,45 @@ def collect_named_entities(tokens):
         named_entities.append(Entity(ent_type, start_offset, len(tokens)-1))
 
     return named_entities
+
+
+def format_for_ner(df):
+
+    # In the dAnnotatedClasses dictionary, we keep, for each article/sentence,
+    # a dictionary that maps the position of an annotated named entity (i.e.
+    # its start and end character, as a tuple, as the key of the inner dictionary)
+    # and another tuple as its value, with the class of named entity (such as LOC
+    # or BUILDING, and its annotated link).
+    dAnnotated = dict()
+    dSentences = dict()
+    for i, row in df.iterrows():
+
+        sentences = literal_eval(row["sentences"])
+        annotations = literal_eval(row["annotations"])
+        
+        for s in sentences:
+            # Sentence position:
+            s_pos = s["sentence_pos"]
+            # Article-sentence pair unique identifier:
+            artsent_id = str(row["article_id"]) + "_" + str(s_pos)
+            # Sentence text:
+            dSentences[artsent_id] = s["sentence_text"]
+            # Annotations in NER-required format:
+            for a in annotations:
+                if a["sent_pos"] == s_pos:
+                    position = (int(a["mention_start"]), int(a["mention_end"]))
+                    wqlink = a["wkdt_qid"]
+                    if not isinstance(wqlink, str):
+                        wqlink = "NIL"
+                    elif wqlink == "*":
+                        wqlink = "NIL"
+                    if artsent_id in dAnnotated:
+                        dAnnotated[artsent_id][position] = (a["entity_type"], a['mention'], wqlink)
+                    else:
+                        dAnnotated[artsent_id] = {position: (a["entity_type"], a['mention'], wqlink)}
+
+    for artsent_id in dSentences:
+        if not artsent_id in dAnnotated:
+            dAnnotated[artsent_id] = dict()
+
+    return dAnnotated, dSentences
