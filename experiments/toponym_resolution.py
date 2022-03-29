@@ -32,6 +32,7 @@ gold_path = (
     + "/lwm_gold_tokenisation.json"
 )
 
+
 # Path where to store REL API output:
 rel_end_to_end = (
     "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/results/" 
@@ -64,7 +65,7 @@ if ner_model_id == "rel":
     cand_select_method = "rel"
     top_res_method = "rel"
 
-dAnnotated, dSentencesDev = ner.format_for_ner(dev, dSentences, dev_ids)
+dAnnotated, dSentences = ner.format_for_ner(dev)
 
 true_mentions_sents = dict()
 dPreds = dict()
