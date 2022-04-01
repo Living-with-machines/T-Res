@@ -631,7 +631,7 @@ def store_results_hipe(dataset, dataresults, dresults):
                     elink = t[2].replace("I-", "")
                 elif t[1] != "O":
                     elink = "NIL"
-                fw.write(t[0] + "\t" + t[1] + "\t0\tO\tO\tO\tO\t" + elink + "\tO\tO\n")
+                fw.write(t[0] + "\t" + t[1] + "\t" + t[1] + "\tO\tO\tO\tO\t" + elink + "\t" + elink + "\tO\n")
             fw.write("\n")
 
 def read_gold_standard(path):

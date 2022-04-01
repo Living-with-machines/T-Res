@@ -77,7 +77,7 @@ def fix_hyphens(lEntities):
     and not "O", then change the current's entity preffix to "I-".
     """
     numbers = [str(x) for x in range(0,10)]
-    connectors = ["-", ",", "."] + numbers # Numbers and punctuation are common OCR errors
+    connectors = ["-", ",", ".", "’", "'"] + numbers # Numbers and punctuation are common OCR errors
     hyphEntities = []
     hyphEntities.append(lEntities[0])
     for i in range(1, len(lEntities)):
@@ -93,8 +93,6 @@ def fix_hyphens(lEntities):
             and prevEntity["entity"] != "O"
             and currEntity["entity"] != "O"
         ):
-            print("Prev:", prevEntity)
-            print("Curr:", currEntity)
             newEntity = {'entity': "I-" + prevEntity["entity"][2:],
                      'score': currEntity["score"], 
                      'word': currEntity["word"], 
