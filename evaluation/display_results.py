@@ -19,12 +19,12 @@ datasets = ["lwm", "hipe"]
 approaches = [
     {
         "ner_model_id": "skyline:lwm",  # LwM baseline
-        "cand_select_method": "perfectmatch",
+        "cand_select_method": "deezymatch",
         "top_res_method": "mostpopular",
     },
     {
         "ner_model_id": "lwm",  # LwM baseline
-        "cand_select_method": "perfectmatch",
+        "cand_select_method": "deezymatch",
         "top_res_method": "mostpopular",
     },
     {
@@ -60,7 +60,7 @@ for dataset in datasets:
         )
 
         ne_tags = ["ALL"]
-        settings = ["strict", "partial", "exact", "ent_type"]
+        settings = ["strict", "partial", "exact"]
         measures = ["P_micro", "R_micro", "F1_micro"]
 
         if not ner_model_id == "skyline:lwm": # We don't need skyline for NER
@@ -68,12 +68,15 @@ for dataset in datasets:
             for ne_tag in ne_tags:
                 for setting in settings:
                     for measure in measures:
-                        overall_results_nerc[setting + measure] = round(
-                            ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][setting][
-                                measure
-                            ],
-                            3,
-                        )
+                        if (dataset == "lwm" and ner_model_id == "rel") and setting == "strict":
+                            overall_results_nerc[setting + measure] = "--"
+                        else:
+                            overall_results_nerc[setting + measure] = round(
+                                ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][setting][
+                                    measure
+                                ],
+                                3,
+                            )
             df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
 
         overall_results_nel["dataset_approach"] = [dataset + "_" + ner_model_id]
@@ -145,4 +148,3 @@ for ne_tag in ne_tags:
 
 
 print(df_ner.to_latex(index=False))
-print(df_nel.to_latex(index=False))
