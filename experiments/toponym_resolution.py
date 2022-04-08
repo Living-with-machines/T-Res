@@ -44,12 +44,12 @@ training_set = pd.read_csv(
         "outputs/data/lwm/linking_df_train.tsv",
         sep="\t",
     )
-training_df = linking.training_class_disambiguation(training_set)
+training_df = process_data.crate_training_for_el(training_set)
 candidates_qid = []
 for i, row in training_df.iterrows():
     cands = candidate_selection.select([row["mention"]], cand_select_method, myranker)
     if row["mention"] in cands:
-        candidates_qid.append(linking.get_candidate_wikidata_ids(cands[row["mention"]]))
+        candidates_qid.append(candidate_selection.get_candidate_wikidata_ids(cands[row["mention"]]))
     else:
         candidates_qid.append(dict())
 training_df["wkdt_cands"] = candidates_qid
