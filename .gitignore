@@ -135,3 +135,5 @@ poetry.lock
 .vscode/launch.json
 evaluation/results/*
 evaluation/CLEF-HIPE-2020-scorer/
+experiments/tmp_*
+preprocessing/toponymmatching/experiments/

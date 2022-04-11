@@ -18,9 +18,11 @@ output_ner_model = "outputs/models/" # Path where NER model will be stored.
 model_name = "lwm-ner" # NER model name.
 base_model_path = "/resources/models/bert/bert_1760_1900/" # Path where base models are stored (it can be
                                                            # a pretrained Huggingface model as well, such
-                                                           # as 'distilbert-base-uncased'. The 'bert_1760_1900'
+                                                           # as 'bert-base-uncased'. The 'bert_1760_1900'
                                                            # model can be obtained following instructions in
                                                            # https://github.com/Living-with-machines/histLM).
+# model_name = "contemporary-lwm-ner"
+# base_model_path = "bert-base-uncased"
 ner_data_path = "outputs/data/lwm/" # Path where preprocessed NER data is stored.
 train_dataset = 'ner_df_train.json' # NER training set (0.80 of LwM training set).
 test_dataset = 'ner_df_dev.json' # NER test set (0.20 of LwM training set).

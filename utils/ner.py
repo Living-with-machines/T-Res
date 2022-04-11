@@ -28,6 +28,17 @@ label_dict["hipe"] = {"LABEL_0": "O",
               "LABEL_10": "I-LOC"}
 
 
+# ----------------------------------------------
+# LABEL GROUPING
+# There are some consistent errors when grouping
+# what constitutes B- or I-. The following functions
+# take care of them:
+# * fix_capitalization
+# * fix_hyphens
+# * fix_nested
+# * fix_startEntity
+# * aggregate_entities
+# ----------------------------------------------
 
 def fix_capitalization(entity, sentence):
     """
@@ -65,14 +76,24 @@ def fix_hyphens(lEntities):
     and the entity type of both previous and current token is the same
     and not "O", then change the current's entity preffix to "I-".
     """
+    numbers = [str(x) for x in range(0,10)]
+    connectors = ["-", ",", ".", "’", "'"] + numbers # Numbers and punctuation are common OCR errors
     hyphEntities = []
     hyphEntities.append(lEntities[0])
     for i in range(1, len(lEntities)):
-        prevEntity = lEntities[i-1]
+        prevEntity = hyphEntities[i-1]
         currEntity = lEntities[i]
-        # E.g. 
-        if (prevEntity["word"] == "-" or currEntity["word"] == "-") and (prevEntity["entity"][2:] == currEntity["entity"][2:]) and prevEntity["entity"] != "O" and currEntity["entity"] != "O":
-            newEntity = {'entity': "I-" + currEntity["entity"][2:],
+        if (
+            (prevEntity["word"] in connectors or currEntity["word"] in connectors) 
+            and (prevEntity["entity"][2:] == currEntity["entity"][2:] # Either the labels match...
+                 or currEntity["word"][0].islower()  # ... or the second token is not capitalised...
+                 or currEntity["word"] in numbers  # ... or the second token is a number...
+                 or prevEntity["end"] == currEntity["start"] # ... or there's no space between prev and curr tokens
+            )
+            and prevEntity["entity"] != "O"
+            and currEntity["entity"] != "O"
+        ):
+            newEntity = {'entity': "I-" + prevEntity["entity"][2:],
                      'score': currEntity["score"], 
                      'word': currEntity["word"], 
                      'start': currEntity["start"],
@@ -82,6 +103,40 @@ def fix_hyphens(lEntities):
             hyphEntities.append(currEntity)
         
     return hyphEntities
+
+
+def fix_nested(lEntities):
+    """
+    Fix B- and I- prefix assignment errors in nested entities.
+    * Description: There is problem with grouping in nested entities,
+    e.g. "Island of Terceira" (["Island", "of", "Terceira"])
+    is grouped as ["B-LOC", "I-LOC", "B-LOC"], when it should
+    be grouped as ["B-LOC", "I-LOC", "I-LOC"], as we consider
+    it one entity.
+    * Solution: if the current token or the previous token is a hyphen,
+    and the entity type of both previous and current token is  not "O", 
+    then change the current's entity preffix to "I-".
+    """
+    nestEntities = []
+    nestEntities.append(lEntities[0])
+    for i in range(1, len(lEntities)):
+        prevEntity = nestEntities[i-1]
+        currEntity = lEntities[i]
+        if (
+            prevEntity["word"].lower() == "of"
+            and prevEntity["entity"] != "O" 
+            and currEntity["entity"] != "O"
+        ):
+            newEntity = {'entity': "I-" + prevEntity["entity"][2:],
+                     'score': currEntity["score"], 
+                     'word': currEntity["word"], 
+                     'start': currEntity["start"],
+                     'end': currEntity["end"]}
+            nestEntities.append(newEntity)
+        else:
+            nestEntities.append(currEntity)
+        
+    return nestEntities
     
 
 def fix_startEntity(lEntities):
@@ -113,7 +168,7 @@ def fix_startEntity(lEntities):
 
     # Fix subsequent entities:
     for i in range(1, len(lEntities)):
-        prevEntity = lEntities[i-1]
+        prevEntity = fixEntities[i-1]
         currEntity = lEntities[i]
         # E.g. If a grouped entity begins with "I-", change to "B-". 
         if (prevEntity["entity"] == "O" or (prevEntity["entity"][2:] != currEntity["entity"][2:])) and currEntity["entity"].startswith("I-"):
@@ -169,6 +224,7 @@ def ner_predict(sentence, annotations, ner_pipe, dataset):
             print("Token processing error.")
         predictions = aggregate_entities(pred_ent, lEntities)
     predictions = fix_hyphens(predictions)
+    predictions = fix_nested(predictions)
     predictions = fix_startEntity(predictions)
 
     # The dGoldStandard dictionary is an alignment between the output

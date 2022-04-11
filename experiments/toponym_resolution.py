@@ -12,12 +12,63 @@ from sklearn.model_selection import train_test_split
 from transformers import pipeline
 from utils import candidate_selection, linking, ner, process_data
 
+# ---------------------------------------------------
+# End-to-end toponym resolution parameters
+# ---------------------------------------------------
+
 # Datasets:
-datasets = ["hipe", "lwm"]
+datasets = ["lwm", "hipe"]
+
+# Approach:
+ner_model_id = "lwm"  # lwm or rel
+cand_select_method = "deezymatch"  # either perfectmatch or deezymatch
+top_res_method = "mostpopular"
+
+# Ranking parameters for DeezyMatch:
+myranker = dict()
+if cand_select_method == "deezymatch":
+    myranker["ranking_metric"] = "faiss"
+    myranker["selection_threshold"] = 5
+    myranker["num_candidates"] = 1
+    myranker["search_size"] = 1
+    # Path to DeezyMatch model and combined candidate vectors:
+    myranker["dm_path"] = "outputs/deezymatch/"
+    myranker["dm_cands"] = "wkdtalts"
+    myranker["dm_model"] = "ocr_faiss_l2"
+    myranker["dm_output"] =  "deezymatch_on_the_fly"
+
+
+# ---------------------------------------------------
+# Create entity linking training data
+# ---------------------------------------------------
+
+# Create entity linking training data (i.e. mentions identified and candidates provided),
+# necessary for training our resolution methods:
+training_set = pd.read_csv(
+    "outputs/data/lwm/linking_df_train.tsv",
+    sep="\t",
+)
+training_df = process_data.crate_training_for_el(training_set)
+candidates_qid = []
+for i, row in training_df.iterrows():
+    cands = candidate_selection.select([row["mention"]], cand_select_method, myranker)
+    if row["mention"] in cands:
+        candidates_qid.append(
+            candidate_selection.get_candidate_wikidata_ids(cands[row["mention"]])
+        )
+    else:
+        candidates_qid.append(dict())
+training_df["wkdt_cands"] = candidates_qid
+training_df.to_csv(
+    "outputs/data/lwm/linking_df_train_cands_" + cand_select_method + ".tsv", sep="\t", index=False
+)
+
+
+# ---------------------------------------------------
+# End-to-end toponym resolution
+# ---------------------------------------------------
 
 for dataset in datasets:
-    # Approach:
-    ner_model_id = "rel"  # lwm or rel
 
     # Path to dev dataframe:
     dev = pd.read_csv(
@@ -35,8 +86,6 @@ for dataset in datasets:
         # Path to NER Model:
         ner_model = "outputs/models/" + ner_model_id + "-ner.model"
         ner_pipe = pipeline("ner", model=ner_model)
-        cand_select_method = "perfectmatch"  # either perfectmatch or deezymatch
-        top_res_method = "mostpopular"
         gold_tokenisation = {}
 
     if ner_model_id == "rel":
@@ -93,7 +142,7 @@ for dataset in datasets:
             true_mentions_sent = ner.aggregate_mentions(sentence_trues)
             # Candidate selection
             mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
-            cands = candidate_selection.select(mentions, cand_select_method)
+            cands = candidate_selection.select(mentions, cand_select_method, myranker)
 
             # # Toponym resolution
             for mention in pred_mentions_sent:
@@ -109,7 +158,8 @@ for dataset in datasets:
                         position_ner = sentence_preds[x][1][:2]
                         sentence_preds[x][2] = position_ner + link
                         sentence_preds[x].append(other_cands)
-                        if link in other_cands:
+                        true_label = sentence_trues[x][2].split("-")[-1]
+                        if true_label in other_cands:
                             sentence_skys[x][2] = sentence_trues[x][2]
 
             dPreds[sent_id] = sentence_preds
