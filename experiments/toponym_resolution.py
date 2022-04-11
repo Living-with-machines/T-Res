@@ -31,6 +31,11 @@ if cand_select_method == "deezymatch":
     myranker["selection_threshold"] = 5
     myranker["num_candidates"] = 1
     myranker["search_size"] = 1
+    # Path to DeezyMatch model and combined candidate vectors:
+    myranker["dm_path"] = "outputs/deezymatch/"
+    myranker["dm_cands"] = "wkdtalts"
+    myranker["dm_model"] = "ocr_faiss_l2"
+    myranker["dm_output"] =  "deezymatch_on_the_fly"
 
 
 # ---------------------------------------------------

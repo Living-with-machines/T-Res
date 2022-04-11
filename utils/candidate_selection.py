@@ -19,13 +19,6 @@ def get_candidate_wikidata_ids(cands):
     return dCands
 
 
-# Path to DeezyMatch model and combined candidate vectors:
-dm_path = "outputs/deezymatch/"
-dm_cands = "wkdtalts"
-dm_model = "ocr_faiss_l2"
-dm_output = "deezymatch_on_the_fly"
-
-
 ### Overall select function
 
 def select(queries, approach, myranker):
@@ -53,6 +46,11 @@ def perfect_match(queries):
 #### DeezyMatch ####
 
 def deezy_on_the_fly(queries, myranker):
+
+    dm_path = myranker["dm_path"]
+    dm_cands = myranker["dm_cands"]
+    dm_model = myranker["dm_model"]
+    dm_output = myranker["dm_output"]
 
     # first we fill in the perfect matches
     cands_dict = perfect_match(queries)
