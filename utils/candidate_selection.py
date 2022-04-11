@@ -9,8 +9,18 @@ with open(wikidata_path + "mentions_to_wikidata.json", "r") as f:
     mentions_to_wikidata = json.load(f)
 
 
+# Get candidates QIDs from strings:
+def get_candidate_wikidata_ids(cands):
+    dCands = dict()
+    for k in cands:
+        if k in mentions_to_wikidata:
+            dCands[k] = list(mentions_to_wikidata[k].keys())
+
+    return dCands
+
+
 # Path to DeezyMatch model and combined candidate vectors:
-dm_path = "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/deezymatch/"
+dm_path = "outputs/deezymatch/"
 dm_cands = "wkdtalts"
 dm_model = "ocr_faiss_l2"
 dm_output = "deezymatch_on_the_fly"

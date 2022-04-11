@@ -6,6 +6,7 @@ import pathlib
 import re
 import urllib
 from pathlib import Path
+from ast import literal_eval
 
 import pandas as pd
 
@@ -402,6 +403,27 @@ def process_lwm_for_linking(tsv_topres_path):
         df = pd.concat([df, row.to_frame().T], ignore_index=True)
         
     return df
+
+
+def crate_training_for_el(df):
+    
+    # Create dataframe by mention:
+    rows = []
+    for i, row in df.iterrows():
+        article_id = row["article_id"]
+        sentences = literal_eval(row["sentences"])
+        annotations = literal_eval(row["annotations"])
+        for s in sentences:
+            for a in annotations:
+                if s["sentence_pos"] == a["sent_pos"]:
+                    rows.append((article_id, s["sentence_pos"], s["sentence_text"], a["mention_pos"], a["mention"], a["wkdt_qid"], a["mention_start"], a["mention_end"]))
+
+    training_df = pd.DataFrame(columns=["article_id", "sentence_pos", "sentence", "mention_pos", "mention", "wkdt_qid", "mention_start", "mention_end"], data=rows)
+    # Drop rows with unlinked entities (DO WE WANT THIS?):
+    training_df = training_df[~training_df["wkdt_qid"].isnull()]
+
+    return training_df
+
 
 
 # ------------------------------

@@ -12,12 +12,17 @@ from sklearn.model_selection import train_test_split
 from transformers import pipeline
 from utils import candidate_selection, linking, ner, process_data
 
-# Datasets:'
+
+# ---------------------------------------------------
+# End-to-end toponym resolution parameters
+# ---------------------------------------------------
+
+# Datasets:
 datasets = ["lwm", "hipe"]
 
 # Approach:
 ner_model_id = "lwm"  # lwm or rel
-cand_select_method = "deezymatch" # either perfectmatch or deezymatch
+cand_select_method = "perfectmatch" # either perfectmatch or deezymatch
 top_res_method = "mostpopular"
 
 # Ranking parameters for DeezyMatch:
@@ -27,6 +32,33 @@ if cand_select_method == "deezymatch":
     myranker["selection_threshold"] = 5
     myranker["num_candidates"] = 1
     myranker["search_size"] = 1
+
+
+# ---------------------------------------------------
+# Create entity linking training data
+# ---------------------------------------------------
+
+# Create entity linking training data (i.e. mentions identified and candidates provided),
+# necessary for training our resolution methods:
+training_set = pd.read_csv(
+        "outputs/data/lwm/linking_df_train.tsv",
+        sep="\t",
+    )
+training_df = process_data.crate_training_for_el(training_set)
+candidates_qid = []
+for i, row in training_df.iterrows():
+    cands = candidate_selection.select([row["mention"]], cand_select_method, myranker)
+    if row["mention"] in cands:
+        candidates_qid.append(candidate_selection.get_candidate_wikidata_ids(cands[row["mention"]]))
+    else:
+        candidates_qid.append(dict())
+training_df["wkdt_cands"] = candidates_qid
+training_df.to_csv("outputs/data/lwm/linking_df_train_cands_" + cand_select_method + ".tsv", sep="\t", index=False)
+
+
+# ---------------------------------------------------
+# End-to-end toponym resolution
+# ---------------------------------------------------
 
 for dataset in datasets:
 
