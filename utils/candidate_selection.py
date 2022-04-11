@@ -20,7 +20,7 @@ def get_candidate_wikidata_ids(cands):
 
 
 # Path to DeezyMatch model and combined candidate vectors:
-dm_path = "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/deezymatch/"
+dm_path = "outputs/deezymatch/"
 dm_cands = "wkdtalts"
 dm_model = "ocr_faiss_l2"
 dm_output = "deezymatch_on_the_fly"
