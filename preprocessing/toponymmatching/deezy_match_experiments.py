@@ -41,6 +41,12 @@ with open('experiments/resources/wikidata_to_mentions.json', 'w') as fp:
 with open('experiments/resources/mentions_to_wikidata.json', 'w') as fp:
     json.dump(mentions_to_wikidata_keys, fp)
 
+with open('experiments/resources/wikidata_to_mentions.json') as json_file:
+    wikidata_to_mentions = json.load(json_file)
+
+with open('experiments/resources/mentions_to_wikidata.json') as json_file:
+    mentions_to_wikidata = json.load(json_file)
+
 queries = []
 candidates = []
 for i, row in train_df.iterrows():
