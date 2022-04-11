@@ -5,21 +5,31 @@ import random
 from pathlib import Path
 from tqdm import tqdm
 
+# Parameters:
+length_diff = 2 # accepted length difference between OCR and correction
+len_token = [5,15] # minimal and maximal length token
+chall_thr = [0.4, 0.7] # min and max threshold (in str sim) for challenging matches
+max_patience = 10000 # Break if no negative match is found after {max_patience} random comparisons
+num_chall = 10 # 1/{num_chall} is the ratio of challenging negative pairs (i.e. similar)
+
 # Dataframe with aligned trove data: # TO DO: make aligned dataset available
 df = pd.read_pickle("/resources/develop/mcollardanuy/toponym-resolution/resources/ocr/trove_subsample_aligned.pkl")
 
 # Path where we will store the resulting toponym pairs dataset:
-output_path = "../../experiments/outputs/deezymatch/datasets/"
+output_path = "experiments/datasets/" # Path for DeezyMatch hyperparameter experiments
+# output_path = "../../experiments/outputs/deezymatch/datasets/" # Path for final experiments
+
+Path(output_path).mkdir(parents=True, exist_ok=True)
 
 
-def acceptable(a, b, threshold, lenToken):
+def acceptable(a, b, threshold, len_token):
     # a: OCR token
     # b: human-corrected token
     # thrshold: minimal string similarity value
-    # lenToken: min and max length of OCR token to be considered
+    # len_token: min and max length of OCR token to be considered
     value = SequenceMatcher(None, a, b).ratio()
-    if lenToken[0] < len(a) < lenToken[1]:
-        if lenToken[0] < len(b) < lenToken[1]:
+    if len_token[0] < len(a) < len_token[1]:
+        if len_token[0] < len(b) < len_token[1]:
             if abs(len(a) - len(b)) <= 2:
                 # length difference is of 2 characters:
                 if (a == b or ((value >= threshold) and (not a in b) and (not b in a))):
@@ -40,7 +50,7 @@ for i, row in df.iterrows():
     for a in alignments:
         ocr_token = ocrText[a[0]:a[1]]
         human_token = humanText[a[2]:a[3]]
-        if acceptable(ocr_token, human_token, 0.82, [5,15]):
+        if acceptable(ocr_token, human_token, chall_thr[1], len_token):
             if human_token in human_to_ocr:
                 human_to_ocr[human_token].append(ocr_token)
             else:
@@ -48,11 +58,11 @@ for i, row in df.iterrows():
                 
                 
 for x in human_to_ocr:
-    # Artificially add s<->f conversion:
+    # Artificially add s<->f confusion:
     if "s" in x[:-1]:
         human_to_ocr[x].append(x[:-1].replace("s", "f", 1) + x[-1])
-    # Artificially add white space, hyphen or dot (1/500 chances)
-    spc = [" ", ".", "-"] + [""] * 497
+    # Artificially add white space, hyphen or dot (1/100) at a random position:
+    spc = [" ", ".", "-"] + [""] * 100
     randomch = random.choice(spc)
     randompos = random.randint(0, len(x) - 1)
     newx = x[:randompos] + randomch + x[randompos:]
@@ -76,27 +86,27 @@ for k in tqdm(human_to_ocr):
         count_true_matches += 1
     for i in range(len(human_to_ocr[k])):
         found_negative_match = False
-        # 1/10 negative matches are challenging:
-        if random.randint(0,10) == 0:
+        # Challenging negative matches:
+        if random.randint(0,num_chall) == 0:
             counter_rand = 0
             while found_negative_match == False:
                 counter_rand += 1
-                # Break if no match is found after 10000 random comparisons:
-                if counter_rand >= 10000:
+                # Break if no match is found after {max_patience} random comparisons:
+                if counter_rand >= max_patience:
                     break
                 random_one = random.choice(all_ocr_tokens)
-                if abs(len(random_one) - len(k)) <= 2:
-                    # Challenging match (similarity between 0.4 and 0.7):
-                    if SequenceMatcher(None, random_one, k).ratio() < 0.7 and SequenceMatcher(None, random_one, k).ratio() > 0.4:
+                if abs(len(random_one) - len(k)) <= length_diff:
+                    # Challenging match (similarity between min and max thr):
+                    if SequenceMatcher(None, random_one, k).ratio() < chall_thr[1] and SequenceMatcher(None, random_one, k).ratio() > chall_thr[0]:
                         false_pairs.append((random_one, k, "FALSE"))
                         found_negative_match = True
                         count_false_matches += 1
         else:
             while found_negative_match == False:
                 random_one = random.choice(all_ocr_tokens)
-                if abs(len(random_one) - len(k)) <= 2:
-                    # Trivial match (similarity below 0.4):
-                    if SequenceMatcher(None, random_one, k).ratio() < 0.4:
+                if abs(len(random_one) - len(k)) <= length_diff:
+                    # Trivial match (similarity below min thr):
+                    if SequenceMatcher(None, random_one, k).ratio() < chall_thr[0]:
                         false_pairs.append((random_one, k, "FALSE"))
                         found_negative_match = True
                         count_false_matches += 1
