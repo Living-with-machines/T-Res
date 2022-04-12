@@ -1,7 +1,14 @@
 import json
-from DeezyMatch import candidate_ranker
+import os
 from collections import OrderedDict
 
+import pandas as pd
+from DeezyMatch import candidate_ranker
+from numpy import NaN
+from pandarallel import pandarallel
+
+pandarallel.initialize()
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 # Load Wikidata mentions-to-wqid:
 wikidata_path = "/resources/wikidata/"
@@ -21,57 +28,101 @@ def get_candidate_wikidata_ids(cands):
 
 ### Overall select function
 
-def select(queries, approach, myranker):
+
+def select(queries, approach, myranker, already_collected_cands):
 
     if approach == "perfectmatch":
-        return perfect_match(queries)
+        return perfect_match(queries, already_collected_cands)
+
+    if approach == "partialmatch":
+        return partial_match(queries, already_collected_cands)
 
     if approach == "deezymatch":
 
-        return deezy_on_the_fly(queries, myranker)
+        return deezy_on_the_fly(queries, myranker, already_collected_cands)
 
 
 #### PerfectMatch ####
 
-def perfect_match(queries):
+
+def perfect_match(queries, already_collected_cands):
     candidates = {}
     for query in queries:
-        if query in mentions_to_wikidata:
-            candidates[query] = {query:1.0}
+        if query in already_collected_cands:
+            candidates[query] = already_collected_cands[query]
         else:
-            candidates[query] = {}
-    return candidates
+            if query in mentions_to_wikidata:
+                candidates[query] = {query: 1.0}
+                already_collected_cands[query] = {query: 1.0}
+            else:
+                candidates[query] = {}
+                already_collected_cands[query] = {}
+    return candidates, already_collected_cands
+
+
+#### PartialMatch ####
+
+
+def partial_match(queries, already_collected_cands):
+
+    candidates, already_collected_cands = perfect_match(queries, already_collected_cands)
+
+    # the rest go through
+    remainers = [x for x, y in candidates.items() if len(y) == 0]
+
+    for query in remainers:
+        mention_df = pd.DataFrame({"mentions": mentions_to_wikidata.keys()})
+        mention_df["score"] = mention_df.parallel_apply(
+            lambda row: check_if_contained(query, row), axis=1
+        )
+        mention_df = mention_df.dropna()
+        # currently hardcoded cutoff
+        top_scores = sorted(list(set(list(mention_df["score"].unique()))), reverse=True)[:1]
+        mention_df = mention_df[mention_df["score"].isin(top_scores)]
+        mention_df = mention_df.set_index("mentions").to_dict()["score"]
+        candidates[query] = mention_df
+        already_collected_cands[query] = mention_df
+    return candidates, already_collected_cands
+
+
+def check_if_contained(query, row):
+    if query.lower() in row["mentions"].lower():
+        return len(query) / len(row["mentions"])
 
 
 #### DeezyMatch ####
 
-def deezy_on_the_fly(queries, myranker):
+
+def deezy_on_the_fly(queries, myranker, already_collected_cands):
 
     dm_path = myranker["dm_path"]
     dm_cands = myranker["dm_cands"]
     dm_model = myranker["dm_model"]
     dm_output = myranker["dm_output"]
 
-    # first we fill in the perfect matches
-    cands_dict = perfect_match(queries)
+    # first we fill in the perfect matches and already collected queries
+    cands_dict, already_collected_cands = perfect_match(queries, already_collected_cands)
 
-    # the rest go through deezymatch
-    remainers = [x for x,y in cands_dict.items() if len(y)==0]
+    # the rest go through
+    remainers = [x for x, y in cands_dict.items() if len(y) == 0]
     if remainers:
         try:
-            candidates = candidate_ranker(candidate_scenario=dm_path + "combined/" + dm_cands + "_" + dm_model,
-                                        query=remainers,
-                                        ranking_metric=myranker["ranking_metric"], 
-                                        selection_threshold=myranker["selection_threshold"], 
-                                        num_candidates=myranker["num_candidates"],
-                                        search_size=myranker["search_size"],
-                                        output_path=dm_path + "ranking/" + dm_output, 
-                                        pretrained_model_path=dm_path + "models/" + dm_model + "/" + dm_model + ".model", 
-                                        pretrained_vocab_path=dm_path + "models/" + dm_model + "/" + dm_model + ".vocab")
+            candidates = candidate_ranker(
+                candidate_scenario=dm_path + "combined/" + dm_cands + "_" + dm_model,
+                query=remainers,
+                ranking_metric=myranker["ranking_metric"],
+                selection_threshold=myranker["selection_threshold"],
+                num_candidates=myranker["num_candidates"],
+                search_size=myranker["search_size"],
+                output_path=dm_path + "ranking/" + dm_output,
+                pretrained_model_path=dm_path + "models/" + dm_model + "/" + dm_model + ".model",
+                pretrained_vocab_path=dm_path + "models/" + dm_model + "/" + dm_model + ".vocab",
+            )
 
-            for idx,row in candidates.iterrows():
-                cands_dict[row['query']] = dict(row['cosine_dist'])
+            for idx, row in candidates.iterrows():
+                cands_dict[row["query"]] = dict(row["cosine_dist"])
+                already_collected_cands[row["query"]] = dict(row["cosine_dist"])
         except TypeError:
             pass
 
-    return cands_dict
+    return cands_dict, already_collected_cands

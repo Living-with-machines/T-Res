@@ -21,8 +21,10 @@ datasets = ["lwm", "hipe"]
 
 # Approach:
 ner_model_id = "lwm"  # lwm or rel
-cand_select_method = "deezymatch"  # either perfectmatch or deezymatch
+cand_select_method = "partialmatch"  # either perfectmatch, partialmatch or deezymatch
+already_collected_cands = {}  # to speed up candidate selection methods
 top_res_method = "mostpopular"
+training = False  # some resolution methods will need training
 
 # Ranking parameters for DeezyMatch:
 myranker = dict()
@@ -35,33 +37,37 @@ if cand_select_method == "deezymatch":
     myranker["dm_path"] = "outputs/deezymatch/"
     myranker["dm_cands"] = "wkdtalts"
     myranker["dm_model"] = "ocr_faiss_l2"
-    myranker["dm_output"] =  "deezymatch_on_the_fly"
+    myranker["dm_output"] = "deezymatch_on_the_fly"
 
 
 # ---------------------------------------------------
 # Create entity linking training data
 # ---------------------------------------------------
-
-# Create entity linking training data (i.e. mentions identified and candidates provided),
-# necessary for training our resolution methods:
-training_set = pd.read_csv(
-    "outputs/data/lwm/linking_df_train.tsv",
-    sep="\t",
-)
-training_df = process_data.crate_training_for_el(training_set)
-candidates_qid = []
-for i, row in training_df.iterrows():
-    cands = candidate_selection.select([row["mention"]], cand_select_method, myranker)
-    if row["mention"] in cands:
-        candidates_qid.append(
-            candidate_selection.get_candidate_wikidata_ids(cands[row["mention"]])
+if training:
+    # Create entity linking training data (i.e. mentions identified and candidates provided),
+    # necessary for training our resolution methods:
+    training_set = pd.read_csv(
+        "outputs/data/lwm/linking_df_train.tsv",
+        sep="\t",
+    )
+    training_df = process_data.crate_training_for_el(training_set)
+    candidates_qid = []
+    for i, row in training_df.iterrows():
+        cands, already_collected_cands = candidate_selection.select(
+            [row["mention"]], cand_select_method, myranker, already_collected_cands
         )
-    else:
-        candidates_qid.append(dict())
-training_df["wkdt_cands"] = candidates_qid
-training_df.to_csv(
-    "outputs/data/lwm/linking_df_train_cands_" + cand_select_method + ".tsv", sep="\t", index=False
-)
+        if row["mention"] in cands:
+            candidates_qid.append(
+                candidate_selection.get_candidate_wikidata_ids(cands[row["mention"]])
+            )
+        else:
+            candidates_qid.append(dict())
+    training_df["wkdt_cands"] = candidates_qid
+    training_df.to_csv(
+        "outputs/data/lwm/linking_df_train_cands_" + cand_select_method + ".tsv",
+        sep="\t",
+        index=False,
+    )
 
 
 # ---------------------------------------------------
@@ -142,7 +148,9 @@ for dataset in datasets:
             true_mentions_sent = ner.aggregate_mentions(sentence_trues)
             # Candidate selection
             mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
-            cands = candidate_selection.select(mentions, cand_select_method, myranker)
+            cands, already_collected_cands = candidate_selection.select(
+                mentions, cand_select_method, myranker, already_collected_cands
+            )
 
             # # Toponym resolution
             for mention in pred_mentions_sent:
