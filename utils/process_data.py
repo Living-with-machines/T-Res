@@ -5,8 +5,8 @@ import json
 import pathlib
 import re
 import urllib
-from pathlib import Path
 from ast import literal_eval
+from pathlib import Path
 
 import pandas as pd
 
@@ -33,10 +33,14 @@ def turn_wikipedia2wikidata(wikipedia_title):
         wikipedia_title = urllib.parse.unquote(wikipedia_title)
         wikipedia_title = wikipedia_title.replace("_", " ")
         wikipedia_title = urllib.parse.quote(wikipedia_title)
-        if "/" in wikipedia_title or len(wikipedia_title)>200:
-            wikipedia_title = hashlib.sha224(wikipedia_title.encode('utf-8')).hexdigest()
+        if "/" in wikipedia_title or len(wikipedia_title) > 200:
+            wikipedia_title = hashlib.sha224(wikipedia_title.encode("utf-8")).hexdigest()
         if not wikipedia_title in wikipedia2wikidata:
-            print("Warning: " + wikipedia_title + " is not in wikipedia2wikidata, the wkdt_qid will be None.")
+            print(
+                "Warning: "
+                + wikipedia_title
+                + " is not in wikipedia2wikidata, the wkdt_qid will be None."
+            )
         return wikipedia2wikidata.get(wikipedia_title)
     return None
 
@@ -169,7 +173,13 @@ def process_tsv(filepath):
             bio_label = bio_label.split("[")[0]
             wkpd = wkpd.split("[")[0]
 
-            dMTokens[(sent_pos, mtok_start)] = (complete_token, complete_wkpd, complete_label, sent_pos, mtok_start)
+            dMTokens[(sent_pos, mtok_start)] = (
+                complete_token,
+                complete_wkpd,
+                complete_label,
+                sent_pos,
+                mtok_start,
+            )
 
             dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
 
@@ -244,12 +254,12 @@ def reconstruct_sentences(dTokens):
         prev_sentid = sentence_id
 
     return dSentences
-                
+
 
 # ------------------------------
 # Process LwM data for training a NER model, where each sentence has an id,
 # and a list of tokens and assigned ner_tags using the BIO scheme, e.g.:
-# > id: 10813493_1 # document_id + "_" + sentence_id 
+# > id: 10813493_1 # document_id + "_" + sentence_id
 # > ner_tags: ['B-LOC', 'O']
 # > tokens: ['INDIA', '.']
 def process_lwm_for_ner(tsv_topres_path):
@@ -302,21 +312,24 @@ def process_lwm_for_linking(tsv_topres_path):
 
     # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
-    df = pd.DataFrame(columns = ["article_id",
-                                 "sentences", 
-                                 "annotations", 
-                                 "place", 
-                                 "decade", 
-                                 "year",
-                                 "ocr_quality_mean",
-                                 "ocr_quality_sd",
-                                 "publication_title"])
+    df = pd.DataFrame(
+        columns=[
+            "article_id",
+            "sentences",
+            "annotations",
+            "place",
+            "decade",
+            "year",
+            "ocr_quality_mean",
+            "ocr_quality_sd",
+            "publication_title",
+        ]
+    )
 
     metadata_df = pd.read_csv(tsv_topres_path + "metadata.tsv", sep="\t", index_col="fname")
 
-
     for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
-        filename = fid.split("/")[-1].split(".tsv")[0] # Full document name
+        filename = fid.split("/")[-1].split(".tsv")[0]  # Full document name
 
         # Fields to fill:
         article_id = filename.split("_")[0]
@@ -328,7 +341,6 @@ def process_lwm_for_linking(tsv_topres_path):
         ocr_quality_mean = float(metadata_df.loc[filename]["ocr_quality_mean"])
         ocr_quality_sd = float(metadata_df.loc[filename]["ocr_quality_sd"])
         publication_title = metadata_df.loc[filename]["publication_title"]
-
 
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
@@ -369,44 +381,49 @@ def process_lwm_for_linking(tsv_topres_path):
                 if "—" in mention:
                     mention = mention.split("—")[0]
 
-                annotations.append({"mention_pos": mention_counter,
-                                    "mention": mention,
-                                    "entity_type": label,
-                                    "wkpd_url": wkpd,
-                                    "wkdt_qid": wkdt,
-                                    "mention_start": mention_start,
-                                    "mention_end": mention_start + len(mention),
-                                    "sent_pos": sent_pos})
+                annotations.append(
+                    {
+                        "mention_pos": mention_counter,
+                        "mention": mention,
+                        "entity_type": label,
+                        "wkpd_url": wkpd,
+                        "wkdt_qid": wkdt,
+                        "mention_start": mention_start,
+                        "mention_end": mention_start + len(mention),
+                        "sent_pos": sent_pos,
+                    }
+                )
 
                 mention_counter += 1
 
         for s_index in dSentences:
             # We keep only the sentence, we don't need the character offset of the sentence
             # going forward:
-            sentences.append({"sentence_pos": s_index,
-                              "sentence_text": dSentences[s_index][0]})
+            sentences.append({"sentence_pos": s_index, "sentence_text": dSentences[s_index][0]})
 
-        df_columns_row = [article_id,
-                          sentences,
-                          annotations,
-                          place_publication,
-                          decade,
-                          year,
-                          ocr_quality_mean,
-                          ocr_quality_sd,
-                          publication_title]
+        df_columns_row = [
+            article_id,
+            sentences,
+            annotations,
+            place_publication,
+            decade,
+            year,
+            ocr_quality_mean,
+            ocr_quality_sd,
+            publication_title,
+        ]
 
         # Convert the row into a pd.Series:
         row = pd.Series(df_columns_row, index=df.columns)
 
         # And append it to the main dataframe:
         df = pd.concat([df, row.to_frame().T], ignore_index=True)
-        
+
     return df
 
 
 def crate_training_for_el(df):
-    
+
     # Create dataframe by mention:
     rows = []
     for i, row in df.iterrows():
@@ -416,14 +433,36 @@ def crate_training_for_el(df):
         for s in sentences:
             for a in annotations:
                 if s["sentence_pos"] == a["sent_pos"]:
-                    rows.append((article_id, s["sentence_pos"], s["sentence_text"], a["mention_pos"], a["mention"], a["wkdt_qid"], a["mention_start"], a["mention_end"]))
+                    rows.append(
+                        (
+                            article_id,
+                            s["sentence_pos"],
+                            s["sentence_text"],
+                            a["mention_pos"],
+                            a["mention"],
+                            a["wkdt_qid"],
+                            a["mention_start"],
+                            a["mention_end"],
+                        )
+                    )
 
-    training_df = pd.DataFrame(columns=["article_id", "sentence_pos", "sentence", "mention_pos", "mention", "wkdt_qid", "mention_start", "mention_end"], data=rows)
+    training_df = pd.DataFrame(
+        columns=[
+            "article_id",
+            "sentence_pos",
+            "sentence",
+            "mention_pos",
+            "mention",
+            "wkdt_qid",
+            "mention_start",
+            "mention_end",
+        ],
+        data=rows,
+    )
     # Drop rows with unlinked entities (DO WE WANT THIS?):
     training_df = training_df[~training_df["wkdt_qid"].isnull()]
 
     return training_df
-
 
 
 # ------------------------------
@@ -434,18 +473,22 @@ def crate_training_for_el(df):
 def aggregate_hipe_entities(entity, lEntities):
     newEntity = entity
     # We remove the word index because we're altering it (by joining suffixes)
-    newEntity.pop('index', None)
+    newEntity.pop("index", None)
     # If token is part of a multitoken that has already started in the previous token (i.e. I-),
     # then join with previous detected entity, unless a sentence starts with an I- entity (due
     # to incorrect sentence splitting in the original data).
     if lEntities and entity["ne_type"].startswith("I-"):
         prevEntity = lEntities.pop()
-        newEntity = {'ne_type': prevEntity["ne_type"], 
-                     'word': prevEntity["word"] + ((entity["start"] - prevEntity["end"]) * " ") + entity["word"], 
-                     "wkdt_qid": entity["wkdt_qid"],
-                     'start': prevEntity["start"],
-                     'end': entity["end"]}
-        
+        newEntity = {
+            "ne_type": prevEntity["ne_type"],
+            "word": prevEntity["word"]
+            + ((entity["start"] - prevEntity["end"]) * " ")
+            + entity["word"],
+            "wkdt_qid": entity["wkdt_qid"],
+            "start": prevEntity["start"],
+            "end": entity["end"],
+        }
+
     lEntities.append(newEntity)
     return lEntities
 
@@ -456,15 +499,19 @@ def process_hipe_for_linking(hipe_path):
 
     # Create the dataframe where we will store our annotated
     # data in a format that works better for us:
-    df = pd.DataFrame(columns = ["article_id",
-                                 "sentences", 
-                                 "annotations", 
-                                 "place", 
-                                 "decade", 
-                                 "year",
-                                 "ocr_quality_mean",
-                                 "ocr_quality_sd",
-                                 "publication_title"])
+    df = pd.DataFrame(
+        columns=[
+            "article_id",
+            "sentences",
+            "annotations",
+            "place",
+            "decade",
+            "year",
+            "ocr_quality_mean",
+            "ocr_quality_sd",
+            "publication_title",
+        ]
+    )
 
     article_id = ""
     new_sentence = ""
@@ -514,7 +561,7 @@ def process_hipe_for_linking(hipe_path):
                             new_sentence += token
                         char_index = 0
                         end_sentence = True
-                        
+
                     elif "NoSpaceAfter" in comment:
                         if end_sentence == True:
                             if start_document == False:
@@ -538,19 +585,24 @@ def process_hipe_for_linking(hipe_path):
                         char_index = end_char + 1
                         end_sentence = False
 
-                    start_document = False        
+                    start_document = False
 
                     if article_id in dAnnotations:
                         if sent_index in dAnnotations[article_id]:
-                            dAnnotations[article_id][sent_index].append((token, etag, elink, start_char, end_char))
+                            dAnnotations[article_id][sent_index].append(
+                                (token, etag, elink, start_char, end_char)
+                            )
                         else:
-                            dAnnotations[article_id][sent_index] = [(token, etag, elink, start_char, end_char)]
+                            dAnnotations[article_id][sent_index] = [
+                                (token, etag, elink, start_char, end_char)
+                            ]
                     else:
-                        dAnnotations[article_id] = {sent_index : [(token, etag, elink, start_char, end_char)]}
-            
+                        dAnnotations[article_id] = {
+                            sent_index: [(token, etag, elink, start_char, end_char)]
+                        }
+
             if article_id and new_document:
                 dSentences[article_id] = new_document
-    
 
     for k in dSentences:
         sentence_counter = 0
@@ -560,8 +612,9 @@ def process_hipe_for_linking(hipe_path):
         for i in range(len(dSentences[k])):
             sentence_counter += 1
             # Populate the dictionary of sentences per file:
-            dSentencesFile.append({"sentence_pos": sentence_counter,
-                                   "sentence_text": dSentences[k][i]})
+            dSentencesFile.append(
+                {"sentence_pos": sentence_counter, "sentence_text": dSentences[k][i]}
+            )
             # Create a dictionary of multitoken entities for linking:
             annotations = dAnnotations[k][i]
             dAnnotationsTmp = []
@@ -570,45 +623,52 @@ def process_hipe_for_linking(hipe_path):
             predictions = []
             start_sentence_pos = annotations[0][3]
             for a in annotations:
-                dAnnotationsTmp.append({"ne_type": a[1],
-                                        "word": a[0],
-                                        "wkdt_qid": a[2], 
-                                        "start": a[3] - start_sentence_pos,
-                                        "end": a[4] - start_sentence_pos})
+                dAnnotationsTmp.append(
+                    {
+                        "ne_type": a[1],
+                        "word": a[0],
+                        "wkdt_qid": a[2],
+                        "start": a[3] - start_sentence_pos,
+                        "end": a[4] - start_sentence_pos,
+                    }
+                )
 
             for a in dAnnotationsTmp:
                 predictions = aggregate_hipe_entities(a, lAnnotations)
 
             for p in predictions:
                 if p["ne_type"].lower().endswith("loc"):
-                    mentions = {"mention_pos": mention_counter,
-                                    "mention": p["word"],
-                                    "entity_type": p["ne_type"].split("-")[-1],
-                                    "wkdt_qid": p["wkdt_qid"],
-                                    "mention_start": p["start"],
-                                    "mention_end": p["end"],
-                                    "sent_pos": sentence_counter}
+                    mentions = {
+                        "mention_pos": mention_counter,
+                        "mention": p["word"],
+                        "entity_type": p["ne_type"].split("-")[-1],
+                        "wkdt_qid": p["wkdt_qid"],
+                        "mention_start": p["start"],
+                        "mention_end": p["end"],
+                        "sent_pos": sentence_counter,
+                    }
 
                     dAnnotationsFile.append(mentions)
                     mention_counter += 1
-            
-        df_columns_row = [k, # article_id
-                    dSentencesFile, # sentences
-                    dAnnotationsFile, # annotations
-                    "", # place_publication
-                    int(str(dMetadata[k]["date"])[:3] + "0"), # decade
-                    dMetadata[k]["date"], # year
-                    None, # ocr_quality_mean
-                    None, # ocr_quality_sd
-                    dMetadata[k]["newspaper_id"] # publication_title
-                    ]
 
-                # Convert the row into a pd.Series:
+        df_columns_row = [
+            k,  # article_id
+            dSentencesFile,  # sentences
+            dAnnotationsFile,  # annotations
+            "",  # place_publication
+            int(str(dMetadata[k]["date"])[:3] + "0"),  # decade
+            dMetadata[k]["date"],  # year
+            None,  # ocr_quality_mean
+            None,  # ocr_quality_sd
+            dMetadata[k]["newspaper_id"],  # publication_title
+        ]
+
+        # Convert the row into a pd.Series:
         row = pd.Series(df_columns_row, index=df.columns)
 
         # And append it to the main dataframe:
         df = pd.concat([df, row.to_frame().T], ignore_index=True)
-        
+
     return df
 
 
@@ -617,9 +677,9 @@ def process_hipe_for_linking(hipe_path):
 # ------------------------------
 
 # Skyline
-def store_resolution_skyline(dataset,approach,value):
-    pathlib.Path("outputs/results/"+dataset+'/').mkdir(parents=True, exist_ok=True)
-    skyline = open("outputs/results/"+dataset+'/'+approach+'.skyline','w')
+def store_resolution_skyline(dataset, approach, value):
+    pathlib.Path("outputs/results/" + dataset + "/").mkdir(parents=True, exist_ok=True)
+    skyline = open("outputs/results/" + dataset + "/" + approach + ".skyline", "w")
     skyline.write(str(value))
     skyline.close()
 
@@ -653,8 +713,20 @@ def store_results_hipe(dataset, dataresults, dresults):
                     elink = t[2].replace("I-", "")
                 elif t[1] != "O":
                     elink = "NIL"
-                fw.write(t[0] + "\t" + t[1] + "\t" + t[1] + "\tO\tO\tO\tO\t" + elink + "\t" + elink + "\tO\n")
+                fw.write(
+                    t[0]
+                    + "\t"
+                    + t[1]
+                    + "\t"
+                    + t[1]
+                    + "\tO\tO\tO\tO\t"
+                    + elink
+                    + "\t"
+                    + elink
+                    + "\tO\n"
+                )
             fw.write("\n")
+
 
 def read_gold_standard(path):
     if Path(path).is_file():
@@ -664,6 +736,18 @@ def read_gold_standard(path):
     else:
         print("The tokenised gold standard is missing. You should first run the LwM baselines.")
         exit()
+
+
+def match_wikipedia_to_wikidata(wiki_title):
+    el = urllib.parse.quote(wiki_title.replace("_", " "))
+    try:
+        el = wikipedia2wikidata[el]
+        return el
+    except Exception:
+        # to be checked but it seems some Wikipedia pages are not in our Wikidata
+        # see for instance Zante%2C%20California
+        return "O"
+
 
 # check NER labels in REL
 accepted_labels = {"LOC"}
@@ -682,10 +766,10 @@ def match_ent(pred_ents, start, end, prev_ann):
                     prev_ann = ent[-1]
 
                 n = ent_pos + ent[-1]
-                el = urllib.parse.quote(ent[3].replace("_", " "))
                 try:
-                    el = ent_pos + wikipedia2wikidata[el]
-                except Exception:
+                    el = ent_pos + match_wikipedia_to_wikidata(ent[3])
+                except Exception as e:
+                    print(e)
                     # to be checked but it seems some Wikipedia pages are not in our Wikidata
                     # see for instance Zante%2C%20California
                     return n, "O", ""
