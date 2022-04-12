@@ -63,7 +63,20 @@ def perfect_match(queries, already_collected_cands):
 #### PartialMatch ####
 
 
-def partial_match(queries, already_collected_cands):
+def partial_match(queries: list, already_collected_cands: dict) -> tuple[dict, dict]:
+
+    """
+    Given a list of queries return a dict of partial matches for each of them
+    and enrich another overall dictionary of candidatees
+
+    Args:
+        queries (list): list of mentions identified in a given sentence
+        already_collected_cands (dict): dictionary of already processed mentions
+
+    Returns:
+        tuple: two dictionaries: a (partial) match between queries->mentions
+                                an enriched version of already_collected_cands
+    """
 
     candidates, already_collected_cands = perfect_match(queries, already_collected_cands)
 
@@ -85,7 +98,18 @@ def partial_match(queries, already_collected_cands):
     return candidates, already_collected_cands
 
 
-def check_if_contained(query, row):
+def check_if_contained(query: str, row: pd.Series) -> float:
+    """
+    Takes a query and a Series and return the amount of overlap, if any
+
+    Args:
+        query (str): the mention identified in text
+        row (Series): the row corresponding to a mention in the KB
+
+    Returns:
+        float: the size of overlap between query and mention, max 1.0 (perfect match)
+    """
+
     if query.lower() in row["mentions"].lower():
         return len(query) / len(row["mentions"])
 
