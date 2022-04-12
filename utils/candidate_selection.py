@@ -108,6 +108,16 @@ def partial_match(queries: list, already_collected_cands: dict, damlev: bool) ->
 
 
 def damlev_dist(query: str, row: pd.Series) -> float:
+    """
+    Compute damerau levenshtein distance between query and Series
+
+    Args:
+        query (str): the mention identified in text
+        row (Series): the row corresponding to a mention in the KB
+
+    Returns:
+        float: the similarity score, between 1.0 and 0.0
+    """
     return 1.0 - normalized_damerau_levenshtein_distance(query.lower(), row["mentions"].lower())
 
 
