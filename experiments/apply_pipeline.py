@@ -18,7 +18,6 @@ class ELPipeline:
 
     def run(self, sent):
         if self.ner_model_id == "rel":
-            print(sent)
             pred_ents = linking.rel_end_to_end(sent)
             pred_ents = [
                 {
