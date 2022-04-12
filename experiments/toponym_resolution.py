@@ -21,7 +21,7 @@ datasets = ["lwm", "hipe"]
 
 # Approach:
 ner_model_id = "lwm"  # lwm or rel
-cand_select_method = "partialmatch"  # either perfectmatch, partialmatch or deezymatch
+cand_select_method = "levenshtein"  # either perfectmatch, partialmatch, levenshtein or deezymatch
 already_collected_cands = {}  # to speed up candidate selection methods
 top_res_method = "mostpopular"
 training = False  # some resolution methods will need training

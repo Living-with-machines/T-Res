@@ -6,6 +6,7 @@ import pandas as pd
 from DeezyMatch import candidate_ranker
 from numpy import NaN
 from pandarallel import pandarallel
+from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 pandarallel.initialize()
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -14,7 +15,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 wikidata_path = "/resources/wikidata/"
 with open(wikidata_path + "mentions_to_wikidata.json", "r") as f:
     mentions_to_wikidata = json.load(f)
-
 
 # Get candidates QIDs from strings:
 def get_candidate_wikidata_ids(cands):
@@ -35,7 +35,10 @@ def select(queries, approach, myranker, already_collected_cands):
         return perfect_match(queries, already_collected_cands)
 
     if approach == "partialmatch":
-        return partial_match(queries, already_collected_cands)
+        return partial_match(queries, already_collected_cands, damlem=False)
+
+    if approach == "levenshtein":
+        return partial_match(queries, already_collected_cands, damlem=True)
 
     if approach == "deezymatch":
 
@@ -63,7 +66,7 @@ def perfect_match(queries, already_collected_cands):
 #### PartialMatch ####
 
 
-def partial_match(queries: list, already_collected_cands: dict) -> tuple[dict, dict]:
+def partial_match(queries: list, already_collected_cands: dict, damlev: bool) -> tuple[dict, dict]:
 
     """
     Given a list of queries return a dict of partial matches for each of them
@@ -72,6 +75,7 @@ def partial_match(queries: list, already_collected_cands: dict) -> tuple[dict, d
     Args:
         queries (list): list of mentions identified in a given sentence
         already_collected_cands (dict): dictionary of already processed mentions
+        damlem (bool): either damerau_levenshtein or simple overlap
 
     Returns:
         tuple: two dictionaries: a (partial) match between queries->mentions
@@ -85,9 +89,14 @@ def partial_match(queries: list, already_collected_cands: dict) -> tuple[dict, d
 
     for query in remainers:
         mention_df = pd.DataFrame({"mentions": mentions_to_wikidata.keys()})
-        mention_df["score"] = mention_df.parallel_apply(
-            lambda row: check_if_contained(query, row), axis=1
-        )
+        if damlem:
+            mention_df["score"] = mention_df.parallel_apply(
+                lambda row: damlev_dist(query, row), axis=1
+            )
+        else:
+            mention_df["score"] = mention_df.parallel_apply(
+                lambda row: check_if_contained(query, row), axis=1
+            )
         mention_df = mention_df.dropna()
         # currently hardcoded cutoff
         top_scores = sorted(list(set(list(mention_df["score"].unique()))), reverse=True)[:1]
@@ -96,6 +105,10 @@ def partial_match(queries: list, already_collected_cands: dict) -> tuple[dict, d
         candidates[query] = mention_df
         already_collected_cands[query] = mention_df
     return candidates, already_collected_cands
+
+
+def damlev_dist(query: str, row: pd.Series) -> float:
+    return 1.0 - normalized_damerau_levenshtein_distance(query.lower(), row["mentions"].lower())
 
 
 def check_if_contained(query: str, row: pd.Series) -> float:
