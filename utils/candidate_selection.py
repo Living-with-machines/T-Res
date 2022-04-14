@@ -35,10 +35,10 @@ def select(queries, approach, myranker, already_collected_cands):
         return perfect_match(queries, already_collected_cands)
 
     if approach == "partialmatch":
-        return partial_match(queries, already_collected_cands, damlem=False)
+        return partial_match(queries, already_collected_cands, damlev=False)
 
     if approach == "levenshtein":
-        return partial_match(queries, already_collected_cands, damlem=True)
+        return partial_match(queries, already_collected_cands, damlev=True)
 
     if approach == "deezymatch":
 
@@ -75,7 +75,7 @@ def partial_match(queries: list, already_collected_cands: dict, damlev: bool) ->
     Args:
         queries (list): list of mentions identified in a given sentence
         already_collected_cands (dict): dictionary of already processed mentions
-        damlem (bool): either damerau_levenshtein or simple overlap
+        damlev (bool): either damerau_levenshtein or simple overlap
 
     Returns:
         tuple: two dictionaries: a (partial) match between queries->mentions
@@ -89,7 +89,7 @@ def partial_match(queries: list, already_collected_cands: dict, damlev: bool) ->
 
     for query in remainers:
         mention_df = pd.DataFrame({"mentions": mentions_to_wikidata.keys()})
-        if damlem:
+        if damlev:
             mention_df["score"] = mention_df.parallel_apply(
                 lambda row: damlev_dist(query, row), axis=1
             )
@@ -132,10 +132,14 @@ def check_if_contained(query: str, row: pd.Series) -> float:
     Returns:
         float: the size of overlap between query and mention, max 1.0 (perfect match)
     """
-
-    if query.lower() in row["mentions"].lower():
+    s1 = query.lower()
+    s2 = row["mentions"].lower()
+    # E.g. query is 'Dorset' and candidate mention is 'County of Dorset'
+    if s1 in s2:
         return len(query) / len(row["mentions"])
-
+    # E.g. query is 'County of Dorset' and candidate mention is 'Dorset'
+    if s2 in s1:
+        return len(row["mentions"]) / len(query)
 
 #### DeezyMatch ####
 
