@@ -1,31 +1,34 @@
-from collections import namedtuple
 from ast import literal_eval
-
+from collections import namedtuple
 
 # Dictionary mapping NER model label with GS label:
 label_dict = dict()
-label_dict["lwm"] = {"LABEL_0": "O",
-              "LABEL_1": "B-LOC",
-              "LABEL_2": "I-LOC",
-              "LABEL_3": "B-STREET",
-              "LABEL_4": "I-STREET",
-              "LABEL_5": "B-BUILDING",
-              "LABEL_6": "I-BUILDING",
-              "LABEL_7": "B-OTHER",
-              "LABEL_8": "I-OTHER",
-              "LABEL_9": "B-FICTION",
-              "LABEL_10": "I-FICTION"}
-label_dict["hipe"] = {"LABEL_0": "O",
-              "LABEL_1": "B-LOC",
-              "LABEL_2": "I-LOC",
-              "LABEL_3": "B-LOC",
-              "LABEL_4": "I-LOC",
-              "LABEL_5": "B-LOC",
-              "LABEL_6": "I-LOC",
-              "LABEL_7": "B-LOC",
-              "LABEL_8": "I-LOC",
-              "LABEL_9": "B-LOC",
-              "LABEL_10": "I-LOC"}
+label_dict["lwm"] = {
+    "LABEL_0": "O",
+    "LABEL_1": "B-LOC",
+    "LABEL_2": "I-LOC",
+    "LABEL_3": "B-STREET",
+    "LABEL_4": "I-STREET",
+    "LABEL_5": "B-BUILDING",
+    "LABEL_6": "I-BUILDING",
+    "LABEL_7": "B-OTHER",
+    "LABEL_8": "I-OTHER",
+    "LABEL_9": "B-FICTION",
+    "LABEL_10": "I-FICTION",
+}
+label_dict["hipe"] = {
+    "LABEL_0": "O",
+    "LABEL_1": "B-LOC",
+    "LABEL_2": "I-LOC",
+    "LABEL_3": "B-LOC",
+    "LABEL_4": "I-LOC",
+    "LABEL_5": "B-LOC",
+    "LABEL_6": "I-LOC",
+    "LABEL_7": "B-LOC",
+    "LABEL_8": "I-LOC",
+    "LABEL_9": "B-LOC",
+    "LABEL_10": "I-LOC",
+}
 
 
 # ----------------------------------------------
@@ -40,6 +43,7 @@ label_dict["hipe"] = {"LABEL_0": "O",
 # * aggregate_entities
 # ----------------------------------------------
 
+
 def fix_capitalization(entity, sentence):
     """
     These entities are the output of the NER prediction, which returns
@@ -49,19 +53,23 @@ def fix_capitalization(entity, sentence):
     """
     newEntity = entity
     if entity["word"].startswith("##"):
-        newEntity = {'entity': entity["entity"], 
-                     'score': entity["score"], 
-                     # To have "word" with the true capitalization, get token from source sentence:
-                     'word': "##" + sentence[entity["start"]:entity["end"]], 
-                     'start': entity["start"],
-                     'end': entity["end"]}
+        newEntity = {
+            "entity": entity["entity"],
+            "score": entity["score"],
+            # To have "word" with the true capitalization, get token from source sentence:
+            "word": "##" + sentence[entity["start"] : entity["end"]],
+            "start": entity["start"],
+            "end": entity["end"],
+        }
     else:
-        newEntity = {'entity': entity["entity"], 
-                     'score': entity["score"], 
-                     # To have "word" with the true capitalization, get token from source sentence:
-                     'word': sentence[entity["start"]:entity["end"]], 
-                     'start': entity["start"],
-                     'end': entity["end"]}
+        newEntity = {
+            "entity": entity["entity"],
+            "score": entity["score"],
+            # To have "word" with the true capitalization, get token from source sentence:
+            "word": sentence[entity["start"] : entity["end"]],
+            "start": entity["start"],
+            "end": entity["end"],
+        }
     return newEntity
 
 
@@ -76,32 +84,42 @@ def fix_hyphens(lEntities):
     and the entity type of both previous and current token is the same
     and not "O", then change the current's entity preffix to "I-".
     """
-    numbers = [str(x) for x in range(0,10)]
-    connectors = ["-", ",", ".", "’", "'"] + numbers # Numbers and punctuation are common OCR errors
+    numbers = [str(x) for x in range(0, 10)]
+    connectors = [
+        "-",
+        ",",
+        ".",
+        "’",
+        "'",
+    ] + numbers  # Numbers and punctuation are common OCR errors
     hyphEntities = []
     hyphEntities.append(lEntities[0])
     for i in range(1, len(lEntities)):
-        prevEntity = hyphEntities[i-1]
+        prevEntity = hyphEntities[i - 1]
         currEntity = lEntities[i]
         if (
-            (prevEntity["word"] in connectors or currEntity["word"] in connectors) 
-            and (prevEntity["entity"][2:] == currEntity["entity"][2:] # Either the labels match...
-                 or currEntity["word"][0].islower()  # ... or the second token is not capitalised...
-                 or currEntity["word"] in numbers  # ... or the second token is a number...
-                 or prevEntity["end"] == currEntity["start"] # ... or there's no space between prev and curr tokens
+            (prevEntity["word"] in connectors or currEntity["word"] in connectors)
+            and (
+                prevEntity["entity"][2:] == currEntity["entity"][2:]  # Either the labels match...
+                or currEntity["word"][0].islower()  # ... or the second token is not capitalised...
+                or currEntity["word"] in numbers  # ... or the second token is a number...
+                or prevEntity["end"]
+                == currEntity["start"]  # ... or there's no space between prev and curr tokens
             )
             and prevEntity["entity"] != "O"
             and currEntity["entity"] != "O"
         ):
-            newEntity = {'entity': "I-" + prevEntity["entity"][2:],
-                     'score': currEntity["score"], 
-                     'word': currEntity["word"], 
-                     'start': currEntity["start"],
-                     'end': currEntity["end"]}
+            newEntity = {
+                "entity": "I-" + prevEntity["entity"][2:],
+                "score": currEntity["score"],
+                "word": currEntity["word"],
+                "start": currEntity["start"],
+                "end": currEntity["end"],
+            }
             hyphEntities.append(newEntity)
         else:
             hyphEntities.append(currEntity)
-        
+
     return hyphEntities
 
 
@@ -114,30 +132,32 @@ def fix_nested(lEntities):
     be grouped as ["B-LOC", "I-LOC", "I-LOC"], as we consider
     it one entity.
     * Solution: if the current token or the previous token is a hyphen,
-    and the entity type of both previous and current token is  not "O", 
+    and the entity type of both previous and current token is  not "O",
     then change the current's entity preffix to "I-".
     """
     nestEntities = []
     nestEntities.append(lEntities[0])
     for i in range(1, len(lEntities)):
-        prevEntity = nestEntities[i-1]
+        prevEntity = nestEntities[i - 1]
         currEntity = lEntities[i]
         if (
             prevEntity["word"].lower() == "of"
-            and prevEntity["entity"] != "O" 
+            and prevEntity["entity"] != "O"
             and currEntity["entity"] != "O"
         ):
-            newEntity = {'entity': "I-" + prevEntity["entity"][2:],
-                     'score': currEntity["score"], 
-                     'word': currEntity["word"], 
-                     'start': currEntity["start"],
-                     'end': currEntity["end"]}
+            newEntity = {
+                "entity": "I-" + prevEntity["entity"][2:],
+                "score": currEntity["score"],
+                "word": currEntity["word"],
+                "start": currEntity["start"],
+                "end": currEntity["end"],
+            }
             nestEntities.append(newEntity)
         else:
             nestEntities.append(currEntity)
-        
+
     return nestEntities
-    
+
 
 def fix_startEntity(lEntities):
     """
@@ -157,46 +177,54 @@ def fix_startEntity(lEntities):
     currEntity = lEntities[0]
     if currEntity["entity"].startswith("I-"):
         fixEntities.append(
-            {'entity': "B-" + currEntity["entity"][2:],
-                     'score': currEntity["score"], 
-                     'word': currEntity["word"], 
-                     'start': currEntity["start"],
-                     'end': currEntity["end"]}
+            {
+                "entity": "B-" + currEntity["entity"][2:],
+                "score": currEntity["score"],
+                "word": currEntity["word"],
+                "start": currEntity["start"],
+                "end": currEntity["end"],
+            }
         )
     else:
         fixEntities.append(currEntity)
 
     # Fix subsequent entities:
     for i in range(1, len(lEntities)):
-        prevEntity = fixEntities[i-1]
+        prevEntity = fixEntities[i - 1]
         currEntity = lEntities[i]
-        # E.g. If a grouped entity begins with "I-", change to "B-". 
-        if (prevEntity["entity"] == "O" or (prevEntity["entity"][2:] != currEntity["entity"][2:])) and currEntity["entity"].startswith("I-"):
-            newEntity = {'entity': "B-" + currEntity["entity"][2:],
-                     'score': currEntity["score"], 
-                     'word': currEntity["word"], 
-                     'start': currEntity["start"],
-                     'end': currEntity["end"]}
+        # E.g. If a grouped entity begins with "I-", change to "B-".
+        if (
+            prevEntity["entity"] == "O" or (prevEntity["entity"][2:] != currEntity["entity"][2:])
+        ) and currEntity["entity"].startswith("I-"):
+            newEntity = {
+                "entity": "B-" + currEntity["entity"][2:],
+                "score": currEntity["score"],
+                "word": currEntity["word"],
+                "start": currEntity["start"],
+                "end": currEntity["end"],
+            }
             fixEntities.append(newEntity)
         else:
             fixEntities.append(currEntity)
-        
+
     return fixEntities
 
 
 def aggregate_entities(entity, lEntities):
     newEntity = entity
     # We remove the word index because we're altering it (by joining suffixes)
-    newEntity.pop('index', None)
+    newEntity.pop("index", None)
     # If word starts with ##, then this is a suffix, join with previous detected entity
     if entity["word"].startswith("##"):
         prevEntity = lEntities.pop()
-        newEntity = {'entity': prevEntity["entity"], 
-                     'score': ((prevEntity["score"] + entity["score"]) / 2.0), 
-                     'word': prevEntity["word"] + entity["word"].replace("##", ""), 
-                     'start': prevEntity["start"],
-                     'end': entity["end"]}
-        
+        newEntity = {
+            "entity": prevEntity["entity"],
+            "score": ((prevEntity["score"] + entity["score"]) / 2.0),
+            "word": prevEntity["word"] + entity["word"].replace("##", ""),
+            "start": prevEntity["start"],
+            "end": entity["end"],
+        }
+
     lEntities.append(newEntity)
     return lEntities
 
@@ -252,7 +280,7 @@ def ner_predict(sentence, annotations, ner_pipe, dataset):
                 gs_for_eval["entity"] = "I-" + annotations[gse][0]
                 gs_for_eval["link"] = "I-" + annotations[gse][2]
         gold_standard.append(gs_for_eval)
-            
+
     return gold_standard, predictions
 
 
@@ -260,8 +288,28 @@ def aggregate_mentions(predictions):
     mentions = collect_named_entities(predictions)
     sent_mentions = []
     for mention in mentions:
-        text_mention = " ".join([predictions[r][0] for r in range(mention.start_offset, mention.end_offset+1)])
-        sent_mentions.append({"mention":text_mention,"start_offset":mention.start_offset,"end_offset":mention.end_offset})
+        text_mention = " ".join(
+            [predictions[r][0] for r in range(mention.start_offset, mention.end_offset + 1)]
+        )
+        ner_score = [
+            predictions[r][3] for r in range(mention.start_offset, mention.end_offset + 1)
+        ]
+        ner_score = sum(ner_score) / len(ner_score)
+        ner_label = [
+            predictions[r][1] for r in range(mention.start_offset, mention.end_offset + 1)
+        ]
+        ner_label = list(
+            set([label.split("-")[1] if "-" in label else label for label in ner_label])
+        )[0]
+        sent_mentions.append(
+            {
+                "mention": text_mention,
+                "start_offset": mention.start_offset,
+                "end_offset": mention.end_offset,
+                "ner_score": ner_score,
+                "ner_label": ner_label,
+            }
+        )
     return sent_mentions
 
 
@@ -283,7 +331,7 @@ def collect_named_entities(tokens):
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
 
-        if token_tag == 'O':
+        if token_tag == "O":
             if ent_type is not None and start_offset is not None:
                 end_offset = offset - 1
                 named_entities.append(Entity(ent_type, start_offset, end_offset))
@@ -295,7 +343,7 @@ def collect_named_entities(tokens):
             ent_type = token_tag[2:]
             start_offset = offset
 
-        elif ent_type != token_tag[2:] or (ent_type == token_tag[2:] and token_tag[:1] == 'B'):
+        elif ent_type != token_tag[2:] or (ent_type == token_tag[2:] and token_tag[:1] == "B"):
 
             end_offset = offset - 1
             named_entities.append(Entity(ent_type, start_offset, end_offset))
@@ -308,7 +356,7 @@ def collect_named_entities(tokens):
     # catches an entity that goes up until the last token
 
     if ent_type is not None and start_offset is not None and end_offset is None:
-        named_entities.append(Entity(ent_type, start_offset, len(tokens)-1))
+        named_entities.append(Entity(ent_type, start_offset, len(tokens) - 1))
 
     return named_entities
 
@@ -326,7 +374,7 @@ def format_for_ner(df):
 
         sentences = literal_eval(row["sentences"])
         annotations = literal_eval(row["annotations"])
-        
+
         for s in sentences:
             # Sentence position:
             s_pos = s["sentence_pos"]
@@ -344,9 +392,11 @@ def format_for_ner(df):
                     elif wqlink == "*":
                         wqlink = "NIL"
                     if artsent_id in dAnnotated:
-                        dAnnotated[artsent_id][position] = (a["entity_type"], a['mention'], wqlink)
+                        dAnnotated[artsent_id][position] = (a["entity_type"], a["mention"], wqlink)
                     else:
-                        dAnnotated[artsent_id] = {position: (a["entity_type"], a['mention'], wqlink)}
+                        dAnnotated[artsent_id] = {
+                            position: (a["entity_type"], a["mention"], wqlink)
+                        }
 
     for artsent_id in dSentences:
         if not artsent_id in dAnnotated:

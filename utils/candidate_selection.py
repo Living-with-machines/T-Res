@@ -8,7 +8,7 @@ from numpy import NaN
 from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
-pandarallel.initialize()
+pandarallel.initialize(progress_bar=True, nb_workers=10)
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 # Load Wikidata mentions-to-wqid:
