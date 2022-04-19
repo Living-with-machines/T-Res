@@ -21,6 +21,9 @@ sklearn = "^0.0"
 docopt = "^0.6.2"
 seqeval = "^1.2.2"
 requests = "^2.27.1"
+pandarallel = "^1.6.1"
+black = "^22.3.0"
+pyxDamerauLevenshtein = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

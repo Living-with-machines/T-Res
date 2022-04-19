@@ -11,7 +11,7 @@ import re
 
 
 pairs_dataset = "ocr_string_pairs" # String pairs dataset
-dm_model = "ocr_faiss_l2" # Name of the resulting DeezyMatch model
+dm_model = "ocr_avgpool" # Name of the resulting DeezyMatch model
 candidates = "wkdtalts" # Name of the resulting Wikidata candidate list
 
 # Path to DeezyMatch outputs:
