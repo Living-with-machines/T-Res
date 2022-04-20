@@ -38,7 +38,6 @@ def create_trainset(train_path, cand_select_method, myranker, already_collected_
 def add_linking_columns(train_path, training_df):
     """
     Add the following columns:
-    * class_emb: node embedding of the Wikidata class (avg when more than one)
     * class_type: closest geotype considering class_emb (town, city, country, continent...)
     * geoscope: whether location is in county, country, or abroad
     * mention_emb: BERT embedding in context of mention
@@ -49,20 +48,20 @@ def add_linking_columns(train_path, training_df):
         training_df.loc[:,'class_type'] = training_df.loc[:,:].apply(lambda x: linking.assign_closest_class(x["class_emb"]), axis=1)
         training_df.loc[:, 'geoscope'] = training_df.loc[:, :].apply(lambda x: linking.get_geoscope_from_publication(x["place"], x["wkdt_qid"]), axis=1)
         training_df.loc[:, 'mention_emb'] = training_df.loc[:, :].apply(lambda x: linking.get_mention_vector(x, agg=np.mean), axis=1)
-        training_df.loc[:, 'mention_relevance'] = training_df.loc[:, :].apply(lambda x: linking.get_mention_relevance(x["wkdt_qid"]), axis=1)
+        training_df = training_df[training_df['class_type'].notna()]
+        training_df = training_df[training_df['mention_emb'].notna()]
+        training_df = training_df[training_df['geoscope'].notna()]
         training_df.to_csv(training_linkcols_path, sep="\t", index=False)
         return training_df
     else:
-        return pd.read_csv(training_linkcols_path, sep="\t")
+        training_df.loc[:, 'mention_emb'] = training_df.loc[:, :].apply(lambda x: literal_eval(x["mention_emb"]), axis=1)
+        return training_df
 
 
 def mention2type_classifier(training_df):
-    size_emb = len(literal_eval(training_df.iloc[0].mention_emb))
-    training_df[["mention_emb", "class_emb"]] = training_df[["mention_emb", "class_emb"]].fillna(str([0] * size_emb))
-    training_df["class_type"] = training_df["class_type"].fillna("")
-    training_df.loc[:, 'mention_emb'] = training_df.loc[:, :].apply(lambda x: literal_eval(x["mention_emb"]), axis=1)
+    training_df = training_df[training_df['class_type'].notna()]
     # X is the avg embedding of the wikipedia entry class, y is the label:
-    X, y = list(training_df["mention_emb"].values), list(training_df.class_type.values)
+    X, y = list(training_df["mention_emb"].values), list(training_df["class_type"].values)
     # Start a MLP classifier:
     model = MLPClassifier(validation_fraction=.2, early_stopping=True, random_state=42, verbose=True)
     model.fit(X,y)
@@ -70,7 +69,7 @@ def mention2type_classifier(training_df):
 
 
 def mention2scope_classifier(training_df):
-    training_df["geoscope"] = training_df["geoscope"].fillna("")
+    training_df = training_df[training_df['geoscope'].notna()]
     # X is the mention embedding, y is the geographic distange:
     X, y = list(training_df["mention_emb"].values), list(training_df["geoscope"].values)
     # Start a MLP classifier:
