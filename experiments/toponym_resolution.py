@@ -39,7 +39,7 @@ accepted_labels["loc"] = ["loc", "b-loc", "i-loc"]
 
 # Ranking parameters for DeezyMatch:
 myranker = dict()
-if cand_select_method == "deezymatch":
+if ner_model_id == "lwm" and cand_select_method == "deezymatch":
     myranker["ranking_metric"] = "faiss"
     myranker["selection_threshold"] = 10
     myranker["num_candidates"] = 3
