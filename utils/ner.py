@@ -256,16 +256,20 @@ def ner_predict(sentence, annotations, ner_pipe, dataset):
     return gold_standard, predictions
 
 
-def aggregate_mentions(predictions):
-    mentions = collect_named_entities(predictions)
+def aggregate_mentions(predictions, accepted_labels):
+    mentions = collect_named_entities(predictions, accepted_labels)
     sent_mentions = []
     for mention in mentions:
         text_mention = " ".join([predictions[r][0] for r in range(mention.start_offset, mention.end_offset+1)])
-        sent_mentions.append({"mention":text_mention,"start_offset":mention.start_offset,"end_offset":mention.end_offset})
+        sent_mentions.append({"mention": text_mention,
+                              "start_offset": mention.start_offset,
+                              "end_offset": mention.end_offset,
+                              "start_char": mention.start_char,
+                              "end_char": mention.end_char})
     return sent_mentions
 
 
-def collect_named_entities(tokens):
+def collect_named_entities(tokens, accepted_labels):
     """
     Creates a list of Entity named-tuples, storing the entity type and the start and end
     offsets of the entity.
@@ -278,15 +282,17 @@ def collect_named_entities(tokens):
     end_offset = None
     ent_type = None
 
-    Entity = namedtuple("Entity", "e_type start_offset end_offset")
+    Entity = namedtuple("Entity", "e_type start_offset end_offset start_char end_char")
+    dict_tokens = dict(enumerate(tokens))
 
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
-
-        if token_tag == 'O':
+        
+        # Only LOC entities will be resolved:
+        if not token_tag.lower() in accepted_labels:
             if ent_type is not None and start_offset is not None:
                 end_offset = offset - 1
-                named_entities.append(Entity(ent_type, start_offset, end_offset))
+                named_entities.append(Entity(ent_type, start_offset, end_offset, dict_tokens[start_offset][3], dict_tokens[end_offset][4]))
                 start_offset = None
                 end_offset = None
                 ent_type = None
@@ -298,7 +304,7 @@ def collect_named_entities(tokens):
         elif ent_type != token_tag[2:] or (ent_type == token_tag[2:] and token_tag[:1] == 'B'):
 
             end_offset = offset - 1
-            named_entities.append(Entity(ent_type, start_offset, end_offset))
+            named_entities.append(Entity(ent_type, start_offset, end_offset, dict_tokens[start_offset][3], dict_tokens[end_offset][4]))
 
             # start of a new entity
             ent_type = token_tag[2:]
@@ -308,7 +314,7 @@ def collect_named_entities(tokens):
     # catches an entity that goes up until the last token
 
     if ent_type is not None and start_offset is not None and end_offset is None:
-        named_entities.append(Entity(ent_type, start_offset, len(tokens)-1))
+        named_entities.append(Entity(ent_type, start_offset, len(tokens)-1, dict_tokens[start_offset][3], dict_tokens[len(tokens)-1][4]))
 
     return named_entities
 
@@ -322,6 +328,7 @@ def format_for_ner(df):
     # or BUILDING, and its annotated link).
     dAnnotated = dict()
     dSentences = dict()
+    dMetadata = dict()
     for i, row in df.iterrows():
 
         sentences = literal_eval(row["sentences"])
@@ -348,8 +355,19 @@ def format_for_ner(df):
                     else:
                         dAnnotated[artsent_id] = {position: (a["entity_type"], a['mention'], wqlink)}
 
+            dMetadata[artsent_id] = dict()
+            dMetadata[artsent_id]["place"] = row["place"]
+            dMetadata[artsent_id]["year"] = row["year"]
+            dMetadata[artsent_id]["ocr_quality_mean"] = row["ocr_quality_mean"]
+            dMetadata[artsent_id]["ocr_quality_sd"] = row["ocr_quality_sd"]
+            dMetadata[artsent_id]["publication_title"] = row["publication_title"]
+
     for artsent_id in dSentences:
         if not artsent_id in dAnnotated:
             dAnnotated[artsent_id] = dict()
 
-    return dAnnotated, dSentences
+    for artsent_id in dSentences:
+        if not artsent_id in dMetadata:
+            dMetadata[artsent_id] = dict()
+
+    return dAnnotated, dSentences, dMetadata

@@ -19,13 +19,13 @@ datasets = ["lwm", "hipe"]
 approaches = [
     {
         "ner_model_id": "skyline:lwm",  # LwM baseline
-        "cand_select_method": "deezymatch",
-        "top_res_method": "mostpopular",
+        "cand_select_method": "deezymatch3",
+        "top_res_method": "featclassifier",
     },
     {
         "ner_model_id": "lwm",  # LwM baseline
-        "cand_select_method": "deezymatch",
-        "top_res_method": "mostpopular",
+        "cand_select_method": "deezymatch3",
+        "top_res_method": "featclassifier",
     },
     {
         "ner_model_id": "rel",  # API end-to-end REL
