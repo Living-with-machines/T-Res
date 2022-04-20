@@ -20,7 +20,7 @@ from utils import candidate_selection, linking, ner, process_data, training
 datasets = ["lwm", "hipe"]
 
 # Approach:
-ner_model_id = "rel"  # lwm or rel
+ner_model_id = "lwm"  # lwm or rel
 cand_select_method = "deezymatch"  # either perfectmatch, partialmatch, levenshtein or deezymatch
 top_res_method = "featclassifier" # either mostpopular, mostpopularnormalised, or featclassifier
 do_training = True  # some resolution methods will need training
