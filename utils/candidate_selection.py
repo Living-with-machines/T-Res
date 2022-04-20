@@ -5,11 +5,9 @@ from collections import OrderedDict
 import pandas as pd
 from DeezyMatch import candidate_ranker
 from numpy import NaN
-from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
-pandarallel.initialize()
-os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 
 # Load Wikidata mentions-to-wqid:
 wikidata_path = "/resources/wikidata/"
@@ -140,6 +138,7 @@ def check_if_contained(query: str, row: pd.Series) -> float:
     # E.g. query is 'County of Dorset' and candidate mention is 'Dorset'
     if s2 in s1:
         return len(row["mentions"]) / len(query)
+
 
 #### DeezyMatch ####
 

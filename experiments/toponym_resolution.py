@@ -3,6 +3,8 @@ import os
 import sys
 from pathlib import Path
 
+from pandarallel import pandarallel
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
@@ -22,19 +24,33 @@ datasets = ["lwm", "hipe"]
 # Approach:
 ner_model_id = "lwm"  # lwm or rel
 cand_select_method = "deezymatch"  # either perfectmatch, partialmatch, levenshtein or deezymatch
-top_res_method = "featclassifier" # either mostpopular, mostpopularnormalised, or featclassifier
+top_res_method = "featclassifier"  # either mostpopular, mostpopularnormalised, or featclassifier
 do_training = True  # some resolution methods will need training
-accepted_labels_str = "loc" # entities considered for linking: all or loc
+accepted_labels_str = "loc"  # entities considered for linking: all or loc
 
 if ner_model_id == "rel" or top_res_method in ["mostpopular", "mostpopularnormalised"]:
     do_training = False
 
+if cand_select_method in ["partialmatch", "levenshtein"]:
+    pandarallel.initialize(nb_workers=10)
+    os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 # Entity types considered for linking (lower-cased):
 accepted_labels = dict()
-accepted_labels["all"] = ["loc", "b-loc", "i-loc",
-                          "street", "b-street", "i-street",
-                          "building", "b-building", "i-building",
-                          "other", "b-other", "i-other"]
+accepted_labels["all"] = [
+    "loc",
+    "b-loc",
+    "i-loc",
+    "street",
+    "b-street",
+    "i-street",
+    "building",
+    "b-building",
+    "i-building",
+    "other",
+    "b-other",
+    "i-other",
+]
 accepted_labels["loc"] = ["loc", "b-loc", "i-loc"]
 
 # Ranking parameters for DeezyMatch:
@@ -64,7 +80,9 @@ training_df = pd.DataFrame()
 if do_training:
     training_path = "outputs/data/lwm/linking_df_train.tsv"
     # Create a dataset for entity linking, with candidates:
-    training_df = training.create_trainset(training_path, cand_select_method, myranker, already_collected_cands)
+    training_df = training.create_trainset(
+        training_path, cand_select_method, myranker, already_collected_cands
+    )
     # Add linking columns (geotype and geoscope)
     training_df = training.add_linking_columns(training_path, training_df)
     # Train a mention to geotype classifier:
@@ -145,15 +163,30 @@ for dataset in datasets:
                 dSentences[sent_id], dAnnotated[sent_id], ner_pipe, dataset
             )
             gold_tokenisation[sent_id] = gold_standard
-            sentence_preds = [[x["word"], x["entity"], "O", x["start"], x["end"]] for x in predictions]
-            sentence_trues = [[x["word"], x["entity"], x["link"], x["start"], x["end"]] for x in gold_standard]
-            sentence_skys = [[x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_standard]
+            sentence_preds = [
+                [x["word"], x["entity"], "O", x["start"], x["end"]] for x in predictions
+            ]
+            sentence_trues = [
+                [x["word"], x["entity"], x["link"], x["start"], x["end"]] for x in gold_standard
+            ]
+            sentence_skys = [
+                [x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_standard
+            ]
 
             # Filter by accepted labels:
-            sentence_trues = [[x[0], x[1], "NIL", x[3], x[4]] if x[1] != "O" and x[1].lower() not in accepted_labels[accepted_labels_str] else x for x in sentence_trues]
+            sentence_trues = [
+                [x[0], x[1], "NIL", x[3], x[4]]
+                if x[1] != "O" and x[1].lower() not in accepted_labels[accepted_labels_str]
+                else x
+                for x in sentence_trues
+            ]
 
-            pred_mentions_sent = ner.aggregate_mentions(sentence_preds, accepted_labels[accepted_labels_str])
-            true_mentions_sent = ner.aggregate_mentions(sentence_trues, accepted_labels[accepted_labels_str])
+            pred_mentions_sent = ner.aggregate_mentions(
+                sentence_preds, accepted_labels[accepted_labels_str]
+            )
+            true_mentions_sent = ner.aggregate_mentions(
+                sentence_trues, accepted_labels[accepted_labels_str]
+            )
             # Candidate selection
             mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
             cands, already_collected_cands = candidate_selection.select(
@@ -200,7 +233,15 @@ for dataset in datasets:
         process_data.store_results_hipe(dataset, "true", dTrues)
         process_data.store_results_hipe(
             dataset,
-            "skyline:" + ner_model_id + "+" + cand_select_method + str(myranker.get("num_candidates", "")) + "+" + top_res_method + "+" + accepted_labels_str,
+            "skyline:"
+            + ner_model_id
+            + "+"
+            + cand_select_method
+            + str(myranker.get("num_candidates", ""))
+            + "+"
+            + top_res_method
+            + "+"
+            + accepted_labels_str,
             dSkys,
         )
         with open(gold_path, "w") as fp:
@@ -212,5 +253,14 @@ for dataset in datasets:
                 json.dump(rel_preds, fp)
 
     process_data.store_results_hipe(
-        dataset, ner_model_id + "+" + cand_select_method + str(myranker.get("num_candidates", "")) + "+" + top_res_method + "+" + accepted_labels_str, dPreds
+        dataset,
+        ner_model_id
+        + "+"
+        + cand_select_method
+        + str(myranker.get("num_candidates", ""))
+        + "+"
+        + top_res_method
+        + "+"
+        + accepted_labels_str,
+        dPreds,
     )
