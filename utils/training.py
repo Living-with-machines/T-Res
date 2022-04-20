@@ -59,7 +59,6 @@ def add_linking_columns(train_path, training_df):
 
 
 def mention2type_classifier(training_df):
-    training_df = training_df[training_df['class_type'].notna()]
     # X is the avg embedding of the wikipedia entry class, y is the label:
     X, y = list(training_df["mention_emb"].values), list(training_df["class_type"].values)
     # Start a MLP classifier:
@@ -69,7 +68,6 @@ def mention2type_classifier(training_df):
 
 
 def mention2scope_classifier(training_df):
-    training_df = training_df[training_df['geoscope'].notna()]
     # X is the mention embedding, y is the geographic distange:
     X, y = list(training_df["mention_emb"].values), list(training_df["geoscope"].values)
     # Start a MLP classifier:
