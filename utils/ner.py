@@ -288,7 +288,6 @@ def collect_named_entities(tokens, accepted_labels):
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
         
-        # Only LOC entities will be resolved:
         if not token_tag.lower() in accepted_labels:
             if ent_type is not None and start_offset is not None:
                 end_offset = offset - 1
