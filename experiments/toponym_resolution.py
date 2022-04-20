@@ -19,23 +19,29 @@ from utils import candidate_selection, linking, ner, process_data, training
 # Datasets:
 datasets = ["lwm", "hipe"]
 
-# Entity types accepted for linking (lower-cased):
-accepted_labels = ["loc", "b-loc", "i-loc"]
-
 # Approach:
-ner_model_id = "lwm"  # lwm or rel
-cand_select_method = "perfectmatch"  # either perfectmatch, partialmatch, levenshtein or deezymatch
+ner_model_id = "rel"  # lwm or rel
+cand_select_method = "deezymatch"  # either perfectmatch, partialmatch, levenshtein or deezymatch
 top_res_method = "featclassifier" # either mostpopular, mostpopularnormalised, or featclassifier
 do_training = True  # some resolution methods will need training
+accepted_labels_str = "loc" # entities considered for linking: all or loc
 
 if ner_model_id == "rel" or top_res_method in ["mostpopular", "mostpopularnormalised"]:
     do_training = False
+
+# Entity types considered for linking (lower-cased):
+accepted_labels = dict()
+accepted_labels["all"] = ["loc", "b-loc", "i-loc",
+                          "street", "b-street", "i-street",
+                          "building", "b-building", "i-building",
+                          "other", "b-other", "i-other"]
+accepted_labels["loc"] = ["loc", "b-loc", "i-loc"]
 
 # Ranking parameters for DeezyMatch:
 myranker = dict()
 if cand_select_method == "deezymatch":
     myranker["ranking_metric"] = "faiss"
-    myranker["selection_threshold"] = 20
+    myranker["selection_threshold"] = 10
     myranker["num_candidates"] = 3
     myranker["search_size"] = 3
     # Path to DeezyMatch model and combined candidate vectors:
@@ -67,6 +73,7 @@ if do_training:
     # Train a mention to geoscope classifier:
     model2scope = training.mention2scope_classifier(training_df)
     mylinker["model2scope"] = model2scope
+
 
 # ---------------------------------------------------
 # End-to-end toponym resolution
@@ -143,10 +150,10 @@ for dataset in datasets:
             sentence_skys = [[x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_standard]
 
             # Filter by accepted labels:
-            sentence_trues = [[x[0], x[1], "NIL", x[3], x[4]] if x[1] != "O" and x[1].lower() not in accepted_labels else x for x in sentence_trues]
+            sentence_trues = [[x[0], x[1], "NIL", x[3], x[4]] if x[1] != "O" and x[1].lower() not in accepted_labels[accepted_labels_str] else x for x in sentence_trues]
 
-            pred_mentions_sent = ner.aggregate_mentions(sentence_preds, accepted_labels)
-            true_mentions_sent = ner.aggregate_mentions(sentence_trues, accepted_labels)
+            pred_mentions_sent = ner.aggregate_mentions(sentence_preds, accepted_labels[accepted_labels_str])
+            true_mentions_sent = ner.aggregate_mentions(sentence_trues, accepted_labels[accepted_labels_str])
             # Candidate selection
             mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
             cands, already_collected_cands = candidate_selection.select(
@@ -193,7 +200,7 @@ for dataset in datasets:
         process_data.store_results_hipe(dataset, "true", dTrues)
         process_data.store_results_hipe(
             dataset,
-            "skyline:" + ner_model_id + "+" + cand_select_method + str(myranker.get("num_candidates", "")) + "+" + top_res_method,
+            "skyline:" + ner_model_id + "+" + cand_select_method + str(myranker.get("num_candidates", "")) + "+" + top_res_method + "+" + accepted_labels_str,
             dSkys,
         )
         with open(gold_path, "w") as fp:
@@ -205,5 +212,5 @@ for dataset in datasets:
                 json.dump(rel_preds, fp)
 
     process_data.store_results_hipe(
-        dataset, ner_model_id + "+" + cand_select_method + str(myranker.get("num_candidates", "")) + "+" + top_res_method, dPreds
+        dataset, ner_model_id + "+" + cand_select_method + str(myranker.get("num_candidates", "")) + "+" + top_res_method + "+" + accepted_labels_str, dPreds
     )
