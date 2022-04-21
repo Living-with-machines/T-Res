@@ -10,6 +10,10 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 from transformers import pipeline
 from utils import candidate_selection, linking, ner, process_data
+from pandarallel import pandarallel
+
+pandarallel.initialize(progress_bar=True, nb_workers=24)
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 class ELPipeline:
