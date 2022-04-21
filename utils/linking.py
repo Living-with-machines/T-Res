@@ -81,7 +81,9 @@ for rc in relevant_classes:
 # Load BERT model and tokenizer, and feature-extraction pipeline:
 base_model_path = "/resources/models/bert/bert_1760_1900/"
 tokenizer = AutoTokenizer.from_pretrained(base_model_path)
-model_rd = pipeline("feature-extraction", model=base_model_path, tokenizer=base_model_path)
+model_rd = pipeline(
+    "feature-extraction", model=base_model_path, tokenizer=base_model_path
+)
 
 # Place of publication to Wikidata QID
 places_of_publication = {
@@ -120,7 +122,9 @@ def assign_closest_class(avg_embedding):
             dict_class_similarity[rce] = 1 - spatial.distance.cosine(
                 avg_embedding, relevant_classes_embeddings[rce]
             )
-        closest_class = relevant_classes[max(dict_class_similarity, key=dict_class_similarity.get)]
+        closest_class = relevant_classes[
+            max(dict_class_similarity, key=dict_class_similarity.get)
+        ]
     return closest_class
 
 
@@ -200,7 +204,9 @@ def feat_classifier(cands, mylinker):
 
             cands_df = pd.DataFrame()
             cands_df["wqid_cand"] = [x for x in wikidata_cands]
-            cands_df["candidate_relevance"] = [wikidata_cands[x] for x in wikidata_cands]
+            cands_df["candidate_relevance"] = [
+                wikidata_cands[x] for x in wikidata_cands
+            ]
 
             cands_df["candrank_confidence"] = cands[candidate]
             cands_df.loc[:, "class_emb"] = cands_df.loc[:, :].apply(
@@ -217,9 +223,16 @@ def feat_classifier(cands, mylinker):
             )
             cands_df["candidate_relevance_norm"] = (
                 cands_df["candidate_relevance"] - min(cands_df["candidate_relevance"])
-            ) / (max(cands_df["candidate_relevance"]) - min(cands_df["candidate_relevance"]))
-            cands_df["candidate_relevance_norm"] = cands_df["candidate_relevance_norm"].fillna(0.0)
-            cands_df["candidate_relevance_norm"] = cands_df["candidate_relevance_norm"].round(3)
+            ) / (
+                max(cands_df["candidate_relevance"])
+                - min(cands_df["candidate_relevance"])
+            )
+            cands_df["candidate_relevance_norm"] = cands_df[
+                "candidate_relevance_norm"
+            ].fillna(0.0)
+            cands_df["candidate_relevance_norm"] = cands_df[
+                "candidate_relevance_norm"
+            ].round(3)
 
             weight_classtype = []
             weight_geoscope = []
