@@ -7,11 +7,6 @@ from DeezyMatch import candidate_ranker
 from numpy import NaN
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> dev
 # Load Wikidata mentions-to-wqid:
 wikidata_path = "/resources/wikidata/"
 with open(wikidata_path + "mentions_to_wikidata.json", "r") as f:

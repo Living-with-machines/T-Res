@@ -23,12 +23,8 @@ datasets = ["lwm", "hipe"]
 
 # Approach:
 ner_model_id = "lwm"  # lwm or rel
-cand_select_method = (
-    "perfectmatch"  # either perfectmatch, partialmatch, levenshtein or deezymatch
-)
-top_res_method = (
-    "mostpopular"  # either mostpopular, mostpopularnormalised, or featclassifier
-)
+cand_select_method = "deezymatch"  # either perfectmatch, partialmatch, levenshtein or deezymatch
+top_res_method = "featclassifier"  # either mostpopular, mostpopularnormalised, or featclassifier
 do_training = True  # some resolution methods will need training
 accepted_labels_str = "loc"  # entities considered for linking: all or loc
 
@@ -111,11 +107,7 @@ for dataset in datasets:
 
     # Path where to store gold tokenization:
     gold_path = (
-        "outputs/results/"
-        + dataset
-        + "/lwm_gold_tokenisation_"
-        + accepted_labels_str
-        + ".json"
+        "outputs/results/" + dataset + "/lwm_gold_tokenisation_" + accepted_labels_str + ".json"
     )
 
     # Path where to store REL API output:
@@ -162,9 +154,7 @@ for dataset in datasets:
                 start = token["start"]
                 end = token["end"]
                 word = token["word"]
-                n, el, prev_ann = process_data.match_ent(
-                    pred_ents, start, end, prev_ann
-                )
+                n, el, prev_ann = process_data.match_ent(pred_ents, start, end, prev_ann)
                 sentence_preds.append([word, n, el])
 
             dPreds[sent_id] = sentence_preds
@@ -179,19 +169,16 @@ for dataset in datasets:
                 [x["word"], x["entity"], "O", x["start"], x["end"]] for x in predictions
             ]
             sentence_trues = [
-                [x["word"], x["entity"], x["link"], x["start"], x["end"]]
-                for x in gold_standard
+                [x["word"], x["entity"], x["link"], x["start"], x["end"]] for x in gold_standard
             ]
             sentence_skys = [
-                [x["word"], x["entity"], "O", x["start"], x["end"]]
-                for x in gold_standard
+                [x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_standard
             ]
 
             # Filter by accepted labels:
             sentence_trues = [
                 [x[0], x[1], "NIL", x[3], x[4]]
-                if x[1] != "O"
-                and x[1].lower() not in accepted_labels[accepted_labels_str]
+                if x[1] != "O" and x[1].lower() not in accepted_labels[accepted_labels_str]
                 else x
                 for x in sentence_trues
             ]

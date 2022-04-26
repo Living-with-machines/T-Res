@@ -287,6 +287,7 @@ def most_popular(cands, type):
             most_popular_wikidata_cand, score = sorted(
                 wikidata_cands.items(), key=operator.itemgetter(1), reverse=True
             )[0]
+            total_score += score
             if score > keep_highest_score:
                 keep_highest_score = score
                 keep_most_popular = most_popular_wikidata_cand

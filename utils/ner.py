@@ -304,11 +304,11 @@ def aggregate_mentions(predictions, accepted_labels):
             {
                 "mention": text_mention,
                 "start_offset": mention.start_offset,
-                "end_offset": mention.end_offset,,
+                "end_offset": mention.end_offset,
                 "start_char": mention.start_char,
-                "end_char": mention.end_char
+                "end_char": mention.end_char,
                 "ner_score": ner_score,
-                "ner_label": ner_label,
+                "ner_label": ner_label
             }
         )
     return sent_mentions
