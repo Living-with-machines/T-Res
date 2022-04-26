@@ -71,9 +71,10 @@ with open("./experiments/datasets/candidates.txt", "w") as f:
     f.write("\n".join(map(str, candidates)))
 
 # -----------------------------------------------------
-# First batch of experiments:
+# First batch of experiments: char
 # -----------------------------------------------------
 
+exp_name = "char"
 list_architectures = ["gru", "lstm"]
 list_pooling_modes = [
     "hstates_layers_simple",
@@ -84,6 +85,26 @@ list_pooling_modes = [
 ]
 list_dropouts = [0.01, 0.5]
 list_learning_rates = [0.01, 0.001]
+
+# # -----------------------------------------------------
+# # Second batch of experiments: charDrLr
+# # -----------------------------------------------------
+
+# exp_name = "charDrLr"
+# list_architectures = ["gru", "lstm"]
+# list_pooling_modes = ["average"] # This is by far the best
+# list_dropouts = [0.01, 0.1, 0.2, 0.5]
+# list_learning_rates = [0.1, 0.01, 0.001]
+
+# # -----------------------------------------------------
+# # Third batch of experiments: charDr02Lr
+# # -----------------------------------------------------
+
+# exp_name = "charDr02Lr"
+# list_architectures = ["gru"]
+# list_pooling_modes = ["average"] # This is by far the best
+# list_dropouts = [0.2]
+# list_learning_rates = [0.05, 0.005]
 
 experiment_id = 0
 
@@ -115,14 +136,14 @@ for architecture in list_architectures:
                 dl_inputs["gru_lstm"]["leraning_rate"] = learning_rate
 
                 with open(
-                    "./experiments/inputs/input_dfm_char_" + str(experiment_id) + ".yaml", "w"
+                    "./experiments/inputs/input_dfm_" + exp_name + "_" + str(experiment_id) + ".yaml", "w"
                 ) as outfile:
                     yaml.dump(dl_inputs, outfile, explicit_start=True, indent=2)
 
                 # --------------------------------------
                 # Train the DeezyMatch model:
 
-                dm_model = "char_" + str(experiment_id)
+                dm_model = exp_name + "_" + str(experiment_id)
 
                 # If model does not exist already, train a new model:
                 if not Path(
@@ -130,7 +151,9 @@ for architecture in list_architectures:
                 ).is_file():
                     # train a new model
                     dm_train(
-                        input_file_path="./experiments/inputs/input_dfm_char_"
+                        input_file_path="./experiments/inputs/input_dfm_" 
+                        + exp_name 
+                        + "_"
                         + str(experiment_id)
                         + ".yaml",
                         dataset_path="./experiments/datasets/ocr_string_pairs.txt",
@@ -147,7 +170,9 @@ for architecture in list_architectures:
                     dm_inference(
                         input_file_path="./experiments/models/"
                         + dm_model
-                        + "/input_dfm_char_"
+                        + "/input_dfm_" 
+                        + exp_name 
+                        + "_"
                         + str(experiment_id)
                         + ".yaml",
                         dataset_path="./experiments/datasets/candidates.txt",
@@ -188,7 +213,9 @@ for architecture in list_architectures:
                     dm_inference(
                         input_file_path="./experiments/models/"
                         + dm_model
-                        + "/input_dfm_char_"
+                        + "/input_dfm_" 
+                        + exp_name 
+                        + "_"
                         + str(experiment_id)
                         + ".yaml",
                         dataset_path="./experiments/datasets/queries.txt",

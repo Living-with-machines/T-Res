@@ -17,8 +17,8 @@ num_chall = 10  # 1/{num_chall} is the ratio of challenging negative pairs (i.e.
 df = pd.read_pickle("../../resources/ocr/trove_subsample_aligned.pkl")
 
 # Path where we will store the resulting toponym pairs dataset:
-output_path = "experiments/datasets/"  # Path for DeezyMatch hyperparameter experiments
-# output_path = "../../experiments/outputs/deezymatch/datasets/" # Path for final experiments
+# output_path = "experiments/datasets/"  # Path for DeezyMatch hyperparameter experiments
+output_path = "../../experiments/outputs/deezymatch/datasets/" # Path for final experiments
 
 Path(output_path).mkdir(parents=True, exist_ok=True)
 

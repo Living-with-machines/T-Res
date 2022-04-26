@@ -428,39 +428,19 @@ def crate_training_for_el(df):
     rows = []
     for i, row in df.iterrows():
         article_id = row["article_id"]
+        place = row["place"]
+        year = row["year"]
+        ocr_quality_mean = row["ocr_quality_mean"]
+        ocr_quality_sd = row["ocr_quality_sd"]
+        publication_title = row["publication_title"]
         sentences = literal_eval(row["sentences"])
         annotations = literal_eval(row["annotations"])
         for s in sentences:
             for a in annotations:
                 if s["sentence_pos"] == a["sent_pos"]:
-                    rows.append(
-                        (
-                            article_id,
-                            s["sentence_pos"],
-                            s["sentence_text"],
-                            a["mention_pos"],
-                            a["mention"],
-                            a["wkdt_qid"],
-                            a["mention_start"],
-                            a["mention_end"],
-                        )
-                    )
+                    rows.append((article_id, s["sentence_pos"], s["sentence_text"], a["mention_pos"], a["mention"], a["wkdt_qid"], a["mention_start"], a["mention_end"], year, place, ocr_quality_mean, ocr_quality_sd, publication_title))
 
-    training_df = pd.DataFrame(
-        columns=[
-            "article_id",
-            "sentence_pos",
-            "sentence",
-            "mention_pos",
-            "mention",
-            "wkdt_qid",
-            "mention_start",
-            "mention_end",
-        ],
-        data=rows,
-    )
-    # Drop rows with unlinked entities (DO WE WANT THIS?):
-    training_df = training_df[~training_df["wkdt_qid"].isnull()]
+    training_df = pd.DataFrame(columns=["article_id", "sentence_pos", "sentence", "mention_pos", "mention", "wkdt_qid", "mention_start", "mention_end", "year", "place", "ocr_quality_mean", "ocr_quality_sd", "publication_title"], data=rows)
 
     return training_df
 
