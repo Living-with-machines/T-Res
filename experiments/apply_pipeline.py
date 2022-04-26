@@ -85,9 +85,9 @@ class ELPipeline:
 # Ranking parameters for DeezyMatch:
 myranker = dict()
 myranker["ranking_metric"] = "faiss"
-myranker["selection_threshold"] = 10
-myranker["num_candidates"] = 3
-myranker["search_size"] = 3
+myranker["selection_threshold"] = 20
+myranker["num_candidates"] = 1
+myranker["search_size"] = 1
 # Path to DeezyMatch model and combined candidate vectors:
 myranker["dm_path"] = "outputs/deezymatch/"
 myranker["dm_cands"] = "wkdtalts"
@@ -104,7 +104,7 @@ ner_pipe = pipeline("ner", model=ner_model)
 
 end_to_end = ELPipeline(
     ner_model_id=ner_model_id,
-    cand_select_method="perfectmatch",
+    cand_select_method="deezymatch",
     top_res_method="mostpopular",
     myranker=myranker,
     accepted_tags=accepted_tags,
@@ -124,10 +124,11 @@ hmd_files = [
     "0002645_plaintext.csv",  # London conservative 1853-1858
     "0002085_plaintext.csv",  # Merseyside conservative 1860-1861
     "0002088_plaintext.csv",  # Merseyside conservative 1832-1854
+    "0002194_plaintext.csv",  # The Sun
 ]
 
 folder = "/resources/hmd-samples/hmd_data_extension_words/"
-Path(folder).mkdir(parents=True, exist_ok=True)
+Path(folder + "results/").mkdir(parents=True, exist_ok=True)
 
 for dataset_name in hmd_files:
 
@@ -145,7 +146,7 @@ for dataset_name in hmd_files:
     years = list(dataset.year.unique())
 
     for month, year in list(itertools.product(months, years)):
-        print(dataset_name, month, year)
+        print(dataset_name)
 
         output_name_toponyms = (
             dataset_name.replace(".csv", "") + "_" + year + month + "_toponyms.json"
@@ -154,25 +155,28 @@ for dataset_name in hmd_files:
             dataset_name.replace(".csv", "") + "_" + year + month + "_metadata.json"
         )
 
-        dataset_tmp = dataset.copy()
-        dataset_tmp = dataset_tmp[
-            (dataset_tmp["month"] == month) & (dataset_tmp["year"] == year)
-        ]
+        if not Path(folder + "results/" + output_name_toponyms).exists():
+            print("*", month, year)
 
-        if not dataset_tmp.empty:
-            dataset_tmp["toponyms"] = dataset_tmp.apply(
-                lambda row: end_to_end.run(row["target_sentence"]), axis=1
-            )
+            dataset_tmp = dataset.copy()
+            dataset_tmp = dataset_tmp[
+                (dataset_tmp["month"] == month) & (dataset_tmp["year"] == year)
+            ]
 
-            metadata_dict = dataset[
-                ["article_path", "hits", "publication_code", "year", "month", "day"]
-            ].to_dict("index")
-            output_dict = dict(zip(dataset_tmp.index, dataset_tmp.toponyms))
+            if not dataset_tmp.empty:
+                dataset_tmp["toponyms"] = dataset_tmp.apply(
+                    lambda row: end_to_end.run(row["target_sentence"]), axis=1
+                )
 
-            with open(folder + "results/" + output_name_toponyms, "w") as fp:
-                json.dump(output_dict, fp)
-            with open(folder + "results/" + output_name_metadata, "w") as fp:
-                json.dump(metadata_dict, fp)
+                metadata_dict = dataset[
+                    ["article_path", "hits", "publication_code", "year", "month", "day"]
+                ].to_dict("index")
+                output_dict = dict(zip(dataset_tmp.index, dataset_tmp.toponyms))
+
+                with open(folder + "results/" + output_name_toponyms, "w") as fp:
+                    json.dump(output_dict, fp)
+                with open(folder + "results/" + output_name_metadata, "w") as fp:
+                    json.dump(metadata_dict, fp)
 
 end = datetime.datetime.now()
 print(end - start)
