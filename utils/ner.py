@@ -291,7 +291,7 @@ def aggregate_mentions(predictions, accepted_labels):
         text_mention = " ".join([predictions[r][0] for r in range(mention.start_offset, mention.end_offset+1)])
 
         ner_score = [
-            predictions[r][3] for r in range(mention.start_offset, mention.end_offset + 1)
+            predictions[r][-1] for r in range(mention.start_offset, mention.end_offset + 1)
         ]
         ner_score = sum(ner_score) / len(ner_score)
         ner_label = [

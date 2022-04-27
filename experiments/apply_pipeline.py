@@ -3,83 +3,24 @@ import itertools
 import json
 import os
 import sys
-
-import pandas as pd
+from argparse import ArgumentParser
 from pathlib import Path
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
-from transformers import pipeline
-from utils import candidate_selection, linking, ner, process_data
+import pandas as pd
 from pandarallel import pandarallel
+from pipeline import ELPipeline
+from transformers import pipeline
+
+parser = ArgumentParser()
+parser.add_argument("-t", "--test", dest="test", help="run in test mode", action="store_true")
+args = parser.parse_args()
+
 
 pandarallel.initialize(progress_bar=True, nb_workers=24)
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
-
-class ELPipeline:
-    def __init__(
-        self,
-        ner_model_id,
-        cand_select_method,
-        top_res_method,
-        myranker,
-        accepted_tags,
-        ner_pipe,
-    ):
-        self.ner_model_id = ner_model_id
-        self.cand_select_method = cand_select_method
-        self.top_res_method = top_res_method
-        self.myranker = myranker
-        self.accepted_tags = accepted_tags
-        self.already_collected_cands = {}
-        self.ner_pipe = ner_pipe
-
-    def run(self, sent):
-        if self.ner_model_id == "rel":
-            pred_ents = linking.rel_end_to_end(sent)
-            pred_ents = [
-                {
-                    "wikidata_id": process_data.match_wikipedia_to_wikidata(pred[3]),
-                    "ner_conf": pred[4],
-                    "el_conf": pred[5],
-                }
-                for pred in pred_ents
-            ]
-            return pred_ents
-        if self.ner_model_id == "lwm":
-            gold_standard, predictions = ner.ner_predict(sent, [], self.ner_pipe, "lwm")
-            sentence_preds = [
-                [x["word"], x["entity"], "O", x["score"]] for x in predictions
-            ]
-            pred_mentions_sent = ner.aggregate_mentions(sentence_preds)
-
-            pred_mentions_sent = [
-                x for x in pred_mentions_sent if x["ner_label"] in self.accepted_tags
-            ]
-
-            mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
-            cands, self.already_collected_cands = candidate_selection.select(
-                mentions,
-                self.cand_select_method,
-                self.myranker,
-                self.already_collected_cands,
-            )
-            pred_ents = []
-            for mention in pred_mentions_sent:
-                text_mention = mention["mention"]
-                res = linking.select(cands[text_mention], self.top_res_method)
-                if res:
-                    # entity_candidate, candidate_score = cands[text_mention]
-                    link, el_score, other_cands = res
-                    # mention["entity_candidate"] = entity_candidate
-                    # mention["candidate_score"] = candidate_score
-                    mention["wikidata_id"] = link
-                    mention["el_score"] = el_score
-                    pred_ents.append(mention)
-
-            return pred_ents
 
 
 # Ranking parameters for DeezyMatch:
@@ -94,7 +35,10 @@ myranker["dm_cands"] = "wkdtalts"
 myranker["dm_model"] = "ocr_avgpool"
 myranker["dm_output"] = "deezymatch_on_the_fly"
 
-accepted_tags = {"LOC"}
+# Instantiate a dictionary to keep linking parameters:
+mylinker = dict()
+
+accepted_labels = ["loc", "b-loc", "i-loc"]
 
 start = datetime.datetime.now()
 
@@ -107,15 +51,10 @@ end_to_end = ELPipeline(
     cand_select_method="deezymatch",
     top_res_method="mostpopular",
     myranker=myranker,
-    accepted_tags=accepted_tags,
+    mylinker=mylinker,
+    accepted_labels=accepted_labels,
     ner_pipe=ner_pipe,
 )
-
-# dSentences = {
-#    "1": "Liverpool is a big city up north",
-#    "2": "I do not like London in winter",
-#    "3": "We live in L%ndon",
-# }
 
 print("Start!")
 
@@ -127,12 +66,15 @@ hmd_files = [
     "0002194_plaintext.csv",  # The Sun
 ]
 
-folder = "/resources/hmd-samples/hmd_data_extension_words/"
+folder = "../resources/hmd-samples/hmd_data_extension_words/"
 Path(folder + "results/").mkdir(parents=True, exist_ok=True)
 
 for dataset_name in hmd_files:
 
     dataset = pd.read_csv(folder + dataset_name)
+
+    if args.test:
+        dataset = dataset[:10]
 
     # Add metadata columns: publication_code, year, month, day, and article_path
     dataset[["publication_code", "year", "monthday", "article_path"]] = dataset[
@@ -155,7 +97,7 @@ for dataset_name in hmd_files:
             dataset_name.replace(".csv", "") + "_" + year + month + "_metadata.json"
         )
 
-        if not Path(folder + "results/" + output_name_toponyms).exists():
+        if not Path(folder + "results/" + output_name_toponyms).exists() and not args.test:
             print("*", month, year)
 
             dataset_tmp = dataset.copy()
