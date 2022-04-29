@@ -46,10 +46,16 @@ ner_model_id = "lwm"
 ner_model = "outputs/models/" + ner_model_id + "-ner.model"
 ner_pipe = pipeline("ner", model=ner_model)
 
+cand_select_method = "deezymatch"
+top_res_method = "mostpopular"
+
+gold_positions = []
+dataset = "hmd"
+
 end_to_end = ELPipeline(
     ner_model_id=ner_model_id,
-    cand_select_method="deezymatch",
-    top_res_method="mostpopular",
+    cand_select_method=cand_select_method,
+    top_res_method=top_res_method,
     myranker=myranker,
     mylinker=mylinker,
     accepted_labels=accepted_labels,
@@ -97,7 +103,7 @@ for dataset_name in hmd_files:
             dataset_name.replace(".csv", "") + "_" + year + month + "_metadata.json"
         )
 
-        if not Path(folder + "results/" + output_name_toponyms).exists() and not args.test:
+        if not Path(folder + "results/" + output_name_toponyms).exists() or args.test:
             print("*", month, year)
 
             dataset_tmp = dataset.copy()
@@ -107,7 +113,7 @@ for dataset_name in hmd_files:
 
             if not dataset_tmp.empty:
                 dataset_tmp["toponyms"] = dataset_tmp.apply(
-                    lambda row: end_to_end.run(row["target_sentence"]), axis=1
+                    lambda row: end_to_end.run(row["target_sentence"])["predicted_ents"], axis=1
                 )
 
                 metadata_dict = dataset[
