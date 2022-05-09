@@ -1,3 +1,5 @@
+import os
+import sys
 import json
 import operator
 from ast import literal_eval
@@ -13,75 +15,263 @@ import requests
 from scipy import spatial
 from transformers import AutoTokenizer, pipeline
 
+# Add "../" to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+from utils import training
+
+
+class Linker:
+    def __init__(
+        self,
+        method,
+        myranker,
+        accepted_labels,
+        do_training,
+        training_csv,
+        resources_path,
+        linking_resources,
+    ):
+        self.do_training = do_training
+        self.training_csv = training_csv
+        self.accepted_labels = accepted_labels
+        self.method = method
+        self.resources_path = resources_path
+        self.linking_resources = linking_resources
+        self.myranker = myranker
+
+    def __str__(self):
+        s = "Entity Linking:\n* Method: {0}\n* Accepted labels: {1}\n* Do training: {2}\n* Linking resources: {3}\n".format(
+            self.method,
+            self.accepted_labels,
+            str(self.do_training),
+            ",".join(list(self.linking_resources.keys())),
+        )
+        return s
+
+    def load_resources(self):
+        """
+        Load resources required for linking.
+        """
+
+        def eval_with_exception(string):
+            try:
+                return literal_eval(string)
+            except ValueError:
+                return None
+
+        # No need to load the resources if the method is REL.
+        if self.method != "rel":
+
+            # Load Wikidata gazetteer
+            gaz = pd.read_csv(
+                self.resources_path + "wikidata_gazetteer.csv", low_memory=False
+            )
+            gaz["instance_of"] = gaz["instance_of"].apply(eval_with_exception)
+            gaz["hcounties"] = gaz["hcounties"].apply(eval_with_exception)
+            gaz["countries"] = gaz["countries"].apply(eval_with_exception)
+            self.linking_resources["gazetteer"] = gaz
+
+            # Load Wikidata mentions-to-wikidata (with normalized counts) to QID dictionary
+            if self.method == "mostpopularnormalised":
+                with open(
+                    self.resources_path + "mentions_to_wikidata_normalized.json", "r"
+                ) as f:
+                    self.linking_resources["mentions_to_wikidata"] = json.load(f)
+
+            # Load Wikidata mentions-to-wikidata (with absolute counts) to QID dictionary
+            if self.method == "mostpopular":
+                with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
+                    self.linking_resources["mentions_to_wikidata"] = json.load(f)
+
+            # Load and map Wikidata class embeddings to their corresponding Wikidata class id:
+            dict_class_to_embedding = dict()
+            # To do: change the path to the resources one:
+            embeddings = np.load(
+                "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/embeddings/embeddings.npy"
+            )
+            with open(
+                "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/embeddings/wikidata_ids.txt"
+            ) as fr:
+                wikidata_ids = fr.readlines()
+                wikidata_ids = np.array([x.strip() for x in wikidata_ids])
+            for i in range(len(wikidata_ids)):
+                dict_class_to_embedding[wikidata_ids[i]] = embeddings[i]
+            self.linking_resources["class_embeddings"] = dict_class_to_embedding
+
+            return self.linking_resources
+
+        return self.linking_resources
+
+    def filtering_labels(self):
+        """
+        Select entities that will be considered for entity linking.
+        """
+        if self.accepted_labels == "all":
+            self.accepted_labels = [
+                "loc",
+                "b-loc",
+                "i-loc",
+                "street",
+                "b-street",
+                "i-street",
+                "building",
+                "b-building",
+                "i-building",
+                "other",
+                "b-other",
+                "i-other",
+            ]
+        if self.accepted_labels == "loc":
+            self.accepted_labels = ["loc", "b-loc", "i-loc"]
+        return self.accepted_labels
+
+    def train(self):
+        """
+        Do the training if necessary.
+        """
+        if self.do_training == True:
+            # Create a dataset for entity linking, with candidates retrieved
+            # using the chosen method:
+            training_df = training.create_trainset(self.training_csv, self.myranker)
+            return training_df
+
+    # Select disambiguation method
+    def run(self, cands, mention_context):
+        if cands:
+            if "mostpopular" in self.method:
+                link, score, other_cands = self.most_popular(cands)
+                return (link, score, other_cands)
+            # elif "featclassifier" in self.method:
+            #     link, score, other_cands = feat_classifier(cands, mylinker)
+            #     return (link, score, other_cands)
+
+    # Most popular candidate:
+    def most_popular(self, cands):
+        keep_most_popular = ""
+        keep_highest_score = 0.0
+        total_score = 0.0
+        all_candidates = []
+        for candidate in cands:
+            wikidata_cands = self.linking_resources["mentions_to_wikidata"][candidate]
+            if wikidata_cands:
+                # most popular wikidata entry (based on number of time mention points to page)
+                most_popular_wikidata_cand, score = sorted(
+                    wikidata_cands.items(), key=operator.itemgetter(1), reverse=True
+                )[0]
+                total_score += score
+                if score > keep_highest_score:
+                    keep_highest_score = score
+                    keep_most_popular = most_popular_wikidata_cand
+                all_candidates += wikidata_cands
+        # we return the predicted, the score (overall the total), and the other candidates
+        final_score = keep_highest_score / total_score
+        return keep_most_popular, final_score, set(all_candidates)
+
+    # def run(self):
+    #     """
+    #     Run toponym resolution.
+    #     """
+
+    #     print("*** Loading the resources...")
+    #     self.linking_resources = self.load_resources()
+    #     print("*** Resources loaded!\n")
+
+    #     # print(self.linking_resources.keys())
+    #     self.train()
+
+
+# # Ranking parameters for DeezyMatch:
+# myranker = dict()
+# cand_select_method = "perfectmatch"
+
+# end_to_end = Linker(
+#     method="featclassifier",
+#     cand_select_method=cand_select_method,
+#     myranker=myranker,
+#     accepted_labels=["loc", "b-loc", "i-loc"],
+#     do_training=True,
+#     training_csv="/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_train.tsv",
+#     resources_path="/resources/wikidata/",
+#     linking_resources=dict(),
+# )
+
+# end_to_end.run()
+
+# import sys
+
+# sys.exit()
+
+"""
+
 # ---------------------------------------------------
 # LOAD RESOURCES
 # ---------------------------------------------------
 
-# Load Wikidata mentions to QID dictionary
-wikidata_path = "/resources/wikidata/"
-with open(wikidata_path + "mentions_to_wikidata.json", "r") as f:
-    mentions_to_wikidata = json.load(f)
+# # Load Wikidata mentions to QID dictionary
+# wikidata_path = "/resources/wikidata/"
+# with open(wikidata_path + "mentions_to_wikidata.json", "r") as f:
+#     mentions_to_wikidata = json.load(f)
 
-# Load Wikidata normalized mentions to QID dictionary
-with open(wikidata_path + "mentions_to_wikidata_normalized.json", "r") as f:
-    normalised_mentions_to_wikidata = json.load(f)
+# # Load Wikidata normalized mentions to QID dictionary
+# with open(wikidata_path + "mentions_to_wikidata_normalized.json", "r") as f:
+#     normalised_mentions_to_wikidata = json.load(f)
 
 # Load Wikidata gazetteer:
-gaz = pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)
+# gaz = pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)
 
 
-def eval_with_exception(string):
-    try:
-        return literal_eval(string)
-    except ValueError:
-        return None
+# def eval_with_exception(string):
+#     try:
+#         return literal_eval(string)
+#     except ValueError:
+#         return None
 
 
-gaz["instance_of"] = gaz["instance_of"].apply(eval_with_exception)
-gaz["hcounties"] = gaz["hcounties"].apply(eval_with_exception)
-gaz["countries"] = gaz["countries"].apply(eval_with_exception)
+# gaz["instance_of"] = gaz["instance_of"].apply(eval_with_exception)
+# gaz["hcounties"] = gaz["hcounties"].apply(eval_with_exception)
+# gaz["countries"] = gaz["countries"].apply(eval_with_exception)
 
 # Map Wikidata entries to the list of classes they are instances of:
 dict_wqid_to_classes = dict(zip(gaz.wikidata_id, gaz.instance_of))
 dict_wqid_to_hcounties = dict(zip(gaz.wikidata_id, gaz.hcounties))
 dict_wqid_to_countries = dict(zip(gaz.wikidata_id, gaz.countries))
 
-# Load and map Wikidata class embeddings to their corresponding Wikidata class id:
-dict_class_to_embedding = dict()
-embeddings = np.load(
-    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/embeddings/embeddings.npy"
-)
-with open(
-    "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/embeddings/wikidata_ids.txt"
-) as fr:
-    wikidata_ids = fr.readlines()
-    wikidata_ids = np.array([x.strip() for x in wikidata_ids])
-for i in range(len(wikidata_ids)):
-    dict_class_to_embedding[wikidata_ids[i]] = embeddings[i]
+# # Load and map Wikidata class embeddings to their corresponding Wikidata class id:
+# dict_class_to_embedding = dict()
+# embeddings = np.load(
+#     "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/embeddings/embeddings.npy"
+# )
+# with open(
+#     "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/embeddings/wikidata_ids.txt"
+# ) as fr:
+#     wikidata_ids = fr.readlines()
+#     wikidata_ids = np.array([x.strip() for x in wikidata_ids])
+# for i in range(len(wikidata_ids)):
+#     dict_class_to_embedding[wikidata_ids[i]] = embeddings[i]
 
-# List of geographical classes we're interested in, mapped to wikidata IDs: (TO DO: turn to file in resources?)
-relevant_classes = {
-    "Q6256": "country",
-    "Q5107": "continent",
-    "Q56061": "administrative territorial entity",
-    "Q532": "village",
-    "Q3957": "town",
-    "Q515": "city",
-    "Q34442": "road",
-    "Q41176": "building",
-    "Q123705": "neighborhood",
-    "Q4022": "river",
-    "Q165": "sea",
-    "Q82794": "geographic region",
-    "Q13418847": "historical event",
-    "Q8502": "mountain",
-    "Q22698": "park",
-}
+# # List of geographical classes we're interested in, mapped to wikidata IDs: (TO DO: turn to file in resources?)
+# relevant_classes = {
+#     "Q6256": "country",
+#     "Q5107": "continent",
+#     "Q56061": "administrative territorial entity",
+#     "Q532": "village",
+#     "Q3957": "town",
+#     "Q515": "city",
+#     "Q34442": "road",
+#     "Q41176": "building",
+#     "Q123705": "neighborhood",
+#     "Q4022": "river",
+#     "Q165": "sea",
+#     "Q82794": "geographic region",
+#     "Q13418847": "historical event",
+#     "Q8502": "mountain",
+#     "Q22698": "park",
+# }
 
-# Dictionary that maps relevant wikidata classes to their embedding:
-relevant_classes_embeddings = dict()
-for rc in relevant_classes:
-    relevant_classes_embeddings[rc] = dict_class_to_embedding[rc]
+# # Dictionary that maps relevant wikidata classes to their embedding:
+# relevant_classes_embeddings = dict()
+# for rc in relevant_classes:
+#     relevant_classes_embeddings[rc] = dict_class_to_embedding[rc]
 
 # Load BERT model and tokenizer, and feature-extraction pipeline:
 base_model_path = "/resources/models/bert/bert_1760_1900/"
@@ -297,11 +487,14 @@ def most_popular(cands, type):
     return keep_most_popular, final_score, set(all_candidates)
 
 
+
+
+"""
+
 # REL end-to-end using the API
 API_URL = "https://rel.cs.ru.nl/api"
 
 
 def rel_end_to_end(sent):
-
     el_result = requests.post(API_URL, json={"text": sent, "spans": []}).json()
     return el_result

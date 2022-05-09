@@ -62,7 +62,9 @@ def perfect_match(queries, already_collected_cands):
 #### PartialMatch ####
 
 
-def partial_match(queries: list, already_collected_cands: dict, damlev: bool) -> tuple[dict, dict]:
+def partial_match(
+    queries: list, already_collected_cands: dict, damlev: bool
+) -> tuple[dict, dict]:
 
     """
     Given a list of queries return a dict of partial matches for each of them
@@ -78,7 +80,9 @@ def partial_match(queries: list, already_collected_cands: dict, damlev: bool) ->
                                 an enriched version of already_collected_cands
     """
 
-    candidates, already_collected_cands = perfect_match(queries, already_collected_cands)
+    candidates, already_collected_cands = perfect_match(
+        queries, already_collected_cands
+    )
 
     # the rest go through
     remainers = [x for x, y in candidates.items() if len(y) == 0]
@@ -95,7 +99,9 @@ def partial_match(queries: list, already_collected_cands: dict, damlev: bool) ->
             )
         mention_df = mention_df.dropna()
         # currently hardcoded cutoff
-        top_scores = sorted(list(set(list(mention_df["score"].unique()))), reverse=True)[:1]
+        top_scores = sorted(
+            list(set(list(mention_df["score"].unique()))), reverse=True
+        )[:1]
         mention_df = mention_df[mention_df["score"].isin(top_scores)]
         mention_df = mention_df.set_index("mentions").to_dict()["score"]
         candidates[query] = mention_df
@@ -114,7 +120,9 @@ def damlev_dist(query: str, row: pd.Series) -> float:
     Returns:
         float: the similarity score, between 1.0 and 0.0
     """
-    return 1.0 - normalized_damerau_levenshtein_distance(query.lower(), row["mentions"].lower())
+    return 1.0 - normalized_damerau_levenshtein_distance(
+        query.lower(), row["mentions"].lower()
+    )
 
 
 def check_if_contained(query: str, row: pd.Series) -> float:
@@ -149,7 +157,9 @@ def deezy_on_the_fly(queries, myranker, already_collected_cands):
     dm_output = myranker["dm_output"]
 
     # first we fill in the perfect matches and already collected queries
-    cands_dict, already_collected_cands = perfect_match(queries, already_collected_cands)
+    cands_dict, already_collected_cands = perfect_match(
+        queries, already_collected_cands
+    )
 
     # the rest go through
     remainers = [x for x, y in cands_dict.items() if len(y) == 0]
@@ -163,8 +173,18 @@ def deezy_on_the_fly(queries, myranker, already_collected_cands):
                 num_candidates=myranker["num_candidates"],
                 search_size=myranker["search_size"],
                 output_path=dm_path + "ranking/" + dm_output,
-                pretrained_model_path=dm_path + "models/" + dm_model + "/" + dm_model + ".model",
-                pretrained_vocab_path=dm_path + "models/" + dm_model + "/" + dm_model + ".vocab",
+                pretrained_model_path=dm_path
+                + "models/"
+                + dm_model
+                + "/"
+                + dm_model
+                + ".model",
+                pretrained_vocab_path=dm_path
+                + "models/"
+                + dm_model
+                + "/"
+                + dm_model
+                + ".vocab",
             )
 
             for idx, row in candidates.iterrows():

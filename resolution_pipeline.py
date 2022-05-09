@@ -1,37 +1,34 @@
-from utils import candidate_selection, linking, ner, process_data
+from utils import ranking, linking, ner, process_data
 
 
 class ELPipeline:
     def __init__(
         self,
         ner_model_id,
-        cand_select_method,
-        top_res_method,
         myranker,
         mylinker,
-        accepted_labels,
         ner_pipe,
+        dataset,
     ):
         self.ner_model_id = ner_model_id
-        self.cand_select_method = cand_select_method
-        self.top_res_method = top_res_method
         self.myranker = myranker
         self.mylinker = mylinker
-        self.accepted_labels = accepted_labels
-        self.already_collected_cands = {}
         self.ner_pipe = ner_pipe
+        self.dataset = dataset
 
     def run(self, sent, dataset=None, annotations=[], gold_positions=[], metadata=None):
 
+        accepted_labels = self.mylinker.filtering_labels()
+
         if self.ner_model_id == "rel":
-            predicted_tags = linking.rel_end_to_end(sent)
+            # predicted_tags = linking.rel_end_to_end(sent)
             predicted_ents = [
                 {
                     "wikidata_id": process_data.match_wikipedia_to_wikidata(pred[3]),
                     "ner_conf": pred[4],
                     "el_conf": pred[5],
                 }
-                for pred in predicted_tags
+                for pred in annotations
             ]
 
             sentence_preds = []
@@ -42,40 +39,40 @@ class ELPipeline:
                 start = token["start"]
                 end = token["end"]
                 word = token["word"]
-                n, el, prev_ann = process_data.match_ent(predicted_tags, start, end, prev_ann)
+                n, el, prev_ann = process_data.match_ent(
+                    annotations, start, end, prev_ann
+                )
                 sentence_preds.append([word, n, el])
 
         if self.ner_model_id == "lwm":
             gold_positions, predictions = ner.ner_predict(
-                sent, annotations, self.ner_pipe, dataset
+                sent, annotations, self.ner_pipe, self.dataset
             )
             sentence_preds = [
                 [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
                 for x in predictions
             ]
             sentence_trues = [
-                [x["word"], x["entity"], x["link"], x["start"], x["end"]] for x in gold_positions
+                [x["word"], x["entity"], x["link"], x["start"], x["end"]]
+                for x in gold_positions
             ]
             sentence_skys = [
-                [x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_positions
+                [x["word"], x["entity"], "O", x["start"], x["end"]]
+                for x in gold_positions
             ]
             # Filter by accepted labels:
             sentence_trues = [
                 [x[0], x[1], "NIL", x[3], x[4], x[5]]
-                if x[1] != "O" and x[1].lower() not in self.accepted_labels
+                if x[1] != "O" and x[1].lower() not in accepted_labels
                 else x
                 for x in sentence_trues
             ]
 
-            pred_mentions_sent = ner.aggregate_mentions(sentence_preds, self.accepted_labels)
+            pred_mentions_sent = ner.aggregate_mentions(sentence_preds, accepted_labels)
 
             mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
-            cands, self.already_collected_cands = candidate_selection.select(
-                mentions,
-                self.cand_select_method,
-                self.myranker,
-                self.already_collected_cands,
-            )
+            cands, self.already_collected_cands = self.myranker.run(mentions)
+
             predicted_ents = []
             for mention in pred_mentions_sent:
                 text_mention = mention["mention"]
@@ -89,14 +86,9 @@ class ELPipeline:
                 mention_context["mention"] = text_mention
                 mention_context["mention_start"] = start_char
                 mention_context["mention_end"] = end_char
-                self.mylinker["mention_context"] = mention_context
-                self.mylinker["metadata"] = metadata
+                mention_context["metadata"] = metadata
 
-                # TO DO: FIND CORRECT PLACE OF PUBLICATION FOR HIPE:
-                if dataset == "hipe":
-                    self.mylinker["metadata"]["place"] = "New York"
-
-                res = linking.select(cands[text_mention], self.top_res_method, self.mylinker)
+                res = self.mylinker.run(cands[text_mention], mention_context)
 
                 if res:
                     entity_candidate = cands[text_mention]

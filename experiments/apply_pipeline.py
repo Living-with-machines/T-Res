@@ -11,34 +11,88 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 import pandas as pd
 from pandarallel import pandarallel
-from pipeline import ELPipeline
+from resolution_pipeline import ELPipeline
 from transformers import pipeline
 
+from utils import process_data, ner, ranking, linking
+
+
 parser = ArgumentParser()
-parser.add_argument("-t", "--test", dest="test", help="run in test mode", action="store_true")
+parser.add_argument(
+    "-t", "--test", dest="test", help="run in test mode", action="store_true"
+)
 args = parser.parse_args()
 
 
-pandarallel.initialize(progress_bar=True, nb_workers=24)
-os.environ["TOKENIZERS_PARALLELISM"] = "true"
+# Named entity recognition approach, options are:
+# * rel
+# * lwm
+ner_model_id = "lwm"
+
+# Candidate selection approach, options are:
+# * perfectmatch
+# * partialmatch
+# * levenshtein
+# * deezymatch
+cand_select_method = "deezymatch"
+
+# Toponym resolution approach, options are:
+# * mostpopular
+# * mostpopularnormalised
+top_res_method = "mostpopular"
+
+# Entities considered for linking, options are:
+# * all: for experiments comparing with other datasets and methods
+# * loc: for application to newspapers
+accepted_labels_str = "loc"
+
+# Initiate the ranker object:
+myranker = ranking.Ranker(
+    method=cand_select_method,
+    resources_path="/resources/wikidata/",
+    mentions_to_wikidata=dict(),
+    deezy_parameters={
+        # Paths and filenames of DeezyMatch models and data:
+        "dm_path": "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/deezymatch/",
+        "dm_cands": "wkdtalts",
+        "dm_model": "ocr_avgpool",
+        "dm_output": "deezymatch_on_the_fly",
+        # Ranking measures:
+        "ranking_metric": "faiss",
+        "selection_threshold": 10,
+        "num_candidates": 3,
+        "search_size": 3,
+        "use_predict": False,
+        "verbose": False,
+    },
+)
+
+# Initiate the linker object:
+mylinker = linking.Linker(
+    method=top_res_method,
+    accepted_labels=accepted_labels_str,
+    do_training=False,
+    training_csv="/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_train.tsv",
+    resources_path="/resources/wikidata/",
+    linking_resources=dict(),
+    myranker=myranker,
+)
+
+# END OF USER INPUT
+# -----------------------------------------------------
+
+# Load the ranker and linker resources:
+print("*** Loading the resources...")
+myranker.mentions_to_wikidata = myranker.load_resources()
+mylinker.linking_resources = mylinker.load_resources()
+print("*** Resources loaded!\n")
 
 
-# Ranking parameters for DeezyMatch:
-myranker = dict()
-myranker["ranking_metric"] = "faiss"
-myranker["selection_threshold"] = 20
-myranker["num_candidates"] = 1
-myranker["search_size"] = 1
-# Path to DeezyMatch model and combined candidate vectors:
-myranker["dm_path"] = "outputs/deezymatch/"
-myranker["dm_cands"] = "wkdtalts"
-myranker["dm_model"] = "ocr_avgpool"
-myranker["dm_output"] = "deezymatch_on_the_fly"
+# Parallelize if ranking method is one of the following:
+if myranker.method in ["partialmatch", "levenshtein"]:
+    pandarallel.initialize(nb_workers=10)
+    os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-# Instantiate a dictionary to keep linking parameters:
-mylinker = dict()
-
-accepted_labels = ["loc", "b-loc", "i-loc"]
 
 start = datetime.datetime.now()
 
@@ -46,30 +100,26 @@ ner_model_id = "lwm"
 ner_model = "outputs/models/" + ner_model_id + "-ner.model"
 ner_pipe = pipeline("ner", model=ner_model)
 
-cand_select_method = "deezymatch"
-top_res_method = "mostpopular"
-
 gold_positions = []
 dataset = "hmd"
 
+# Print the contents fo the ranker and linker objects:
+print(myranker)
+print(mylinker)
+
+# Instantiate the entity linking pipeline:
 end_to_end = ELPipeline(
     ner_model_id=ner_model_id,
-    cand_select_method=cand_select_method,
-    top_res_method=top_res_method,
     myranker=myranker,
     mylinker=mylinker,
-    accepted_labels=accepted_labels,
     ner_pipe=ner_pipe,
+    dataset=dataset,
 )
 
 print("Start!")
 
 hmd_files = [
-    "0002642_plaintext.csv",  # London liberal 1846-1868
-    "0002645_plaintext.csv",  # London conservative 1853-1858
-    "0002085_plaintext.csv",  # Merseyside conservative 1860-1861
-    "0002088_plaintext.csv",  # Merseyside conservative 1832-1854
-    "0002194_plaintext.csv",  # The Sun
+    "0002643_plaintext.csv",
 ]
 
 folder = "../resources/hmd-samples/hmd_data_extension_words/"
@@ -78,9 +128,6 @@ Path(folder + "results/").mkdir(parents=True, exist_ok=True)
 for dataset_name in hmd_files:
 
     dataset = pd.read_csv(folder + dataset_name)
-
-    if args.test:
-        dataset = dataset[:10]
 
     # Add metadata columns: publication_code, year, month, day, and article_path
     dataset[["publication_code", "year", "monthday", "article_path"]] = dataset[
@@ -112,11 +159,15 @@ for dataset_name in hmd_files:
             ]
 
             if not dataset_tmp.empty:
+                print(dataset_tmp)
                 dataset_tmp["toponyms"] = dataset_tmp.apply(
-                    lambda row: end_to_end.run(row["target_sentence"])["predicted_ents"], axis=1
+                    lambda row: end_to_end.run(row["target_sentence"])[
+                        "predicted_ents"
+                    ],
+                    axis=1,
                 )
 
-                metadata_dict = dataset[
+                metadata_dict = dataset_tmp[
                     ["article_path", "hits", "publication_code", "year", "month", "day"]
                 ].to_dict("index")
                 output_dict = dict(zip(dataset_tmp.index, dataset_tmp.toponyms))
@@ -125,6 +176,10 @@ for dataset_name in hmd_files:
                     json.dump(output_dict, fp)
                 with open(folder + "results/" + output_name_metadata, "w") as fp:
                     json.dump(metadata_dict, fp)
+
+        # If this is a test, break after having parsed one subset of the data:
+        if args.test:
+            break
 
 end = datetime.datetime.now()
 print(end - start)

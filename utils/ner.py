@@ -16,6 +16,19 @@ label_dict["lwm"] = {
     "LABEL_9": "B-FICTION",
     "LABEL_10": "I-FICTION",
 }
+label_dict["hmd"] = {
+    "LABEL_0": "O",
+    "LABEL_1": "B-LOC",
+    "LABEL_2": "I-LOC",
+    "LABEL_3": "B-STREET",
+    "LABEL_4": "I-STREET",
+    "LABEL_5": "B-BUILDING",
+    "LABEL_6": "I-BUILDING",
+    "LABEL_7": "B-OTHER",
+    "LABEL_8": "I-OTHER",
+    "LABEL_9": "B-FICTION",
+    "LABEL_10": "I-FICTION",
+}
 label_dict["hipe"] = {
     "LABEL_0": "O",
     "LABEL_1": "B-LOC",
@@ -100,11 +113,17 @@ def fix_hyphens(lEntities):
         if (
             (prevEntity["word"] in connectors or currEntity["word"] in connectors)
             and (
-                prevEntity["entity"][2:] == currEntity["entity"][2:]  # Either the labels match...
-                or currEntity["word"][0].islower()  # ... or the second token is not capitalised...
-                or currEntity["word"] in numbers  # ... or the second token is a number...
+                prevEntity["entity"][2:]
+                == currEntity["entity"][2:]  # Either the labels match...
+                or currEntity["word"][
+                    0
+                ].islower()  # ... or the second token is not capitalised...
+                or currEntity["word"]
+                in numbers  # ... or the second token is a number...
                 or prevEntity["end"]
-                == currEntity["start"]  # ... or there's no space between prev and curr tokens
+                == currEntity[
+                    "start"
+                ]  # ... or there's no space between prev and curr tokens
             )
             and prevEntity["entity"] != "O"
             and currEntity["entity"] != "O"
@@ -194,7 +213,8 @@ def fix_startEntity(lEntities):
         currEntity = lEntities[i]
         # E.g. If a grouped entity begins with "I-", change to "B-".
         if (
-            prevEntity["entity"] == "O" or (prevEntity["entity"][2:] != currEntity["entity"][2:])
+            prevEntity["entity"] == "O"
+            or (prevEntity["entity"][2:] != currEntity["entity"][2:])
         ) and currEntity["entity"].startswith("I-"):
             newEntity = {
                 "entity": "B-" + currEntity["entity"][2:],
@@ -288,14 +308,21 @@ def aggregate_mentions(predictions, accepted_labels):
     mentions = collect_named_entities(predictions, accepted_labels)
     sent_mentions = []
     for mention in mentions:
-        text_mention = " ".join([predictions[r][0] for r in range(mention.start_offset, mention.end_offset+1)])
+        text_mention = " ".join(
+            [
+                predictions[r][0]
+                for r in range(mention.start_offset, mention.end_offset + 1)
+            ]
+        )
 
         ner_score = [
-            predictions[r][-1] for r in range(mention.start_offset, mention.end_offset + 1)
+            predictions[r][-1]
+            for r in range(mention.start_offset, mention.end_offset + 1)
         ]
         ner_score = sum(ner_score) / len(ner_score)
         ner_label = [
-            predictions[r][1] for r in range(mention.start_offset, mention.end_offset + 1)
+            predictions[r][1]
+            for r in range(mention.start_offset, mention.end_offset + 1)
         ]
         ner_label = list(
             set([label.split("-")[1] if "-" in label else label for label in ner_label])
@@ -308,7 +335,7 @@ def aggregate_mentions(predictions, accepted_labels):
                 "start_char": mention.start_char,
                 "end_char": mention.end_char,
                 "ner_score": ner_score,
-                "ner_label": ner_label
+                "ner_label": ner_label,
             }
         )
     return sent_mentions
@@ -332,11 +359,19 @@ def collect_named_entities(tokens, accepted_labels):
 
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
-        
+
         if not token_tag.lower() in accepted_labels:
             if ent_type is not None and start_offset is not None:
                 end_offset = offset - 1
-                named_entities.append(Entity(ent_type, start_offset, end_offset, dict_tokens[start_offset][3], dict_tokens[end_offset][4]))
+                named_entities.append(
+                    Entity(
+                        ent_type,
+                        start_offset,
+                        end_offset,
+                        dict_tokens[start_offset][3],
+                        dict_tokens[end_offset][4],
+                    )
+                )
                 start_offset = None
                 end_offset = None
                 ent_type = None
@@ -345,10 +380,20 @@ def collect_named_entities(tokens, accepted_labels):
             ent_type = token_tag[2:]
             start_offset = offset
 
-        elif ent_type != token_tag[2:] or (ent_type == token_tag[2:] and token_tag[:1] == "B"):
+        elif ent_type != token_tag[2:] or (
+            ent_type == token_tag[2:] and token_tag[:1] == "B"
+        ):
 
             end_offset = offset - 1
-            named_entities.append(Entity(ent_type, start_offset, end_offset, dict_tokens[start_offset][3], dict_tokens[end_offset][4]))
+            named_entities.append(
+                Entity(
+                    ent_type,
+                    start_offset,
+                    end_offset,
+                    dict_tokens[start_offset][3],
+                    dict_tokens[end_offset][4],
+                )
+            )
 
             # start of a new entity
             ent_type = token_tag[2:]
@@ -358,7 +403,15 @@ def collect_named_entities(tokens, accepted_labels):
     # catches an entity that goes up until the last token
 
     if ent_type is not None and start_offset is not None and end_offset is None:
-        named_entities.append(Entity(ent_type, start_offset, len(tokens)-1, dict_tokens[start_offset][3], dict_tokens[len(tokens)-1][4]))
+        named_entities.append(
+            Entity(
+                ent_type,
+                start_offset,
+                len(tokens) - 1,
+                dict_tokens[start_offset][3],
+                dict_tokens[len(tokens) - 1][4],
+            )
+        )
 
     return named_entities
 
@@ -395,7 +448,11 @@ def format_for_ner(df):
                     elif wqlink == "*":
                         wqlink = "NIL"
                     if artsent_id in dAnnotated:
-                        dAnnotated[artsent_id][position] = (a["entity_type"], a["mention"], wqlink)
+                        dAnnotated[artsent_id][position] = (
+                            a["entity_type"],
+                            a["mention"],
+                            wqlink,
+                        )
                     else:
                         dAnnotated[artsent_id] = {
                             position: (a["entity_type"], a["mention"], wqlink)
