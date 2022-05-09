@@ -9,14 +9,11 @@ from pandarallel import pandarallel
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 import pandas as pd
 import tqdm
-from resolution_pipeline import ELPipeline
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
 from utils import process_data, ner, ranking, linking
+from utils.resolution_pipeline import ELPipeline
 
-
-# -----------------------------------------------------
-# BEGINNING OF USER INPUT
 
 # Datasets:
 datasets = ["lwm", "hipe"]
@@ -44,7 +41,28 @@ do_training = False
 # Entities considered for linking, options are:
 # * all
 # * loc
-accepted_labels_str = "all"
+accepted_labels_str = "loc"
+
+# Initiate the recogniser object:
+myner = ner.Recogniser(
+    method=ner_model_id,  # NER method (lwm or rel)
+    model_name="blb_lwm-ner",  # NER model name
+    pipe=None,  # We'll store the NER pipeline here
+    model=None,  # We'll store the NER model here
+    base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+    train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
+    test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
+    output_model_path="outputs/models/",  # Path where the NER model is or will be stored
+    training_args={
+        "learning_rate": 5e-5,
+        "batch_size": 16,
+        "num_train_epochs": 4,
+        "weight_decay": 0.01,
+    },
+    overwrite_training=False,  # Set to True if you want to overwrite model if existing
+    do_test=False,  # Set to True if you want to train on test mode
+    accepted_labels=accepted_labels_str,
+)
 
 # Initiate the ranker object:
 myranker = ranking.Ranker(
@@ -70,7 +88,7 @@ myranker = ranking.Ranker(
 # Initiate the linker object:
 mylinker = linking.Linker(
     method=top_res_method,
-    accepted_labels=accepted_labels_str,
+    # accepted_labels=accepted_labels_str,
     do_training=do_training,
     training_csv="/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_train.tsv",
     resources_path="/resources/wikidata/",
@@ -78,12 +96,27 @@ mylinker = linking.Linker(
     myranker=myranker,
 )
 
-# END OF USER INPUT
-# -----------------------------------------------------
+# --------------------------------------------
+# End of user input!
+# --------------------------------------------
 
+# Check for method inconsistencies:
+# # TO DO: add all possible inconsistencies
+if myner.method == "rel" and (myranker.method != "rel" or mylinker.method != "rel"):
+    print(
+        "\n*** Error: NER is '{0}', ranking method is '{1}' and linking method is '{2}'.\n".format(
+            myner.method, myranker.method, mylinker.method
+        )
+    )
+    sys.exit(0)
+
+# Train the NER model if needed:
+print("*** Training the NER model...")
+myner.training()
 
 # Load the ranker and linker resources:
 print("*** Loading the resources...")
+myner.model, myner.pipe = myner.create_pipeline()
 myranker.mentions_to_wikidata = myranker.load_resources()
 mylinker.linking_resources = mylinker.load_resources()
 print("*** Resources loaded!\n")
@@ -102,7 +135,7 @@ gold_tokenisation = {}
 
 
 # ---------------------------------------------------
-# End-to-end toponym resolution
+# Perform end-to-end toponym resolution
 # ---------------------------------------------------
 
 for dataset in datasets:
@@ -125,13 +158,7 @@ for dataset in datasets:
     # Path where to store REL API output:
     rel_end_to_end = "outputs/results/" + dataset + "/rel_end_to_end.json"
 
-    if ner_model_id == "lwm":
-        # Path to NER Model:
-        ner_model = "outputs/models/" + ner_model_id + "-ner.model"
-        ner_pipe = pipeline("ner", model=ner_model)
-
-    if ner_model_id == "rel":
-        ner_pipe = None
+    if myner.method == "rel":
         if Path(rel_end_to_end).is_file():
             with open(rel_end_to_end) as f:
                 rel_preds = json.load(f)
@@ -152,21 +179,21 @@ for dataset in datasets:
     dSkys = dict()
 
     # Print the contents fo the ranker and linker objects:
+    print(myner)
     print(myranker)
     print(mylinker)
 
     # Instantiate the entity linking pipeline:
     end_to_end = ELPipeline(
-        ner_model_id=ner_model_id,
+        myner=myner,
         myranker=myranker,
         mylinker=mylinker,
-        ner_pipe=ner_pipe,
         dataset=dataset,
     )
 
     for sent_id in tqdm.tqdm(dSentences.keys()):
 
-        if end_to_end.ner_model_id == "rel":
+        if myner.method == "rel":
             if Path(rel_end_to_end).is_file():
                 preds = rel_preds[sent_id]
             else:
@@ -194,12 +221,12 @@ for dataset in datasets:
         gold_tokenisation[sent_id] = output["gold_positions"]
         dSkys[sent_id] = output["skyline"]
 
-    if end_to_end.ner_model_id == "lwm":
+    if myner.method == "lwm":
         process_data.store_results_hipe(dataset, "true_" + accepted_labels_str, dTrues)
         process_data.store_results_hipe(
             dataset,
             "skyline:"
-            + end_to_end.ner_model_id
+            + myner.method
             + "+"
             + myranker.method
             + "+"
@@ -211,7 +238,7 @@ for dataset in datasets:
 
     process_data.store_results_hipe(
         dataset,
-        end_to_end.ner_model_id
+        myner.method
         + "+"
         + myranker.method
         + "+"

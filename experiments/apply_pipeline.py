@@ -11,12 +11,13 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 import pandas as pd
 from pandarallel import pandarallel
-from resolution_pipeline import ELPipeline
 from transformers import pipeline
 
-from utils import process_data, ner, ranking, linking
+from utils import ner, ranking, linking
+from utils.resolution_pipeline import ELPipeline
 
 
+# To run in test mode:
 parser = ArgumentParser()
 parser.add_argument(
     "-t", "--test", dest="test", help="run in test mode", action="store_true"
@@ -46,6 +47,27 @@ top_res_method = "mostpopular"
 # * loc: for application to newspapers
 accepted_labels_str = "loc"
 
+# Initiate the recogniser object:
+myner = ner.Recogniser(
+    method=ner_model_id,  # NER method (lwm or rel)
+    model_name="blb_lwm-ner",  # NER model name
+    pipe=None,  # We'll store the NER pipeline here
+    model=None,  # We'll store the NER model here
+    base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+    train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
+    test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
+    output_model_path="outputs/models/",  # Path where the NER model is or will be stored
+    training_args={
+        "learning_rate": 5e-5,
+        "batch_size": 16,
+        "num_train_epochs": 4,
+        "weight_decay": 0.01,
+    },
+    overwrite_training=False,  # Set to True if you want to overwrite model if existing
+    do_test=False,  # Set to True if you want to train on test mode
+    accepted_labels=accepted_labels_str,
+)
+
 # Initiate the ranker object:
 myranker = ranking.Ranker(
     method=cand_select_method,
@@ -70,7 +92,6 @@ myranker = ranking.Ranker(
 # Initiate the linker object:
 mylinker = linking.Linker(
     method=top_res_method,
-    accepted_labels=accepted_labels_str,
     do_training=False,
     training_csv="/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_train.tsv",
     resources_path="/resources/wikidata/",
@@ -83,6 +104,7 @@ mylinker = linking.Linker(
 
 # Load the ranker and linker resources:
 print("*** Loading the resources...")
+myner.model, myner.pipe = myner.create_pipeline()
 myranker.mentions_to_wikidata = myranker.load_resources()
 mylinker.linking_resources = mylinker.load_resources()
 print("*** Resources loaded!\n")
@@ -96,10 +118,6 @@ if myranker.method in ["partialmatch", "levenshtein"]:
 
 start = datetime.datetime.now()
 
-ner_model_id = "lwm"
-ner_model = "outputs/models/" + ner_model_id + "-ner.model"
-ner_pipe = pipeline("ner", model=ner_model)
-
 gold_positions = []
 dataset = "hmd"
 
@@ -109,10 +127,9 @@ print(mylinker)
 
 # Instantiate the entity linking pipeline:
 end_to_end = ELPipeline(
-    ner_model_id=ner_model_id,
+    myner=myner,
     myranker=myranker,
     mylinker=mylinker,
-    ner_pipe=ner_pipe,
     dataset=dataset,
 )
 

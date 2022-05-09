@@ -192,7 +192,7 @@ approaches = dict()
 approaches["rel"] = {"candselect": ["rel"], "topres": ["rel"]}
 approaches["lwm"] = {
     "candselect": ["perfectmatch", "deezymatch"],
-    "topres": ["skyline", "mostpopular", "featclassifier"],
+    "topres": ["skyline", "mostpopular"],
 }
 accepted_labels = ["all", "loc"]
 

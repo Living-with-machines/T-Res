@@ -1,4 +1,5 @@
-import sys,os
+import sys, os
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from datasets import load_metric
@@ -6,7 +7,13 @@ from datasets import load_dataset
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from transformers import AutoTokenizer, DataCollatorForTokenClassification, AutoModelForTokenClassification, TrainingArguments, Trainer
+from transformers import (
+    AutoTokenizer,
+    DataCollatorForTokenClassification,
+    AutoModelForTokenClassification,
+    TrainingArguments,
+    Trainer,
+)
 from argparse import ArgumentParser
 
 # Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb
@@ -14,18 +21,18 @@ from argparse import ArgumentParser
 
 # -------------------
 # Input and output parameters:
-output_ner_model = "outputs/models/" # Path where NER model will be stored.
-model_name = "lwm-ner" # NER model name.
-base_model_path = "/resources/models/bert/bert_1760_1900/" # Path where base models are stored (it can be
-                                                           # a pretrained Huggingface model as well, such
-                                                           # as 'bert-base-uncased'. The 'bert_1760_1900'
-                                                           # model can be obtained following instructions in
-                                                           # https://github.com/Living-with-machines/histLM).
+output_ner_model = "outputs/models/"  # Path where NER model will be stored.
+model_name = "lwm-ner"  # NER model name.
+base_model_path = "/resources/models/bert/bert_1760_1900/"  # Path where base models are stored (it can be
+# a pretrained Huggingface model as well, such
+# as 'bert-base-uncased'. The 'bert_1760_1900'
+# model can be obtained following instructions in
+# https://github.com/Living-with-machines/histLM).
 # model_name = "contemporary-lwm-ner"
 # base_model_path = "bert-base-uncased"
-ner_data_path = "outputs/data/lwm/" # Path where preprocessed NER data is stored.
-train_dataset = 'ner_df_train.json' # NER training set (0.80 of LwM training set).
-test_dataset = 'ner_df_dev.json' # NER test set (0.20 of LwM training set).
+ner_data_path = "outputs/data/lwm/"  # Path where preprocessed NER data is stored.
+train_dataset = "ner_df_train.json"  # NER training set (0.80 of LwM training set).
+test_dataset = "ner_df_dev.json"  # NER test set (0.20 of LwM training set).
 
 
 Path(output_ner_model).mkdir(parents=True, exist_ok=True)
@@ -37,11 +44,13 @@ metric = load_metric("seqeval")
 # Test option
 parser = ArgumentParser()
 
-parser.add_argument('-t',
-                    dest="test",
-                    choices=('True','False'),
-                    help='Run in test mode. Options are "True" or "False", default is "True".',
-                    default='True')
+parser.add_argument(
+    "-t",
+    dest="test",
+    choices=("True", "False"),
+    help='Run in test mode. Options are "True" or "False", default is "True".',
+    default="True",
+)
 
 args = parser.parse_args()
 
@@ -49,34 +58,49 @@ args = parser.parse_args()
 # -------------------
 # Fine-tuning for NER
 
-if args.test == 'True':
+if args.test == "True":
     # If test is True, train on 5% of the train and test sets, and add "_test" to the model name.
     model_name = model_name + "_test"
-    lwm_train = load_dataset('json', data_files=ner_data_path + train_dataset, split='train[:5%]')
-    lwm_test = load_dataset('json', data_files=ner_data_path + test_dataset, split='train[:5%]')
+    lwm_train = load_dataset(
+        "json", data_files=ner_data_path + train_dataset, split="train[:5%]"
+    )
+    lwm_test = load_dataset(
+        "json", data_files=ner_data_path + test_dataset, split="train[:5%]"
+    )
 else:
-    lwm_train = load_dataset('json', data_files=ner_data_path + train_dataset, split='train')
-    lwm_test = load_dataset('json', data_files=ner_data_path + test_dataset, split='train')
-    
+    lwm_train = load_dataset(
+        "json", data_files=ner_data_path + train_dataset, split="train"
+    )
+    lwm_test = load_dataset(
+        "json", data_files=ner_data_path + test_dataset, split="train"
+    )
 
-label_encoding_dict = {'O': 0,
-                       'B-LOC': 1,
-                       'I-LOC': 2,
-                       'B-STREET': 3,
-                       'I-STREET': 4,
-                       'B-BUILDING': 5,
-                       'I-BUILDING': 6,
-                       'B-OTHER': 7,
-                       'I-OTHER': 8,
-                       'B-FICTION': 9,
-                       'I-FICTION': 10}
+print(lwm_train)
+print(lwm_test)
+
+
+label_encoding_dict = {
+    "O": 0,
+    "B-LOC": 1,
+    "I-LOC": 2,
+    "B-STREET": 3,
+    "I-STREET": 4,
+    "B-BUILDING": 5,
+    "I-BUILDING": 6,
+    "B-OTHER": 7,
+    "I-OTHER": 8,
+    "B-FICTION": 9,
+    "I-FICTION": 10,
+}
 label_list = list(label_encoding_dict.keys())
 
 
 # Align tokens and labels:
 def tokenize_and_align_labels(examples):
     label_all_tokens = True
-    tokenized_inputs = tokenizer(list(examples["tokens"]), truncation=True, is_split_into_words=True)
+    tokenized_inputs = tokenizer(
+        list(examples["tokens"]), truncation=True, is_split_into_words=True
+    )
 
     labels = []
     for i, label in enumerate(examples[f"{task}_tags"]):
@@ -88,7 +112,7 @@ def tokenize_and_align_labels(examples):
             # ignored in the loss function.
             if word_idx is None:
                 label_ids.append(-100)
-            elif label[word_idx] == '0':
+            elif label[word_idx] == "0":
                 label_ids.append(0)
             # We set the label for the first token of each word.
             elif word_idx != previous_word_idx:
@@ -96,7 +120,9 @@ def tokenize_and_align_labels(examples):
             # For the other tokens in a word, we set the label to either the current label or -100, depending on
             # the label_all_tokens flag.
             else:
-                label_ids.append(label_encoding_dict[label[word_idx]] if label_all_tokens else -100)
+                label_ids.append(
+                    label_encoding_dict[label[word_idx]] if label_all_tokens else -100
+                )
             previous_word_idx = word_idx
 
         labels.append(label_ids)
@@ -129,7 +155,9 @@ def compute_metrics(p):
     }
 
 
-model = AutoModelForTokenClassification.from_pretrained(base_model_path, num_labels=len(label_list))
+model = AutoModelForTokenClassification.from_pretrained(
+    base_model_path, num_labels=len(label_list)
+)
 tokenizer = AutoTokenizer.from_pretrained(base_model_path)
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
@@ -155,7 +183,7 @@ trainer = Trainer(
     eval_dataset=lwm_test_tok,
     data_collator=data_collator,
     tokenizer=tokenizer,
-    compute_metrics=compute_metrics
+    compute_metrics=compute_metrics,
 )
 
 
@@ -163,4 +191,4 @@ trainer.train()
 
 trainer.evaluate()
 
-trainer.save_model(output_ner_model + model_name + '.model')
+trainer.save_model(output_ner_model + model_name + ".model")

@@ -4,24 +4,19 @@ from utils import ranking, linking, ner, process_data
 class ELPipeline:
     def __init__(
         self,
-        ner_model_id,
+        myner,
         myranker,
         mylinker,
-        ner_pipe,
         dataset,
     ):
-        self.ner_model_id = ner_model_id
+        self.myner = myner
         self.myranker = myranker
         self.mylinker = mylinker
-        self.ner_pipe = ner_pipe
         self.dataset = dataset
 
     def run(self, sent, dataset=None, annotations=[], gold_positions=[], metadata=None):
 
-        accepted_labels = self.mylinker.filtering_labels()
-
-        if self.ner_model_id == "rel":
-            # predicted_tags = linking.rel_end_to_end(sent)
+        if self.myner.method == "rel":
             predicted_ents = [
                 {
                     "wikidata_id": process_data.match_wikipedia_to_wikidata(pred[3]),
@@ -44,9 +39,9 @@ class ELPipeline:
                 )
                 sentence_preds.append([word, n, el])
 
-        if self.ner_model_id == "lwm":
-            gold_positions, predictions = ner.ner_predict(
-                sent, annotations, self.ner_pipe, self.dataset
+        if self.myner.method == "lwm":
+            gold_positions, predictions = self.myner.ner_predict(
+                sent, annotations, self.dataset
             )
             sentence_preds = [
                 [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
@@ -60,15 +55,16 @@ class ELPipeline:
                 [x["word"], x["entity"], "O", x["start"], x["end"]]
                 for x in gold_positions
             ]
+
             # Filter by accepted labels:
             sentence_trues = [
-                [x[0], x[1], "NIL", x[3], x[4], x[5]]
-                if x[1] != "O" and x[1].lower() not in accepted_labels
+                [x[0], x[1], "NIL", x[3], x[4]]
+                if x[1] != "O" and x[1].lower() not in self.myner.filtering_labels()
                 else x
                 for x in sentence_trues
             ]
 
-            pred_mentions_sent = ner.aggregate_mentions(sentence_preds, accepted_labels)
+            pred_mentions_sent = self.myner.aggregate_mentions(sentence_preds)
 
             mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
             cands, self.already_collected_cands = self.myranker.run(mentions)
