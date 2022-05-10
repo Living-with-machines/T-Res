@@ -97,6 +97,9 @@ mylinker = linking.Linker(
     resources_path="/resources/wikidata/",
     linking_resources=dict(),
     myranker=myranker,
+    base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+    tokenizer=None,
+    model_rd=None,
 )
 
 # END OF USER INPUT

@@ -36,12 +36,12 @@ cand_select_method = "deezymatch"
 top_res_method = "mostpopular"
 
 # Perform training if needed:
-do_training = False
+do_training = True
 
 # Entities considered for linking, options are:
 # * all
 # * loc
-accepted_labels_str = "loc"
+accepted_labels_str = "all"
 
 # Initiate the recogniser object:
 myner = ner.Recogniser(
@@ -77,7 +77,7 @@ myranker = ranking.Ranker(
         "dm_output": "deezymatch_on_the_fly",
         # Ranking measures:
         "ranking_metric": "faiss",
-        "selection_threshold": 10,
+        "selection_threshold": 20,
         "num_candidates": 3,
         "search_size": 3,
         "use_predict": False,
@@ -88,13 +88,16 @@ myranker = ranking.Ranker(
 # Initiate the linker object:
 mylinker = linking.Linker(
     method=top_res_method,
-    # accepted_labels=accepted_labels_str,
     do_training=do_training,
     training_csv="/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_train.tsv",
     resources_path="/resources/wikidata/",
     linking_resources=dict(),
     myranker=myranker,
+    base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+    tokenizer=None,
+    model_rd=None,
 )
+
 
 # --------------------------------------------
 # End of user input!
@@ -119,6 +122,7 @@ print("*** Loading the resources...")
 myner.model, myner.pipe = myner.create_pipeline()
 myranker.mentions_to_wikidata = myranker.load_resources()
 mylinker.linking_resources = mylinker.load_resources()
+mylinker.tokenizer, mylinker.model_rd = mylinker.create_pipeline()
 print("*** Resources loaded!\n")
 
 # Parallelize if ranking method is one of the following:
@@ -129,6 +133,8 @@ if myranker.method in ["partialmatch", "levenshtein"]:
 # Some methods are unsupervised, set the do_training flag to False:
 if mylinker.method in ["rel", "mostpopular", "mostpopularnormalised"]:
     mylinker.do_training = False
+else:
+    mylinker.train()
 
 # Instantiate gold tokenization dictionary:
 gold_tokenisation = {}

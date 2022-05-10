@@ -29,6 +29,9 @@ class Linker:
         training_csv,
         resources_path,
         linking_resources,
+        base_model,
+        tokenizer,
+        model_rd,
     ):
         self.do_training = do_training
         self.training_csv = training_csv
@@ -36,6 +39,9 @@ class Linker:
         self.resources_path = resources_path
         self.linking_resources = linking_resources
         self.myranker = myranker
+        self.base_model = base_model
+        self.tokenizer = tokenizer
+        self.model_rd = model_rd
 
     def __str__(self):
         s = "Entity Linking:\n* Method: {0}\n* Do training: {1}\n* Linking resources: {2}\n".format(
@@ -44,6 +50,14 @@ class Linker:
             ",".join(list(self.linking_resources.keys())),
         )
         return s
+
+    def create_pipeline(self):
+        # Load BERT model and tokenizer, and feature-extraction pipeline:
+        self.tokenizer = AutoTokenizer.from_pretrained(self.base_model)
+        self.model_rd = pipeline(
+            "feature-extraction", model=self.base_model, tokenizer=self.base_model
+        )
+        return self.tokenizer, self.model_rd
 
     def load_resources(self):
         """
@@ -99,6 +113,33 @@ class Linker:
 
         return self.linking_resources
 
+    def get_candidate_wikidata_ids(self, mention):
+        """
+        Given the output from the candidate ranking module for a given
+        mention (e.g. "Liverpool" for mention "LIVERPOOL"), return
+        the wikidata IDs.
+        """
+        wikidata_cands = self.linking_resources["mentions_to_wikidata"].get(
+            mention, None
+        )
+        return wikidata_cands
+
+    # Get BERT vector in context of the mention:
+    def get_mention_vector(self, row, agg=np.mean):
+        tokenized = self.tokenizer(row["sentence"])
+        start_token = tokenized.char_to_token(row["mention_start"])
+        end_token = tokenized.char_to_token(row["mention_end"] - 1)
+        if not end_token:
+            print("\t>>> Watch out, issue with:", row["mention"])  # check later
+            end_token = start_token
+        # TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+        if not start_token or not end_token:
+            return None
+        tokens_positions = list(range(start_token, end_token + 1))
+        vectors = np.array(self.model_rd(row["sentence"]))
+        vector = list(agg(vectors[0, tokens_positions, :], axis=0))
+        return vector
+
     def train(self):
         """
         Do the training if necessary.
@@ -106,7 +147,10 @@ class Linker:
         if self.do_training == True:
             # Create a dataset for entity linking, with candidates retrieved
             # using the chosen method:
-            training_df = training.create_trainset(self.training_csv, self.myranker)
+            training_df = training.create_trainset(
+                self.training_csv, self.myranker, self
+            )
+            print(training_df)
             return training_df
 
     # Select disambiguation method

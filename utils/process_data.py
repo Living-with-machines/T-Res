@@ -34,7 +34,9 @@ def turn_wikipedia2wikidata(wikipedia_title):
         wikipedia_title = wikipedia_title.replace("_", " ")
         wikipedia_title = urllib.parse.quote(wikipedia_title)
         if "/" in wikipedia_title or len(wikipedia_title) > 200:
-            wikipedia_title = hashlib.sha224(wikipedia_title.encode("utf-8")).hexdigest()
+            wikipedia_title = hashlib.sha224(
+                wikipedia_title.encode("utf-8")
+            ).hexdigest()
         if not wikipedia_title in wikipedia2wikidata:
             print(
                 "Warning: "
@@ -132,7 +134,9 @@ def process_tsv(filepath):
                 if multiple_mention == prev_multmention:
                     # Preappend as many white spaces as the distance between the end of the
                     # previous token and the start of the current token:
-                    complete_token += " " * (int(tok_tmp.split("-")[0]) - int(prev_endchar))
+                    complete_token += " " * (
+                        int(tok_tmp.split("-")[0]) - int(prev_endchar)
+                    )
                     # Append the current token to the complete token:
                     complete_token += token
                     # The complete_token end character will be considered to be the end of
@@ -181,7 +185,14 @@ def process_tsv(filepath):
                 mtok_start,
             )
 
-            dTokens[(sent_pos, tok_start)] = (token, wkpd, bio_label, sent_pos, tok_start, tok_end)
+            dTokens[(sent_pos, tok_start)] = (
+                token,
+                wkpd,
+                bio_label,
+                sent_pos,
+                tok_start,
+                tok_end,
+            )
 
     return dMTokens, dTokens
 
@@ -195,17 +206,21 @@ def reconstruct_sentences(dTokens):
 
     complete_sentence = ""  # In this variable we keep each complete sentence
     sentence_id = 0  # In this variable we keep the sentence id
-    start_ids = [k[1] for k in dTokens]  # Ordered list of token character start positions.
-    dSentences = dict()  # In this variable we'll map the sentence id with the complete sentence
-    prev_sentid = (
-        0  # Keeping track of previous sentence id (to know when a new sentence is starting)
-    )
+    start_ids = [
+        k[1] for k in dTokens
+    ]  # Ordered list of token character start positions.
+    dSentences = (
+        dict()
+    )  # In this variable we'll map the sentence id with the complete sentence
+    prev_sentid = 0  # Keeping track of previous sentence id (to know when a new sentence is starting)
     dSentenceCharstart = (
         dict()
     )  # In this variable we will map the sentence id with the start character
     # position of the sentence in question
 
-    dIndices = dict()  # In this dictionary we map the token start character in the document with
+    dIndices = (
+        dict()
+    )  # In this dictionary we map the token start character in the document with
     # the full mention, the sentence id, and the end character of the mention.
 
     # In this for-loop, we populate dSentenceCharstart and dIndices:
@@ -233,7 +248,9 @@ def reconstruct_sentences(dTokens):
                 complete_sentence = ""
 
             if mention_endchar < start_ids[i + 1]:
-                complete_sentence += mention + (" " * (start_ids[i + 1] - mention_endchar))
+                complete_sentence += mention + (
+                    " " * (start_ids[i + 1] - mention_endchar)
+                )
             elif mention_endchar == start_ids[i + 1]:
                 complete_sentence += mention
 
@@ -297,7 +314,11 @@ def process_lwm_for_ner(tsv_topres_path):
 
         # Now append the tokens and ner_tags of the last sentence:
         lwm_data.append(
-            {"id": file_id + "_" + str(prev_sent), "ner_tags": ner_tags, "tokens": tokens}
+            {
+                "id": file_id + "_" + str(prev_sent),
+                "ner_tags": ner_tags,
+                "tokens": tokens,
+            }
         )
 
     lwm_df = pd.DataFrame(lwm_data)
@@ -323,10 +344,13 @@ def process_lwm_for_linking(tsv_topres_path):
             "ocr_quality_mean",
             "ocr_quality_sd",
             "publication_title",
+            "publication_code",
         ]
     )
 
-    metadata_df = pd.read_csv(tsv_topres_path + "metadata.tsv", sep="\t", index_col="fname")
+    metadata_df = pd.read_csv(
+        tsv_topres_path + "metadata.tsv", sep="\t", index_col="fname"
+    )
 
     for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
         filename = fid.split("/")[-1].split(".tsv")[0]  # Full document name
@@ -341,10 +365,13 @@ def process_lwm_for_linking(tsv_topres_path):
         ocr_quality_mean = float(metadata_df.loc[filename]["ocr_quality_mean"])
         ocr_quality_sd = float(metadata_df.loc[filename]["ocr_quality_sd"])
         publication_title = metadata_df.loc[filename]["publication_title"]
+        publication_code = str(metadata_df.loc[filename]["publication_code"]).zfill(7)
 
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
-        dMTokens, dTokens = process_tsv(tsv_topres_path + "annotated_tsv/" + filename + ".tsv")
+        dMTokens, dTokens = process_tsv(
+            tsv_topres_path + "annotated_tsv/" + filename + ".tsv"
+        )
 
         # Dictionary of reconstructed sentences:
         dSentences = reconstruct_sentences(dTokens)
@@ -399,7 +426,9 @@ def process_lwm_for_linking(tsv_topres_path):
         for s_index in dSentences:
             # We keep only the sentence, we don't need the character offset of the sentence
             # going forward:
-            sentences.append({"sentence_pos": s_index, "sentence_text": dSentences[s_index][0]})
+            sentences.append(
+                {"sentence_pos": s_index, "sentence_text": dSentences[s_index][0]}
+            )
 
         df_columns_row = [
             article_id,
@@ -411,6 +440,7 @@ def process_lwm_for_linking(tsv_topres_path):
             ocr_quality_mean,
             ocr_quality_sd,
             publication_title,
+            publication_code,
         ]
 
         # Convert the row into a pd.Series:
@@ -433,14 +463,52 @@ def crate_training_for_el(df):
         ocr_quality_mean = row["ocr_quality_mean"]
         ocr_quality_sd = row["ocr_quality_sd"]
         publication_title = row["publication_title"]
+        publication_code = str(row["publication_code"]).zfill(7)
         sentences = literal_eval(row["sentences"])
         annotations = literal_eval(row["annotations"])
         for s in sentences:
             for a in annotations:
                 if s["sentence_pos"] == a["sent_pos"]:
-                    rows.append((article_id, s["sentence_pos"], s["sentence_text"], a["mention_pos"], a["mention"], a["wkdt_qid"], a["mention_start"], a["mention_end"], year, place, ocr_quality_mean, ocr_quality_sd, publication_title))
+                    rows.append(
+                        (
+                            article_id,
+                            s["sentence_pos"],
+                            s["sentence_text"],
+                            a["mention_pos"],
+                            a["mention"],
+                            a["wkdt_qid"],
+                            a["mention_start"],
+                            a["mention_end"],
+                            a["entity_type"],
+                            year,
+                            place,
+                            ocr_quality_mean,
+                            ocr_quality_sd,
+                            publication_title,
+                            publication_code,
+                        )
+                    )
 
-    training_df = pd.DataFrame(columns=["article_id", "sentence_pos", "sentence", "mention_pos", "mention", "wkdt_qid", "mention_start", "mention_end", "year", "place", "ocr_quality_mean", "ocr_quality_sd", "publication_title"], data=rows)
+    training_df = pd.DataFrame(
+        columns=[
+            "article_id",
+            "sentence_pos",
+            "sentence",
+            "mention_pos",
+            "mention",
+            "wkdt_qid",
+            "mention_start",
+            "mention_end",
+            "entity_type",
+            "year",
+            "place",
+            "ocr_quality_mean",
+            "ocr_quality_sd",
+            "publication_title",
+            "publication_code",
+        ],
+        data=rows,
+    )
 
     return training_df
 
@@ -490,6 +558,7 @@ def process_hipe_for_linking(hipe_path):
             "ocr_quality_mean",
             "ocr_quality_sd",
             "publication_title",
+            "publication_code",
         ]
     )
 
@@ -640,7 +709,8 @@ def process_hipe_for_linking(hipe_path):
             dMetadata[k]["date"],  # year
             None,  # ocr_quality_mean
             None,  # ocr_quality_sd
-            dMetadata[k]["newspaper_id"],  # publication_title
+            "",  # publication_title
+            dMetadata[k]["newspaper_id"],  # publication_code
         ]
 
         # Convert the row into a pd.Series:
@@ -679,7 +749,9 @@ def store_results_hipe(dataset, dataresults, dresults):
     """
     pathlib.Path("outputs/results/" + dataset + "/").mkdir(parents=True, exist_ok=True)
     # Bundle 2 associated tasks: NERC-coarse and NEL
-    with open("outputs/results/" + dataset + "/" + dataresults + "_bundle2_en_1.tsv", "w") as fw:
+    with open(
+        "outputs/results/" + dataset + "/" + dataresults + "_bundle2_en_1.tsv", "w"
+    ) as fw:
         fw.write(
             "TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n"
         )
@@ -714,7 +786,9 @@ def read_gold_standard(path):
             d = json.load(f)
             return d
     else:
-        print("The tokenised gold standard is missing. You should first run the LwM baselines.")
+        print(
+            "The tokenised gold standard is missing. You should first run the LwM baselines."
+        )
         exit()
 
 

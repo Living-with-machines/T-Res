@@ -46,16 +46,6 @@ class Ranker:
 
         return self.mentions_to_wikidata
 
-    def get_candidate_wqids(self, cands):
-        """
-        Return candidates given a list of mentions.
-        """
-        dCands = dict()
-        for k in cands:
-            if k in self.mentions_to_wikidata:
-                dCands[k] = list(self.mentions_to_wikidata[k].keys())
-        return dCands
-
     def perfect_match(self, queries):
         """
         Perform perfect match between the string and the KB altnames.
@@ -196,10 +186,11 @@ class Ranker:
                 )
 
                 for idx, row in candidates.iterrows():
-                    cands_dict[row["query"]] = dict(row["cosine_dist"])
-                    self.already_collected_cands[row["query"]] = dict(
-                        row["cosine_dist"]
-                    )
+                    # Reverse cosine distance to cosine similarity:
+                    returned_cands = row["cosine_dist"]
+                    returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
+                    cands_dict[row["query"]] = returned_cands
+                    self.already_collected_cands[row["query"]] = returned_cands
             except TypeError:
                 pass
 

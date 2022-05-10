@@ -717,6 +717,7 @@ def format_for_ner(df):
             dMetadata[artsent_id]["ocr_quality_mean"] = row["ocr_quality_mean"]
             dMetadata[artsent_id]["ocr_quality_sd"] = row["ocr_quality_sd"]
             dMetadata[artsent_id]["publication_title"] = row["publication_title"]
+            dMetadata[artsent_id]["publication_code"] = row["publication_code"]
 
     for artsent_id in dSentences:
         if not artsent_id in dAnnotated:

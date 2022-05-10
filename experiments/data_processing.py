@@ -1,4 +1,5 @@
-import sys,os
+import sys, os
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 import pandas as pd
@@ -30,8 +31,10 @@ lwm_df = process_data.process_lwm_for_ner(topres_path_train)
 # Split NER-formatted training set into train and dev, and store them.
 # They will be used by the ner_training.py script:
 lwm_train_ner, lwm_dev_ner = train_test_split(lwm_df, test_size=0.2, random_state=42)
-lwm_train_ner.to_json(output_path_lwm + 'ner_df_train.json', orient="records", lines=True)
-lwm_dev_ner.to_json(output_path_lwm + 'ner_df_dev.json', orient="records", lines=True)
+lwm_train_ner.to_json(
+    output_path_lwm + "ner_df_train.json", orient="records", lines=True
+)
+lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines=True)
 
 # Process data for resolution:
 lwm_train_df = process_data.process_lwm_for_linking(topres_path_train)
@@ -57,8 +60,12 @@ Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
 # Path to folder with HIPE original data (v1.4):
 hipe_path = "/resources/newsdataset/clef_hipe/"
 
-hipe_dev_df = process_data.process_hipe_for_linking(hipe_path + "HIPE-data-v1.4-dev-en.tsv")
-hipe_test_df = process_data.process_hipe_for_linking(hipe_path + "HIPE-data-v1.4-test-en.tsv")
+hipe_dev_df = process_data.process_hipe_for_linking(
+    hipe_path + "HIPE-data-v1.4-dev-en.tsv"
+)
+hipe_test_df = process_data.process_hipe_for_linking(
+    hipe_path + "HIPE-data-v1.4-test-en.tsv"
+)
 
 # Store dataframes:
 hipe_dev_df.to_csv(output_path_hipe + "linking_df_dev.tsv", sep="\t", index=False)
