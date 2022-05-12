@@ -48,9 +48,9 @@ python map_wikidata_wikipedia.py
 ```
 This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. It will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, using the flag `-t`.
 
-## 4. Create a Wikidata-based gazetteer
+## 4. Extract locations from Wikidata
 
-Finally, to extract locations from Wikidata (and their relevant properties) if they have a corresponding page on Wikipedia, you can use:
+To extract locations from Wikidata (and their relevant properties) if they have a corresponding page on Wikipedia, you can use:
 ```
 python wikidata_extraction.py -t ['True'|'False']
 ```
@@ -66,6 +66,53 @@ The output is in the form of `.csv` files that will be created in `../resources/
 ```
 'wikidata_id', 'english_label', 'instance_of', 'description_set', 'alias_dict', 'nativelabel', 'population_dict', 'area', 'hcounties', 'date_opening', 'date_closing': date_closing, 'inception_date', 'dissolved_date', 'follows', 'replaces', 'adm_regions', 'countries', 'continents', 'capital_of', 'borders', 'near_water', 'latitude', 'longitude', 'wikititle', 'geonamesIDs', 'connectswith', 'street_address', 'street_located', 'postal_code'
 ```
+
+## 5. Create a Wikidata-based gazetteer
+
+The following script creates the gazetteer.
+
+```
+python create_wk_gazetteer
+```
+
+To create the gazetteer, it follows these steps:
+1. It concatenates the different csv files from the previous step into a unified csv: `wikidata_gazetteer.csv`.
+2. It collects alternate names and mentions from our Wikipedia resources and linkes them to Wikidata locations. Four dictionaries result from this step:
+    * `mentions_to_wikidata.json`: For a given mention, a dictionary where the keys are the Wikidata ID that can be referred to by this mention, and the values are the absolute number of mentions given the Wikidata ID, for example:
+      ```
+      >>> data["London"]
+      {'Q84': 76938, 'Q170027': 142, ...}
+      ```
+    * `wikidata_to_mentions.json`: The reversed dictionary, for example:
+      ```
+      >>> data["Q84"]
+      {'London': 76938, 'City of London': 1, ...}
+      ```
+    * `mentions_to_wikidata_normalized.json`: For a given mention, each Wikidata ID is provided with the probability of it being referred to by such mention (being referred to by this is not the same as how likely a wikipedia ID is given a certain mention. I.e. the probability of London in Kiribati (Q2477346) of being referred to as "London" is 0.80, and that's the measure we are interested in here; the probability of having the London in Kiribati entry given the mention "London" would be close to 0, because most "London" mentions refer to the city in England, for example:
+      ```
+      >>> data["London"]
+      {'Q84': 0.9762342820164698, 'Q170027': 0.02005083309799492, ...}
+      ```
+    * `wikidata_to_mentions_normalized.json`: The reversed dictionary, for example:
+      ```
+      >>> data["Q84"]
+      {'London': 0.9762342820164698, 'City of London: 1.2688584080902413e-05, ...}
+      ```
+3. It produces a dictionary of Wikidata entity relevance, according to Wikipedia inlinks: `overall_entity_freq_wikidata.json`.
+
+## 6. Obtain Wikidata embeddings for entities
+
+The following script selects and exports entity embeddings of entities that appear in our gazetteer:
+
+```
+python produce_wkdt_embs_subset.py
+```
+
+These embeddings and mapped entities are downloaded from https://torchbiggraph.readthedocs.io/en/latest/pretrained_embeddings.html, downloaded on Apr 11 2022.
+
+The resulting entity embeddings are stored as follows:
+* `/resources/wikidata/gazetteer_entity_embeddings.npy`: the entity embeddings.
+* `/resources/wikidata/gazetteer_entity_ids.txt`: the entity Wikidata IDs.
 
 ## Final outputs
 
@@ -85,3 +132,11 @@ These scripts will produce the following outputs (note that entities are percent
   - `wikidata2wikipedia.json`: a dictionary mapping Wikidata ids to a list of Wikipedia pages with associated frequency.
 - In `/resources/wikidata/extracted/`:
   - A list of `.csv` files, each containing 5,000 rows corresponding to geographical entities extracted from Wikidata.
+  - `wikidata_gazetteer.csv`: The Wikidata-based gazetteer.
+  - `mentions_to_wikidata.json`: A dictionary that maps mentions to Wikidata IDs (absolute counts).
+  - `wikidata_to_mentions.json`: A dictionary that maps Wikidata IDs to mentions (absolute counts).
+  - `mentions_to_wikidata_normalized.json`: A dictionary that maps mentions to Wikidata IDs (normalized).
+  - `wikidata_to_mentions_normalized.json`: A dictionary that maps Wikidata IDs to mentions (normalized).
+  - `overall_entity_freq_wikidata.json`: this is a dictionary which simply maps a Wikidata entity to its overall frequency in the Wikipedia corpus.
+  - `gazetteer_entity_embeddings.npy`: Wikidata embeddings of entities in our gazetteer.
+  - `gazetteer_entity_ids.txt`: Mapped Wikidata IDs of the entities in our gazetteer.
