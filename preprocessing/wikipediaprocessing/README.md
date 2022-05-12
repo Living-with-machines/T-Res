@@ -100,12 +100,13 @@ To create the gazetteer, it follows these steps:
       ```
 3. It produces a dictionary of Wikidata entity relevance, according to Wikipedia inlinks: `overall_entity_freq_wikidata.json`.
 
-## 6. Obtain Wikidata embeddings for entities
+## 6. Obtain Wikidata embeddings for entities and classes
 
-The following script selects and exports entity embeddings of entities that appear in our gazetteer:
+The following scripts selects and exports entity embeddings of entities (and of wikidata classes) that appear in our gazetteer:
 
 ```
 python produce_wkdt_embs_subset.py
+python produce_wkdt_class_subset.py
 ```
 
 These embeddings and mapped entities are downloaded from https://torchbiggraph.readthedocs.io/en/latest/pretrained_embeddings.html, downloaded on Apr 11 2022.
@@ -113,6 +114,8 @@ These embeddings and mapped entities are downloaded from https://torchbiggraph.r
 The resulting entity embeddings are stored as follows:
 * `/resources/wikidata/gazetteer_entity_embeddings.npy`: the entity embeddings.
 * `/resources/wikidata/gazetteer_entity_ids.txt`: the entity Wikidata IDs.
+* `/resources/wikidata/gazetteer_wkdtclass_embeddings.npy`: the class embeddings.
+* `/resources/wikidata/gazetteer_wkdtclass_ids.txt`: the class Wikidata IDs.
 
 ## Final outputs
 
@@ -140,3 +143,5 @@ These scripts will produce the following outputs (note that entities are percent
   - `overall_entity_freq_wikidata.json`: this is a dictionary which simply maps a Wikidata entity to its overall frequency in the Wikipedia corpus.
   - `gazetteer_entity_embeddings.npy`: Wikidata embeddings of entities in our gazetteer.
   - `gazetteer_entity_ids.txt`: Mapped Wikidata IDs of the entities in our gazetteer.
+  - `gazetteer_wkdtclass_embeddings.npy`: Wikidata embeddings of entity classes in our gazetteer.
+  - `gazetteer_wkdtclass_ids.txt`: Mapped Wikidata IDs of the entity classes in our gazetteer.
