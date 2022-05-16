@@ -11,8 +11,13 @@ import pandas as pd
 import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
-from utils import process_data, ner, ranking, linking
+from utils import process_data, ner, ranking, linking, training
 from utils.resolution_pipeline import ELPipeline
+
+import torch
+from torch.utils.data import Dataset, DataLoader
+from torch.nn import Linear
+import torch.nn.functional as F
 
 
 # Datasets:
@@ -33,7 +38,8 @@ cand_select_method = "deezymatch"
 # Toponym resolution approach, options are:
 # * mostpopular
 # * mostpopularnormalised
-top_res_method = "mostpopular"
+# * lwmperceptron
+top_res_method = "lwmperceptron"
 
 # Perform training if needed:
 do_training = True
@@ -42,6 +48,9 @@ do_training = True
 # * all
 # * loc
 accepted_labels_str = "all"
+
+# Instantiate dictionary of REL outputs
+rel_preds = {}
 
 # Initiate the recogniser object:
 myner = ner.Recogniser(
@@ -78,8 +87,8 @@ myranker = ranking.Ranker(
         # Ranking measures:
         "ranking_metric": "faiss",
         "selection_threshold": 20,
-        "num_candidates": 3,
-        "search_size": 3,
+        "num_candidates": 1,
+        "search_size": 1,
         "use_predict": False,
         "verbose": False,
     },
@@ -93,9 +102,10 @@ mylinker = linking.Linker(
     resources_path="/resources/wikidata/",
     linking_resources=dict(),
     myranker=myranker,
-    base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
-    tokenizer=None,
-    model_rd=None,
+    bert_base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+    bert_tokenizer=None,
+    bert_pipeline=None,
+    perceptron=dict(),
 )
 
 
@@ -122,7 +132,6 @@ print("*** Loading the resources...")
 myner.model, myner.pipe = myner.create_pipeline()
 myranker.mentions_to_wikidata = myranker.load_resources()
 mylinker.linking_resources = mylinker.load_resources()
-mylinker.tokenizer, mylinker.model_rd = mylinker.create_pipeline()
 print("*** Resources loaded!\n")
 
 # Parallelize if ranking method is one of the following:
@@ -130,15 +139,72 @@ if myranker.method in ["partialmatch", "levenshtein"]:
     pandarallel.initialize(nb_workers=10)
     os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+
+# Define the model.
+# I can't move this to the other scripts, I get an error...
+class EnhancedMLP(torch.nn.Module):
+    def __init__(
+        self,
+        input_channels,
+        ext_channels,
+        hidden_channels_1,
+        hidden_channels_2,
+    ):
+        super().__init__()
+        torch.manual_seed(12345)
+        self.lin1 = Linear(input_channels, hidden_channels_1)
+        self.lin2 = Linear(hidden_channels_1 + ext_channels, hidden_channels_2)
+        self.lin3 = Linear(hidden_channels_2 + ext_channels, 2)
+
+    def forward(self, x, ext_features):
+        x = self.lin1(x)
+        x = x.relu()
+        x = torch.cat([x, ext_features], dim=1)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.lin2(x)
+        x = x.relu()
+        x = torch.cat([x, ext_features], dim=1)
+        x = F.dropout(x, p=0.25, training=self.training)
+        x = self.lin3(x)
+        return x
+
+
 # Some methods are unsupervised, set the do_training flag to False:
 if mylinker.method in ["rel", "mostpopular", "mostpopularnormalised"]:
     mylinker.do_training = False
-else:
-    mylinker.train()
+elif mylinker.method in ["lwmperceptron"]:
+    # Load trained perceptron:
+    mylinker.bert_tokenizer, mylinker.bertpipeline = mylinker.create_pipeline()
+    mylinker.perceptron[
+        "perceptron_path"
+    ] = "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/models/lwm_perceptron/best_model_split_random/mlp_classifier.pt"
+    # Create a dataset for entity linking, with candidates retrieved
+    # using the chosen method:
+    training_df = training.create_trainset(
+        mylinker.training_csv, mylinker.myranker, mylinker
+    )
+    # Choose the features to use:
+    mylinker.perceptron["features"] = ["conf_score", "wkdt_relv", "log_dist"]
+
+    ### In the future uncomment, to skip training if done:
+    """
+    if Path(mylinker.perceptron["perceptron_path"]).exists():
+        perceptron_model = torch.load(mylinker.perceptron["perceptron_path"])
+        m = torch.nn.Softmax(dim=1)
+        mylinker.perceptron["perceptron_model"] = perceptron_model
+        mylinker.perceptron["m"] = m
+    else:
+        print("Perceptron does not exist, let's train it!")
+    """
+    if not mylinker.perceptron.get("perceptron_model"):
+        mylinker.train(training_df)
+        perceptron_model = torch.load(mylinker.perceptron["perceptron_path"])
+        m = torch.nn.Softmax(dim=1)
+        mylinker.perceptron["perceptron_model"] = perceptron_model
+        mylinker.perceptron["m"] = m
 
 # Instantiate gold tokenization dictionary:
 gold_tokenisation = {}
-
 
 # ---------------------------------------------------
 # Perform end-to-end toponym resolution
@@ -201,12 +267,11 @@ for dataset in datasets:
 
         if myner.method == "rel":
             if Path(rel_end_to_end).is_file():
+                print(sent_id)
                 preds = rel_preds[sent_id]
             else:
                 pred_ents = linking.rel_end_to_end(dSentences[sent_id])
                 rel_preds[sent_id] = pred_ents
-                with open(rel_end_to_end, "w") as fp:
-                    json.dump(rel_preds, fp)
             output = end_to_end.run(
                 dSentences[sent_id],
                 dataset=dataset,
@@ -253,3 +318,6 @@ for dataset in datasets:
         + accepted_labels_str,
         dPreds,
     )
+
+    with open(rel_end_to_end, "w") as fp:
+        json.dump(rel_preds, fp)

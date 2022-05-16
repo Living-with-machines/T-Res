@@ -28,11 +28,11 @@ ner_approaches = [
         "cand_select_method": "perfectmatch",  # This does not really matter here
         "top_res_method": "mostpopular",  # This does not really matter here
     },
-    {
-        "ner_model_id": "rel",
-        "cand_select_method": "rel",
-        "top_res_method": "rel",
-    },
+    # {
+    #     "ner_model_id": "rel",
+    #     "cand_select_method": "rel",
+    #     "top_res_method": "rel",
+    # },
 ]
 
 ne_tag = "ALL"
@@ -189,10 +189,10 @@ print(df_ner.to_latex(index=False))
 
 datasets = ["lwm", "hipe"]
 approaches = dict()
-approaches["rel"] = {"candselect": ["rel"], "topres": ["rel"]}
+# approaches["rel"] = {"candselect": ["rel"], "topres": ["rel"]}
 approaches["lwm"] = {
     "candselect": ["perfectmatch", "deezymatch"],
-    "topres": ["skyline", "mostpopular"],
+    "topres": ["skyline", "mostpopular", "lwmperceptron"],
 }
 accepted_labels = ["all", "loc"]
 

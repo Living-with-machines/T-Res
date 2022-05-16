@@ -120,7 +120,7 @@ hipe_train_df, hipe_dev_df = train_test_split(
 )
 
 # Store dataframes:
-hipe_train_df.to_csv(output_path_hipe + "hipe_train_df.tsv", sep="\t", index=False)
+hipe_train_df.to_csv(output_path_hipe + "linking_df_train.tsv", sep="\t", index=False)
 hipe_dev_df.to_csv(output_path_hipe + "linking_df_dev.tsv", sep="\t", index=False)
 hipe_test_df.to_csv(output_path_hipe + "linking_df_test.tsv", sep="\t", index=False)
 
