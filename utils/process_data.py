@@ -829,3 +829,9 @@ def match_ent(pred_ents, start, end, prev_ann):
                     return n, "O", ""
                 return n, el, prev_ann
     return "O", "O", ""
+
+
+# Split list into equal parts:
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n))

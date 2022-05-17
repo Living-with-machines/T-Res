@@ -18,7 +18,6 @@ from sklearn.model_selection import train_test_split
 
 # Path for the output dataset dataframes:
 output_path_lwm = "outputs/data/lwm/"
-Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
 
 # Path of the annotated data:
 # !TODO: Change path to that where downloaded data is stored.
@@ -40,61 +39,27 @@ lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines
 lwm_train_df = process_data.process_lwm_for_linking(topres_path_train)
 lwm_test_df = process_data.process_lwm_for_linking(topres_path_test)
 
-# Leave out one location just for test and one for dev.
-# We'll leave Ashton-under-Lyne and Poole for that, because
-# they are our smaller subsets by place, as you can see
-# below (number of annotated articles per place):
-# * Manchester           216
-# * Dorchester           143
-# * Poole                 48
-# * Ashton-under-Lyne     48
+# Concatenate original training and test sets:
+lwm_all_df = pd.concat([lwm_train_df, lwm_test_df])
 
-# Split test set into dev and test set, by article:
-lwm_dev_df, lwm_test_df = train_test_split(lwm_test_df, test_size=0.5, random_state=42)
+groups = [i for i, group in lwm_all_df.groupby(["place", "decade"])]
+for group in groups:
+    group_name = group[0].split("-")[0] + str(group[1])
+    train_test_column = []
+    for i, row in lwm_all_df.iterrows():
+        if row["place"] == group[0] and row["decade"] == group[1]:
+            train_test_column.append("test")
+        else:
+            train_test_column.append("train")
 
-# Add the left-out place of publication articles to the corresponding split
-# We keep Ashton exclusively for dev:
-mask_ashton_train = lwm_train_df["place"] == "Ashton-under-Lyne"
-mask_ashton_test = lwm_test_df["place"] == "Ashton-under-Lyne"
-lwm_dev_df = pd.concat(
-    [lwm_dev_df, lwm_train_df[mask_ashton_train], lwm_test_df[mask_ashton_test]]
+    lwm_all_df[group_name] = train_test_column
+
+# Store dataframe:
+lwm_all_df.to_csv(
+    output_path_lwm + "linking_df_split.tsv",
+    sep="\t",
+    index=False,
 )
-lwm_train_df = lwm_train_df[~mask_ashton_train]
-lwm_test_df = lwm_test_df[~mask_ashton_test]
-
-# Wee keep Poole exclusively for test:
-mask_poole_train = lwm_train_df["place"] == "Poole"
-mask_poole_dev = lwm_dev_df["place"] == "Poole"
-lwm_test_df = pd.concat(
-    [lwm_test_df, lwm_train_df[mask_poole_train], lwm_dev_df[mask_poole_dev]]
-)
-lwm_train_df = lwm_train_df[~mask_poole_train]
-lwm_dev_df = lwm_dev_df[~mask_poole_dev]
-
-print("\nLwM dataset")
-print("===========")
-print("* Size of the toponym resolution train set:", lwm_train_df.shape[0])
-print("* Size of the toponym resolution dev set:", lwm_dev_df.shape[0])
-print("* Size of the toponym resolution test set:", lwm_test_df.shape[0])
-print(
-    "\n* Places of publication in the train set: "
-    + ", ".join(list(lwm_train_df.place.unique()))
-)
-print(
-    "* Places of publication in the dev set: "
-    + ", ".join(list(lwm_dev_df.place.unique()))
-)
-print(
-    "* Places of publication in the test set: "
-    + ", ".join(list(lwm_test_df.place.unique()))
-)
-print()
-
-# Store dataframes:
-lwm_train_df.to_csv(output_path_lwm + "linking_df_train.tsv", sep="\t", index=False)
-lwm_dev_df.to_csv(output_path_lwm + "linking_df_dev.tsv", sep="\t", index=False)
-lwm_test_df.to_csv(output_path_lwm + "linking_df_test.tsv", sep="\t", index=False)
-
 
 # ------------------------------------------------------
 # CLEF HIPE dataset
@@ -114,18 +79,25 @@ hipe_test_df = process_data.process_hipe_for_linking(
     hipe_path + "HIPE-data-v1.4-test-en.tsv"
 )
 
-# Split dev set into train and dev set, by article:
-hipe_train_df, hipe_dev_df = train_test_split(
-    hipe_dev_df, test_size=0.5, random_state=42
+hipe_all_df = pd.concat([hipe_dev_df, hipe_test_df])
+
+all_publications = sorted(list(hipe_all_df.publication_code.unique()))
+
+exp_n = 0
+for comb_group in list(process_data.split(all_publications, 3)):
+    exp_n += 1
+    train_test_column = []
+    for i, row in hipe_all_df.iterrows():
+        if row["publication_code"] in comb_group:
+            train_test_column.append("test")
+        else:
+            train_test_column.append("train")
+
+    hipe_all_df["Exp" + str(exp_n)] = train_test_column
+
+# Store dataframe:
+hipe_all_df.to_csv(
+    output_path_hipe + "linking_df_split.tsv",
+    sep="\t",
+    index=False,
 )
-
-# Store dataframes:
-hipe_train_df.to_csv(output_path_hipe + "hipe_train_df.tsv", sep="\t", index=False)
-hipe_dev_df.to_csv(output_path_hipe + "linking_df_dev.tsv", sep="\t", index=False)
-hipe_test_df.to_csv(output_path_hipe + "linking_df_test.tsv", sep="\t", index=False)
-
-print("\nHIPE dataset")
-print("============")
-print("* Size of the toponym resolution train set:", hipe_train_df.shape[0])
-print("* Size of the toponym resolution dev set:", hipe_dev_df.shape[0])
-print("* Size of the toponym resolution test set:", hipe_test_df.shape[0])
