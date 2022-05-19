@@ -8,20 +8,12 @@ from pandarallel import pandarallel
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 import pandas as pd
-import tqdm
-from sklearn.model_selection import train_test_split
-from transformers import pipeline
-from utils import process_data, ner, ranking, linking
-from utils.resolution_pipeline import ELPipeline
+from geoparser import processing, recogniser
 
+# from utils import postprocess_data, ner  # , ranking, linking, processing
+# from utils.resolution_pipeline import ELPipeline
 
-# Datasets:
-datasets = ["lwm", "hipe"]
-
-# Named entity recognition approach, options are:
-# * rel
-# * lwm
-ner_model_id = "lwm"
+dataset = "lwm"  # "hipe" or "lwm"
 
 # Candidate selection approach, options are:
 # * perfectmatch
@@ -35,20 +27,12 @@ cand_select_method = "deezymatch"
 # * mostpopularnormalised
 top_res_method = "mostpopular"
 
-# Perform training if needed:
-do_training = True
-
-# Entities considered for linking, options are:
-# * all
-# * loc
-accepted_labels_str = "all"
-
 # Initiate the recogniser object:
-myner = ner.Recogniser(
-    method=ner_model_id,  # NER method (lwm or rel)
-    model_name="blb_lwm-ner",  # NER model name
-    pipe=None,  # We'll store the NER pipeline here
+myner = recogniser.Recogniser(
+    method="lwm",  # NER method
+    model_name="blb_lwm-ner",  # NER model name preffix (will have suffixes appended)
     model=None,  # We'll store the NER model here
+    pipe=None,  # We'll store the NER pipeline here
     base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
     train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
     test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
@@ -61,9 +45,30 @@ myner = ner.Recogniser(
     },
     overwrite_training=False,  # Set to True if you want to overwrite model if existing
     do_test=False,  # Set to True if you want to train on test mode
-    accepted_labels=accepted_labels_str,
+    filtering_labels="all",  # Option of labels to recognise (all or loc)
+    training_tagset="coarse",  # Options are: "coarse" or "fine"
 )
 
+mydata = processing.Preprocessor(
+    dataset=dataset,
+    data_path="outputs/data/",
+    dataset_df=pd.DataFrame(),
+    results_path="outputs/results/",
+    myner=myner,
+    overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists
+    processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
+)
+
+# Print data postprocessing information:
+print(mydata)
+
+# Load processed data if existing:
+mydata.processed_data = mydata.load_data()
+
+# Perform data postprocessing:
+mydata.processed_data = mydata.prepare_data()
+
+"""
 # Initiate the ranker object:
 myranker = ranking.Ranker(
     method=cand_select_method,
@@ -97,7 +102,9 @@ mylinker = linking.Linker(
     tokenizer=None,
     model_rd=None,
 )
+"""
 
+"""
 
 # --------------------------------------------
 # End of user input!
@@ -253,3 +260,4 @@ for dataset in datasets:
         + accepted_labels_str,
         dPreds,
     )
+"""

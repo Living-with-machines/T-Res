@@ -1,4 +1,4 @@
-from utils import ranking, linking, ner, process_data
+from utils import postprocess_data, ranking, linking, ner
 
 
 class ELPipeline:
@@ -19,7 +19,9 @@ class ELPipeline:
         if self.myner.method == "rel":
             predicted_ents = [
                 {
-                    "wikidata_id": process_data.match_wikipedia_to_wikidata(pred[3]),
+                    "wikidata_id": postprocess_data.match_wikipedia_to_wikidata(
+                        pred[3]
+                    ),
                     "ner_conf": pred[4],
                     "el_conf": pred[5],
                 }
@@ -34,7 +36,7 @@ class ELPipeline:
                 start = token["start"]
                 end = token["end"]
                 word = token["word"]
-                n, el, prev_ann = process_data.match_ent(
+                n, el, prev_ann = postprocess_data.match_ent(
                     annotations, start, end, prev_ann
                 )
                 sentence_preds.append([word, n, el])

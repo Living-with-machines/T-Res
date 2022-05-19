@@ -5,11 +5,19 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 import pandas as pd
 from pathlib import Path
 from utils import get_data
-from utils import process_data
+from utils import preprocess_data
 from sklearn.model_selection import train_test_split
 import random
+import json
 
 random.seed(42)
+
+
+with open("../resources/publication_metadata.json") as jsonfile:
+    df_metadata = json.load(jsonfile)
+dict_titles = {k: df_metadata[k]["publication_title"] for k in df_metadata}
+dict_place = {k: df_metadata[k]["publication_place"] for k in df_metadata}
+dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
 
 
 # ------------------------------------------------------
@@ -28,7 +36,7 @@ topres_path_train = "/resources/newsdataset/fmp_lwm/train/"
 topres_path_test = "/resources/newsdataset/fmp_lwm/test/"
 
 # Process data for training a named entity recognition model:
-lwm_df = process_data.process_lwm_for_ner(topres_path_train)
+lwm_df = preprocess_data.process_lwm_for_ner(topres_path_train)
 
 # Split NER-formatted training set into train and dev, and store them.
 # They will be used by the ner_training.py script:
@@ -39,11 +47,21 @@ lwm_train_ner.to_json(
 lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines=True)
 
 # Process data for resolution:
-lwm_train_df = process_data.process_lwm_for_linking(topres_path_train)
-lwm_test_df = process_data.process_lwm_for_linking(topres_path_test)
+lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train)
+lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test)
 
 # Concatenate original training and test sets:
 lwm_all_df = pd.concat([lwm_train_df, lwm_test_df])
+lwm_all_df["place_wqid"] = lwm_all_df["publication_code"].map(dict_placewqid)
+
+# Keep the original train/test split for assessing NER:
+ner_split_train = list(lwm_train_df["article_id"].unique())
+ner_split_test = list(lwm_test_df["article_id"].unique())
+
+# Add a column for the ner_split (i.e. the original split)
+lwm_all_df["originalsplit"] = lwm_all_df["article_id"].apply(
+    lambda x: "test" if x in ner_split_test else "train"
+)
 
 groups = [i for i, group in lwm_all_df.groupby(["place", "decade"])]
 for group in groups:
@@ -92,14 +110,17 @@ Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
 # Path to folder with HIPE original data (v1.4):
 hipe_path = "/resources/newsdataset/clef_hipe/"
 
-hipe_dev_df = process_data.process_hipe_for_linking(
+hipe_dev_df = preprocess_data.process_hipe_for_linking(
     hipe_path + "HIPE-data-v1.4-dev-en.tsv"
 )
-hipe_test_df = process_data.process_hipe_for_linking(
+hipe_test_df = preprocess_data.process_hipe_for_linking(
     hipe_path + "HIPE-data-v1.4-test-en.tsv"
 )
 
 hipe_all_df = pd.concat([hipe_dev_df, hipe_test_df])
+hipe_all_df["place"] = hipe_all_df["publication_code"].map(dict_place)
+hipe_all_df["publication_title"] = hipe_all_df["publication_code"].map(dict_titles)
+hipe_all_df["place_wqid"] = hipe_all_df["publication_code"].map(dict_placewqid)
 
 # Split dev set into train and dev set, by article:
 hipe_train_df, hipe_dev_df = train_test_split(
