@@ -14,7 +14,7 @@ import pandas as pd
 import requests
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import utils
+from utils import utils, ner
 
 
 # Load wikipedia2wikidata mapper:
@@ -248,6 +248,8 @@ def ner_and_process(dSentences, dAnnotated, myner, accepted_labels):
     dPreds = dict()
     dTrues = dict()
     dSkys = dict()
+    dMentionsPred = dict()  # Dictionary of detected mentions
+    dMentionsGold = dict()  # Dictionary of goldstandard mentions
     for sent_id in tqdm(list(dSentences.keys())):
         sent = dSentences[sent_id]
         annotations = dAnnotated[sent_id]
@@ -260,7 +262,13 @@ def ner_and_process(dSentences, dAnnotated, myner, accepted_labels):
         dTrues[sent_id] = sentence_postprocessing["sentence_trues"]
         dSkys[sent_id] = sentence_postprocessing["sentence_skys"]
         gold_tokenization[sent_id] = gold_positions
-    return dPreds, dTrues, dSkys, gold_tokenization
+        dMentionsPred[sent_id] = ner.aggregate_mentions(
+            sentence_postprocessing["sentence_preds"], accepted_labels, "pred"
+        )
+        dMentionsGold[sent_id] = ner.aggregate_mentions(
+            sentence_postprocessing["sentence_trues"], accepted_labels, "gold"
+        )
+    return dPreds, dTrues, dSkys, gold_tokenization, dMentionsPred, dMentionsGold
 
 
 def load_processed_data(mydata):
@@ -290,6 +298,10 @@ def load_processed_data(mydata):
             output_processed_data["dMetadata"] = json.load(fr)
         with open(output_path + "_dict_REL.json") as fr:
             output_processed_data["dREL"] = json.load(fr)
+        with open(output_path + "_pred_mentions.json") as fr:
+            output_processed_data["dMentionsPred"] = json.load(fr)
+        with open(output_path + "_gold_mentions.json") as fr:
+            output_processed_data["dMentionsGold"] = json.load(fr)
         return output_processed_data
     except FileNotFoundError:
         return dict()
@@ -304,6 +316,8 @@ def store_processed_data(
     dSentences,
     dMetadata,
     dREL,
+    dMentionsPred,
+    dMentionsGold,
     data_path,
     dataset,
     model_name,
@@ -343,6 +357,14 @@ def store_processed_data(
     with open(output_path + "_dict_REL.json", "w") as fw:
         json.dump(dREL, fw)
 
+    # Store the dictionary of REL results:
+    with open(output_path + "_pred_mentions.json", "w") as fw:
+        json.dump(dMentionsPred, fw)
+
+    # Store the dictionary of REL results:
+    with open(output_path + "_gold_mentions.json", "w") as fw:
+        json.dump(dMentionsGold, fw)
+
     dict_processed_data = dict()
     dict_processed_data["preds"] = preds
     dict_processed_data["trues"] = trues
@@ -351,6 +373,8 @@ def store_processed_data(
     dict_processed_data["dSentences"] = dSentences
     dict_processed_data["dMetadata"] = dMetadata
     dict_processed_data["dREL"] = dREL
+    dict_processed_data["dMentionsPred"] = dMentionsPred
+    dict_processed_data["dMentionsGold"] = dMentionsGold
     return dict_processed_data
 
 
@@ -435,6 +459,71 @@ def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization, accepted_la
 
         dREL[sent_id] = sentence_preds
     return dREL
+
+
+def process_for_linking(df):
+    """
+    Process data for linking, resulting in a dataframe with one mention
+    per row.
+    """
+
+    # Create dataframe by mention:
+    rows = []
+    for i, row in df.iterrows():
+        article_id = row["article_id"]
+        place = row["place"]
+        year = row["year"]
+        ocr_quality_mean = row["ocr_quality_mean"]
+        ocr_quality_sd = row["ocr_quality_sd"]
+        publication_title = row["publication_title"]
+        publication_code = str(row["publication_code"]).zfill(7)
+        sentences = literal_eval(row["sentences"])
+        annotations = literal_eval(row["annotations"])
+        for s in sentences:
+            for a in annotations:
+                if s["sentence_pos"] == a["sent_pos"]:
+                    rows.append(
+                        (
+                            article_id,
+                            s["sentence_pos"],
+                            s["sentence_text"],
+                            a["mention_pos"],
+                            a["mention"],
+                            a["wkdt_qid"],
+                            a["mention_start"],
+                            a["mention_end"],
+                            a["entity_type"],
+                            year,
+                            place,
+                            ocr_quality_mean,
+                            ocr_quality_sd,
+                            publication_title,
+                            publication_code,
+                        )
+                    )
+
+    training_df = pd.DataFrame(
+        columns=[
+            "article_id",
+            "sentence_pos",
+            "sentence",
+            "mention_pos",
+            "mention",
+            "wkdt_qid",
+            "mention_start",
+            "mention_end",
+            "entity_type",
+            "year",
+            "place",
+            "ocr_quality_mean",
+            "ocr_quality_sd",
+            "publication_title",
+            "publication_code",
+        ],
+        data=rows,
+    )
+
+    return training_df
 
 
 ##################################################

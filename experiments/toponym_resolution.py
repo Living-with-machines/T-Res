@@ -13,7 +13,7 @@ from geoparser import processing, recogniser
 # from utils import postprocess_data, ner  # , ranking, linking, processing
 # from utils.resolution_pipeline import ELPipeline
 
-dataset = "lwm"  # "hipe" or "lwm"
+dataset = "hipe"  # "hipe" or "lwm"
 
 # Candidate selection approach, options are:
 # * perfectmatch
@@ -67,6 +67,9 @@ mydata.processed_data = mydata.load_data()
 
 # Perform data postprocessing:
 mydata.processed_data = mydata.prepare_data()
+
+# Create mentions dataframe:
+mydata.processed_data["processed_df"] = mydata.create_df()
 
 """
 # Initiate the ranker object:

@@ -126,12 +126,17 @@ def collect_named_entities(tokens, accepted_labels):
     start_offset = None
     end_offset = None
     ent_type = None
+    link = None
 
-    Entity = namedtuple("Entity", "e_type start_offset end_offset start_char end_char")
+    Entity = namedtuple(
+        "Entity", "e_type link start_offset end_offset start_char end_char"
+    )
     dict_tokens = dict(enumerate(tokens))
+    dict_links = dict(enumerate(tokens))
 
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
+        token_link = annotation[2]
 
         if not token_tag.lower() in accepted_labels:
             if ent_type is not None and start_offset is not None:
@@ -139,6 +144,7 @@ def collect_named_entities(tokens, accepted_labels):
                 named_entities.append(
                     Entity(
                         ent_type,
+                        link,
                         start_offset,
                         end_offset,
                         dict_tokens[start_offset][3],
@@ -148,9 +154,11 @@ def collect_named_entities(tokens, accepted_labels):
                 start_offset = None
                 end_offset = None
                 ent_type = None
+                link = None
 
         elif ent_type is None:
             ent_type = token_tag[2:]
+            link = token_link[2:]
             start_offset = offset
 
         elif ent_type != token_tag[2:] or (
@@ -161,6 +169,7 @@ def collect_named_entities(tokens, accepted_labels):
             named_entities.append(
                 Entity(
                     ent_type,
+                    link,
                     start_offset,
                     end_offset,
                     dict_tokens[start_offset][3],
@@ -170,6 +179,7 @@ def collect_named_entities(tokens, accepted_labels):
 
             # start of a new entity
             ent_type = token_tag[2:]
+            link = token_link[2:]
             start_offset = offset
             end_offset = None
 
@@ -179,6 +189,7 @@ def collect_named_entities(tokens, accepted_labels):
         named_entities.append(
             Entity(
                 ent_type,
+                link,
                 start_offset,
                 len(tokens) - 1,
                 dict_tokens[start_offset][3],
@@ -191,13 +202,14 @@ def collect_named_entities(tokens, accepted_labels):
 
 # -------------------------------------------------------------
 # Aggregate separate tokens into mentions:
-def aggregate_mentions(predictions, accepted_labels):
+def aggregate_mentions(predictions, accepted_labels, setting):
     """
     Aggregates mentions (NER outputs separate tokens) and finds
     mention position in sentence.
     """
 
     mentions = collect_named_entities(predictions, accepted_labels)
+
     sent_mentions = []
     for mention in mentions:
         text_mention = " ".join(
@@ -207,11 +219,11 @@ def aggregate_mentions(predictions, accepted_labels):
             ]
         )
 
-        ner_score = [
-            predictions[r][-1]
-            for r in range(mention.start_offset, mention.end_offset + 1)
-        ]
-        ner_score = sum(ner_score) / len(ner_score)
+        ner_score = 0.0
+        entity_link = ""
+        ner_label = ""
+
+        # Consolidate the NER label:
         ner_label = [
             predictions[r][1]
             for r in range(mention.start_offset, mention.end_offset + 1)
@@ -219,6 +231,36 @@ def aggregate_mentions(predictions, accepted_labels):
         ner_label = list(
             set([label.split("-")[1] if "-" in label else label for label in ner_label])
         )[0]
+
+        if setting == "pred":
+
+            # Consolidate the NER score
+            ner_score = [
+                predictions[r][-1]
+                for r in range(mention.start_offset, mention.end_offset + 1)
+            ]
+            ner_score = round(sum(ner_score) / len(ner_score), 3)
+
+            # Link is at the moment not filled:
+            entity_link = "O"
+
+        elif setting == "gold":
+            ner_score = 1.0
+
+            # Consolidate the enity link:
+            entity_link = [
+                predictions[r][2]
+                for r in range(mention.start_offset, mention.end_offset + 1)
+            ]
+            entity_link = list(
+                set(
+                    [
+                        label.split("-")[1] if "-" in label else label
+                        for label in entity_link
+                    ]
+                )
+            )[0]
+
         sent_mentions.append(
             {
                 "mention": text_mention,
@@ -228,6 +270,7 @@ def aggregate_mentions(predictions, accepted_labels):
                 "end_char": mention.end_char,
                 "ner_score": ner_score,
                 "ner_label": ner_label,
+                "entity_link": entity_link,
             }
         )
     return sent_mentions
