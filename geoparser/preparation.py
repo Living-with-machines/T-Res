@@ -94,7 +94,6 @@ class Preprocessor:
 
         if self.processed_data and self.overwrite_processing == False:
             print("\nData already postprocessed and loaded!\n")
-            return self.processed_data
 
         # If data has not been processed, or overwrite is set to True, then:
         else:
@@ -117,10 +116,8 @@ class Preprocessor:
             self.myner.model, self.myner.pipe = self.myner.create_pipeline()
             accepted_labels = process_data.load_tagset(self.myner.filtering_labels)
 
-            # =========================================
+            # -------------------------------------------
             # Parse with NER in the LwM way
-            # =========================================
-
             print("\nPerform NER with our model:")
             output_lwm_ner = process_data.ner_and_process(
                 dSentences, dAnnotated, self.myner, accepted_labels
@@ -132,14 +129,12 @@ class Preprocessor:
             dMentionsPred = output_lwm_ner[4]
             dMentionsGold = output_lwm_ner[5]
 
-            # ==========================================
+            # -------------------------------------------
             # Run REL end-to-end, as well
             # Note: Do not move the next block of code,
             # as REL relies on the tokenisation performed
             # by the previous method, so it needs to be
             # run after ther our method.
-            # ==========================================
-
             Path(self.results_path + self.dataset).mkdir(parents=True, exist_ok=True)
             rel_end2end_path = (
                 self.results_path + self.dataset + "/rel_e2d_from_api.json"
@@ -150,10 +145,8 @@ class Preprocessor:
                 rel_end2end_path, dSentences, gold_tokenization, accepted_labels
             )
 
-            # ==========================================
+            # -------------------------------------------
             # Store postprocessed data
-            # ==========================================
-
             self.processed_data = process_data.store_processed_data(
                 dPreds,
                 dTrues,
@@ -169,134 +162,47 @@ class Preprocessor:
                 self.myner.model_name,
                 self.myner.filtering_labels,
             )
+
+        # -------------------------------------------
+        # Store results in the CLEF-HIPE scorer-required format
+        hipe_scorer_results_path = self.results_path + self.dataset + "/"
+        scenario_name = (
+            "ner_" + self.myner.model_name + "_" + self.myner.filtering_labels + "_"
+        )
+
+        # Find article ids of the test set (original split, for NER):
+        ner_all = self.dataset_df
+        ner_test_articles = list(
+            ner_all[ner_all["originalsplit"] == "test"].article_id.unique()
+        )
+        ner_test_articles = [str(art) for art in ner_test_articles]
+
+        # Store predictions results formatted for CLEF-HIPE scorer:
+        process_data.store_for_scorer(
+            hipe_scorer_results_path,
+            scenario_name + "preds",
+            self.processed_data["preds"],
+            ner_test_articles,
+        )
+
+        # Store gold standard results formatted for CLEF-HIPE scorer:
+        process_data.store_for_scorer(
+            hipe_scorer_results_path,
+            scenario_name + "trues",
+            self.processed_data["trues"],
+            ner_test_articles,
+        )
+
+        # Store REL results formatted for CLEF-HIPE scorer:
+        process_data.store_for_scorer(
+            hipe_scorer_results_path,
+            scenario_name + "rel",
+            self.processed_data["dREL"],
+            ner_test_articles,
+        )
+
+        # Create a mention-based dataframe for the linking experiments:
+        processed_df = process_data.create_mentions_df(self)
+        self.processed_data["processed_df"] = processed_df
+
         return self.processed_data
-
-    def create_df(self):
-        dMentions = self.processed_data["dMentionsPred"]
-        dGoldSt = self.processed_data["dMentionsGold"]
-        dSentences = self.processed_data["dSentences"]
-        dMetadata = self.processed_data["dMetadata"]
-        self.processed_data["trues"]
-
-        rows = []
-        for sentence_id in dMentions:
-            for mention in dMentions[sentence_id]:
-                if mention:
-                    article_id = sentence_id.split("_")[0]
-                    sentence_pos = sentence_id.split("_")[1]
-                    sentence = dSentences[sentence_id]
-                    token_start = mention["start_offset"]
-                    token_end = mention["end_offset"]
-                    char_start = mention["start_char"]
-                    char_end = mention["end_char"]
-                    ner_score = round(mention["ner_score"], 3)
-                    pred_mention = mention["mention"]
-                    entity_type = mention["ner_label"]
-                    place = dMetadata[sentence_id]["place"]
-                    year = dMetadata[sentence_id]["year"]
-                    publication = dMetadata[sentence_id]["publication_code"]
-                    place_wqid = dMetadata[sentence_id]["place_wqid"]
-                    # Match predicted mention with gold standard mention (will just be used for training):
-                    max_tok_overlap = 0
-                    gold_standard_link = "NIL"
-                    gold_standard_ner = "O"
-                    gold_mention = ""
-                    for gs in dGoldSt[sentence_id]:
-                        pred_token_range = range(token_start, token_end + 1)
-                        gs_token_range = range(gs["start_offset"], gs["end_offset"] + 1)
-                        overlap = len(list(set(pred_token_range) & set(gs_token_range)))
-                        if overlap > max_tok_overlap:
-                            max_tok_overlap = overlap
-                            gold_mention = gs["mention"]
-                            gold_standard_link = gs["entity_link"]
-                            gold_standard_ner = gs["ner_label"]
-
-                    rows.append(
-                        [
-                            sentence_id,
-                            article_id,
-                            sentence_pos,
-                            sentence,
-                            token_start,
-                            token_end,
-                            char_start,
-                            char_end,
-                            ner_score,
-                            pred_mention,
-                            entity_type,
-                            place,
-                            year,
-                            publication,
-                            place_wqid,
-                            gold_mention,
-                            gold_standard_link,
-                            gold_standard_ner,
-                        ]
-                    )
-
-        processed_df = pd.DataFrame(
-            columns=[
-                "sentence_id",
-                "article_id",
-                "sentence_pos",
-                "sentence",
-                "token_start",
-                "token_end",
-                "char_start",
-                "char_end",
-                "ner_score",
-                "pred_mention",
-                "pred_ner_label",
-                "place",
-                "year",
-                "publication",
-                "place_wqid",
-                "gold_mention",
-                "gold_entity_link",
-                "gold_ner_label",
-            ],
-            data=rows,
-        )
-
-        output_path = (
-            self.data_path
-            + self.dataset
-            + "/"
-            + self.myner.model_name
-            + "_"
-            + self.myner.filtering_labels
-        )
-
-        # List of columns to merge (i.e. columns where we have indicated
-        # out data splits), and "article_id", the columns on which we
-        # will merge the data:
-        keep_columns = [
-            "article_id",
-            "originalsplit",
-            "traindevtest",
-            "Ashton1860",
-            "Dorchester1820",
-            "Dorchester1830",
-            "Dorchester1860",
-            "Manchester1780",
-            "Manchester1800",
-            "Manchester1820",
-            "Manchester1830",
-            "Manchester1860",
-            "Poole1860",
-        ]
-
-        # Add data splits from original dataframe:
-        df = self.dataset_df[[c for c in keep_columns if c in self.dataset_df.columns]]
-
-        # Convert article_id to string (it's read as an int):
-        df = df.assign(article_id=lambda d: d["article_id"].astype(str))
-        processed_df = processed_df.assign(
-            article_id=lambda d: d["article_id"].astype(str)
-        )
-        processed_df = pd.merge(processed_df, df, on=["article_id"], how="left")
-
-        # Store mentions dataframe:
-        processed_df.to_csv(output_path + "_linking_df_mentions.tsv", sep="\t")
-
-        return processed_df

@@ -8,7 +8,7 @@ from pandarallel import pandarallel
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 import pandas as pd
-from geoparser import processing, recogniser
+from geoparser import preparation, recogniser
 
 # from utils import postprocess_data, ner  # , ranking, linking, processing
 # from utils.resolution_pipeline import ELPipeline
@@ -49,8 +49,8 @@ myner = recogniser.Recogniser(
     training_tagset="coarse",  # Options are: "coarse" or "fine"
 )
 
-mydata = processing.Preprocessor(
-    dataset=dataset,
+mydata = preparation.Preprocessor(
+    dataset="hipe",
     data_path="outputs/data/",
     dataset_df=pd.DataFrame(),
     results_path="outputs/results/",
@@ -58,6 +58,21 @@ mydata = processing.Preprocessor(
     overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists
     processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
 )
+
+
+# ----------------------------------
+# Coherence check:
+if (mydata.dataset == "hipe" and myner.filtering_labels == "loc") or (
+    mydata.dataset == "hipe" and myner.training_tagset == "fine"
+):
+    print(
+        """HIPE should neither be filtered by type of label nor allow processing with fine-graned location types, because it was not designed for that."""
+    )
+    sys.exit(0)
+
+
+# ----------------------------------
+# Start data preparation:
 
 # Print data postprocessing information:
 print(mydata)
@@ -67,9 +82,6 @@ mydata.processed_data = mydata.load_data()
 
 # Perform data postprocessing:
 mydata.processed_data = mydata.prepare_data()
-
-# Create mentions dataframe:
-mydata.processed_data["processed_df"] = mydata.create_df()
 
 """
 # Initiate the ranker object:

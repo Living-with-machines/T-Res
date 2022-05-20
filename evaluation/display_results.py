@@ -21,19 +21,10 @@ import clef_evaluation
 # -------------------------------------
 
 datasets = ["lwm", "hipe"]
-accepted_labels = "all"
-ner_approaches = [
-    {
-        "ner_model_id": "lwm",
-        "cand_select_method": "perfectmatch",  # This does not really matter here
-        "top_res_method": "mostpopular",  # This does not really matter here
-    },
-    {
-        "ner_model_id": "rel",
-        "cand_select_method": "rel",
-        "top_res_method": "rel",
-    },
-]
+filtering_labels = ["all", "loc"]
+approaches = ["preds", "rel"]
+granularities = ["fine", "coarse"]
+ner_models = ["blb_lwm"]
 
 ne_tag = "ALL"
 settings = ["strict", "partial", "exact"]
@@ -43,68 +34,77 @@ df_ner = pd.DataFrame()
 overall_results_nerc = dict()
 
 for dataset in datasets:
-    for approach in ner_approaches:
-
-        ner_method = approach["ner_model_id"]
-        cand_select_method = approach["cand_select_method"]
-        top_res_method = approach["top_res_method"]
-
-        # Create approach name:
-        approach_name = (
-            ner_method
-            + "+"
-            + cand_select_method
-            + "+"
-            + top_res_method
-            + "+"
-            + accepted_labels
-        )
-
-        # Predictions file:
-        pred = (
-            "../experiments/outputs/results/"
-            + dataset
-            + "/"
-            + approach_name
-            + "_bundle2_en_1.tsv"
-        )
-
-        # Gold standard file:
-        true = (
-            "../experiments/outputs/results/"
-            + dataset
-            + "/true_"
-            + accepted_labels
-            + "_bundle2_en_1.tsv"
-        )
-
-        # Get NER score:
-        ner_score = clef_evaluation.get_results(
-            f_ref=true, f_pred=pred, task="nerc_coarse", outdir="results/"
-        )
-
-        # Produce results table:
-        overall_results_nerc["ner_method"] = [dataset + ":" + ner_method]
-        for setting in settings:
-            for measure in measures:
-                if (dataset == "lwm" and ner_method == "rel") and setting == "strict":
-                    overall_results_nerc[
-                        setting.replace("_", "") + ":" + measure.split("_")[0]
-                    ] = "--"
-                else:
-                    overall_results_nerc[
-                        setting.replace("_", "") + ":" + measure.split("_")[0]
-                    ] = round(
-                        ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
-                            setting
-                        ][measure],
-                        3,
+    for filtering_label in filtering_labels:
+        for granularity in granularities:
+            for approach in approaches:
+                for ner_model in ner_models:
+                    if filtering_label == "loc":
+                        ne_tag = "LOC"
+                    approach_fullname = (
+                        dataset
+                        + "_"
+                        + approach
+                        + "-"
+                        + ner_model
+                        + "-"
+                        + granularity
+                        + "-"
+                        + filtering_label
                     )
-        df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
 
+                    # String in common in pred and true filenames:
+                    filename_common_str = (
+                        "../experiments/outputs/results/"
+                        + dataset
+                        + "/ner_"
+                        + ner_model
+                        + "-ner-"
+                        + granularity
+                        + "_"
+                        + filtering_label
+                    )
+
+                    # Predictions file:
+                    pred_file = filename_common_str + "_" + approach + ".tsv"
+                    # Gold standard file:
+                    true_file = filename_common_str + "_trues.tsv"
+
+                    print(pred_file)
+                    print(true_file)
+
+                    try:
+                        # Get NER score:
+                        ner_score = clef_evaluation.get_results(
+                            f_ref=true_file,
+                            f_pred=pred_file,
+                            task="nerc_coarse",
+                            outdir="results/",
+                            skip_check=True,
+                        )
+
+                        # Produce results table:
+                        overall_results_nerc["ner_method"] = [approach_fullname]
+                        for setting in settings:
+                            for measure in measures:
+                                overall_results_nerc[
+                                    setting.replace("_", "")
+                                    + ":"
+                                    + measure.split("_")[0]
+                                ] = round(
+                                    ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][
+                                        ne_tag
+                                    ][setting][measure],
+                                    3,
+                                )
+                        df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
+                    except FileNotFoundError:
+                        print("File does not exist.")
+
+print("# --------------------------------")
+print("# Toponym recognition:\n")
 print(df_ner.to_latex(index=False))
 
-
+"""
 # -------------------------------------
 # TAG-SPECIFIC NAMED ENTITY RECOGNITION
 # -------------------------------------
@@ -282,3 +282,4 @@ for al in accepted_labels:
                     df_nel = df_nel.append(pd.DataFrame(overall_results_nel))
 
 print(df_nel.to_latex(index=False))
+"""

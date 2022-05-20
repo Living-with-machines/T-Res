@@ -526,6 +526,186 @@ def process_for_linking(df):
     return training_df
 
 
+def create_mentions_df(mydata):
+    """
+    Create a dataframe for the linking experiment, with one
+    mention per row.
+    """
+    dMentions = mydata.processed_data["dMentionsPred"]
+    dGoldSt = mydata.processed_data["dMentionsGold"]
+    dSentences = mydata.processed_data["dSentences"]
+    dMetadata = mydata.processed_data["dMetadata"]
+
+    rows = []
+    for sentence_id in dMentions:
+        for mention in dMentions[sentence_id]:
+            if mention:
+                article_id = sentence_id.split("_")[0]
+                sentence_pos = sentence_id.split("_")[1]
+                sentence = dSentences[sentence_id]
+                token_start = mention["start_offset"]
+                token_end = mention["end_offset"]
+                char_start = mention["start_char"]
+                char_end = mention["end_char"]
+                ner_score = round(mention["ner_score"], 3)
+                pred_mention = mention["mention"]
+                entity_type = mention["ner_label"]
+                place = dMetadata[sentence_id]["place"]
+                year = dMetadata[sentence_id]["year"]
+                publication = dMetadata[sentence_id]["publication_code"]
+                place_wqid = dMetadata[sentence_id]["place_wqid"]
+                # Match predicted mention with gold standard mention (will just be used for training):
+                max_tok_overlap = 0
+                gold_standard_link = "NIL"
+                gold_standard_ner = "O"
+                gold_mention = ""
+                for gs in dGoldSt[sentence_id]:
+                    pred_token_range = range(token_start, token_end + 1)
+                    gs_token_range = range(gs["start_offset"], gs["end_offset"] + 1)
+                    overlap = len(list(set(pred_token_range) & set(gs_token_range)))
+                    if overlap > max_tok_overlap:
+                        max_tok_overlap = overlap
+                        gold_mention = gs["mention"]
+                        gold_standard_link = gs["entity_link"]
+                        gold_standard_ner = gs["ner_label"]
+
+                rows.append(
+                    [
+                        sentence_id,
+                        article_id,
+                        sentence_pos,
+                        sentence,
+                        token_start,
+                        token_end,
+                        char_start,
+                        char_end,
+                        ner_score,
+                        pred_mention,
+                        entity_type,
+                        place,
+                        year,
+                        publication,
+                        place_wqid,
+                        gold_mention,
+                        gold_standard_link,
+                        gold_standard_ner,
+                    ]
+                )
+
+    processed_df = pd.DataFrame(
+        columns=[
+            "sentence_id",
+            "article_id",
+            "sentence_pos",
+            "sentence",
+            "token_start",
+            "token_end",
+            "char_start",
+            "char_end",
+            "ner_score",
+            "pred_mention",
+            "pred_ner_label",
+            "place",
+            "year",
+            "publication",
+            "place_wqid",
+            "gold_mention",
+            "gold_entity_link",
+            "gold_ner_label",
+        ],
+        data=rows,
+    )
+
+    output_path = (
+        mydata.data_path
+        + mydata.dataset
+        + "/"
+        + mydata.myner.model_name
+        + "_"
+        + mydata.myner.filtering_labels
+    )
+
+    # List of columns to merge (i.e. columns where we have indicated
+    # out data splits), and "article_id", the columns on which we
+    # will merge the data:
+    keep_columns = [
+        "article_id",
+        "originalsplit",
+        "traindevtest",
+        "Ashton1860",
+        "Dorchester1820",
+        "Dorchester1830",
+        "Dorchester1860",
+        "Manchester1780",
+        "Manchester1800",
+        "Manchester1820",
+        "Manchester1830",
+        "Manchester1860",
+        "Poole1860",
+    ]
+
+    # Add data splits from original dataframe:
+    df = mydata.dataset_df[[c for c in keep_columns if c in mydata.dataset_df.columns]]
+
+    # Convert article_id to string (it's read as an int):
+    df = df.assign(article_id=lambda d: d["article_id"].astype(str))
+    processed_df = processed_df.assign(article_id=lambda d: d["article_id"].astype(str))
+    processed_df = pd.merge(processed_df, df, on=["article_id"], how="left")
+
+    # Store mentions dataframe:
+    processed_df.to_csv(output_path + "_linking_df_mentions.tsv", sep="\t")
+
+    return processed_df
+
+
+# Storing results for evaluation using the CLEF-HIPE scorer
+def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles_test):
+    """
+    Store results in the right format to be used by the CLEF-HIPE
+    scorer: https://github.com/impresso/CLEF-HIPE-2020-scorer.
+
+    Assuming the CLEF-HIPE scorer is stored in ../CLEF-HIPE-2020-scorer/,
+    run scorer as follows:
+    For NER:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nerc_coarse --outdir outputs/results/
+    For EL:
+    > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
+    """
+    # Bundle 2 associated tasks: NERC-coarse and NEL
+    with open(
+        hipe_scorer_results_path + "/" + scenario_name + ".tsv",
+        "w",
+    ) as fw:
+        fw.write(
+            "TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n"
+        )
+        for sent_id in dresults:
+            # Filter by article in test:
+            if sent_id.split("_")[0] in articles_test:
+                fw.write("# sentence_id = " + sent_id + "\n")
+                for t in dresults[sent_id]:
+                    elink = t[2]
+                    if t[2].startswith("B-"):
+                        elink = t[2].replace("B-", "")
+                    elif t[2].startswith("I-"):
+                        elink = t[2].replace("I-", "")
+                    elif t[1] != "O":
+                        elink = "NIL"
+                    fw.write(
+                        t[0]
+                        + "\t"
+                        + t[1]
+                        + "\t"
+                        + t[1]
+                        + "\tO\tO\tO\tO\t"
+                        + elink
+                        + "\t"
+                        + elink
+                        + "\tO\n"
+                    )
+                fw.write("\n")
+
+
 ##################################################
 ##################################################
 #############       NOT USED YET       ###########

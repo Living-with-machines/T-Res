@@ -29,6 +29,7 @@ dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
 
 # Path for the output dataset dataframes:
 output_path_lwm = "outputs/data/lwm/"
+Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
 
 # Path of the annotated data:
 # !TODO: Change path to that where downloaded data is stored.
