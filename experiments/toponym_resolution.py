@@ -1,19 +1,12 @@
-import json
 import os
 import sys
-from pathlib import Path
-
-from pandarallel import pandarallel
+import pandas as pd
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-import pandas as pd
-from geoparser import preparation, recogniser
+from geoparser import preparation, recogniser, ranking
 
-# from utils import postprocess_data, ner  # , ranking, linking, processing
-# from utils.resolution_pipeline import ELPipeline
-
-dataset = "hipe"  # "hipe" or "lwm"
+dataset = "lwm"  # "hipe" or "lwm"
 
 # Candidate selection approach, options are:
 # * perfectmatch
@@ -49,41 +42,6 @@ myner = recogniser.Recogniser(
     training_tagset="coarse",  # Options are: "coarse" or "fine"
 )
 
-mydata = preparation.Preprocessor(
-    dataset="hipe",
-    data_path="outputs/data/",
-    dataset_df=pd.DataFrame(),
-    results_path="outputs/results/",
-    myner=myner,
-    overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists
-    processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
-)
-
-
-# ----------------------------------
-# Coherence check:
-if (mydata.dataset == "hipe" and myner.filtering_labels == "loc") or (
-    mydata.dataset == "hipe" and myner.training_tagset == "fine"
-):
-    print(
-        """HIPE should neither be filtered by type of label nor allow processing with fine-graned location types, because it was not designed for that."""
-    )
-    sys.exit(0)
-
-
-# ----------------------------------
-# Start data preparation:
-
-# Print data postprocessing information:
-print(mydata)
-
-# Load processed data if existing:
-mydata.processed_data = mydata.load_data()
-
-# Perform data postprocessing:
-mydata.processed_data = mydata.prepare_data()
-
-"""
 # Initiate the ranker object:
 myranker = ranking.Ranker(
     method=cand_select_method,
@@ -105,19 +63,43 @@ myranker = ranking.Ranker(
     },
 )
 
-# Initiate the linker object:
-mylinker = linking.Linker(
-    method=top_res_method,
-    do_training=do_training,
-    training_csv="/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_train.tsv",
-    resources_path="/resources/wikidata/",
-    linking_resources=dict(),
+mydata = preparation.Preprocessor(
+    dataset=dataset,
+    data_path="outputs/data/",
+    dataset_df=pd.DataFrame(),
+    results_path="outputs/results/",
+    myner=myner,
     myranker=myranker,
-    base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
-    tokenizer=None,
-    model_rd=None,
+    overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists
+    processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
 )
-"""
+
+
+# ----------------------------------
+# Start data preparation:
+
+# Print data postprocessing information:
+print(mydata)
+
+# Load processed data if existing:
+mydata.processed_data = mydata.load_data()
+
+# Perform data postprocessing:
+mydata.processed_data = mydata.prepare_data()
+
+# # Initiate the linker object:
+# mylinker = linking.Linker(
+#     method=top_res_method,
+#     training_df=mydata.processed_data["processed_df"],
+#     test_split="traindevtest",  # traindevtest for HIPE, or Ashton1860, etc. for LwM
+#     resources_path="/resources/wikidata/",
+#     linking_resources=dict(),
+#     base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+#     tokenizer=None,
+#     model_rd=None,
+#     overwrite_training=False,
+# )
+
 
 """
 

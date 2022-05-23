@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 import pandas as pd
 from DeezyMatch import candidate_ranker
+from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 
@@ -43,6 +44,11 @@ class Ranker:
         # Load Wikidata mentions-to-wqid:
         with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
             self.mentions_to_wikidata = json.load(f)
+
+        # Parallelize if ranking method is one of the following:
+        if self.method in ["partialmatch", "levenshtein"]:
+            pandarallel.initialize(nb_workers=10)
+            os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
         return self.mentions_to_wikidata
 

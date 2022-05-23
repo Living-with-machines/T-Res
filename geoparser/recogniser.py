@@ -53,9 +53,6 @@ class Recogniser:
         self.do_test = do_test
         self.training_tagset = training_tagset
         self.filtering_labels = filtering_labels
-        # Filtering labels to "loc" only makes sense with fine-grained tagset:
-        if self.training_tagset == "coarse":
-            self.filtering_labels = "all"
         self.model_name = self.model_name + "-" + self.training_tagset
 
     # -------------------------------------------------------------

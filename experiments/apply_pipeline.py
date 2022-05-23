@@ -6,6 +6,8 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
+from geoparser import ranking
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
@@ -13,7 +15,7 @@ import pandas as pd
 from pandarallel import pandarallel
 from transformers import pipeline
 
-from utils import ner, ranking, linking
+from utils import ner, linking
 from utils.resolution_pipeline import ELPipeline
 
 

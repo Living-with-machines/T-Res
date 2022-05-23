@@ -21,6 +21,7 @@ class Preprocessor:
         results_path: str,
         dataset_df,
         myner,
+        myranker,
         overwrite_processing=True,
         processed_data=dict(),
     ):
@@ -34,6 +35,7 @@ class Preprocessor:
                 where the resulting preprocessed dataset will be
                 stored.
             myner (ner.Recogniser): a Recogniser object.
+            myranker (ranking.Ranker): a Ranking object.
             overwrite_processing (bool): If True, do data processing,
                 else load existing processing, if it exists.
             processed_data (dict): Dictionary where we'll keep the
@@ -44,6 +46,7 @@ class Preprocessor:
         self.data_path = data_path
         self.results_path = results_path
         self.myner = myner
+        self.myranker = myranker
         self.overwrite_processing = overwrite_processing
         self.dataset_df = dataset_df
         self.processed_data = processed_data
@@ -89,12 +92,30 @@ class Preprocessor:
                 using their API.
         """
 
+        # ----------------------------------
+        # Coherence check:
+        if (
+            (self.dataset == "hipe" and self.myner.filtering_labels == "loc")
+            or (self.dataset == "hipe" and self.myner.training_tagset == "fine")
+            or (
+                self.myner.filtering_labels == "loc"
+                and self.myner.training_tagset == "coarse"
+            )
+        ):
+            print(
+                """\n!!! Coherence check failed. This could be due to:
+                * HIPE should neither be filtered by type of label nor allow processing with fine-graned location types, because it was not designed for that.
+                * Filtering labels to 'loc' only makes sense with fine-grained tagset.\n"""
+            )
+            sys.exit(0)
+
+        # ----------------------------------
         # If data is processed and overwrite is set to False, then do nothing,
         # otherwise process the data.
-
         if self.processed_data and self.overwrite_processing == False:
             print("\nData already postprocessed and loaded!\n")
 
+        # ----------------------------------
         # If data has not been processed, or overwrite is set to True, then:
         else:
             # Create the results directory if it does not exist:
@@ -130,6 +151,10 @@ class Preprocessor:
             dMentionsGold = output_lwm_ner[5]
 
             # -------------------------------------------
+            # Obtain candidates per sentence:
+            dCandidates = process_data.find_candidates(dMentionsPred, self.myranker)
+
+            # -------------------------------------------
             # Run REL end-to-end, as well
             # Note: Do not move the next block of code,
             # as REL relies on the tokenisation performed
@@ -146,8 +171,9 @@ class Preprocessor:
             )
 
             # -------------------------------------------
-            # Store postprocessed data
+            # Store temporary postprocessed data
             self.processed_data = process_data.store_processed_data(
+                self,
                 dPreds,
                 dTrues,
                 dSkys,
@@ -157,49 +183,12 @@ class Preprocessor:
                 dREL,
                 dMentionsPred,
                 dMentionsGold,
-                self.data_path,
-                self.dataset,
-                self.myner.model_name,
-                self.myner.filtering_labels,
+                dCandidates,
             )
 
         # -------------------------------------------
         # Store results in the CLEF-HIPE scorer-required format
-        hipe_scorer_results_path = self.results_path + self.dataset + "/"
-        scenario_name = (
-            "ner_" + self.myner.model_name + "_" + self.myner.filtering_labels + "_"
-        )
-
-        # Find article ids of the test set (original split, for NER):
-        ner_all = self.dataset_df
-        ner_test_articles = list(
-            ner_all[ner_all["originalsplit"] == "test"].article_id.unique()
-        )
-        ner_test_articles = [str(art) for art in ner_test_articles]
-
-        # Store predictions results formatted for CLEF-HIPE scorer:
-        process_data.store_for_scorer(
-            hipe_scorer_results_path,
-            scenario_name + "preds",
-            self.processed_data["preds"],
-            ner_test_articles,
-        )
-
-        # Store gold standard results formatted for CLEF-HIPE scorer:
-        process_data.store_for_scorer(
-            hipe_scorer_results_path,
-            scenario_name + "trues",
-            self.processed_data["trues"],
-            ner_test_articles,
-        )
-
-        # Store REL results formatted for CLEF-HIPE scorer:
-        process_data.store_for_scorer(
-            hipe_scorer_results_path,
-            scenario_name + "rel",
-            self.processed_data["dREL"],
-            ner_test_articles,
-        )
+        process_data.store_results(self)
 
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)

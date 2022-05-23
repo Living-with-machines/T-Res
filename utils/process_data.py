@@ -281,6 +281,14 @@ def load_processed_data(mydata):
         + "_"
         + mydata.myner.filtering_labels
     )
+
+    cand_approach = mydata.myranker.method
+    if mydata.myranker.method == "deezymatch":
+        cand_approach += "+" + str(mydata.myranker.deezy_parameters["num_candidates"])
+        cand_approach += "+" + str(
+            mydata.myranker.deezy_parameters["selection_threshold"]
+        )
+
     print("* Prefix of data to load:", output_path)
     output_processed_data = dict()
     try:
@@ -302,13 +310,18 @@ def load_processed_data(mydata):
             output_processed_data["dMentionsPred"] = json.load(fr)
         with open(output_path + "_gold_mentions.json") as fr:
             output_processed_data["dMentionsGold"] = json.load(fr)
+        with open(output_path + "_candidates_" + cand_approach + ".json") as fr:
+            output_processed_data["dCandidates"] = json.load(fr)
+
         return output_processed_data
     except FileNotFoundError:
+        print("File not found, process data.")
         return dict()
 
 
 # ----------------------------------------------------
 def store_processed_data(
+    mydata,
     preds,
     trues,
     skys,
@@ -318,16 +331,23 @@ def store_processed_data(
     dREL,
     dMentionsPred,
     dMentionsGold,
-    data_path,
-    dataset,
-    model_name,
-    filtering_labels,
+    dCandidates,
 ):
     """
     This function stores all the postprocessed data as jsons.
     """
-
+    data_path = mydata.data_path
+    dataset = mydata.dataset
+    model_name = mydata.myner.model_name
+    filtering_labels = mydata.myner.filtering_labels
     output_path = data_path + dataset + "/" + model_name + "_" + filtering_labels
+
+    cand_approach = mydata.myranker.method
+    if mydata.myranker.method == "deezymatch":
+        cand_approach += "+" + str(mydata.myranker.deezy_parameters["num_candidates"])
+        cand_approach += "+" + str(
+            mydata.myranker.deezy_parameters["selection_threshold"]
+        )
 
     # Store NER predictions using a specific NER model:
     with open(output_path + "_ner_predictions.json", "w") as fw:
@@ -357,13 +377,17 @@ def store_processed_data(
     with open(output_path + "_dict_REL.json", "w") as fw:
         json.dump(dREL, fw)
 
-    # Store the dictionary of REL results:
+    # Store the dictionary of predicted results:
     with open(output_path + "_pred_mentions.json", "w") as fw:
         json.dump(dMentionsPred, fw)
 
-    # Store the dictionary of REL results:
+    # Store the dictionary of gold standard:
     with open(output_path + "_gold_mentions.json", "w") as fw:
         json.dump(dMentionsGold, fw)
+
+    # Store the dictionary of gold standard:
+    with open(output_path + "_candidates_" + cand_approach + ".json", "w") as fw:
+        json.dump(dCandidates, fw)
 
     dict_processed_data = dict()
     dict_processed_data["preds"] = preds
@@ -375,7 +399,27 @@ def store_processed_data(
     dict_processed_data["dREL"] = dREL
     dict_processed_data["dMentionsPred"] = dMentionsPred
     dict_processed_data["dMentionsGold"] = dMentionsGold
+    dict_processed_data["dCandidates"] = dCandidates
     return dict_processed_data
+
+
+def find_candidates(dMentionsPred, myranker):
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    dCandidates = dict()
+    for sentence_id in tqdm(dMentionsPred):
+        pred_mentions_sent = dMentionsPred[sentence_id]
+        mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
+        cands, myranker.already_collected_cands = myranker.run(mentions)
+
+        wk_cands = dict()
+        for found_mention in cands:
+            # Find Wikidata ID and relv.
+            found_cands = myranker.mentions_to_wikidata.get(found_mention, dict())
+            wk_cands[found_mention] = {"Matches": cands[found_mention]}
+            wk_cands[found_mention]["Candidates"] = found_cands
+
+        dCandidates[sentence_id] = wk_cands
+    return dCandidates
 
 
 # ----------------------------------------------------
@@ -535,6 +579,14 @@ def create_mentions_df(mydata):
     dGoldSt = mydata.processed_data["dMentionsGold"]
     dSentences = mydata.processed_data["dSentences"]
     dMetadata = mydata.processed_data["dMetadata"]
+    dCandidates = mydata.processed_data["dCandidates"]
+
+    cand_approach = mydata.myranker.method
+    if mydata.myranker.method == "deezymatch":
+        cand_approach += "+" + str(mydata.myranker.deezy_parameters["num_candidates"])
+        cand_approach += "+" + str(
+            mydata.myranker.deezy_parameters["selection_threshold"]
+        )
 
     rows = []
     for sentence_id in dMentions:
@@ -568,6 +620,7 @@ def create_mentions_df(mydata):
                         gold_mention = gs["mention"]
                         gold_standard_link = gs["entity_link"]
                         gold_standard_ner = gs["ner_label"]
+                candidates = dCandidates[sentence_id][mention["mention"]]
 
                 rows.append(
                     [
@@ -589,6 +642,7 @@ def create_mentions_df(mydata):
                         gold_mention,
                         gold_standard_link,
                         gold_standard_ner,
+                        candidates,
                     ]
                 )
 
@@ -612,6 +666,7 @@ def create_mentions_df(mydata):
             "gold_mention",
             "gold_entity_link",
             "gold_ner_label",
+            "candidates",
         ],
         data=rows,
     )
@@ -623,6 +678,8 @@ def create_mentions_df(mydata):
         + mydata.myner.model_name
         + "_"
         + mydata.myner.filtering_labels
+        + "_"
+        + cand_approach
     )
 
     # List of columns to merge (i.e. columns where we have indicated
@@ -704,6 +761,44 @@ def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles
                         + "\tO\n"
                     )
                 fw.write("\n")
+
+
+def store_results(mydata):
+    hipe_scorer_results_path = mydata.results_path + mydata.dataset + "/"
+    scenario_name = (
+        "ner_" + mydata.myner.model_name + "_" + mydata.myner.filtering_labels + "_"
+    )
+
+    # Find article ids of the test set (original split, for NER):
+    ner_all = mydata.dataset_df
+    ner_test_articles = list(
+        ner_all[ner_all["originalsplit"] == "test"].article_id.unique()
+    )
+    ner_test_articles = [str(art) for art in ner_test_articles]
+
+    # Store predictions results formatted for CLEF-HIPE scorer:
+    store_for_scorer(
+        hipe_scorer_results_path,
+        scenario_name + "preds",
+        mydata.processed_data["preds"],
+        ner_test_articles,
+    )
+
+    # Store gold standard results formatted for CLEF-HIPE scorer:
+    store_for_scorer(
+        hipe_scorer_results_path,
+        scenario_name + "trues",
+        mydata.processed_data["trues"],
+        ner_test_articles,
+    )
+
+    # Store REL results formatted for CLEF-HIPE scorer:
+    store_for_scorer(
+        hipe_scorer_results_path,
+        scenario_name + "rel",
+        mydata.processed_data["dREL"],
+        ner_test_articles,
+    )
 
 
 ##################################################
