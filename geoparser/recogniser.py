@@ -1,7 +1,5 @@
 import os
 import sys
-from ast import literal_eval
-from collections import namedtuple
 from pathlib import Path
 import numpy as np
 
@@ -38,7 +36,6 @@ class Recogniser:
         overwrite_training,
         do_test,
         training_tagset,
-        filtering_labels,
     ):
         self.method = method
         self.model_name = model_name
@@ -52,12 +49,11 @@ class Recogniser:
         self.overwrite_training = overwrite_training
         self.do_test = do_test
         self.training_tagset = training_tagset
-        self.filtering_labels = filtering_labels
         self.model_name = self.model_name + "-" + self.training_tagset
 
     # -------------------------------------------------------------
     def __str__(self):
-        s = """\n>>> Toponym recogniser:\n    * Method: {0}\n    * Model name: {1}\n    * Base model: {2}\n    * Overwrite model if exists: {3}\n    * Train in test mode: {4}\n    * Training args: {5}\n    * Training tagset: {6}\n    * Filtering labels: {7}\n""".format(
+        s = """\n>>> Toponym recogniser:\n    * Method: {0}\n    * Model name: {1}\n    * Base model: {2}\n    * Overwrite model if exists: {3}\n    * Train in test mode: {4}\n    * Training args: {5}\n    * Training tagset: {6}\n""".format(
             self.method,
             self.model_name,
             self.base_model,
@@ -65,27 +61,18 @@ class Recogniser:
             str(self.do_test),
             str(self.training_args),
             self.training_tagset,
-            self.filtering_labels,
         )
         return s
 
     # -------------------------------------------------------------
-    def create_pipeline(self):
-        """
-        Create a pipeline for NER given a NER model.
-        """
-        if self.method == "lwm":
-            # Path to NER Model:
-            self.model = self.output_path + self.model_name + ".model"
-            self.pipe = pipeline("ner", model=self.model)
-            return self.model, self.pipe
-        else:
-            return None, None
-
-    # -------------------------------------------------------------
     def train(self):
         """
-        Training a NER model.
+        Training a NER model. The training will be skipped if the model already
+        exists and self.overwrite_training it set to False. The training will
+        be run on test mode if self.do_test is set to True.
+
+        Returns:
+            A trained NER model.
 
         Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
@@ -203,6 +190,22 @@ class Recogniser:
         trainer.evaluate()
         trainer.save_model(self.output_path + self.model_name + ".model")
 
+    # -------------------------------------------------------------
+    def create_pipeline(self):
+        """
+        Create a pipeline for performing NER given a NER model.
+
+        Returns:
+            self.model (str): the model name.
+            self.pipe (Pipeline): a pipeline object which performs
+                named entity recognition given a model.
+        """
+        # Path to NER Model:
+        self.model = self.output_path + self.model_name + ".model"
+        self.pipe = pipeline("ner", model=self.model)
+        return self.model, self.pipe
+
+    # -------------------------------------------------------------
     def ner_predict(self, sentence):
         """
         Given a sentence, recognise its mentioned entities.

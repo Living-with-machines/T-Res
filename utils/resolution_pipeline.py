@@ -1,5 +1,5 @@
-from geoparser import ranking
-from utils import postprocess_data, linking, ner
+from geoparser import linking, ranking
+from utils import postprocess_data, ner
 
 
 class ELPipeline:

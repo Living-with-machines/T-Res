@@ -1,13 +1,10 @@
 import os
 import sys
-import hashlib
 import json
-import pathlib
-import re
 import urllib
+import hashlib
 from ast import literal_eval
 from pathlib import Path
-from regex import D
 from tqdm import tqdm
 
 import pandas as pd
@@ -27,56 +24,14 @@ else:
     print("Warning: wikipedia2wikidata.json does not exist.")
 
 
-# ------------------------------
-# Get the Wikidata ID from a Wikipedia title
-def turn_wikipedia2wikidata(wikipedia_title):
-    """
-    Get wikidata ID from wikipedia URL
-    """
-    if not wikipedia_title == "NIL" and not wikipedia_title == "*":
-        wikipedia_title = wikipedia_title.split("/wiki/")[-1]
-        wikipedia_title = urllib.parse.unquote(wikipedia_title)
-        wikipedia_title = wikipedia_title.replace("_", " ")
-        wikipedia_title = urllib.parse.quote(wikipedia_title)
-        if "/" in wikipedia_title or len(wikipedia_title) > 200:
-            wikipedia_title = hashlib.sha224(
-                wikipedia_title.encode("utf-8")
-            ).hexdigest()
-        if not wikipedia_title in wikipedia2wikidata:
-            print(
-                "    >>> Warning: "
-                + wikipedia_title
-                + " is not in wikipedia2wikidata, the wkdt_qid will be NIL."
-            )
-        return wikipedia2wikidata.get(wikipedia_title)
-    return "NIL"
-
-
-# ----------------------------------------------
-def load_tagset(filtering_labels):
-    """
-    Selects entities that will be considered for entity linking
-    at inference time: if "all" is selected, we will link all
-    detections regardless of their entity type; if "loc" is
-    selected, we will link detections of the "loc" type.
-    """
-    tagset = dict()
-    tagset["loc"] = ["loc", "b-loc", "i-loc"]
-    tagset["all"] = [
-        "loc",
-        "b-loc",
-        "i-loc",
-        "street",
-        "b-street",
-        "i-street",
-        "building",
-        "b-building",
-        "i-building",
-        "other",
-        "b-other",
-        "i-other",
-    ]
-    return tagset[filtering_labels]
+# Load gazetteer (our knowledge base):
+gazetteer_ids = set(
+    list(
+        pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)[
+            "wikidata_id"
+        ].unique()
+    )
+)
 
 
 # ----------------------------------------------------
@@ -159,7 +114,7 @@ def prepare_sents(df):
     return dAnnotated, dSentences, dMetadata
 
 
-# ----------------------------------------------
+# ----------------------------------------------------
 def align_gold(predictions, annotations):
     """
     The gold standard tokenisation is not aligned with the tokenization
@@ -208,9 +163,28 @@ def align_gold(predictions, annotations):
 
 
 # ----------------------------------------------------
-def postprocess_predictions(predictions, gold_positions, accepted_labels):
+def postprocess_predictions(predictions, gold_positions):
     """
     Postprocess predictions to be used later in the pipeline.
+
+    Arguments:
+        predictions (list): the output of the recogniser.ner_predict()
+            method, where, given a sentence, a list of dictionaries is
+            returned, where each dictionary corresponds to a recognised
+            token, e.g.: {'entity': 'O', 'score': 0.99975187, 'word':
+            'From', 'start': 0, 'end': 4}
+        gold_positions(list): the output of the align_gold() function,
+            which aligns the gold standard text to the tokenisation
+            performed by the named entity recogniser, to enable
+            assessing the performance of the NER and linking steps.
+
+    Returns:
+        postprocessed_sentence (dict): a dictionary with three key-value
+            pairs: (1) sentence_preds is mapped to the list of lists
+            representation of 'predictions', (2) sentence_trues is
+            mapped to the list of lists representation of 'gold_positions',
+            and (3) sentence_skys is the same as sentence_trues, but
+            with empty link.
     """
     postprocessed_sentence = dict()
     sentence_preds = [
@@ -222,15 +196,7 @@ def postprocess_predictions(predictions, gold_positions, accepted_labels):
         for x in gold_positions
     ]
     sentence_skys = [
-        [x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_positions
-    ]
-
-    # Filter by accepted labels:
-    sentence_trues = [
-        [x[0], x[1], "NIL", x[3], x[4]]
-        if x[1] != "O" and x[1].lower() not in accepted_labels
-        else x
-        for x in sentence_trues
+        [x["word"], x["entity"], "O", x["start"], x["end"]] for x in predictions
     ]
 
     postprocessed_sentence["sentence_preds"] = sentence_preds
@@ -240,53 +206,224 @@ def postprocess_predictions(predictions, gold_positions, accepted_labels):
     return postprocessed_sentence
 
 
-def ner_and_process(dSentences, dAnnotated, myner, accepted_labels):
+# ----------------------------------------------------
+def ner_and_process(dSentences, dAnnotated, myner):
     """
-    Perform NER in the LwM way, and postprocess the output.
+    Perform named entity recognition in the LwM way, and postprocess the
+    output to prepare it for the experiments.
+
+    Arguments:
+        dSentences (dict): dictionary in which we keep, for each article/sentence
+            (expressed as e.g. "10732214_1", where "10732214" is the article_id
+            and "1" is the order of the sentence in the article), the full original
+            unprocessed sentence.
+        dAnnotated (dict): dictionary in which we keep, for each article/sentence,
+            an inner dictionary mapping the position of an annotated named entity (i.e.
+            its start and end character, as a tuple, as the key) and another tuple as
+            its value, which consists of: the type of named entity (such as LOC
+            or BUILDING, the mention, and its annotated link), all extracted from
+            the gold standard.
+        myner (recogniser.Recogniser): a Recogniser object, for NER.
+
+    Returns:
+        dPreds (dict): dictionary where the NER predictions are stored, where the key
+            is the sentence_id (i.e. article_id + "_" + sentence_pos) and the value is
+            a list of lists, where each element corresponds to one token in a sentence,
+            for example:
+                ["From", "O", "O", 0, 4, 0.999826967716217]
+            ...where the the elements are: (1) the token, (2) the NER tag, (3), the link
+            to wikidata, set to "O" for now because we haven't performed linking yet, (4)
+            the starting character of the token, (5) the end character of the token, and
+            (6) the NER prediction score. This dictionary is stored in the 'outputs/data'
+            folder, with prefix "_ner_predictions.json".
+        dTrues (dict): a dictionary where the gold standard named entities are stored,
+            which has the same format as dPreds, but with the manually annotated data
+            instead of the predictions. This dictionary is stored in the 'outputs/data'
+            folder, with prefix "_gold_standard.json".
+        dSkys (dict): a dictionary where the skyline will be stored, for the linking
+            experiments. At this point, it will be the same as dPreds, without the
+            NER prediction score. During linking, it will be filled with the gold standard
+            entities when these have been retrieved using candidates. This dictionary
+            is stored in the 'outputs/data' folder, with prefix "_ner_skyline.json".
+        gold_tokenization (dict): a dictionary where the gold standard entities are
+            stored, wehre the key is the sentence_id (i.e. article_id + "_" + sentence_pos)
+            and the value is a list of dictionaries, each looking like this:
+                {"entity": "B-LOC", "score": 1.0, "word": "Unitec", "start": 193,
+                "end": 199, "link": "B-Q30"}
+            ...this dictionary is stored in the 'outputs/data' folder, with prefix
+            "_gold_positions.json".
+        dMentionsPred (dict): dictionary of detected mentions but not yet linked mentions,
+            for example:
+                "sn83030483-1790-03-03-a-i0001_9": [
+                    {
+                        "mention": "Unitec ? States",
+                        "start_offset": 38,
+                        "end_offset": 40,
+                        "start_char": 193,
+                        "end_char": 206,
+                        "ner_score": 0.79,
+                        "ner_label": "LOC",
+                        "entity_link": "O"
+                    }
+                ],
+            ...this dictionary is stored in the 'outputs/data' folder, with prefix" _pred_mentions.json"
+        dMentionsGold (dict): dictionary of gold standard mentions, analogous to the dictionary
+            of detected mentions, but with the gold standard ner_label and entity_link.
     """
     gold_tokenization = dict()
     dPreds = dict()
     dTrues = dict()
     dSkys = dict()
     dMentionsPred = dict()  # Dictionary of detected mentions
-    dMentionsGold = dict()  # Dictionary of goldstandard mentions
+    dMentionsGold = dict()  # Dictionary of gold standard mentions
     for sent_id in tqdm(list(dSentences.keys())):
         sent = dSentences[sent_id]
         annotations = dAnnotated[sent_id]
         predictions = myner.ner_predict(sent)
         gold_positions = align_gold(predictions, annotations)
-        sentence_postprocessing = postprocess_predictions(
-            predictions, gold_positions, accepted_labels
-        )
+        sentence_postprocessing = postprocess_predictions(predictions, gold_positions)
         dPreds[sent_id] = sentence_postprocessing["sentence_preds"]
         dTrues[sent_id] = sentence_postprocessing["sentence_trues"]
         dSkys[sent_id] = sentence_postprocessing["sentence_skys"]
         gold_tokenization[sent_id] = gold_positions
         dMentionsPred[sent_id] = ner.aggregate_mentions(
-            sentence_postprocessing["sentence_preds"], accepted_labels, "pred"
+            sentence_postprocessing["sentence_preds"], "pred"
         )
         dMentionsGold[sent_id] = ner.aggregate_mentions(
-            sentence_postprocessing["sentence_trues"], accepted_labels, "gold"
+            sentence_postprocessing["sentence_trues"], "gold"
         )
     return dPreds, dTrues, dSkys, gold_tokenization, dMentionsPred, dMentionsGold
 
 
-def load_processed_data(mydata):
+# ----------------------------------------------------
+def update_with_linking(ner_predictions, link_predictions):
+    """
+    Updates the NER predictions with linking results.
+
+    Arguments:
+        ner_predictions (dict): dictionary with NER predictions (token-per-token)
+            for a given sentence.
+        link_predictions (pd.Series): a pandas series, corresponding to one
+            row of the test_df, corresponding to one mention.
+
+    Returns:
+        resulting_preds (dict): a dictionary like ner_predictions, only with
+            the added link to wikidata.
+    """
+    resulting_preds = ner_predictions
+    link_predictions = link_predictions.to_dict(orient="index")
+    for lp in link_predictions:
+        for x in range(
+            link_predictions[lp]["token_start"], link_predictions[lp]["token_end"] + 1
+        ):
+            position_ner = resulting_preds[x][1][:2]
+            resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+    return resulting_preds
+
+
+# ----------------------------------------------------
+def update_with_skyline(ner_predictions, link_predictions):
+    """
+    Update NER predictions with linking results.
+
+    Arguments:
+        ner_predictions (dict): dictionary with NER predictions (token-per-token)
+            for a given sentence.
+        link_predictions (pd.Series): a pandas series, corresponding to one
+            row of the test_df, corresponding to one mention.
+
+    Returns:
+        resulting_preds (dict): a dictionary like ner_predictions, only with
+            the added skyline link to wikidata (i.e. the gold standard candidate
+            if the candidate has been retrieved via candidate ranking).
+    """
+    resulting_preds = ner_predictions
+    link_predictions = link_predictions.to_dict(orient="index")
+    for lp in link_predictions:
+        all_candidates = [
+            list(link_predictions[lp]["candidates"][x]["Candidates"].keys())
+            for x in link_predictions[lp]["candidates"]
+        ]
+        all_candidates = [item for sublist in all_candidates for item in sublist]
+        for x in range(
+            link_predictions[lp]["token_start"], link_predictions[lp]["token_end"] + 1
+        ):
+            position_ner = resulting_preds[x][1][:2]
+            if link_predictions[lp]["gold_entity_link"] in all_candidates:
+                resulting_preds[x][2] = (
+                    position_ner + link_predictions[lp]["gold_entity_link"]
+                )
+            else:
+                resulting_preds[x][2] = "O"
+    return resulting_preds
+
+
+# ----------------------------------------------------
+def prepare_storing_links(processed_data, all_test, test_df):
+    """
+    Updates the processed data dictionaries (preds and skys) with the
+    predicted links for "preds" and with the skyline for "skys" (where
+    the skyline is "if the gold standard entity is among the candidates,
+    choose that one", providing the skyline of the maximum we can possibly
+    achieve with linking).
+
+    Arguments:
+        processed_data (dict): dictionary of all processed data.
+        all_test (list): ids of articles in current data split used for testing.
+        test_df (pd.DataFrame): dataframe with one-mention-per-row that will
+            be used for testing in this current experiment.
+    """
+    for sent_id in processed_data["preds"]:
+        article_id = sent_id.split("_")[0]
+        # First: is sentence in the current dev/test set?
+        if article_id in all_test:
+            # Update predictions with linking:
+            # >> Step 1. If there is no mention in the sentence, it will
+            #            not be in the per-mention dataframe. However,
+            #            it should still be in the results file.
+            if not sent_id in test_df["sentence_id"].unique():
+                processed_data["preds"][sent_id] = processed_data["preds"][sent_id]
+            if not sent_id in test_df["sentence_id"].unique():
+                processed_data["skys"][sent_id] = processed_data["skys"][sent_id]
+            # >> Step 2: If there is a mention in the sentence, update the link:
+            else:
+                processed_data["preds"][sent_id] = update_with_linking(
+                    processed_data["preds"][sent_id],  # NER predictions
+                    test_df[test_df["sentence_id"] == sent_id],  # Processed df
+                )
+                processed_data["skys"][sent_id] = update_with_skyline(
+                    processed_data["skys"][sent_id],  # NER predictions
+                    test_df[test_df["sentence_id"] == sent_id],  # Processed df
+                )
+    return processed_data
+
+
+# ----------------------------------------------------
+def load_processed_data(experiment):
+    """
+    Loads the data already processed in a previous run of the code, using
+    the same parameters.
+
+    Arguments:
+        experiment (preparation.Experiment): an Experiment object.
+
+    Returns:
+        output_processed_data (dict): a dictionary where the already
+            processed data is stored.
+    """
 
     output_path = (
-        mydata.data_path
-        + mydata.dataset
-        + "/"
-        + mydata.myner.model_name
-        + "_"
-        + mydata.myner.filtering_labels
+        experiment.data_path + experiment.dataset + "/" + experiment.myner.model_name
     )
 
-    cand_approach = mydata.myranker.method
-    if mydata.myranker.method == "deezymatch":
-        cand_approach += "+" + str(mydata.myranker.deezy_parameters["num_candidates"])
+    # Add the candidate experiment info to the path:
+    cand_approach = experiment.myranker.method
+    if experiment.myranker.method == "deezymatch":
         cand_approach += "+" + str(
-            mydata.myranker.deezy_parameters["selection_threshold"]
+            experiment.myranker.deezy_parameters["num_candidates"]
+        )
+        cand_approach += "+" + str(
+            experiment.myranker.deezy_parameters["selection_threshold"]
         )
 
     print("* Prefix of data to load:", output_path)
@@ -321,7 +458,7 @@ def load_processed_data(mydata):
 
 # ----------------------------------------------------
 def store_processed_data(
-    mydata,
+    experiment,
     preds,
     trues,
     skys,
@@ -335,18 +472,39 @@ def store_processed_data(
 ):
     """
     This function stores all the postprocessed data as jsons.
-    """
-    data_path = mydata.data_path
-    dataset = mydata.dataset
-    model_name = mydata.myner.model_name
-    filtering_labels = mydata.myner.filtering_labels
-    output_path = data_path + dataset + "/" + model_name + "_" + filtering_labels
 
-    cand_approach = mydata.myranker.method
-    if mydata.myranker.method == "deezymatch":
-        cand_approach += "+" + str(mydata.myranker.deezy_parameters["num_candidates"])
+    Arguments:
+        experiment (preparation.Experiment): the experiment object.
+        preds (dict): dictionary of tokens with predictions, per sentence.
+        trues (dict): dictionary of tokens with gold standard annotations, per sentence.
+        skys (dict): dictionary of tokens which will keep the skyline, per sentence.
+        gold_tok (dict): dictionary of tokens with gold standard annotations
+            as dictionaries, per sentence.
+        dSentences (dict): dictionary that maps a sentence id with the text.
+        dMetadata (dict): dictionary that maps a sentence id with the associated metadata.
+        dREL (dict): dictionary that maps a sentence id with the REL end-to-end result.
+        dMentionsPred (dict): dictionary of predicted mentions, per sentence.
+        dMentionsGold (dict): dictionary of gold standard mentions, per sentence.
+        dCandidates (dict): dictionary of candidates, per mention in sentence.
+
+    Returns:
+        dict_processed_data (dict): dictionary of dictionaries, keeping
+            all processed data (predictions, REL, gold standard, candidates)
+            in one place.
+        Also returns one .json file per dictionary, stored in 'outputs/data'.
+    """
+    data_path = experiment.data_path
+    dataset = experiment.dataset
+    model_name = experiment.myner.model_name
+    output_path = data_path + dataset + "/" + model_name
+
+    cand_approach = experiment.myranker.method
+    if experiment.myranker.method == "deezymatch":
         cand_approach += "+" + str(
-            mydata.myranker.deezy_parameters["selection_threshold"]
+            experiment.myranker.deezy_parameters["num_candidates"]
+        )
+        cand_approach += "+" + str(
+            experiment.myranker.deezy_parameters["selection_threshold"]
         )
 
     # Store NER predictions using a specific NER model:
@@ -403,8 +561,27 @@ def store_processed_data(
     return dict_processed_data
 
 
+# ----------------------------------------------------
 def find_candidates(dMentionsPred, myranker):
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    """
+    Function that obtains potential candidates given the mentions
+    detected in a sentence.
+
+    Arguments:
+        dMentionsPred (list): a dictionary that stores a list of predicted
+            mentions as dictionaries for each sentence.
+        myranker (ranking.Ranker): a Ranker object, which will be used
+            to obtain candidates for a given mention.
+
+    Returns:
+        dCandidates (dict): a dictionary of nested dictionaries, where, for
+            each sentence, we keep the original detected mention, the variation
+            found by the candidate ranker in the knowledge base, and for each
+            variation, we keep the candidate ranking score and the candidates
+            in Wikidata. E.g. for mention "Guadaloupe" in sentence "sn83030483-
+            1790-03-31-a-i0004_1, we store the candidates as follows:
+               {'Guadaloupe': {'Score': 1.0, 'Candidates': {'Q17012': 10, 'Q3153836': 2}}}
+    """
     dCandidates = dict()
     for sentence_id in tqdm(dMentionsPred):
         pred_mentions_sent = dMentionsPred[sentence_id]
@@ -412,11 +589,15 @@ def find_candidates(dMentionsPred, myranker):
         cands, myranker.already_collected_cands = myranker.run(mentions)
 
         wk_cands = dict()
-        for found_mention in cands:
-            # Find Wikidata ID and relv.
-            found_cands = myranker.mentions_to_wikidata.get(found_mention, dict())
-            wk_cands[found_mention] = {"Matches": cands[found_mention]}
-            wk_cands[found_mention]["Candidates"] = found_cands
+        for original_mention in cands:
+            wk_cands[original_mention] = dict()
+            for variation in cands[original_mention]:
+                match_score = cands[original_mention][variation]
+                # Find Wikidata ID and relv.
+                found_cands = myranker.mentions_to_wikidata.get(variation, dict())
+                if not variation in wk_cands[original_mention]:
+                    wk_cands[original_mention][variation] = {"Score": match_score}
+                    wk_cands[original_mention][variation]["Candidates"] = found_cands
 
         dCandidates[sentence_id] = wk_cands
     return dCandidates
@@ -424,7 +605,16 @@ def find_candidates(dMentionsPred, myranker):
 
 # ----------------------------------------------------
 def rel_end_to_end(sent):
-    """REL end-to-end using the API."""
+    """
+    REL end-to-end using the API.
+
+    Arguments:
+        sent (str): a sentence in plain text.
+
+    Returns:
+        el_result (dict): the output from REL end-to-end API
+            for the input sentence.
+    """
     API_URL = "https://rel.cs.ru.nl/api"
     el_result = requests.post(API_URL, json={"text": sent, "spans": []}).json()
     return el_result
@@ -461,9 +651,25 @@ def get_rel_from_api(dSentences, rel_end2end_path):
                 rel_preds = json.load(f)
 
 
-def match_ent(pred_ents, start, end, prev_ann, accepted_labels):
+# ----------------------------------------------------
+# Get the Wikidata ID from a Wikipedia title
+def match_wikipedia_to_wikidata(wiki_title):
+    el = urllib.parse.quote(wiki_title.replace("_", " "))
+    try:
+        el = wikipedia2wikidata[el]
+        return el
+    except Exception:
+        # to be checked but it seems some Wikipedia pages are not in our Wikidata
+        # see for instance Zante%2C%20California
+        return "NIL"
+
+
+# ----------------------------------------------------
+def match_ent(pred_ents, start, end, prev_ann):
     for ent in pred_ents:
-        if ent[-1].lower() in accepted_labels:
+        wqid = match_wikipedia_to_wikidata(ent[3])
+        # If entity is a LOC or linked entity is in our KB:
+        if ent[-1] == "LOC" or wqid in gazetteer_ids:
             st_ent = ent[0]
             len_ent = ent[1]
             if start >= st_ent and end <= (st_ent + len_ent):
@@ -475,16 +681,18 @@ def match_ent(pred_ents, start, end, prev_ann, accepted_labels):
 
                 n = ent_pos + ent[-1]
                 try:
-                    el = ent_pos + turn_wikipedia2wikidata(ent[3])
+                    el = ent_pos + match_wikipedia_to_wikidata(ent[3])
                 except Exception as e:
+                    print(e)
                     # to be checked but it seems some Wikipedia pages are not in our Wikidata
                     # see for instance Zante%2C%20California
-                    return n, ent_pos + "NIL", prev_ann
+                    return n, "O", ""
                 return n, el, prev_ann
     return "O", "O", ""
 
 
-def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization, accepted_labels):
+# ----------------------------------------------------
+def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization):
     with open(rel_end2end_path) as f:
         rel_preds = json.load(f)
 
@@ -496,15 +704,14 @@ def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization, accepted_la
             start = token["start"]
             end = token["end"]
             word = token["word"]
-            n, el, prev_ann = match_ent(
-                rel_preds[sent_id], start, end, prev_ann, accepted_labels
-            )
+            n, el, prev_ann = match_ent(rel_preds[sent_id], start, end, prev_ann)
             sentence_preds.append([word, n, el])
 
         dREL[sent_id] = sentence_preds
     return dREL
 
 
+# ----------------------------------------------------
 def process_for_linking(df):
     """
     Process data for linking, resulting in a dataframe with one mention
@@ -570,22 +777,34 @@ def process_for_linking(df):
     return training_df
 
 
-def create_mentions_df(mydata):
+# ----------------------------------------------------
+def create_mentions_df(experiment):
     """
     Create a dataframe for the linking experiment, with one
     mention per row.
-    """
-    dMentions = mydata.processed_data["dMentionsPred"]
-    dGoldSt = mydata.processed_data["dMentionsGold"]
-    dSentences = mydata.processed_data["dSentences"]
-    dMetadata = mydata.processed_data["dMetadata"]
-    dCandidates = mydata.processed_data["dCandidates"]
 
-    cand_approach = mydata.myranker.method
-    if mydata.myranker.method == "deezymatch":
-        cand_approach += "+" + str(mydata.myranker.deezy_parameters["num_candidates"])
+    Arguments:
+        experiment (preparation.Experiment): the current experiment.
+
+    Returns:
+        processed_df (pd.DataFrame): a dataframe with one mention
+            per row, and containing all relevant information for subsequent
+            steps (i.e. for linking).
+        It also returns a .tsv file in the "outputs/data/[dataset]/" folder.
+    """
+    dMentions = experiment.processed_data["dMentionsPred"]
+    dGoldSt = experiment.processed_data["dMentionsGold"]
+    dSentences = experiment.processed_data["dSentences"]
+    dMetadata = experiment.processed_data["dMetadata"]
+    dCandidates = experiment.processed_data["dCandidates"]
+
+    cand_approach = experiment.myranker.method
+    if experiment.myranker.method == "deezymatch":
         cand_approach += "+" + str(
-            mydata.myranker.deezy_parameters["selection_threshold"]
+            experiment.myranker.deezy_parameters["num_candidates"]
+        )
+        cand_approach += "+" + str(
+            experiment.myranker.deezy_parameters["selection_threshold"]
         )
 
     rows = []
@@ -672,12 +891,10 @@ def create_mentions_df(mydata):
     )
 
     output_path = (
-        mydata.data_path
-        + mydata.dataset
+        experiment.data_path
+        + experiment.dataset
         + "/"
-        + mydata.myner.model_name
-        + "_"
-        + mydata.myner.filtering_labels
+        + experiment.myner.model_name
         + "_"
         + cand_approach
     )
@@ -702,7 +919,9 @@ def create_mentions_df(mydata):
     ]
 
     # Add data splits from original dataframe:
-    df = mydata.dataset_df[[c for c in keep_columns if c in mydata.dataset_df.columns]]
+    df = experiment.dataset_df[
+        [c for c in keep_columns if c in experiment.dataset_df.columns]
+    ]
 
     # Convert article_id to string (it's read as an int):
     df = df.assign(article_id=lambda d: d["article_id"].astype(str))
@@ -710,11 +929,12 @@ def create_mentions_df(mydata):
     processed_df = pd.merge(processed_df, df, on=["article_id"], how="left")
 
     # Store mentions dataframe:
-    processed_df.to_csv(output_path + "_linking_df_mentions.tsv", sep="\t")
+    processed_df.to_csv(output_path + "_mentions.tsv", sep="\t")
 
     return processed_df
 
 
+# ----------------------------------------------------
 # Storing results for evaluation using the CLEF-HIPE scorer
 def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles_test):
     """
@@ -727,6 +947,17 @@ def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles
     > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nerc_coarse --outdir outputs/results/
     For EL:
     > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
+
+    Argument:
+        hipe_scorer_results_path (str): first part of the path of the output path.
+        scenario_name (str): second part of the path of the output file.
+        dresults (dict): dictionary with the results.
+        articles_test (list): list of sentences that are part of the
+            split we're using for evaluating the performance on this
+            particular experiment.
+
+    Returns:
+        A tsv with the results in the Conll format required by the scorer.
     """
     # Bundle 2 associated tasks: NERC-coarse and NEL
     with open(
@@ -763,166 +994,72 @@ def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles
                 fw.write("\n")
 
 
-def store_results(mydata):
-    hipe_scorer_results_path = mydata.results_path + mydata.dataset + "/"
-    scenario_name = (
-        "ner_" + mydata.myner.model_name + "_" + mydata.myner.filtering_labels + "_"
-    )
+# ----------------------------------------------------
+def store_results(experiment, task, how_split, which_split):
+    """
+    Function which stores the results of an experiment in the format
+    required by the HIPE 2020 evaluation scorer.
 
-    # Find article ids of the test set (original split, for NER):
-    ner_all = mydata.dataset_df
-    ner_test_articles = list(
-        ner_all[ner_all["originalsplit"] == "test"].article_id.unique()
-    )
-    ner_test_articles = [str(art) for art in ner_test_articles]
+    Arguments:
+        experiment (preparation.Experiment): the current experiment.
+        task (str): either "ner" or "linking". Store the results for just
+            ner or with links as well.
+        how_split (str): which way of splitting the data are we using?
+            It could be the "originalsplit" or "Ashton1860", for example,
+            which would mean that "Ashton1860" is left out for test only.
+        which_split (str): on which split are we testing our experiments?
+            It can be "dev" while we're developing the code, or "test"
+            when we run it in the final experiments.
+    """
+    hipe_scorer_results_path = experiment.results_path + experiment.dataset + "/"
+    scenario_name = task + "_" + experiment.myner.model_name + "_"
+    if task == "linking":
+        cand_approach = experiment.myranker.method
+        if experiment.myranker.method == "deezymatch":
+            cand_approach += "+" + str(
+                experiment.myranker.deezy_parameters["num_candidates"]
+            )
+            cand_approach += "+" + str(
+                experiment.myranker.deezy_parameters["selection_threshold"]
+            )
+        scenario_name += cand_approach + "_" + how_split + "-" + which_split + "_"
+
+    # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
+    # 'test' of the Ashton1860 split, etc):
+    all = experiment.dataset_df
+    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = [str(art) for art in test_articles]
 
     # Store predictions results formatted for CLEF-HIPE scorer:
+    preds_name = experiment.mylinker.method if task == "linking" else "preds"
     store_for_scorer(
         hipe_scorer_results_path,
-        scenario_name + "preds",
-        mydata.processed_data["preds"],
-        ner_test_articles,
+        scenario_name + preds_name,
+        experiment.processed_data["preds"],
+        test_articles,
     )
 
     # Store gold standard results formatted for CLEF-HIPE scorer:
     store_for_scorer(
         hipe_scorer_results_path,
         scenario_name + "trues",
-        mydata.processed_data["trues"],
-        ner_test_articles,
+        experiment.processed_data["trues"],
+        test_articles,
     )
 
     # Store REL results formatted for CLEF-HIPE scorer:
     store_for_scorer(
         hipe_scorer_results_path,
         scenario_name + "rel",
-        mydata.processed_data["dREL"],
-        ner_test_articles,
+        experiment.processed_data["dREL"],
+        test_articles,
     )
 
-
-##################################################
-##################################################
-#############       NOT USED YET       ###########
-##################################################
-##################################################
-
-
-"""
-def crate_training_for_el(df):
-
-    # Create dataframe by mention:
-    rows = []
-    for i, row in df.iterrows():
-        article_id = row["article_id"]
-        place = row["place"]
-        year = row["year"]
-        ocr_quality_mean = row["ocr_quality_mean"]
-        ocr_quality_sd = row["ocr_quality_sd"]
-        publication_title = row["publication_title"]
-        publication_code = str(row["publication_code"]).zfill(7)
-        sentences = literal_eval(row["sentences"])
-        annotations = literal_eval(row["annotations"])
-        for s in sentences:
-            for a in annotations:
-                if s["sentence_pos"] == a["sent_pos"]:
-                    rows.append(
-                        (
-                            article_id,
-                            s["sentence_pos"],
-                            s["sentence_text"],
-                            a["mention_pos"],
-                            a["mention"],
-                            a["wkdt_qid"],
-                            a["mention_start"],
-                            a["mention_end"],
-                            a["entity_type"],
-                            year,
-                            place,
-                            ocr_quality_mean,
-                            ocr_quality_sd,
-                            publication_title,
-                            publication_code,
-                        )
-                    )
-
-    training_df = pd.DataFrame(
-        columns=[
-            "article_id",
-            "sentence_pos",
-            "sentence",
-            "mention_pos",
-            "mention",
-            "wkdt_qid",
-            "mention_start",
-            "mention_end",
-            "entity_type",
-            "year",
-            "place",
-            "ocr_quality_mean",
-            "ocr_quality_sd",
-            "publication_title",
-            "publication_code",
-        ],
-        data=rows,
-    )
-
-    return training_df
-"""
-
-# # ------------------------------
-# # EVALUATION WITH CLEF SCORER
-# # ------------------------------
-
-# # Skyline
-# def store_resolution_skyline(dataset, approach, value):
-#     pathlib.Path("outputs/results/" + dataset + "/").mkdir(parents=True, exist_ok=True)
-#     skyline = open("outputs/results/" + dataset + "/" + approach + ".skyline", "w")
-#     skyline.write(str(value))
-#     skyline.close()
-
-
-# # Storing results for evaluation using the CLEF-HIPE scorer
-# def store_results_hipe(dataset, dataresults, dresults):
-#     """
-#     Store results in the right format to be used by the CLEF-HIPE
-#     scorer: https://github.com/impresso/CLEF-HIPE-2020-scorer.
-
-#     Assuming the CLEF-HIPE scorer is stored in ../CLEF-HIPE-2020-scorer/,
-#     run scorer as follows:
-#     For NER:
-#     > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nerc_coarse --outdir outputs/results/
-#     For EL:
-#     > python ../CLEF-HIPE-2020-scorer/clef_evaluation.py --ref outputs/results/lwm-true_bundle2_en_1.tsv --pred outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir outputs/results/
-#     """
-#     pathlib.Path("outputs/results/" + dataset + "/").mkdir(parents=True, exist_ok=True)
-#     # Bundle 2 associated tasks: NERC-coarse and NEL
-#     with open(
-#         "outputs/results/" + dataset + "/" + dataresults + "_bundle2_en_1.tsv", "w"
-#     ) as fw:
-#         fw.write(
-#             "TOKEN\tNE-COARSE-LIT\tNE-COARSE-METO\tNE-FINE-LIT\tNE-FINE-METO\tNE-FINE-COMP\tNE-NESTED\tNEL-LIT\tNEL-METO\tMISC\n"
-#         )
-#         for sent_id in dresults:
-#             fw.write("# sentence_id = " + sent_id + "\n")
-#             for t in dresults[sent_id]:
-#                 elink = t[2]
-#                 if t[2].startswith("B-"):
-#                     elink = t[2].replace("B-", "")
-#                 elif t[2].startswith("I-"):
-#                     elink = t[2].replace("I-", "")
-#                 elif t[1] != "O":
-#                     elink = "NIL"
-#                 fw.write(
-#                     t[0]
-#                     + "\t"
-#                     + t[1]
-#                     + "\t"
-#                     + t[1]
-#                     + "\tO\tO\tO\tO\t"
-#                     + elink
-#                     + "\t"
-#                     + elink
-#                     + "\tO\n"
-#                 )
-#             fw.write("\n")
+    if task == "linking":
+        # Store REL results formatted for CLEF-HIPE scorer:
+        store_for_scorer(
+            hipe_scorer_results_path,
+            scenario_name + "skys",
+            experiment.processed_data["skys"],
+            test_articles,
+        )

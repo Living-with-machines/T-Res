@@ -2,9 +2,15 @@ import re
 import glob
 import json
 import urllib
+import hashlib
 
 import pandas as pd
 from pathlib import Path
+
+
+"""
+This script reads the original data sources and formats them for our experiments.
+"""
 
 
 # Load wikipedia2wikidata mapper:
@@ -15,6 +21,16 @@ if Path(path + "wikipedia2wikidata.json").exists():
         wikipedia2wikidata = json.load(f)
 else:
     print("Warning: wikipedia2wikidata.json does not exist.")
+
+
+# Load gazetteer (our knowledge base):
+gazetteer_ids = set(
+    list(
+        pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)[
+            "wikidata_id"
+        ].unique()
+    )
+)
 
 
 # ------------------------------
@@ -247,6 +263,10 @@ def process_lwm_for_linking(tsv_topres_path):
                 if "—" in mention:
                     mention = mention.split("—")[0]
 
+                # If the gold standard entity is not in the KB, it's NIL
+                if not wkdt in gazetteer_ids:
+                    wkdt = "NIL"
+
                 annotations.append(
                     {
                         "mention_pos": mention_counter,
@@ -355,6 +375,8 @@ def process_hipe_for_linking(hipe_path):
     start_document = False
     with open(hipe_path) as fr:
         lines = fr.readlines()
+        previous_endchar = 0
+        adding_chars = 0  # To readjust the indices of badly split sentences.
         for line in lines[1:]:
             if line.startswith("# newspaper"):
                 newspaper_id = line.split("= ")[-1].strip()
@@ -369,6 +391,7 @@ def process_hipe_for_linking(hipe_path):
                 article_id = line.split("= ")[-1].strip()
                 start_document = True
                 dMetadata[article_id] = {"newspaper_id": newspaper_id, "date": date}
+                adding_chars = 0
             elif not line.startswith("#"):
                 line = line.strip().split()
                 if len(line) == 10:
@@ -378,6 +401,13 @@ def process_hipe_for_linking(hipe_path):
                     etag = line[1]
                     elink = line[7]
                     comment = line[-1]
+
+                    # If a sentence starts with "I-", it means it's not a new sentence,
+                    # just an error in sentence splitting. The indices of the word offsets
+                    # will need to be readjusted:
+                    if end_sentence == True and etag.startswith("I-"):
+                        end_sentence = False
+                        adding_chars += previous_endchar
 
                     if "PySBDSegment" in comment:
                         if end_sentence == True:
@@ -389,6 +419,7 @@ def process_hipe_for_linking(hipe_path):
                             new_sentence += token
                         char_index = 0
                         end_sentence = True
+                        adding_chars = 0
 
                     elif "NoSpaceAfter" in comment:
                         if end_sentence == True:
@@ -414,6 +445,12 @@ def process_hipe_for_linking(hipe_path):
                         end_sentence = False
 
                     start_document = False
+
+                    start_char += adding_chars
+                    end_char += adding_chars
+
+                    # Keep last character of previous token:
+                    previous_endchar = end_char
 
                     if article_id in dAnnotations:
                         if sent_index in dAnnotations[article_id]:
@@ -465,12 +502,17 @@ def process_hipe_for_linking(hipe_path):
                 predictions = aggregate_hipe_entities(a, lAnnotations)
 
             for p in predictions:
-                if p["ne_type"].lower().endswith("loc"):
+                wkdt = p["wkdt_qid"]
+                if not wkdt in gazetteer_ids:
+                    wkdt = "NIL"
+                # Only keep entities that are "loc" or whose Wikidata ID
+                # is in the KB (for metonymic uses of locations):
+                if not wkdt == "NIL" or p["ne_type"][2:].lower() == "loc":
                     mentions = {
                         "mention_pos": mention_counter,
                         "mention": p["word"],
                         "entity_type": p["ne_type"].split("-")[-1],
-                        "wkdt_qid": p["wkdt_qid"],
+                        "wkdt_qid": wkdt,
                         "mention_start": p["start"],
                         "mention_end": p["end"],
                         "sent_pos": sentence_counter,

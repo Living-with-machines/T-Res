@@ -1,17 +1,15 @@
 import os
 import sys
-import json
 import pandas as pd
-from tqdm import tqdm
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_data
 
 
-class Preprocessor:
+class Experiment:
     """
-    The Preprocessor preprocesses, prepares, and formats the data for the experiments.
+    The Experiment class processes, prepares, and formats the data for the experiments.
     """
 
     def __init__(
@@ -22,8 +20,10 @@ class Preprocessor:
         dataset_df,
         myner,
         myranker,
+        mylinker,
         overwrite_processing=True,
         processed_data=dict(),
+        test_split="",
     ):
         """
         Arguments:
@@ -34,12 +34,15 @@ class Preprocessor:
             dataset_df (pd.DataFrame): initially empty dataframe
                 where the resulting preprocessed dataset will be
                 stored.
-            myner (ner.Recogniser): a Recogniser object.
-            myranker (ranking.Ranker): a Ranking object.
+            myner (recogniser.Recogniser): a Recogniser object.
+            myranker (ranking.Ranker): a Ranker object.
+            mylinker (linking.Linker): a Linker object.
             overwrite_processing (bool): If True, do data processing,
                 else load existing processing, if it exists.
             processed_data (dict): Dictionary where we'll keep the
                 processed data for the experiments.
+            test split (str): the split (train/dev/test) for the
+                linking experiment.
         """
 
         self.dataset = dataset
@@ -47,11 +50,13 @@ class Preprocessor:
         self.results_path = results_path
         self.myner = myner
         self.myranker = myranker
+        self.mylinker = mylinker
         self.overwrite_processing = overwrite_processing
         self.dataset_df = dataset_df
         self.processed_data = processed_data
+        self.test_split = test_split
 
-        # Load the dataset dataframe:
+        # Load the dataset as a dataframe:
         self.dataset_df = pd.read_csv(
             self.data_path + self.dataset + "/linking_df_split.tsv",
             sep="\t",
@@ -59,14 +64,16 @@ class Preprocessor:
 
     def __str__(self):
         """
-        Prints the data processor method name.
+        Prints the characteristics of the experiment.
         """
         msg = "\nData processing in the " + self.dataset.upper() + " dataset."
+        msg += "\n* Overwrite processing: " + str(self.overwrite_processing)
+        msg += "\n* Experiments run on the >>> " + self.test_split + " <<< set.\n"
         return msg
 
     def load_data(self):
         """
-        Loads the processed data if exists.
+        Loads the already processed data if exists.
         """
         return process_data.load_processed_data(self)
 
@@ -75,37 +82,21 @@ class Preprocessor:
         Function that prepares the data for the experiments.
 
         Returns:
-            dSentences (dict): dictionary in which we keep, for each article/sentence
-                (expressed as e.g. "10732214_1", where "10732214" is the article_id
-                and "1" is the order of the sentence in the article), the full original
-                unprocessed sentence.
-            dAnnotated (dict): dictionary in which we keep, for each article/sentence,
-                an inner dictionary mapping the position of an annotated named entity (i.e.
-                its start and end character, as a tuple, as the key) and another tuple as
-                its value, which consists of: the type of named entity (such as LOC
-                or BUILDING, the mention, and its annotated link), all extracted from
-                the gold standard.
-            dMetadata (dict): dictionary in which we keep, for each article/sentence,
-                its metadata: place (of publication), year, ocr_quality_mean, ocr_quality_sd,
-                publication_title, and publication_code.
+            self.processed_data (dict): a dictionary which stores the different
+                processed data (predicted mentions, gold standard, REL end-to-end
+                processing, candidates), which will be used later for linking.
             A JSON file in which we store the end-to-end resolution produced by REL
                 using their API.
         """
 
         # ----------------------------------
         # Coherence check:
-        if (
-            (self.dataset == "hipe" and self.myner.filtering_labels == "loc")
-            or (self.dataset == "hipe" and self.myner.training_tagset == "fine")
-            or (
-                self.myner.filtering_labels == "loc"
-                and self.myner.training_tagset == "coarse"
-            )
-        ):
+        # Some scenarios do not make sense. Warn and exit:
+        if self.dataset == "hipe" and self.myner.training_tagset == "fine":
             print(
-                """\n!!! Coherence check failed. This could be due to:
-                * HIPE should neither be filtered by type of label nor allow processing with fine-graned location types, because it was not designed for that.
-                * Filtering labels to 'loc' only makes sense with fine-grained tagset.\n"""
+                """\n!!! Coherence check failed. This is due to:
+                * HIPE should neither be filtered by type of label nor allow processing 
+                  with fine-graned location types, because it was not designed for that.\n"""
             )
             sys.exit(0)
 
@@ -118,6 +109,7 @@ class Preprocessor:
         # ----------------------------------
         # If data has not been processed, or overwrite is set to True, then:
         else:
+
             # Create the results directory if it does not exist:
             Path(self.results_path).mkdir(parents=True, exist_ok=True)
 
@@ -135,13 +127,12 @@ class Preprocessor:
 
             print("** Load NER pipeline!")
             self.myner.model, self.myner.pipe = self.myner.create_pipeline()
-            accepted_labels = process_data.load_tagset(self.myner.filtering_labels)
 
             # -------------------------------------------
             # Parse with NER in the LwM way
             print("\nPerform NER with our model:")
             output_lwm_ner = process_data.ner_and_process(
-                dSentences, dAnnotated, self.myner, accepted_labels
+                dSentences, dAnnotated, self.myner
             )
             dPreds = output_lwm_ner[0]
             dTrues = output_lwm_ner[1]
@@ -151,6 +142,11 @@ class Preprocessor:
             dMentionsGold = output_lwm_ner[5]
 
             # -------------------------------------------
+            # Perform candidate ranking:
+            # Load ranking resources
+            print("\n* Load ranking resources:")
+            self.myranker.mentions_to_wikidata = self.myranker.load_resources()
+            print("\n* Perform candidate ranking:")
             # Obtain candidates per sentence:
             dCandidates = process_data.find_candidates(dMentionsPred, self.myranker)
 
@@ -167,7 +163,7 @@ class Preprocessor:
             process_data.get_rel_from_api(dSentences, rel_end2end_path)
             print("\nPostprocess REL outputs:")
             dREL = process_data.postprocess_rel(
-                rel_end2end_path, dSentences, gold_tokenization, accepted_labels
+                rel_end2end_path, dSentences, gold_tokenization
             )
 
             # -------------------------------------------
@@ -188,10 +184,77 @@ class Preprocessor:
 
         # -------------------------------------------
         # Store results in the CLEF-HIPE scorer-required format
-        process_data.store_results(self)
+        process_data.store_results(
+            self, task="ner", how_split="originalsplit", which_split="test"
+        )
 
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
         self.processed_data["processed_df"] = processed_df
 
         return self.processed_data
+
+    def linking_experiments(self):
+
+        # Linker load resources:
+        print("\n* Load linking resources:")
+        self.mylinker.linking_resources = self.mylinker.load_resources()
+
+        list_test_splits = []
+        if self.test_split == "dev":
+            # We use the original split for developing the code:
+            list_test_splits = ["originalsplit"]
+
+        if self.test_split == "test":
+            # N-cross validation (we use the originalsplit for developing the
+            # code, when running the code for real we'll uncomment the following
+            # block of code):
+            if self.dataset == "hipe":
+                list_test_splits += ["originalsplit", "traindevtest"]
+            elif self.dataset == "lwm":
+                list_test_splits += [
+                    "originalsplit",
+                    "Ashton1860",
+                    "Dorchester1820",
+                    "Dorchester1830",
+                    "Dorchester1860",
+                    "Manchester1780",
+                    "Manchester1800",
+                    "Manchester1820",
+                    "Manchester1830",
+                    "Manchester1860",
+                    "Poole1860",
+                ]
+
+        # Iterate over each linking experiments, each will have its own
+        # results file:
+        all_df = self.dataset_df
+        for split in list_test_splits:
+            # Get ids of articles in each split:
+            all_test = list(
+                all_df[all_df[split] == self.test_split].article_id.astype(str)
+            )
+
+            # Split processed df according to split:
+            processed_df = self.processed_data["processed_df"]
+            train_df = processed_df[processed_df[split] == "train"]
+            test_df = processed_df[processed_df[split] == self.test_split]
+
+            # Train according to method:
+            self.mylinker.perform_training(train_df)
+
+            # Resolve according to method:
+            test_df = self.mylinker.perform_linking(test_df)
+
+            # Prepare data for scorer:
+            self.processed_data = process_data.prepare_storing_links(
+                self.processed_data, all_test, test_df
+            )
+
+            # Store linking results:
+            process_data.store_results(
+                self,
+                task="linking",
+                how_split=split,
+                which_split=self.test_split,
+            )

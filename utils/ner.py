@@ -110,7 +110,7 @@ def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict)
 
 # -------------------------------------------------------------
 # Collects named entities from tokens:
-def collect_named_entities(tokens, accepted_labels):
+def collect_named_entities(tokens):
     """
     Creates a list of Entity named-tuples, storing the entity
     type and the start and end offsets of the entity.
@@ -138,7 +138,7 @@ def collect_named_entities(tokens, accepted_labels):
         token_tag = annotation[1]
         token_link = annotation[2]
 
-        if not token_tag.lower() in accepted_labels:
+        if token_tag == "O":
             if ent_type is not None and start_offset is not None:
                 end_offset = offset - 1
                 named_entities.append(
@@ -202,13 +202,31 @@ def collect_named_entities(tokens, accepted_labels):
 
 # -------------------------------------------------------------
 # Aggregate separate tokens into mentions:
-def aggregate_mentions(predictions, accepted_labels, setting):
+def aggregate_mentions(predictions, setting):
     """
     Aggregates mentions (NER outputs separate tokens) and finds
     mention position in sentence.
+
+    Arguments:
+        predictions: a list of lists (the outer list representing
+            a sentence, the inner list representing a token) representation
+            the NER predictions.
+        setting: either "pred" or "gold". If "pred", set entity_link
+            to "O" (because we haven't performed linking yet) and
+            perform average of the NER score of all the tokens that
+            belong to the same entity. If "gold", set ner_score to
+            1.0 (it's manually detected) and consolidate the link of the
+            mention subtokens.
+
+    Returns:
+        sent_mentions (list): a list of dictionaries, there the list
+            corresponds to the sentence, and the inner dictionaries
+            correspond to the different (multi-token) mentions that
+            have been identified (in case of "pred") or that were
+            annotated (in case of "gold").
     """
 
-    mentions = collect_named_entities(predictions, accepted_labels)
+    mentions = collect_named_entities(predictions)
 
     sent_mentions = []
     for mention in mentions:
@@ -338,6 +356,7 @@ def fix_hyphens(lEntities):
         ".",
         "’",
         "'",
+        "?",
     ] + numbers  # Numbers and punctuation are common OCR errors
     hyphEntities = []
     hyphEntities.append(lEntities[0])
@@ -490,378 +509,3 @@ def aggregate_entities(entity, lEntities):
 
     lEntities.append(newEntity)
     return lEntities
-
-
-"""
-from ast import literal_eval
-from collections import namedtuple
-from pathlib import Path
-import numpy as np
-
-from datasets import load_metric
-from datasets import load_dataset
-from transformers import (
-    AutoTokenizer,
-    DataCollatorForTokenClassification,
-    AutoModelForTokenClassification,
-    TrainingArguments,
-    Trainer,
-    pipeline,
-)
-
-
-class Recogniser:
-    def __init__(
-        self,
-        method,
-        model_name,
-        model,
-        pipe,
-        base_model,
-        train_dataset,
-        test_dataset,
-        output_model_path,
-        training_args,
-        overwrite_training,
-        do_test,
-        training_tagset,
-        filtering_labels,
-    ):
-        self.method = method
-        self.model_name = model_name
-        self.model = model
-        self.pipe = pipe
-        self.base_model = base_model
-        self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
-        self.output_path = output_model_path
-        self.training_args = training_args
-        self.overwrite_training = overwrite_training
-        self.do_test = do_test
-        self.training_tagset = training_tagset
-        self.filtering_labels = filtering_labels
-        self.model_name = self.model_name + "-" + self.training_tagset
-
-    # -------------------------------------------------------------
-    def __str__(self):
-        s = "Toponym recogniser:\n* Method: {0}\n* Model: {1}\n* Base model: {2}\n* Overwrite model if exists: {3}\n* Train in test mode: {4}\n".format(
-            self.method,
-            self.model_name,
-            self.base_model,
-            str(self.overwrite_training),
-            str(self.do_test),
-        )
-        return s
-
-    # -------------------------------------------------------------
-    def create_pipeline(self):
-        
-        # Create a pipeline for NER given a NER model.
-        
-        if self.method == "lwm":
-            # Path to NER Model:
-            self.model = self.output_path + self.model_name + ".model"
-            self.pipe = pipeline("ner", model=self.model)
-            return self.model, self.pipe
-        else:
-            return None, None
-
-    # -------------------------------------------------------------
-    def train(self):
-        # Training a NER model.
-
-        # Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
-
-
-        Path(self.output_path).mkdir(parents=True, exist_ok=True)
-        metric = load_metric("seqeval")
-
-        # Load train and test sets:
-        if self.do_test == True:
-            # If test is True, train on 5% of the train and test sets, and add "_test" to the model name.
-            self.model_name = self.model_name + "_test"
-            lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:5%]"
-            )
-            lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:5%]"
-            )
-        else:
-            lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train"
-            )
-            lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train"
-            )
-
-        # If method is not one of LwM, skip training:
-        if self.method != "lwm":
-            return None
-
-        # If model exists and overwrite is set to False, skip training:
-        if (
-            Path(self.output_path + self.model_name + ".model").exists()
-            and self.overwrite_training == False
-        ):
-            print(
-                "\n** Note: Model "
-                + self.output_path
-                + self.model_name
-                + ".model is already trained. Set overwrite to True if needed.\n"
-            )
-            return None
-
-        label_encoding_dict = dict()
-        if self.training_tagset == "coarse":
-            # Fine-grained tagging: each location type will be kept:
-            label_encoding_dict = {
-                "O": 0,
-                "B-LOC": 1,
-                "I-LOC": 2,
-                "B-STREET": 3,
-                "I-STREET": 4,
-                "B-BUILDING": 5,
-                "I-BUILDING": 6,
-                "B-OTHER": 7,
-                "I-OTHER": 8,
-                "B-FICTION": 9,
-                "I-FICTION": 10,
-            }
-        elif self.training_tagset == "fine":
-            # Coarse tagging: all location types that should have coordinates
-            # will be considered as LOC.
-            label_encoding_dict = {
-                "O": 0,
-                "B-LOC": 1,
-                "I-LOC": 2,
-                "B-STREET": 1,
-                "I-STREET": 2,
-                "B-BUILDING": 1,
-                "I-BUILDING": 2,
-                "B-OTHER": 1,
-                "I-OTHER": 2,
-                "B-FICTION": 0,
-                "I-FICTION": 0,
-            }
-        label_list = list(label_encoding_dict.keys())
-
-        # Align tokens and labels:
-        def tokenize_and_align_labels(examples):
-            label_all_tokens = True
-            tokenized_inputs = tokenizer(
-                list(examples["tokens"]), truncation=True, is_split_into_words=True
-            )
-
-            labels = []
-            for i, label in enumerate(examples["ner_tags"]):
-                word_ids = tokenized_inputs.word_ids(batch_index=i)
-                previous_word_idx = None
-                label_ids = []
-                for word_idx in word_ids:
-                    # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-                    # ignored in the loss function.
-                    if word_idx is None:
-                        label_ids.append(-100)
-                    elif label[word_idx] == "0":
-                        label_ids.append(0)
-                    # We set the label for the first token of each word.
-                    elif word_idx != previous_word_idx:
-                        label_ids.append(label_encoding_dict[label[word_idx]])
-                    # For the other tokens in a word, we set the label to either the current label or -100, depending on
-                    # the label_all_tokens flag.
-                    else:
-                        label_ids.append(
-                            label_encoding_dict[label[word_idx]]
-                            if label_all_tokens
-                            else -100
-                        )
-                    previous_word_idx = word_idx
-
-                labels.append(label_ids)
-
-            tokenized_inputs["labels"] = labels
-            return tokenized_inputs
-
-        # Compute metrics:
-        def compute_metrics(p):
-            predictions, labels = p
-            predictions = np.argmax(predictions, axis=2)
-
-            # Remove ignored index (special tokens)
-            true_predictions = [
-                [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
-                for prediction, label in zip(predictions, labels)
-            ]
-            true_labels = [
-                [label_list[l] for (p, l) in zip(prediction, label) if l != -100]
-                for prediction, label in zip(predictions, labels)
-            ]
-
-            results = metric.compute(
-                predictions=true_predictions, references=true_labels
-            )
-            return {
-                "precision": results["overall_precision"],
-                "recall": results["overall_recall"],
-                "f1": results["overall_f1"],
-                "accuracy": results["overall_accuracy"],
-            }
-
-        model = AutoModelForTokenClassification.from_pretrained(
-            self.base_model, num_labels=len(label_list)
-        )
-        tokenizer = AutoTokenizer.from_pretrained(self.base_model)
-        data_collator = DataCollatorForTokenClassification(tokenizer)
-
-        lwm_train_tok = lwm_train.map(tokenize_and_align_labels, batched=True)
-        lwm_test_tok = lwm_test.map(tokenize_and_align_labels, batched=True)
-
-        training_args = TrainingArguments(
-            output_dir=self.output_path,
-            evaluation_strategy="epoch",
-            logging_dir=self.output_path + "runs/" + self.model_name,
-            learning_rate=self.training_args["learning_rate"],
-            per_device_train_batch_size=self.training_args["batch_size"],
-            per_device_eval_batch_size=self.training_args["batch_size"],
-            num_train_epochs=self.training_args["num_train_epochs"],
-            weight_decay=self.training_args["weight_decay"],
-        )
-
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=lwm_train_tok,
-            eval_dataset=lwm_test_tok,
-            data_collator=data_collator,
-            tokenizer=tokenizer,
-            compute_metrics=compute_metrics,
-        )
-
-        trainer.train()
-        trainer.evaluate()
-        trainer.save_model(self.output_path + self.model_name + ".model")
-
-    # -------------------------------------------------------------
-    def filtering_labels(self):
-        
-        # Select entities that will be considered for entity linking.
-        
-        if self.accepted_labels == "all":
-            self.accepted_labels = [
-                "loc",
-                "b-loc",
-                "i-loc",
-                "street",
-                "b-street",
-                "i-street",
-                "building",
-                "b-building",
-                "i-building",
-                "other",
-                "b-other",
-                "i-other",
-            ]
-        if self.accepted_labels == "loc":
-            self.accepted_labels = ["loc", "b-loc", "i-loc"]
-        return self.accepted_labels
-
-    
-
-    def ner_predict(self, sentence, annotations, dataset):
-        
-        # This function reads a dataset dataframe and the NER pipeline and returns
-        # two dictionaries:
-        # * dPredictions: The dPredictions dictionary keeps the results of the BERT NER
-        #                 as a list of dictionaries (value) for each article/sentence
-        #                 pair (key).
-        # * dGoldStandard: The dGoldStandard contains the gold standard labels (aligned
-        #                 to the BERT NER tokenisation).
-        
-
-        # Dictionary mapping NER model label with GS label:
-        label_dict = dict()
-        label_dict["lwm"] = {
-            "LABEL_0": "O",
-            "LABEL_1": "B-LOC",
-            "LABEL_2": "I-LOC",
-            "LABEL_3": "B-STREET",
-            "LABEL_4": "I-STREET",
-            "LABEL_5": "B-BUILDING",
-            "LABEL_6": "I-BUILDING",
-            "LABEL_7": "B-OTHER",
-            "LABEL_8": "I-OTHER",
-            "LABEL_9": "B-FICTION",
-            "LABEL_10": "I-FICTION",
-        }
-        label_dict["hmd"] = {
-            "LABEL_0": "O",
-            "LABEL_1": "B-LOC",
-            "LABEL_2": "I-LOC",
-            "LABEL_3": "B-STREET",
-            "LABEL_4": "I-STREET",
-            "LABEL_5": "B-BUILDING",
-            "LABEL_6": "I-BUILDING",
-            "LABEL_7": "B-OTHER",
-            "LABEL_8": "I-OTHER",
-            "LABEL_9": "B-FICTION",
-            "LABEL_10": "I-FICTION",
-        }
-        label_dict["hipe"] = {
-            "LABEL_0": "O",
-            "LABEL_1": "B-LOC",
-            "LABEL_2": "I-LOC",
-            "LABEL_3": "B-LOC",
-            "LABEL_4": "I-LOC",
-            "LABEL_5": "B-LOC",
-            "LABEL_6": "I-LOC",
-            "LABEL_7": "B-LOC",
-            "LABEL_8": "I-LOC",
-            "LABEL_9": "B-LOC",
-            "LABEL_10": "I-LOC",
-        }
-
-
-
-        # The dPredictions dictionary keeps the results of the BERT NER
-        # as a list of dictionaries (value) for each article/sentence pair (key).
-        ner_preds = self.pipe(sentence)
-        lEntities = []
-        for pred_ent in ner_preds:
-            prev_tok = pred_ent["word"]
-            pred_ent["entity"] = label_dict[dataset][pred_ent["entity"]]
-            pred_ent = fix_capitalization(pred_ent, sentence)
-            if prev_tok.lower() != pred_ent["word"].lower():
-                print("Token processing error.")
-            predictions = aggregate_entities(pred_ent, lEntities)
-        predictions = fix_hyphens(predictions)
-        predictions = fix_nested(predictions)
-        predictions = fix_startEntity(predictions)
-
-        # The dGoldStandard dictionary is an alignment between the output
-        # of BERT NER (as it uses its own tokenizer) and the gold standard
-        # labels. It does so based on the start and end position of each
-        # predicted token. By default, a predicted token is assigned the
-        # "O" label, unless its position overlaps with the position an
-        # annotated entity, in which case we relabel it according to this
-        # label.
-        gold_standard = []
-        for pred_ent in predictions:
-            gs_for_eval = pred_ent.copy()
-            # This has been manually annotated, so perfect score
-            gs_for_eval["score"] = 1.0
-            # We instantiate the entity class as "O" ("outside", i.e. not a NE)
-            gs_for_eval["entity"] = "O"
-            gs_for_eval["link"] = "O"
-            # It's prefixed as "B-" if the token is the first in a sequence,
-            # otherwise it's prefixed as "I-"
-            for gse in annotations:
-                if pred_ent["start"] == gse[0] and pred_ent["end"] <= gse[1]:
-                    gs_for_eval["entity"] = "B-" + annotations[gse][0]
-                    gs_for_eval["link"] = "B-" + annotations[gse][2]
-                elif pred_ent["start"] > gse[0] and pred_ent["end"] <= gse[1]:
-                    gs_for_eval["entity"] = "I-" + annotations[gse][0]
-                    gs_for_eval["link"] = "I-" + annotations[gse][2]
-            gold_standard.append(gs_for_eval)
-
-        return gold_standard, predictions
-"""

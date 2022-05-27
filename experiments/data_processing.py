@@ -51,17 +51,27 @@ lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines
 lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train)
 lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test)
 
+# Split train set into train and dev set, by article:
+lwm_train_df, lwm_dev_df = train_test_split(
+    lwm_train_df, test_size=0.33, random_state=42
+)
+
 # Concatenate original training and test sets:
-lwm_all_df = pd.concat([lwm_train_df, lwm_test_df])
+lwm_all_df = pd.concat([lwm_train_df, lwm_dev_df, lwm_test_df])
 lwm_all_df["place_wqid"] = lwm_all_df["publication_code"].map(dict_placewqid)
 
 # Keep the original train/test split for assessing NER:
 ner_split_train = list(lwm_train_df["article_id"].unique())
+ner_split_dev = list(lwm_dev_df["article_id"].unique())
 ner_split_test = list(lwm_test_df["article_id"].unique())
 
 # Add a column for the ner_split (i.e. the original split)
 lwm_all_df["originalsplit"] = lwm_all_df["article_id"].apply(
-    lambda x: "test" if x in ner_split_test else "train"
+    lambda x: "test"
+    if x in ner_split_test
+    else "train"
+    if x in ner_split_train
+    else "dev"
 )
 
 groups = [i for i, group in lwm_all_df.groupby(["place", "decade"])]
@@ -98,6 +108,7 @@ print("===================\n")
 for group in groups:
     group_name = group[0].split("-")[0] + str(group[1])
     print(lwm_all_df[group_name].value_counts())
+print(lwm_all_df["originalsplit"].value_counts())
 print()
 
 # ------------------------------------------------------

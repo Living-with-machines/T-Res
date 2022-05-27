@@ -1,6 +1,5 @@
-import json
 import os
-from collections import OrderedDict
+import json
 
 import pandas as pd
 from DeezyMatch import candidate_ranker
@@ -39,7 +38,15 @@ class Ranker:
 
     def load_resources(self):
         """
-        Load resources required for linking.
+        Load resources required for linking, and initializes pandarallel
+        if needed by the candidate ranking method.
+
+        Returns:
+            self.mentions_to_wikidata (dict): loads the mentions_to_wikidata.json
+                dictionary, which maps a mention (e.g. "London") to the Wikidata
+                entities that are referred to by this mention on Wikipedia (e.g.
+                Q84, Q2477346) and mapped each entity with their relevance (i.e.
+                number of inlinks) on Wikipedia.
         """
         # Load Wikidata mentions-to-wqid:
         with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
@@ -147,7 +154,16 @@ class Ranker:
 
     def deezy_on_the_fly(self, queries):
         """
-        Rank using DeezyMatch.
+        Given a list of queries return a dict of fuzzy matches for each of them,
+        using DeezyMatch (with DeezyMatch parameters specified when initiating
+        the Ranker object).
+
+        Args:
+            queries (list): list of mentions identified in a given sentence
+
+        Returns:
+            cands_dict: a (fuzzy) match between mentions and mentions in the KB
+            self.already_collected_cands (dict): an enriched version of already_collected_cands
         """
 
         dm_path = self.deezy_parameters["dm_path"]
@@ -205,6 +221,13 @@ class Ranker:
     def run(self, queries):
         """
         Overall select ranking method.
+
+        Arguments:
+            queries (list): the list of mentions as they appear in the text,
+                for a given sentence.
+
+        Returns:
+            A dictionary, resulting from running a certain rainking method.
         """
         if self.method == "perfectmatch":
             return self.perfect_match(queries)
