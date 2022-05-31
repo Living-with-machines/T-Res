@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+from tqdm import tqdm
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -148,7 +149,14 @@ class Experiment:
             self.myranker.mentions_to_wikidata = self.myranker.load_resources()
             print("\n* Perform candidate ranking:")
             # Obtain candidates per sentence:
-            dCandidates = process_data.find_candidates(dMentionsPred, self.myranker)
+            dCandidates = dict()
+            for sentence_id in tqdm(dMentionsPred):
+                pred_mentions_sent = dMentionsPred[sentence_id]
+                (
+                    wk_cands,
+                    self.myranker.already_collected_cands,
+                ) = self.myranker.find_candidates(pred_mentions_sent)
+                dCandidates[sentence_id] = wk_cands
 
             # -------------------------------------------
             # Run REL end-to-end, as well
@@ -197,8 +205,9 @@ class Experiment:
     def linking_experiments(self):
 
         # Linker load resources:
-        print("\n* Load linking resources:")
+        print("\n* Load linking resources...")
         self.mylinker.linking_resources = self.mylinker.load_resources()
+        print("... resources loaded, linking in progress!\n")
 
         list_test_splits = []
         if self.test_split == "dev":

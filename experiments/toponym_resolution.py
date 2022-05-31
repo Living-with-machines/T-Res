@@ -13,7 +13,7 @@ dataset = "lwm"  # "hipe" or "lwm"
 # * partialmatch
 # * levenshtein
 # * deezymatch
-cand_select_method = "deezymatch"
+cand_select_method = "perfectmatch"
 
 # Toponym resolution approach, options are:
 # * mostpopular
@@ -93,8 +93,11 @@ experiment = preparation.Experiment(
     test_split="dev",  # "dev" while experimenting, "test" when running final experiments.
 )
 
-# Print data postprocessing information:
+# Print experiment information:
 print(experiment)
+print(myner)
+print(myranker)
+print(mylinker)
 
 # Load processed data if existing:
 experiment.processed_data = experiment.load_data()

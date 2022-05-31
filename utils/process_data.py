@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import urllib
-import hashlib
 from ast import literal_eval
 from pathlib import Path
 from tqdm import tqdm
@@ -11,7 +10,7 @@ import pandas as pd
 import requests
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import utils, ner
+from utils import ner
 
 
 # Load wikipedia2wikidata mapper:
@@ -32,6 +31,22 @@ gazetteer_ids = set(
         ].unique()
     )
 )
+
+
+# ----------------------------------------------------
+def eval_with_exception(str2parse, in_case=""):
+    """
+    Given a string in the form or a list or dictionary, parse it
+    to read it as such.
+
+    Arguments:
+        str2parse (str): the string to parse.
+        in_case (str): what should be returned in case of error.
+    """
+    try:
+        return literal_eval(str2parse)
+    except ValueError:
+        return in_case
 
 
 # ----------------------------------------------------
@@ -61,8 +76,8 @@ def prepare_sents(df):
     dMetadata = dict()
     for i, row in df.iterrows():
 
-        sentences = utils.eval_with_exception(row["sentences"], [])
-        annotations = utils.eval_with_exception(row["annotations"], [])
+        sentences = eval_with_exception(row["sentences"], [])
+        annotations = eval_with_exception(row["annotations"], [])
 
         for s in sentences:
             # Sentence position:
@@ -426,7 +441,6 @@ def load_processed_data(experiment):
             experiment.myranker.deezy_parameters["selection_threshold"]
         )
 
-    print("* Prefix of data to load:", output_path)
     output_processed_data = dict()
     try:
         with open(output_path + "_ner_predictions.json") as fr:
@@ -562,48 +576,6 @@ def store_processed_data(
 
 
 # ----------------------------------------------------
-def find_candidates(dMentionsPred, myranker):
-    """
-    Function that obtains potential candidates given the mentions
-    detected in a sentence.
-
-    Arguments:
-        dMentionsPred (list): a dictionary that stores a list of predicted
-            mentions as dictionaries for each sentence.
-        myranker (ranking.Ranker): a Ranker object, which will be used
-            to obtain candidates for a given mention.
-
-    Returns:
-        dCandidates (dict): a dictionary of nested dictionaries, where, for
-            each sentence, we keep the original detected mention, the variation
-            found by the candidate ranker in the knowledge base, and for each
-            variation, we keep the candidate ranking score and the candidates
-            in Wikidata. E.g. for mention "Guadaloupe" in sentence "sn83030483-
-            1790-03-31-a-i0004_1, we store the candidates as follows:
-               {'Guadaloupe': {'Score': 1.0, 'Candidates': {'Q17012': 10, 'Q3153836': 2}}}
-    """
-    dCandidates = dict()
-    for sentence_id in tqdm(dMentionsPred):
-        pred_mentions_sent = dMentionsPred[sentence_id]
-        mentions = list(set([mention["mention"] for mention in pred_mentions_sent]))
-        cands, myranker.already_collected_cands = myranker.run(mentions)
-
-        wk_cands = dict()
-        for original_mention in cands:
-            wk_cands[original_mention] = dict()
-            for variation in cands[original_mention]:
-                match_score = cands[original_mention][variation]
-                # Find Wikidata ID and relv.
-                found_cands = myranker.mentions_to_wikidata.get(variation, dict())
-                if not variation in wk_cands[original_mention]:
-                    wk_cands[original_mention][variation] = {"Score": match_score}
-                    wk_cands[original_mention][variation]["Candidates"] = found_cands
-
-        dCandidates[sentence_id] = wk_cands
-    return dCandidates
-
-
-# ----------------------------------------------------
 def rel_end_to_end(sent):
     """
     REL end-to-end using the API.
@@ -652,8 +624,16 @@ def get_rel_from_api(dSentences, rel_end2end_path):
 
 
 # ----------------------------------------------------
-# Get the Wikidata ID from a Wikipedia title
 def match_wikipedia_to_wikidata(wiki_title):
+    """
+    Get the Wikidata ID from a Wikipedia title.
+
+    Arguments:
+        wiki_title (str): a Wikipedia title, underscore-separated.
+
+    Returns:
+        a string, either the Wikidata QID corresponding entity, or NIL.
+    """
     el = urllib.parse.quote(wiki_title.replace("_", " "))
     try:
         el = wikipedia2wikidata[el]
@@ -666,20 +646,39 @@ def match_wikipedia_to_wikidata(wiki_title):
 
 # ----------------------------------------------------
 def match_ent(pred_ents, start, end, prev_ann):
+    """
+    Function that, given the position in a sentence of a
+    specific gold standard token, finds the corresponding
+    string and prediction information returned by REL.
+
+    Arguments:
+        pred_ents (list): a list of lists, each inner list
+            corresponds to a token.
+        start (int): start character of a token in the gold standard.
+        end (int): end character of a token in the gold standard.
+        prev_ann (str): entity type of the previous token.
+
+    Returns:
+        A tuple with three elements: (1) the entity type, (2) the
+        entity link and (3) the entity type of the previous token.
+    """
     for ent in pred_ents:
         wqid = match_wikipedia_to_wikidata(ent[3])
         # If entity is a LOC or linked entity is in our KB:
         if ent[-1] == "LOC" or wqid in gazetteer_ids:
+            # Any place with coordinates is considered a location
+            # throughout our experiments:
+            ent_type = "LOC"
             st_ent = ent[0]
             len_ent = ent[1]
             if start >= st_ent and end <= (st_ent + len_ent):
-                if prev_ann == ent[-1]:
+                if prev_ann == ent_type:
                     ent_pos = "I-"
                 else:
                     ent_pos = "B-"
-                    prev_ann = ent[-1]
+                    prev_ann = ent_type
 
-                n = ent_pos + ent[-1]
+                n = ent_pos + ent_type
                 try:
                     el = ent_pos + match_wikipedia_to_wikidata(ent[3])
                 except Exception as e:
@@ -693,6 +692,21 @@ def match_ent(pred_ents, start, end, prev_ann):
 
 # ----------------------------------------------------
 def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization):
+    """
+    For each sentence, retokenizes the REL output to match the gold
+    standard tokenization.
+
+    Arguments:
+        rel_end2end_path (str): the path of the REL outputs.
+        dSentences (dict): dictionary that maps a sentence id to the text.
+        gold_tokenization (dict): dictionary that contains the tokenized
+            sentence with gold standard annotations of entity type and
+            link, per sentence.
+
+    Returns:
+        dREL (dict): dictionary that maps a sentence id with the REL predictions,
+            retokenized as in the gold standard.
+    """
     with open(rel_end2end_path) as f:
         rel_preds = json.load(f)
 
@@ -709,72 +723,6 @@ def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization):
 
         dREL[sent_id] = sentence_preds
     return dREL
-
-
-# ----------------------------------------------------
-def process_for_linking(df):
-    """
-    Process data for linking, resulting in a dataframe with one mention
-    per row.
-    """
-
-    # Create dataframe by mention:
-    rows = []
-    for i, row in df.iterrows():
-        article_id = row["article_id"]
-        place = row["place"]
-        year = row["year"]
-        ocr_quality_mean = row["ocr_quality_mean"]
-        ocr_quality_sd = row["ocr_quality_sd"]
-        publication_title = row["publication_title"]
-        publication_code = str(row["publication_code"]).zfill(7)
-        sentences = literal_eval(row["sentences"])
-        annotations = literal_eval(row["annotations"])
-        for s in sentences:
-            for a in annotations:
-                if s["sentence_pos"] == a["sent_pos"]:
-                    rows.append(
-                        (
-                            article_id,
-                            s["sentence_pos"],
-                            s["sentence_text"],
-                            a["mention_pos"],
-                            a["mention"],
-                            a["wkdt_qid"],
-                            a["mention_start"],
-                            a["mention_end"],
-                            a["entity_type"],
-                            year,
-                            place,
-                            ocr_quality_mean,
-                            ocr_quality_sd,
-                            publication_title,
-                            publication_code,
-                        )
-                    )
-
-    training_df = pd.DataFrame(
-        columns=[
-            "article_id",
-            "sentence_pos",
-            "sentence",
-            "mention_pos",
-            "mention",
-            "wkdt_qid",
-            "mention_start",
-            "mention_end",
-            "entity_type",
-            "year",
-            "place",
-            "ocr_quality_mean",
-            "ocr_quality_sd",
-            "publication_title",
-            "publication_code",
-        ],
-        data=rows,
-    )
-
-    return training_df
 
 
 # ----------------------------------------------------

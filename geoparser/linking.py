@@ -1,14 +1,12 @@
 import os
 import sys
 import json
-
-import numpy as np
 import pandas as pd
+from ast import literal_eval
 from transformers import AutoTokenizer, pipeline
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import utils  # training
 
 
 class Linker:
@@ -27,7 +25,7 @@ class Linker:
         self.overwrite_training = overwrite_training
 
     def __str__(self):
-        s = "Entity Linking:\n* Method: {0}\n* Overwrite training: {1}\n* Linking resources: {2}\n".format(
+        s = ">>> Entity Linking:\n\t* Method: {0}\n\t* Overwrite training: {1}\n\t* Linking resources: {2}\n".format(
             self.method,
             str(self.overwrite_training),
             ",".join(list(self.linking_resources.keys())),
@@ -35,13 +33,20 @@ class Linker:
         return s
 
     def create_pipeline(self):
-        # Load BERT model and tokenizer, and feature-extraction pipeline:
+        """
+        Load a BERT model and tokenizer, create a pipeline to get contextualized
+        embeddings.
+
+        Returns:
+            self.linking_resources (dict): dictionary of resources for linking,
+                with two additional resources, the tokenizer and the pipeline.
+        """
         tokenizer = AutoTokenizer.from_pretrained(self.base_model)
         model_rd = pipeline(
             "feature-extraction", model=self.base_model, tokenizer=self.base_model
         )
         self.linking_resources["tokenizer"] = tokenizer
-        self.linking_resources["model_rd"] = model_rd
+        self.linking_resources["pipeline"] = model_rd
         return self.linking_resources
 
     def load_resources(self):
@@ -57,7 +62,14 @@ class Linker:
         gaz = pd.read_csv(
             self.resources_path + "wikidata_gazetteer.csv", low_memory=False
         )
-        gaz["instance_of"] = gaz["instance_of"].apply(utils.eval_with_exception)
+
+        def eval_with_exception(string, in_case=""):
+            try:
+                return literal_eval(string)
+            except ValueError:
+                return in_case
+
+        gaz["instance_of"] = gaz["instance_of"].apply(eval_with_exception)
         self.linking_resources["gazetteer"] = gaz
 
         # Load Wikidata mentions-to-wikidata (with normalized counts) to QID dictionary
@@ -78,6 +90,7 @@ class Linker:
 
         return self.linking_resources
 
+    # ----------------------------------------------
     def perform_training(self, train_df):
         """
         TODO: Here will go the code to perform training, checking

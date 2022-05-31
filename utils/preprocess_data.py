@@ -511,7 +511,9 @@ def process_hipe_for_linking(hipe_path):
                     mentions = {
                         "mention_pos": mention_counter,
                         "mention": p["word"],
-                        "entity_type": p["ne_type"].split("-")[-1],
+                        # Any place with coordinates is considered a location
+                        # throughout our experiments:
+                        "entity_type": "LOC",
                         "wkdt_qid": wkdt,
                         "mention_start": p["start"],
                         "mention_end": p["end"],

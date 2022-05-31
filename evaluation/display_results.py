@@ -118,7 +118,10 @@ print(df_ner.to_latex(index=False))
 
 datasets = ["lwm", "hipe"]
 ner_approaches = ["linking_blb_lwm-ner"]
-ranking_approaches = ["perfectmatch", "deezymatch+2+10", "deezymatch+2+20"]
+ranking_approaches = [
+    "perfectmatch",
+    "deezymatch+2+20",
+]
 linking_approaches = ["mostpopular", "skys", "rel"]
 granularities = ["fine", "coarse"]
 splits = [

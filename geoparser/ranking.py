@@ -33,7 +33,7 @@ class Ranker:
         """
         Print the ranker method name.
         """
-        s = "Candidate selection:\n* Method: {0}\n".format(self.method)
+        s = ">>> Candidate selection:\n\t* Method: {0}\n".format(self.method)
         return s
 
     def load_resources(self):
@@ -237,3 +237,33 @@ class Ranker:
             return self.partial_match(queries, damlev=True)
         if self.method == "deezymatch":
             return self.deezy_on_the_fly(queries)
+
+    def find_candidates(self, mentions):
+        """
+        Method that obtains potential candidates given the mentions
+        detected in a sentence.
+
+        Arguments:
+            mentions (list): a list of predicted mentions as dictionaries.
+
+        Returns:
+            wk_cands (dict): a dictionary where we keep the original detected mention,
+                the variation found by the candidate ranker in the knowledge base, and
+                for each variation, we keep the candidate ranking score and the candidates
+                in Wikidata. E.g. for mention "Guadaloupe" in sentence "sn83030483-
+                1790-03-31-a-i0004_1, we store the candidates as follows:
+                {'Guadaloupe': {'Score': 1.0, 'Candidates': {'Q17012': 10, 'Q3153836': 2}}}
+        """
+        queries = list(set([mention["mention"] for mention in mentions]))
+        cands, self.already_collected_cands = self.run(queries)
+        wk_cands = dict()
+        for original_mention in cands:
+            wk_cands[original_mention] = dict()
+            for variation in cands[original_mention]:
+                match_score = cands[original_mention][variation]
+                # Find Wikidata ID and relv.
+                found_cands = self.mentions_to_wikidata.get(variation, dict())
+                if not variation in wk_cands[original_mention]:
+                    wk_cands[original_mention][variation] = {"Score": match_score}
+                    wk_cands[original_mention][variation]["Candidates"] = found_cands
+        return wk_cands, self.already_collected_cands
