@@ -119,10 +119,11 @@ start = datetime.datetime.now()
 
 query = "accident"
 datasets = ["hmd", "lwm"]
-datasets = ["hmd"]
 
-output_path = "../experiments/outputs/newspapers/"
-Path(output_path).mkdir(parents=True, exist_ok=True)
+output_path_csv = "../experiments/outputs/newspapers/csvs/"
+output_path_resolved = "../experiments/outputs/newspapers/resolved/"
+Path(output_path_csv).mkdir(parents=True, exist_ok=True)
+Path(output_path_resolved).mkdir(parents=True, exist_ok=True)
 
 
 # ----------------------------------------------------------
@@ -132,7 +133,7 @@ for dataset in datasets:
 
     for i in tqdm(glob.glob(dataset_path + "*.csv")):
         news_nlp = i.split("/")[-1].split("_")[0]
-        path_nlp_query = output_path + query + "_" + news_nlp + ".csv"
+        path_nlp_query = output_path_csv + query + "_" + news_nlp + ".csv"
 
         if not Path(path_nlp_query).exists():
             df_query = pd.DataFrame(
@@ -154,7 +155,7 @@ for dataset in datasets:
 
 # ----------------------------------------------------------
 # Run toponym resolution:
-for i in tqdm(glob.glob(output_path + "*.csv")):
+for i in tqdm(glob.glob(output_path_csv + "*.csv")):
 
     news_nlp = i.split("/")[-1].split("_")[-1].split(".csv")[0]
     df_query = pd.read_csv(i)
@@ -171,11 +172,13 @@ for i in tqdm(glob.glob(output_path + "*.csv")):
             output_name_metadata = (
                 news_nlp + "/" + str(year) + str(month) + "_metadata.json"
             )
-            Path(output_path + news_nlp + "/").mkdir(parents=True, exist_ok=True)
+            Path(output_path_resolved + news_nlp + "/").mkdir(
+                parents=True, exist_ok=True
+            )
 
             print(news_nlp, year, month)
 
-            if not Path(output_path + output_name_toponyms).exists():
+            if not Path(output_path_resolved + output_name_toponyms).exists():
                 df_tmp = df_query[
                     (df_query["month"] == month) & (df_query["year"] == year)
                 ]
@@ -198,9 +201,9 @@ for i in tqdm(glob.glob(output_path + "*.csv")):
                     ].to_dict("index")
                     output_dict = dict(zip(df_tmp.index, df_tmp.toponyms))
 
-                    with open(output_path + output_name_toponyms, "w") as fp:
+                    with open(output_path_resolved + output_name_toponyms, "w") as fp:
                         json.dump(output_dict, fp)
-                    with open(output_path + output_name_metadata, "w") as fp:
+                    with open(output_path_resolved + output_name_metadata, "w") as fp:
                         json.dump(metadata_dict, fp)
 
 end = datetime.datetime.now()
