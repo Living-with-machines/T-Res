@@ -157,6 +157,9 @@ for dataset in datasets:
 # Run toponym resolution:
 for i in tqdm(glob.glob(output_path_csv + "*.csv")):
 
+    if not query in i:
+        continue
+
     news_nlp = i.split("/")[-1].split("_")[-1].split(".csv")[0]
     df_query = pd.read_csv(i)
 
