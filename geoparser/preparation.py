@@ -25,6 +25,7 @@ class Experiment:
         overwrite_processing=True,
         processed_data=dict(),
         test_split="",
+        rel_experiments=False,
     ):
         """
         Arguments:
@@ -44,6 +45,8 @@ class Experiment:
                 processed data for the experiments.
             test split (str): the split (train/dev/test) for the
                 linking experiment.
+            rel_experiments (bool): If True, run the REL experiments,
+                else skip them.
         """
 
         self.dataset = dataset
@@ -56,6 +59,7 @@ class Experiment:
         self.dataset_df = dataset_df
         self.processed_data = processed_data
         self.test_split = test_split
+        self.rel_experiments = rel_experiments
 
         # Load the dataset as a dataframe:
         self.dataset_df = pd.read_csv(
@@ -93,11 +97,14 @@ class Experiment:
         # ----------------------------------
         # Coherence check:
         # Some scenarios do not make sense. Warn and exit:
-        if self.dataset == "hipe" and self.myner.training_tagset == "fine":
+        if self.myranker.method not in [
+            "perfectmatch",
+            "partialmatch",
+            "levenshtein",
+            "deezymatch",
+        ]:
             print(
-                """\n!!! Coherence check failed. This is due to:
-                * HIPE should neither be filtered by type of label nor allow processing 
-                  with fine-graned location types, because it was not designed for that.\n"""
+                """\n!!! Coherence check failed. This is due to: \n\t* Nonexistent candidate ranking method.\n"""
             )
             sys.exit(0)
 
@@ -159,22 +166,6 @@ class Experiment:
                 dCandidates[sentence_id] = wk_cands
 
             # -------------------------------------------
-            # Run REL end-to-end, as well
-            # Note: Do not move the next block of code,
-            # as REL relies on the tokenisation performed
-            # by the previous method, so it needs to be
-            # run after ther our method.
-            Path(self.results_path + self.dataset).mkdir(parents=True, exist_ok=True)
-            rel_end2end_path = (
-                self.results_path + self.dataset + "/rel_e2d_from_api.json"
-            )
-            process_data.get_rel_from_api(dSentences, rel_end2end_path)
-            print("\nPostprocess REL outputs:")
-            dREL = process_data.postprocess_rel(
-                rel_end2end_path, dSentences, gold_tokenization
-            )
-
-            # -------------------------------------------
             # Store temporary postprocessed data
             self.processed_data = process_data.store_processed_data(
                 self,
@@ -184,7 +175,6 @@ class Experiment:
                 gold_tokenization,
                 dSentences,
                 dMetadata,
-                dREL,
                 dMentionsPred,
                 dMentionsGold,
                 dCandidates,
@@ -204,23 +194,20 @@ class Experiment:
 
     def linking_experiments(self):
 
-        # Linker load resources:
-        print("\n* Load linking resources...")
-        self.mylinker.linking_resources = self.mylinker.load_resources()
-        print("... resources loaded, linking in progress!\n")
-
-        list_test_splits = []
-        if self.test_split == "dev":
-            # We use the original split for developing the code:
+        # Experiments data splits:
+        if self.dataset == "hipe":
+            # Test split used in experiments:
             list_test_splits = ["originalsplit"]
-
-        if self.test_split == "test":
+        if self.dataset == "lwm":
+            # Data splits for experiments:
+            list_test_splits = []
+            # We use the original split for developing the code:
+            if self.test_split == "dev":
+                list_test_splits = ["originalsplit"]
             # N-cross validation (we use the originalsplit for developing the
             # code, when running the code for real we'll uncomment the following
             # block of code):
-            if self.dataset == "hipe":
-                list_test_splits += ["originalsplit", "traindevtest"]
-            elif self.dataset == "lwm":
+            if self.test_split == "test":
                 list_test_splits += [
                     "originalsplit",
                     "Ashton1860",
@@ -234,30 +221,76 @@ class Experiment:
                     "Manchester1860",
                     "Poole1860",
                 ]
+        # ------------------------------------------
+        # HIPE dataset has no train set, so we always use LwM dataset for training.
+        # Try to load the LwM dataset, otherwise raise a warning and create
+        # an empty dataframe (we're not raising an error because not all
+        # linking approaches will need a training set).
+        lwm_processed_df = pd.DataFrame()
+        lwm_original_df = pd.DataFrame()
+        try:
+            # Load training set:
+            output_path = self.data_path + "lwm/" + self.myner.model_name
+            # Add the candidate experiment info to the path:
+            cand_approach = self.myranker.method
+            if self.myranker.method == "deezymatch":
+                cand_approach += "+" + str(
+                    self.myranker.deezy_parameters["num_candidates"]
+                )
+                cand_approach += "+" + str(
+                    self.myranker.deezy_parameters["selection_threshold"]
+                )
 
-        # Iterate over each linking experiments, each will have its own
-        # results file:
-        all_df = self.dataset_df
-        for split in list_test_splits:
-            # Get ids of articles in each split:
-            all_test = list(
-                all_df[all_df[split] == self.test_split].article_id.astype(str)
+            output_path += "_" + cand_approach
+            lwm_processed_df = pd.read_csv(output_path + "_mentions.tsv", sep="\t")
+            lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
+            lwm_original_df = pd.read_csv(
+                self.data_path + "lwm/linking_df_split.tsv",
+                sep="\t",
+            )
+        except FileNotFoundError:
+            print(
+                "* WARNING! The training set has not been generated yet. To do so,\nplease run the same experiment with the LwM dataset. If the linking\nmethod you're using is unsupervised, please ignore this warning.\n"
             )
 
-            # Split processed df according to split:
-            processed_df = self.processed_data["processed_df"]
-            train_df = processed_df[processed_df[split] == "train"]
-            test_df = processed_df[processed_df[split] == self.test_split]
+        # ------------------------------------------
+        # Iterate over each linking experiments, each will have its own
+        # results file:
+        for split in list_test_splits:
+            processed_df_current = self.processed_data["processed_df"]
+            original_df_current = self.dataset_df
 
-            # Train according to method:
-            self.mylinker.perform_training(train_df)
+            # Get ids of articles in each split:
+            test_article_ids = list(
+                original_df_current[
+                    original_df_current[split] == self.test_split
+                ].article_id.astype(str)
+            )
+
+            if "reldisamb" in self.mylinker.method:
+                # Train according to method and store model:
+                self.rel_params = self.mylinker.perform_training(
+                    lwm_original_df, lwm_processed_df, split
+                )
+
+            if "gnn" in self.mylinker.method:
+                # Train according to method and store model:
+                self.gnn_params = self.mylinker.perform_training(
+                    lwm_original_df, lwm_processed_df, split
+                )
 
             # Resolve according to method:
-            test_df = self.mylinker.perform_linking(test_df)
+            test_df = processed_df_current[
+                processed_df_current[split] == self.test_split
+            ]
+            original_df_test = self.dataset_df[
+                self.dataset_df[split] == self.test_split
+            ]
+            test_df = self.mylinker.perform_linking(test_df, original_df_test, split)
 
             # Prepare data for scorer:
             self.processed_data = process_data.prepare_storing_links(
-                self.processed_data, all_test, test_df
+                self.processed_data, test_article_ids, test_df
             )
 
             # Store linking results:
@@ -267,3 +300,10 @@ class Experiment:
                 how_split=split,
                 which_split=self.test_split,
             )
+
+        # -----------------------------------------------
+        # Run end-to-end REL experiments:
+        if self.rel_experiments == True:
+            from utils import rel_e2e
+
+            rel_e2e.run_rel_experiments(self)

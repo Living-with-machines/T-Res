@@ -49,6 +49,30 @@ def eval_with_exception(str2parse, in_case=""):
         return in_case
 
 
+def get_wikidata_instance_ids(mylinker):
+    """helper to map wikidata entitiess to class ids
+    if there is more than one, we take the most general class
+    i.e. the one with lowest number
+    """
+    mylinker.linking_resources["wikidata_id2inst_id"] = {}
+    for i, row in tqdm(mylinker.linking_resources["gazetteer"].iterrows()):
+        instances = row["instance_of"]
+        if instances:
+            if len(instances) > 1:
+                instance = instances[0]
+                for i in instances[1:]:
+                    if int(i[1:]) < int(instance[1:]):
+                        instance = i
+                mylinker.linking_resources["wikidata_id2inst_id"][
+                    row.wikidata_id
+                ] = instance
+            else:
+                mylinker.linking_resources["wikidata_id2inst_id"][
+                    row.wikidata_id
+                ] = instances[0]
+    return mylinker.linking_resources["wikidata_id2inst_id"]
+
+
 # ----------------------------------------------------
 def prepare_sents(df):
     """
@@ -455,8 +479,6 @@ def load_processed_data(experiment):
             output_processed_data["dSentences"] = json.load(fr)
         with open(output_path + "_dict_metadata.json") as fr:
             output_processed_data["dMetadata"] = json.load(fr)
-        with open(output_path + "_dict_REL.json") as fr:
-            output_processed_data["dREL"] = json.load(fr)
         with open(output_path + "_pred_mentions.json") as fr:
             output_processed_data["dMentionsPred"] = json.load(fr)
         with open(output_path + "_gold_mentions.json") as fr:
@@ -479,7 +501,6 @@ def store_processed_data(
     gold_tok,
     dSentences,
     dMetadata,
-    dREL,
     dMentionsPred,
     dMentionsGold,
     dCandidates,
@@ -496,7 +517,6 @@ def store_processed_data(
             as dictionaries, per sentence.
         dSentences (dict): dictionary that maps a sentence id with the text.
         dMetadata (dict): dictionary that maps a sentence id with the associated metadata.
-        dREL (dict): dictionary that maps a sentence id with the REL end-to-end result.
         dMentionsPred (dict): dictionary of predicted mentions, per sentence.
         dMentionsGold (dict): dictionary of gold standard mentions, per sentence.
         dCandidates (dict): dictionary of candidates, per mention in sentence.
@@ -545,10 +565,6 @@ def store_processed_data(
     with open(output_path + "_dict_metadata.json", "w") as fw:
         json.dump(dMetadata, fw)
 
-    # Store the dictionary of REL results:
-    with open(output_path + "_dict_REL.json", "w") as fw:
-        json.dump(dREL, fw)
-
     # Store the dictionary of predicted results:
     with open(output_path + "_pred_mentions.json", "w") as fw:
         json.dump(dMentionsPred, fw)
@@ -568,7 +584,6 @@ def store_processed_data(
     dict_processed_data["gold_tok"] = gold_tok
     dict_processed_data["dSentences"] = dSentences
     dict_processed_data["dMetadata"] = dMetadata
-    dict_processed_data["dREL"] = dREL
     dict_processed_data["dMentionsPred"] = dMentionsPred
     dict_processed_data["dMentionsGold"] = dMentionsGold
     dict_processed_data["dCandidates"] = dCandidates
@@ -621,6 +636,84 @@ def get_rel_from_api(dSentences, rel_end2end_path):
                 json.dump(rel_preds, fp)
             with open(rel_end2end_path) as f:
                 rel_preds = json.load(f)
+
+
+# ----------------------------------------------------
+def rel_process_results(
+    mentions_dataset,
+    predictions,
+    processed,
+    include_offset=False,
+):
+    """
+    Function that can be used to process the End-to-End results.
+    :return: dictionary with results and document as key.
+    """
+    res = {}
+    for doc in mentions_dataset:
+        if doc not in predictions:
+            # No mentions found, we return empty list.
+            continue
+        pred_doc = predictions[doc]
+        ment_doc = mentions_dataset[doc]
+        text = processed[doc][0]
+        res_doc = []
+
+        for pred, ment in zip(pred_doc, ment_doc):
+            sent = ment["sentence"]
+            idx = ment["sent_idx"]
+            start_pos = ment["pos"]
+            mention_length = int(ment["end_pos"] - ment["pos"])
+
+            if pred["prediction"] != "NIL":
+                temp = (
+                    start_pos,
+                    mention_length,
+                    ment["ngram"],
+                    pred["prediction"],
+                    pred["conf_ed"],
+                    ment["conf_md"] if "conf_md" in ment else 0.0,
+                    ment["tag"] if "tag" in ment else "NULL",
+                )
+                res_doc.append(temp)
+        res[doc] = res_doc
+    return res
+
+
+# ----------------------------------------------------
+def get_rel_locally(dSentences, mention_detection, tagger_ner, linking_model):
+    """
+    Uses the REL API to do end-to-end entity linking.
+
+    Arguments:
+        dSentences (dict): dictionary of sentences, where the
+            key is the article-sent identifier and the value
+            is the full text of the sentence.
+        XXXX
+        XXXX
+
+    Returns:
+        A JSON file with the REL results.
+    """
+    # Dictionary to store REL predictions:
+    print("\nObtain REL linking locally\n")
+
+    def rel_sentence_preprocessing(s, sentence):
+        text = sentence
+        processed = {s: [text, []]}
+        return processed
+
+    dREL = dict()
+    for s in tqdm(dSentences):
+        input_text = rel_sentence_preprocessing(s, dSentences[s])
+        mentions_dataset, n_mentions = mention_detection.find_mentions(
+            input_text, tagger_ner
+        )
+        predictions, timing = linking_model.predict(mentions_dataset)
+        result = rel_process_results(mentions_dataset, predictions, input_text)
+        for k in result:
+            dREL[k] = result[k]
+    return dREL
 
 
 # ----------------------------------------------------
@@ -691,13 +784,13 @@ def match_ent(pred_ents, start, end, prev_ann):
 
 
 # ----------------------------------------------------
-def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization):
+def postprocess_rel(rel_preds, dSentences, gold_tokenization):
     """
     For each sentence, retokenizes the REL output to match the gold
     standard tokenization.
 
     Arguments:
-        rel_end2end_path (str): the path of the REL outputs.
+        XXX
         dSentences (dict): dictionary that maps a sentence id to the text.
         gold_tokenization (dict): dictionary that contains the tokenized
             sentence with gold standard annotations of entity type and
@@ -707,9 +800,6 @@ def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization):
         dREL (dict): dictionary that maps a sentence id with the REL predictions,
             retokenized as in the gold standard.
     """
-    with open(rel_end2end_path) as f:
-        rel_preds = json.load(f)
-
     dREL = dict()
     for sent_id in tqdm(list(dSentences.keys())):
         sentence_preds = []
@@ -718,9 +808,9 @@ def postprocess_rel(rel_end2end_path, dSentences, gold_tokenization):
             start = token["start"]
             end = token["end"]
             word = token["word"]
-            n, el, prev_ann = match_ent(rel_preds[sent_id], start, end, prev_ann)
+            current_preds = rel_preds.get(sent_id, [])
+            n, el, prev_ann = match_ent(current_preds, start, end, prev_ann)
             sentence_preds.append([word, n, el])
-
         dREL[sent_id] = sentence_preds
     return dREL
 
@@ -995,19 +1085,38 @@ def store_results(experiment, task, how_split, which_split):
         test_articles,
     )
 
-    # Store REL results formatted for CLEF-HIPE scorer:
-    store_for_scorer(
-        hipe_scorer_results_path,
-        scenario_name + "rel",
-        experiment.processed_data["dREL"],
-        test_articles,
-    )
-
     if task == "linking":
-        # Store REL results formatted for CLEF-HIPE scorer:
+        # If task is "linking", store the skyline results:
         store_for_scorer(
             hipe_scorer_results_path,
             scenario_name + "skys",
             experiment.processed_data["skys"],
             test_articles,
         )
+
+
+def store_rel(experiment, dREL, approach, how_split, which_split):
+    hipe_scorer_results_path = experiment.results_path + experiment.dataset + "/"
+    scenario_name = (
+        approach
+        + "_"
+        + experiment.myner.model_name  # The model name is needed due to tokenization
+        + "_"
+        + how_split
+        + "-"
+        + which_split
+    )
+
+    # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
+    # 'test' of the Ashton1860 split, etc):
+    all = experiment.dataset_df
+    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = [str(art) for art in test_articles]
+
+    # Store REL results formatted for CLEF-HIPE scorer:
+    store_for_scorer(
+        hipe_scorer_results_path,
+        scenario_name,
+        dREL,
+        test_articles,
+    )

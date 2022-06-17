@@ -24,6 +24,11 @@ requests = "^2.27.1"
 pandarallel = "^1.6.1"
 black = "^22.3.0"
 pyxDamerauLevenshtein = "^1.7.0"
+anyascii = "^0.3.1"
+colorama = "^0.4.4"
+nltk = "^3.7"
+flair = "0.10"
+networkx = "^2.8.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
