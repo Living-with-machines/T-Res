@@ -177,26 +177,26 @@ ranking_approaches = [
 linking_approaches = [
     "mostpopular",
     "skys",
-    # "reldisamb:relcs",
-    # "reldisamb:lwmcs:relv",
-    # "reldisamb:lwmcs:dist",
-    # "reldisamb:lwmcs:relvdist",
+    "reldisamb:relcs",
+    "reldisamb:lwmcs:relv",
+    "reldisamb:lwmcs:dist",
+    "reldisamb:lwmcs:relvdist",
     "gnn",
 ]
 granularities = ["fine", "coarse"]
 splits = [
     "originalsplit",
-    # "traindevtest",
-    # "Ashton1860",
-    # "Dorchester1820",
-    # "Dorchester1830",
-    # "Dorchester1860",
-    # "Manchester1780",
-    # "Manchester1800",
-    # "Manchester1820",
-    # "Manchester1830",
-    # "Manchester1860",
-    # "Poole1860",
+    "traindevtest",
+    "Ashton1860",
+    "Dorchester1820",
+    "Dorchester1830",
+    "Dorchester1860",
+    "Manchester1780",
+    "Manchester1800",
+    "Manchester1820",
+    "Manchester1830",
+    "Manchester1860",
+    "Poole1860",
 ]
 devtest_list = ["test"]  # "dev",
 
@@ -322,7 +322,7 @@ for i in range(len(pred_files)):
     approach_fullname = approach_names[i]
 
     try:
-        print(pred_file)
+        print(str(i) + ">> " + pred_file)
         linking_score = clef_evaluation.get_results(
             f_ref=true_file,
             f_pred=pred_file,
@@ -335,7 +335,7 @@ for i in range(len(pred_files)):
         settings = ["strict"]
         measures = ["P_micro", "R_micro", "F1_micro", "Acc"]
 
-        overall_results_nel["dataset:approach"] = [approach_fullname]
+        overall_results_nel["dataset:approach"] = [str(i) + " > " + approach_fullname]
         for ne_tag in ne_tags:
             for setting in settings:
                 for measure in measures:

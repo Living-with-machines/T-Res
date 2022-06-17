@@ -210,16 +210,16 @@ class Experiment:
             if self.test_split == "test":
                 list_test_splits += [
                     "originalsplit",
-                    "Ashton1860",
-                    "Dorchester1820",
-                    "Dorchester1830",
-                    "Dorchester1860",
-                    "Manchester1780",
-                    "Manchester1800",
-                    "Manchester1820",
-                    "Manchester1830",
-                    "Manchester1860",
-                    "Poole1860",
+                    # "Ashton1860",
+                    # "Dorchester1820",
+                    # "Dorchester1830",
+                    # "Dorchester1860",
+                    # "Manchester1780",
+                    # "Manchester1800",
+                    # "Manchester1820",
+                    # "Manchester1830",
+                    # "Manchester1860",
+                    # "Poole1860",
                 ]
         # ------------------------------------------
         # HIPE dataset has no train set, so we always use LwM dataset for training.
@@ -244,6 +244,9 @@ class Experiment:
             output_path += "_" + cand_approach
             lwm_processed_df = pd.read_csv(output_path + "_mentions.tsv", sep="\t")
             lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
+            lwm_processed_df["candidates"] = lwm_processed_df["candidates"].apply(
+                process_data.eval_with_exception
+            )
             lwm_original_df = pd.read_csv(
                 self.data_path + "lwm/linking_df_split.tsv",
                 sep="\t",

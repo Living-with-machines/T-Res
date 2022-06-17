@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import pandas as pd
 from pathlib import Path
 
 # Import utils
@@ -62,6 +63,7 @@ def run_rel_experiments(self):
     # by the previous method, so it needs to be
     # run after ther our method.
     print("* REL: Approach 1")
+    rel_approach_name = "rel_end_to_end_api"
     Path(self.results_path + self.dataset).mkdir(parents=True, exist_ok=True)
     rel_end2end_path = self.results_path + self.dataset + "/rel_e2d_from_api.json"
     process_data.get_rel_from_api(self.processed_data["dSentences"], rel_end2end_path)
@@ -72,43 +74,44 @@ def run_rel_experiments(self):
         self.processed_data["dSentences"],
         self.processed_data["gold_tok"],
     )
-    dict_rel_approaches["rel_end_to_end_api"] = {"results": dREL}
+    dict_rel_approaches[rel_approach_name] = {"results": dREL}
 
-    # -------------------------------------------
-    # 2. END TO END USING 2019 WIKI DUMP, TRAINED ON AIDA
-    # -------------------------------------------
-    print("* REL: Approach 2")
+    # # -------------------------------------------
+    # # 2. END TO END USING 2019 WIKI DUMP, TRAINED ON AIDA
+    # # -------------------------------------------
+    # print("* REL: Approach 2")
 
-    rel_approach_name = "rel_wiki2019_aida"
-    base_path = "/resources/rel_db"
-    wiki_version = "wiki_2019"
-    model_name = "ed-wiki-2019"
-    config = {
-        "mode": "eval",
-        "model_path": "{}/{}/model".format(base_path, model_name),
-    }
-    mention_detection = MentionDetection(base_path, wiki_version, locs_only=False)
-    tagger_ner = load_flair_ner("ner-fast")
-    linking_model = EntityDisambiguation(base_path, wiki_version, config)
-    rel_preds = process_data.get_rel_locally(
-        self.processed_data["dSentences"],
-        mention_detection,
-        tagger_ner,
-        linking_model,
-    )
-    dREL = process_data.postprocess_rel(
-        rel_preds,
-        self.processed_data["dSentences"],
-        self.processed_data["gold_tok"],
-    )
+    # rel_approach_name = "rel_wiki2019_aida"
+    # base_path = "/resources/rel_db"
+    # wiki_version = "wiki_2019"
+    # model_name = "ed-wiki-2019"
+    # config = {
+    #     "mode": "eval",
+    #     "model_path": "{}/{}/model".format(base_path, model_name),
+    # }
+    # mention_detection = MentionDetection(base_path, wiki_version, locs_only=False)
+    # tagger_ner = load_flair_ner("ner-fast")
+    # linking_model = EntityDisambiguation(base_path, wiki_version, config)
+    # rel_preds = process_data.get_rel_locally(
+    #     self.processed_data["dSentences"],
+    #     mention_detection,
+    #     tagger_ner,
+    #     linking_model,
+    # )
+    # dREL = process_data.postprocess_rel(
+    #     rel_preds,
+    #     self.processed_data["dSentences"],
+    #     self.processed_data["gold_tok"],
+    # )
 
-    dict_rel_approaches[rel_approach_name] = {
-        "base_path": base_path,
-        "wiki_version": wiki_version,
-        "model_name": model_name,
-        "results": dREL,
-    }
+    # dict_rel_approaches[rel_approach_name] = {
+    #     "base_path": base_path,
+    #     "wiki_version": wiki_version,
+    #     "model_name": model_name,
+    #     "results": dREL,
+    # }
 
+    """
     # -------------------------------------------
     # 3. END TO END USING 2019 WIKI DUMP TRAINED ON LwM, ONLY LOCS
     # -------------------------------------------
@@ -116,6 +119,16 @@ def run_rel_experiments(self):
 
     # -------------------
     # 1st step: Train a model:
+
+    lwm_processed_df = pd.read_csv(
+        "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/blb_lwm-ner-fine_perfectmatch_mentions.tsv",
+        sep="\t",
+    )
+    lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
+    lwm_original_df = pd.read_csv(
+        "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/data/lwm/linking_df_split.tsv",
+        sep="\t",
+    )
 
     rel_approach_name = "rel_wikilwm_lwm_locs"
     base_path = "/resources/rel_db/"
@@ -128,7 +141,7 @@ def run_rel_experiments(self):
     # TODO: Change so that "train" and "dev" change for each split:
     data_handler = GenTrainingTest(base_path, wiki_version, wikipedia, locs_only=True)
     for ds in ["train", "dev"]:
-        data_handler.process_lwm(ds, "originalsplit")
+        data_handler.process_lwm(ds, lwm_original_df, lwm_processed_df, "originalsplit")
 
     datasets = TrainingEvaluationDatasets(base_path, wiki_version).load()
 
@@ -174,23 +187,23 @@ def run_rel_experiments(self):
         "model_name": model_name,
         "results": dREL,
     }
+    """
 
     # -------------------------------------------
     # N. STORE RESULTS PER EVAL SCENARIO
     # -------------------------------------------
 
     # Store results for each split
-    for rel_approach in dict_rel_approaches:
-        for test_split in dict_splits:
-            for split in dict_splits[test_split]:
+    for test_split in dict_splits:
+        for split in dict_splits[test_split]:
 
-                # Process REL results:
-                process_data.store_rel(
-                    self,
-                    dict_rel_approaches[rel_approach]["results"],
-                    approach=rel_approach,
-                    how_split=split,
-                    which_split=test_split,
-                )
+            # Process REL results:
+            process_data.store_rel(
+                self,
+                dict_rel_approaches[rel_approach_name]["results"],
+                approach=rel_approach_name,
+                how_split=split,
+                which_split=test_split,
+            )
 
     print("... done!\n")

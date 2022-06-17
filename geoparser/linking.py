@@ -316,67 +316,6 @@ class Linker:
 
         return dRELresults
 
-    # # ----------------------------------------------
-    # # Select disambiguation method
-    # def run_x_mention(self, dict_mention):
-    #     """
-
-    #     Given a mention dictionary, return the link and the score according to the
-    #         method specified when initialising the Linker.
-
-    #     Arguments:
-    #         dict_mention (dict): dictionary with all the relevant information needed
-    #             to disambiguate a certain mention.
-
-    #     Returns:
-    #         link (str): the Wikidata ID (e.g. "Q84") or "NIL".
-    #         score (float): the confidence of the predicted link.
-    #     """
-    #     if "mostpopular" in self.method:
-    #         link, score = self.most_popular(dict_mention)
-    #     return link, score
-
-    # # ----------------------------------------------
-    # # Select disambiguation method
-    # def run_x_sentence(self, dict_mentions, test_df, original_df):
-    #     """
-    #     Given a mention dictionary, return the link and the score according to the
-    #         method specified when initialising the Linker.
-
-    #     Arguments:
-    #         dict_mention (dict): dictionary with all the relevant information needed
-    #             to disambiguate a certain mention.
-
-    #     Returns:
-    #         link (str): the Wikidata ID (e.g. "Q84") or "NIL".
-    #         score (float): the confidence of the predicted link.
-    #     """
-    #     # REL disambiguation with REL candidates
-    #     if self.method == "reldisamb:relcs":
-    #         link, score = self.rel_disambiguation_rel_cs(
-    #             dict_mentions, test_df, original_df
-    #         )
-    #     # REL disambiguation with OUR candidates
-    #     if self.method == "reldisamb:ourcs":
-    #         link, score = self.rel_disambiguation_our_cs(
-    #             dict_mentions, test_df, original_df
-    #         )
-    #     return link, score
-
-    # def rel_disambiguation_rel_cs(self, dict_mention, test_df, original_df):
-    #     print(
-    #         self.rel_params["mention_detection"].format_detected_spans(
-    #             dict_mention, test_df, original_df
-    #         )
-    #     )
-
-    #     cands = dict_mention["candidates"]
-    #     keep_most_popular = "NIL"
-    #     keep_highest_score = 0.0
-    #     total_score = 0.0
-    #     final_score = 0.0
-    #     return keep_most_popular, final_score
-
     # ----------------------------------------------
     # Most popular candidate:
     def most_popular(self, dict_mention):

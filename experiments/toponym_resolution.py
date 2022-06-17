@@ -22,10 +22,10 @@ cand_select_method = "deezymatch"
 # * reldisamb:lwmcs # REL disambiguation with our candidates (our mentions)
 # top_res_method = "mostpopular"
 # top_res_method = "reldisamb:lwmcs:relv"
-top_res_method = "reldisamb:relcs"
+# top_res_method = "reldisamb:relcs"
 # top_res_method = "reldisamb:lwmcs:dist"
 # top_res_method = "reldisamb:lwmcs:relvdist"
-# top_res_method = "gnn"
+top_res_method = "gnn"
 
 
 # --------------------------------------
@@ -105,7 +105,7 @@ experiment = preparation.Experiment(
     overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
     processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
     test_split="test",  # "dev" while experimenting, "test" when running final experiments.
-    rel_experiments=True,  # False if we're not interested in running the different experiments with REL, True otherwise.
+    rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
 )
 
 # Print experiment information:

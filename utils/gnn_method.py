@@ -332,9 +332,11 @@ def network_data(
     max_distance: int = 200,
     similarity_threshold: float = 0.7,
 ):
+    # print(processed_df)
     processed_df["matched"] = processed_df.candidates.apply(
         lambda x: "_".join(x.keys())
     )
+    # print(processed_df)
     level = mylinker.gnn_params["level"]
     max_distance = mylinker.gnn_params["max_distance"]
     similarity_threshold = mylinker.gnn_params["similarity_threshold"]
