@@ -125,7 +125,72 @@ output_path_resolved = "../experiments/outputs/newspapers/resolved/"
 Path(output_path_csv).mkdir(parents=True, exist_ok=True)
 Path(output_path_resolved).mkdir(parents=True, exist_ok=True)
 
+# ------------------------------------------------------------
+# Run on all sentences in a subsample for a given newspaper publication:
+# ------------------------------------------------------------
+newspaper = "0002194"  # The Sun
+# newspaper = "0002089"  # Another
+sample_rows = 100000
+dataset_path = "/resources/hmd-newspapers/hmd_sentences/" + newspaper + "_plaintext.csv"
+df_sun = pd.read_csv(dataset_path, index_col=0, low_memory=False)
+df_sun[["year", "month", "day"]] = df_sun["date"].str.split("-", -1, expand=True)
+print(df_sun.shape)
+sample_df = df_sun.sample(n=sample_rows, random_state=42)
+sample_df = sample_df.dropna(subset=["sentence"])
+print(sample_df.shape)
 
+months = list(sample_df.month.unique())
+years = list(sample_df.year.unique())
+
+for year in tqdm(years):
+    for month in months:
+
+        output_name_toponyms = (
+            "randsample" + newspaper + "/" + str(year) + str(month) + "_toponyms.json"
+        )
+        output_name_metadata = (
+            "randsample" + newspaper + "/" + str(year) + str(month) + "_metadata.json"
+        )
+        Path(output_path_resolved + "randsample" + newspaper + "/").mkdir(
+            parents=True, exist_ok=True
+        )
+
+        print(newspaper, year, month)
+
+        if not Path(output_path_resolved + output_name_toponyms).exists():
+            df_tmp = sample_df[
+                (sample_df["month"] == month) & (sample_df["year"] == year)
+            ]
+
+            if not df_tmp.empty:
+                df_tmp["toponyms"] = df_tmp.apply(
+                    lambda row: end_to_end(row["sentence"]), axis=1
+                )
+
+                metadata_dict = df_tmp[
+                    [
+                        "nlp_id",
+                        "article_id",
+                        "date",
+                        "sentence_id",
+                        "year",
+                        "month",
+                        "day",
+                        "sentence",
+                    ]
+                ].to_dict("index")
+                output_dict = dict(zip(df_tmp.index, df_tmp.toponyms))
+
+                with open(output_path_resolved + output_name_toponyms, "w") as fp:
+                    json.dump(output_dict, fp)
+                with open(output_path_resolved + output_name_metadata, "w") as fp:
+                    json.dump(metadata_dict, fp)
+
+end = datetime.datetime.now()
+print(end - start)
+
+
+"""
 # ----------------------------------------------------------
 # Filter data by query token:
 for dataset in datasets:
@@ -211,3 +276,4 @@ for i in tqdm(glob.glob(output_path_csv + "*.csv")):
 
 end = datetime.datetime.now()
 print(end - start)
+"""

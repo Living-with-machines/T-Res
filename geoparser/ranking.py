@@ -49,7 +49,9 @@ class Ranker:
                 number of inlinks) on Wikipedia.
         """
         # Load Wikidata mentions-to-wqid:
-        with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
+        with open(
+            self.resources_path + "mentions_to_wikidata_normalized.json", "r"
+        ) as f:
             self.mentions_to_wikidata = json.load(f)
 
         # Parallelize if ranking method is one of the following:

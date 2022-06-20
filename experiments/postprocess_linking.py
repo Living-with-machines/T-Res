@@ -14,7 +14,8 @@ wqid_to_longitude = dict(zip(gaz.wikidata_id, gaz.longitude))
 
 dict_dataframes = dict()
 
-query = "accident"
+# TODO CHange this
+query = "noquery"
 output_path_csv = "../experiments/outputs/newspapers/csvs/"
 output_path_resolved = "../experiments/outputs/newspapers/resolved/"
 output_path_georesolved = "../experiments/outputs/newspapers/georesolved/"
@@ -28,48 +29,34 @@ for i in glob.glob(folder):
 
 # Generate
 for publication in all_publications:
-    print(publication)
+    # TODO CHange this
+    if not "randsample" in publication:
+        continue
     publication_dfs = []
     for i in glob.glob(folder):
         current_publication = i.split("/")[-2]
+
         if current_publication == publication:
             if "metadata" in i:
-                metadata_df = pd.read_json(i, orient="index")
+                with open(i) as json_file:
+                    metadata_dict = json.load(json_file)
 
                 with open(i.replace("_metadata", "_toponyms")) as json_file:
                     toponyms_data = json.load(json_file)
 
-                df = pd.read_csv(output_path_csv + query + "_" + publication + ".csv")
-
                 rows = []
                 for line in toponyms_data:
-                    metadata_info = metadata_df.loc[int(line)]
+                    metadata_info = metadata_dict[str(line)]
                     for t in toponyms_data[line]:
                         wqid = t["wqid"]
                         lat = wqid_to_latitude.get(t["wqid"], None)
                         lon = wqid_to_longitude.get(t["wqid"], None)
                         wq_score = t["wqid_score"]
-                        sentence_txt = ""
 
-                        # The try-except can be removed after rerunning apply_pipeline:
-                        try:
-                            sentence_txt = (
-                                df[
-                                    (df["article_id"] == metadata_info["article_id"])
-                                    & (
-                                        df["sentence_id"]
-                                        == metadata_info["sentence_id"]
-                                    )
-                                ]
-                                .iloc[0]
-                                .sentence
-                            )
-                        except IndexError:
-                            continue
-
-                        # This can be removed after rerunning apply_pipeline:
-                        if not query in sentence_txt.lower():
-                            continue
+                        # TODO CHange this
+                        # # This can be removed after rerunning apply_pipeline:
+                        # if not query in sentence_txt.lower():
+                        #     continue
 
                         rows.append(
                             [
@@ -82,11 +69,11 @@ for publication in all_publications:
                                 metadata_info["article_id"],
                                 metadata_info["nlp_id"],
                                 metadata_info["sentence_id"],
+                                metadata_info["sentence"],
                                 metadata_info["year"],
                                 metadata_info["month"],
                                 metadata_info["day"],
                                 metadata_info["date"],
-                                sentence_txt,
                             ]
                         )
 
@@ -101,11 +88,11 @@ for publication in all_publications:
                         "path",
                         "publication",
                         "sentence_order",
+                        "sentence",
                         "year",
                         "month",
                         "day",
                         "date",
-                        "sentence",
                     ],
                     data=rows,
                 )
