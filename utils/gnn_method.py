@@ -1,26 +1,27 @@
 from collections import defaultdict
-from email.policy import default
-import torch
-from tqdm import tqdm
-import torch.nn.functional as F
-from torch_geometric.nn import GATConv
-import torch_geometric.data as pyg_data
-from torch_geometric.utils.convert import from_networkx
-import pandas as pd
+from itertools import combinations
+
 import networkx as nx
 import numpy as np
-from scipy.spatial.distance import cosine
-from itertools import combinations
+import pandas as pd
+import torch
+import torch.nn.functional as F
+import torch_geometric.data as pyg_data
 from haversine import haversine
+from scipy.spatial.distance import cosine
+from torch_geometric.nn import GATConv
+from torch_geometric.utils.convert import from_networkx
+from tqdm import tqdm
+
+RANDOM_SEED = 42
+np.random.seed(RANDOM_SEED)
 
 
 class EnhancedGATCN(torch.nn.Module):
     def __init__(self, input_channels, hidden_channels, edge_dim, x_ext_dim=3):
         super().__init__()
-        torch.manual_seed(1234567)
-        self.conv1 = GATConv(
-            input_channels + x_ext_dim, hidden_channels, edge_dim=edge_dim
-        )
+        torch.manual_seed(RANDOM_SEED)
+        self.conv1 = GATConv(input_channels + x_ext_dim, hidden_channels, edge_dim=edge_dim)
         self.conv2 = GATConv(hidden_channels, hidden_channels, edge_dim=edge_dim)
         # self.conv2 = GATConv(hidden_channels+x_ext_dim, 2,edge_dim=edge_dim)
         self.lin = torch.nn.Linear(hidden_channels + x_ext_dim, 2)
@@ -67,9 +68,7 @@ def get_entity_vector(mylinker, candidate: str) -> np.array:
             ] = candidate_vector  # .squeeze()
         else:
             # make sure each entity not in the embedding space has at least the same vector
-            candidate_vector = mylinker.linking_resources["random_entity_embeddings"][
-                candidate
-            ]
+            candidate_vector = mylinker.linking_resources["random_entity_embeddings"][candidate]
 
     return candidate_vector
 
@@ -93,9 +92,7 @@ def get_instance_vector(mylinker, candidate: str, use_random=True) -> np.array:
             ]
         except Exception as e:
             if use_random:
-                instance_vector = mylinker.linking_resources[
-                    "random_instance_embedding"
-                ][0]
+                instance_vector = mylinker.linking_resources["random_instance_embedding"][0]
             else:
                 return None
     else:  # if none of the instance ids found, get random vector
@@ -133,12 +130,8 @@ def to_network(
 
     # create place of publication as anchor point
     publication_wqid = str(rows.iloc[0].place_wqid)
-    publication_wqid_lat = mylinker.linking_resources["dict_wqid_to_lat"][
-        publication_wqid
-    ]
-    publication_wqid_lon = mylinker.linking_resources["dict_wqid_to_lon"][
-        publication_wqid
-    ]
+    publication_wqid_lat = mylinker.linking_resources["dict_wqid_to_lat"][publication_wqid]
+    publication_wqid_lon = mylinker.linking_resources["dict_wqid_to_lon"][publication_wqid]
     point1 = (publication_wqid_lat, publication_wqid_lon)
 
     pop_wikidata_id = publication_wqid + "_POP"
@@ -188,9 +181,7 @@ def to_network(
             # IMPORTANT: maybe change this later
             # take only the most relevant candidates
             # possibly change from here ---->
-            _df_sel = _df[
-                (_df.relevance_1 > 0.8) | (_df.relevance_2 > 0.8)
-            ].reset_index()
+            _df_sel = _df[(_df.relevance_1 > 0.8) | (_df.relevance_2 > 0.8)].reset_index()
             if _df_sel is None:
                 _df_sel = _df.sort_values("relevance_2", ascending=False)[:10]
             # <----- change till here
@@ -217,18 +208,14 @@ def to_network(
 
     df_candidates = pd.concat(df_candidates).reset_index()
     df_candidates["y"] = 0
-    correct = np.where(
-        df_candidates["wikidata_id"] == df_candidates["gold_entity_link"]
-    )[0]
+    correct = np.where(df_candidates["wikidata_id"] == df_candidates["gold_entity_link"])[0]
     df_candidates.iloc[correct, -1] = 1
     G = nx.MultiGraph()
     nodes = []
 
     for i, row in df_candidates.iterrows():
         x = get_entity_vector(mylinker, row.wikidata_id).astype(np.float32)
-        x_ext = row[["relevance_1", "relevance_2", "confidence"]].values.astype(
-            np.float32
-        )
+        x_ext = row[["relevance_1", "relevance_2", "confidence"]].values.astype(np.float32)
         nodes.append(
             (
                 row.wikidata_id,
@@ -333,9 +320,7 @@ def network_data(
     similarity_threshold: float = 0.7,
 ):
     # print(processed_df)
-    processed_df["matched"] = processed_df.candidates.apply(
-        lambda x: "_".join(x.keys())
-    )
+    processed_df["matched"] = processed_df.candidates.apply(lambda x: "_".join(x.keys()))
     # print(processed_df)
     level = mylinker.gnn_params["level"]
     max_distance = mylinker.gnn_params["max_distance"]
