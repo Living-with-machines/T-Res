@@ -210,16 +210,16 @@ class Experiment:
             if self.test_split == "test":
                 list_test_splits += [
                     "originalsplit",
-                    # "Ashton1860",
-                    # "Dorchester1820",
-                    # "Dorchester1830",
-                    # "Dorchester1860",
-                    # "Manchester1780",
-                    # "Manchester1800",
-                    # "Manchester1820",
-                    # "Manchester1830",
-                    # "Manchester1860",
-                    # "Poole1860",
+                    "Ashton1860",
+                    "Dorchester1820",
+                    "Dorchester1830",
+                    "Dorchester1860",
+                    "Manchester1780",
+                    "Manchester1800",
+                    "Manchester1820",
+                    "Manchester1830",
+                    "Manchester1860",
+                    "Poole1860",
                 ]
         # ------------------------------------------
         # HIPE dataset has no train set, so we always use LwM dataset for training.

@@ -104,6 +104,7 @@ class Linker:
         if self.method in [
             "mostpopular",
             "reldisamb:lwmcs:relv",
+            "reldisamb:lwmcs:relvpubl",
             "reldisamb:lwmcs:relvdist",
             "gnn",
         ]:

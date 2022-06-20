@@ -181,12 +181,12 @@ linking_approaches = [
     "reldisamb:lwmcs:relv",
     "reldisamb:lwmcs:dist",
     "reldisamb:lwmcs:relvdist",
+    "reldisamb:lwmcs:relvpubl",
     "gnn",
 ]
 granularities = ["fine", "coarse"]
 splits = [
     "originalsplit",
-    "traindevtest",
     "Ashton1860",
     "Dorchester1820",
     "Dorchester1830",

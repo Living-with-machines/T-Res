@@ -22,10 +22,11 @@ cand_select_method = "deezymatch"
 # * reldisamb:lwmcs # REL disambiguation with our candidates (our mentions)
 # top_res_method = "mostpopular"
 # top_res_method = "reldisamb:lwmcs:relv"
+top_res_method = "reldisamb:lwmcs:relvpubl"
 # top_res_method = "reldisamb:relcs"
 # top_res_method = "reldisamb:lwmcs:dist"
 # top_res_method = "reldisamb:lwmcs:relvdist"
-top_res_method = "gnn"
+# top_res_method = "gnn"
 
 
 # --------------------------------------
