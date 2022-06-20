@@ -10,11 +10,8 @@ from utils import process_data
 
 # REL imports
 from REL.REL.mention_detection import MentionDetection
-from REL.REL.ner import Cmns, load_flair_ner
+from REL.REL.ner import load_flair_ner
 from REL.REL.entity_disambiguation import EntityDisambiguation
-from REL.REL.wikipedia import Wikipedia
-from REL.REL.generate_train_test import GenTrainingTest
-from REL.REL.training_datasets import TrainingEvaluationDatasets
 
 
 def run_rel_experiments(self):
