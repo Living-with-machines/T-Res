@@ -10,7 +10,9 @@ from sklearn.model_selection import train_test_split
 import random
 import json
 
-random.seed(42)
+RANDOM_SEED = 42
+
+random.seed(RANDOM_SEED)
 
 
 with open("../resources/publication_metadata.json") as jsonfile:
@@ -41,7 +43,7 @@ lwm_df = preprocess_data.process_lwm_for_ner(topres_path_train)
 
 # Split NER-formatted training set into train and dev, and store them.
 # They will be used by the ner_training.py script:
-lwm_train_ner, lwm_dev_ner = train_test_split(lwm_df, test_size=0.2, random_state=42)
+lwm_train_ner, lwm_dev_ner = train_test_split(lwm_df, test_size=0.2, random_state=RANDOM_SEED)
 lwm_train_ner.to_json(
     output_path_lwm + "ner_df_train.json", orient="records", lines=True
 )
@@ -53,7 +55,7 @@ lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test)
 
 # Split train set into train and dev set, by article:
 lwm_train_df, lwm_dev_df = train_test_split(
-    lwm_train_df, test_size=0.33, random_state=42
+    lwm_train_df, test_size=0.33, random_state=RANDOM_SEED
 )
 
 # Concatenate original training and test sets:
@@ -136,7 +138,7 @@ hipe_all_df["place_wqid"] = hipe_all_df["publication_code"].map(dict_placewqid)
 
 # Split dev set into train and dev set, by article:
 hipe_train_df, hipe_dev_df = train_test_split(
-    hipe_dev_df, test_size=0.5, random_state=42
+    hipe_dev_df, test_size=0.5, random_state=RANDOM_SEED
 )
 train_ids = list(hipe_train_df.article_id.unique())
 dev_ids = list(hipe_dev_df.article_id.unique())
