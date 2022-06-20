@@ -1,23 +1,17 @@
 import os
 import sys
+import warnings
+from pathlib import Path
 
 import pandas as pd
-from pathlib import Path
-import warnings
 
-from regex import E
-
-warnings.filterwarnings(
-    "ignore", category=FutureWarning
-)  # To fix properly in the future
+warnings.filterwarnings("ignore", category=FutureWarning)  # To fix properly in the future
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath("CLEF-HIPE-2020-scorer/"))
 
 import clef_evaluation
 
-
-rel_approaches = ["rel_end_to_end_api", "rel_wiki2019_aida", "rel_wikilwm_lwm_locs"]
 dApprNames = dict()
 dApprNames["rel_end_to_end_api"] = "rel-api"
 dApprNames["rel_wiki2019_aida"] = "rel-19aida"
@@ -59,18 +53,13 @@ for dataset in datasets:
                 pred_files.append(pred_file)
                 true_files.append(true_file)
                 approach_names.append(
-                    dataset
-                    + "-"
-                    + ner_model.replace("_", "")
-                    + "-"
-                    + granularity
-                    + "-preds"
+                    dataset + "-" + ner_model.replace("_", "") + "-" + granularity + "-preds"
                 )
 
 for dataset in datasets:
     for granularity in granularities:
         for ner_model in ner_models:
-            for rel_approach in rel_approaches:
+            for rel_approach in dApprNames.keys():
                 pred_file = (
                     "../experiments/outputs/results/"
                     + dataset
@@ -148,9 +137,9 @@ for i in range(len(pred_files)):
                     overall_results_nerc[
                         setting.replace("_", "") + ":" + measure.split("_")[0]
                     ] = round(
-                        ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
-                            setting
-                        ][measure],
+                        ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][setting][
+                            measure
+                        ],
                         3,
                     )
         df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
@@ -268,7 +257,7 @@ for dataset in datasets:
 for dataset in datasets:
     for granularity in granularities:
         for ner_approach in ner_approaches:
-            for rel_approach in rel_approaches:
+            for rel_approach in dApprNames.keys():
                 for split in splits:
                     for devtest in devtest_list:
                         pred_file = (
@@ -343,18 +332,18 @@ for i in range(len(pred_files)):
                         overall_results_nel[
                             setting.replace("_", "") + ":" + measure.split("_")[0]
                         ] = round(
-                            linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
-                                setting
-                            ][measure],
+                            linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][setting][
+                                measure
+                            ],
                             3,
                         )
                     else:
-                        correct = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][
-                            ne_tag
-                        ][setting]["correct"]
-                        incorrect = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][
-                            ne_tag
-                        ][setting]["incorrect"]
+                        correct = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
+                            setting
+                        ]["correct"]
+                        incorrect = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
+                            setting
+                        ]["incorrect"]
                         overall_results_nel[
                             setting.replace("_", "") + ":" + measure.split("_")[0]
                         ] = round(
