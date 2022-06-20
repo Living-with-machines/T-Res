@@ -1,21 +1,16 @@
+import json
 import os
 import sys
 from pathlib import Path
 
-import torch
-from sklearn.metrics import f1_score, accuracy_score
 import numpy as np
-from torch_geometric.utils.convert import from_networkx
-from torch_geometric.nn import GATConv
+import torch
 import torch.nn.functional as F
-from collections import defaultdict
-from tqdm.notebook import tqdm
-import json
-
-from REL.REL.wikipedia import Wikipedia
+from REL.REL.entity_disambiguation import EntityDisambiguation
 from REL.REL.generate_train_test import GenTrainingTest
 from REL.REL.training_datasets import TrainingEvaluationDatasets
-from REL.REL.entity_disambiguation import EntityDisambiguation
+from REL.REL.wikipedia import Wikipedia
+from sklearn.metrics import f1_score
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -48,15 +43,11 @@ class Trainer(object):
         return loss.item()
 
     def set_split(self):
-        val_mask = np.array(
-            [True if s == "dev" else False for l in self.data.split for s in l]
-        )
+        val_mask = np.array([True if s == "dev" else False for l in self.data.split for s in l])
         train_mask = np.array(
             [True if s == "train" else False for l in self.data.split for s in l]
         )
-        test_mask = np.array(
-            [True if s == "test" else False for l in self.data.split for s in l]
-        )
+        test_mask = np.array([True if s == "test" else False for l in self.data.split for s in l])
         self.data.val_mask = torch.tensor(val_mask, dtype=torch.bool)
         self.data.train_mask = torch.tensor(train_mask, dtype=torch.bool)
         self.data.test_mask = torch.tensor(test_mask, dtype=torch.bool)
