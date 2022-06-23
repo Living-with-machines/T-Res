@@ -3,8 +3,8 @@ from http.server import BaseHTTPRequestHandler
 
 from flair.models import SequenceTagger
 
-from REL.mention_detection import MentionDetection
-from REL.utils import process_results
+from REL.REL.mention_detection import MentionDetection
+from REL.REL.utils import process_results
 
 API_DOC = "API_DOC"
 

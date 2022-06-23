@@ -1,7 +1,7 @@
 import os
 from urllib.parse import unquote
 
-from REL.utils import first_letter_to_uppercase, trim1
+from REL.REL.utils import first_letter_to_uppercase, trim1
 
 """
 Class responsible for loading Wikipedia files. Required when filling sqlite3 database with e.g. p(e|m) index.

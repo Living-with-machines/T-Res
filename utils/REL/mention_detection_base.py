@@ -1,15 +1,18 @@
 import os
 import re
 
-from REL.db.generic import GenericLookup
-from REL.utils import modify_uppercase_phrase, split_in_words
+from REL.REL.db.generic import GenericLookup
+from REL.REL.utils import modify_uppercase_phrase, split_in_words
+import urllib
+from haversine import haversine
 
 
 class MentionDetectionBase:
-    def __init__(self, base_url, wiki_version):
+    def __init__(self, base_url, wiki_version, mylinker=None):
         self.wiki_db = GenericLookup(
             "entity_word_embedding", os.path.join(base_url, wiki_version, "generated")
         )
+        self.mylinker = mylinker
 
     def get_ctxt(self, start, end, idx_sent, sentence, sentences_doc):
         """
@@ -39,7 +42,7 @@ class MentionDetectionBase:
 
         return left_ctxt, right_ctxt
 
-    def get_candidates(self, mention):
+    def get_candidates(self, mention, lwm_cands=None, publication=None):
         """
         Retrieves a maximum of 100 candidates from the sqlite3 database for a given mention.
 
@@ -49,9 +52,106 @@ class MentionDetectionBase:
         # Performs extra check for ED.
         cands = self.wiki_db.wiki(mention, "wiki")
         if cands:
+            if self.mylinker == None:
+                cands = cands[:100]
+                cands = [
+                    c
+                    for c in cands
+                    if urllib.parse.quote(c[0].replace("_", " "))
+                    in self.mylinker.linking_resources["wikipedia_locs"]
+                ]
+                return cands
+            #### CANDIDATE SELECTION FROM REL
+            elif "relcs" in self.mylinker.method:
+                cands = cands[:100]
+                cands = [
+                    c
+                    for c in cands
+                    if urllib.parse.quote(c[0].replace("_", " "))
+                    in self.mylinker.linking_resources["wikipedia_locs"]
+                ]
+                return cands
+            ### CANDIDATE RANKING: Based on wikipedia mention2entity relevance
+            elif self.mylinker.method in [
+                "reldisamb:lwmcs:relv",
+                "reldisamb:lwmcs:relvpubl",
+            ]:
+                cands = []
+                tmp_cands = []
+                max_cand_freq = 0
+                for c in lwm_cands:
+                    for qc in lwm_cands[c]["Candidates"]:
+                        # Mention-to-entity releavance:
+                        qcrlv = self.mylinker.linking_resources["mentions_to_wikidata"][
+                            c
+                        ][qc]
+                        if qcrlv > max_cand_freq:
+                            max_cand_freq = qcrlv
+                        # Wikidata entity to Wikipedia:
+                        gold_ids = self.mylinker.linking_resources[
+                            "wikidata2wikipedia"
+                        ].get(qc)
+                        qc_wikipedia = ""
+                        max_freq = 0
+                        if gold_ids:
+                            for k in gold_ids:
+                                if k["freq"] > max_freq:
+                                    max_freq = k["freq"]
+                                    qc_wikipedia = k["title"]
+                        tmp_cands.append((qc_wikipedia, qcrlv))
+                # Append candidate and normalized score weighted by candidate selection conf:
+                for cand in tmp_cands:
+                    qc_wikipedia = urllib.parse.unquote(cand[0]).replace(" ", "_")
+                    qc_score = round(cand[1] / max_cand_freq, 3)
+                    cands.append([qc_wikipedia, qc_score])
+                return cands
+            ### CANDIDATE RANKING: Based on distance from publication
+            elif self.mylinker.method == "reldisamb:lwmcs:dist":
+                cands = []
+                tmp_cands = []
+                max_dist = 0
+                for c in lwm_cands:
+                    for qc in lwm_cands[c]["Candidates"]:
+                        print(qc, publication)
+                        lat_publ = self.mylinker.linking_resources["dict_wqid_to_lat"][
+                            publication
+                        ]
+                        lon_publ = self.mylinker.linking_resources["dict_wqid_to_lon"][
+                            publication
+                        ]
+                        lat_cand = self.mylinker.linking_resources["dict_wqid_to_lat"][
+                            qc
+                        ]
+                        lon_cand = self.mylinker.linking_resources["dict_wqid_to_lon"][
+                            qc
+                        ]
+                        # Distance between place of publication and candidate:
+                        qcdist = haversine((lat_publ, lon_publ), (lat_cand, lon_cand))
+                        # Keep max distance for later normalizing:
+                        if qcdist > max_dist:
+                            max_dist = qcdist
+                        # Wikidata entity to Wikipedia:
+                        gold_ids = self.mylinker.linking_resources[
+                            "wikidata2wikipedia"
+                        ].get(qc)
+                        qc_wikipedia = ""
+                        max_freq = 0
+                        if gold_ids:
+                            for k in gold_ids:
+                                if k["freq"] > max_freq:
+                                    max_freq = k["freq"]
+                                    qc_wikipedia = k["title"]
+                        tmp_cands.append((qc_wikipedia, qcdist))
+                # Append candidate and normalized score weighted by candidate selection conf:
+                for cand in tmp_cands:
+                    qc_wikipedia = urllib.parse.unquote(cand[0]).replace(" ", "_")
+                    qc_score = round(1 - (cand[1] / max_dist), 3)
+                    cands.append([qc_wikipedia, qc_score])
+                return cands
+
+            # CANDIDATE RANKING: Original REL approach
             return cands[:100]
-        else:
-            return []
+        return []
 
     def preprocess_mention(self, m):
         """

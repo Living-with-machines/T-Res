@@ -6,7 +6,7 @@ from gensim import utils
 from numpy import float32 as REAL
 from numpy import zeros
 
-from REL.db.base import DB
+from REL.REL.db.base import DB
 
 
 class GenericLookup(DB):

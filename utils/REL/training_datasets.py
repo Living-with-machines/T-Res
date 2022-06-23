@@ -24,27 +24,18 @@ class TrainingEvaluationDatasets:
         :return: Returns training/evaluation datasets.
         """
         datasets = {}
-        for ds in [
-            "aida_train",
-            "aida_testA",
-            "aida_testB",
-            "wned-ace2004",
-            "wned-aquaint",
-            "wned-clueweb",
-            "wned-msnbc",
-            "wned-wikipedia",
-        ]:
+        for ds in ["lwm_train", "lwm_dev"]:
 
             print("Loading {}".format(ds))
             datasets[ds] = self.__read_pickle_file(
                 os.path.join(self.base_url, "generated/test_train_data/", f"{ds}.pkl")
             )
 
-            if ds == "wned-wikipedia":
-                if "Jiří_Třanovský" in datasets[ds]:
-                    del datasets[ds]["Jiří_Třanovský"]
-                if "Jiří_Třanovský Jiří_Třanovský" in datasets[ds]:
-                    del datasets[ds]["Jiří_Třanovský Jiří_Třanovský"]
+            # if ds == "wned-wikipedia":
+            #     if "Jiří_Třanovský" in datasets[ds]:
+            #         del datasets[ds]["Jiří_Třanovský"]
+            #     if "Jiří_Třanovský Jiří_Třanovský" in datasets[ds]:
+            #         del datasets[ds]["Jiří_Třanovský Jiří_Třanovský"]
 
             self.with_coref(datasets[ds])
 

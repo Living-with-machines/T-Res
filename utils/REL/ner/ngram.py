@@ -3,10 +3,10 @@ from collections import defaultdict, namedtuple
 
 import numpy as np
 
-from REL.db.generic import GenericLookup
-from REL.mention_detection_base import MentionDetectionBase
-from REL.ner import NERBase, Span
-from REL.utils import preprocess_mention
+from REL.REL.db.generic import GenericLookup
+from REL.REL.mention_detection_base import MentionDetectionBase
+from REL.REL.ner import NERBase, Span
+from REL.REL.utils import preprocess_mention
 
 
 class Cmns(NERBase, MentionDetectionBase):

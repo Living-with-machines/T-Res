@@ -1,8 +1,10 @@
 from flair.data import Sentence
 from flair.models import SequenceTagger
 from segtok.segmenter import split_single
+from ast import literal_eval
+import urllib
 
-from REL.mention_detection_base import MentionDetectionBase
+from REL.REL.mention_detection_base import MentionDetectionBase
 
 """
 Class responsible for mention detection.
@@ -10,12 +12,112 @@ Class responsible for mention detection.
 
 
 class MentionDetection(MentionDetectionBase):
-    def __init__(self, base_url, wiki_version):
+    def __init__(self, base_url, wiki_version, mylinker=None):
         self.cnt_exact = 0
         self.cnt_partial = 0
         self.cnt_total = 0
 
-        super().__init__(base_url, wiki_version)
+        super().__init__(base_url, wiki_version, mylinker)
+
+    def format_detected_spans(self, test_df, original_df, mylinker=None):
+        """
+        Responsible for formatting given spans into dataset for the ED step. More specifically,
+        it returns the mention, its left/right context and a set of candidates.
+
+        :return: Dictionary with mentions per document.
+        """
+        results = dict()
+        total_ment = 0
+        dict_sentences = dict()
+        # Collect document sentences:
+        for i, row in original_df.iterrows():
+            article_id = row["article_id"]
+            for sentence in literal_eval(row["sentences"]):
+                dict_sentences[
+                    str(article_id) + "_" + str(sentence["sentence_pos"])
+                ] = sentence["sentence_text"]
+
+        # Get REL candidates for our recognized toponyms:
+        for i, prediction in test_df.iterrows():
+            article_id = prediction["article_id"]
+            dict_mention = dict()
+            dict_mention["mention"] = prediction["pred_mention"]
+            sent_idx = int(prediction["sentence_pos"])
+            dict_mention["sent_idx"] = sent_idx
+            dict_mention["sentence"] = dict_sentences[
+                str(article_id) + "_" + str(sent_idx)
+            ]
+            dict_mention["ngram"] = prediction["pred_mention"]
+            dict_mention["context"] = ["", ""]
+            if str(article_id) + "_" + str(sent_idx - 1) in dict_sentences:
+                dict_mention["context"][0] = dict_sentences[
+                    str(article_id) + "_" + str(sent_idx - 1)
+                ]
+            if str(article_id) + "_" + str(sent_idx + 1) in dict_sentences:
+                dict_mention["context"][1] = dict_sentences[
+                    str(article_id) + "_" + str(sent_idx + 1)
+                ]
+            dict_mention["pos"] = prediction["char_start"]
+            dict_mention["end_pos"] = prediction["char_end"]
+            if "reldisamb:relcs" in mylinker.method:
+                dict_mention["candidates"] = self.get_candidates(
+                    dict_mention["mention"]
+                )
+            # Use LwM candidates weighted by mention2wikidata relevance and candselection conf:
+            # TODO Actually this should happen in the get_candidates function, so it's in the training as well.
+            # TODO Convert to Wikipedia......
+            if "reldisamb:lwmcs" in mylinker.method:
+                dict_mention["candidates"] = self.get_candidates(
+                    dict_mention["mention"],
+                    prediction["candidates"],
+                    prediction["place_wqid"],
+                )
+            dict_mention["gold"] = ["NONE"]
+            dict_mention["tag"] = prediction["pred_ner_label"]
+            dict_mention["conf_md"] = prediction["ner_score"]
+            total_ment += 1
+
+            if article_id in results:
+                if sent_idx in results[article_id]:
+                    results[article_id][sent_idx].append(dict_mention)
+                else:
+                    results[article_id][sent_idx] = [dict_mention]
+            else:
+                results[article_id] = {sent_idx: [dict_mention]}
+
+            if "publ" in self.mylinker.method:
+                # Add place of publication as an entity in each sentence:
+                # Wikipedia title of place of publication QID:
+                wiki_gold = "NIL"
+                gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
+                    prediction["place_wqid"]
+                )
+                max_freq = 0
+                if gold_ids:
+                    for k in gold_ids:
+                        if k["freq"] > max_freq:
+                            max_freq = k["freq"]
+                            wiki_gold = k["title"]
+                wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
+                sent2 = (
+                    dict_mention["sentence"] + " Published in " + prediction["place"]
+                )
+                pos2 = len(dict_mention["sentence"]) + len(" Published in ")
+                end_pos2 = pos2 + len(prediction["place"])
+                dict_publ = {
+                    "mention": "publication",
+                    "sent_idx": dict_mention["sent_idx"],
+                    "sentence": sent2,
+                    "gold": [wiki_gold],
+                    "ngram": "publication",
+                    "context": dict_mention["context"],
+                    "pos": pos2,
+                    "end_pos": end_pos2,
+                    "candidates": [[wiki_gold, 1.0]],
+                }
+                results[article_id][sent_idx].append(dict_publ)
+
+        return results, total_ment
 
     def format_spans(self, dataset):
         """

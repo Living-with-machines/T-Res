@@ -17,11 +17,14 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from torch.autograd import Variable
 
-import REL.utils as utils
-from REL.db.generic import GenericLookup
-from REL.mulrel_ranker import MulRelRanker, PreRank
-from REL.training_datasets import TrainingEvaluationDatasets
-from REL.vocabulary import Vocabulary
+import REL.REL.utils as utils
+from REL.REL.db.generic import GenericLookup
+from REL.REL.mulrel_ranker import MulRelRanker, PreRank
+from REL.REL.training_datasets import TrainingEvaluationDatasets
+from REL.REL.vocabulary import Vocabulary
+
+import pandas as pd
+import urllib
 
 """
 Parent Entity Disambiguation class that directs the various subclasses used
@@ -32,7 +35,13 @@ wiki_prefix = "en.wikipedia.org/wiki/"
 
 
 class EntityDisambiguation:
-    def __init__(self, base_url, wiki_version, user_config, reset_embeddings=False):
+    def __init__(
+        self,
+        base_url,
+        wiki_version,
+        user_config,
+        reset_embeddings=False,
+    ):
         self.base_url = base_url
         self.wiki_version = wiki_version
         self.embeddings = {}
@@ -119,11 +128,12 @@ class EntityDisambiguation:
         config = default_config
 
         model_dict = json.loads(
-            pkg_resources.resource_string("REL.models", "models.json")
+            pkg_resources.resource_string("REL.REL.models", "models.json")
         )
         model_path: str = config["model_path"]
         # load aliased url if it exists, else keep original string
         config["model_path"] = model_dict.get(model_path, model_path)
+        print("Model path:", config["model_path"])
 
         if urlparse(str(config["model_path"])).scheme in ("http", "https"):
             model_path = utils.fetch_model(
@@ -322,7 +332,7 @@ class EntityDisambiguation:
                         ),
                     )
 
-                    if dname == "aida_testA":
+                    if dname == "lwm_dev":
                         dev_f1 = f1
 
                 if (
@@ -411,19 +421,19 @@ class EntityDisambiguation:
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
         train_dataset = self.get_data_items(
-            datasets["aida_train"], "train", predict=False
+            datasets["lwm_train"], "train", predict=False
         )
 
         dev_datasets = []
         for dname, data in list(datasets.items()):
-            if dname == "aida_train":
+            if dname == "lwm_train":
                 continue
             dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
 
         model = LogisticRegression()
 
         predictions = self.__predict(train_dataset, eval_raw=True)
-        X, y, meta = self.__create_dataset_LR(datasets, predictions, "aida_train")
+        X, y, meta = self.__create_dataset_LR(datasets, predictions, "lwm_train")
         model.fit(X, y)
 
         for dname, data in dev_datasets:
