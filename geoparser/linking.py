@@ -7,7 +7,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
+
+# import torch
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -18,8 +19,10 @@ np.random.seed(RANDOM_SEED)
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from REL.REL.entity_disambiguation import EntityDisambiguation
 from REL.REL.mention_detection import MentionDetection
-from utils import gnn_method, process_data, training
-from utils.gnn_method import EnhancedGATCN
+
+from utils import process_data, training  # , gnn_method
+
+# from utils.gnn_method import EnhancedGATCN
 
 
 class Linker:
@@ -59,7 +62,9 @@ class Linker:
                 that will be needed for a specific linking method.
         """
         # Load Wikidata gazetteer
-        gaz = pd.read_csv(self.resources_path + "wikidata_gazetteer.csv", low_memory=False)
+        gaz = pd.read_csv(
+            self.resources_path + "wikidata_gazetteer.csv", low_memory=False
+        )
 
         # Gazetteer entity classes:
         gaz["instance_of"] = gaz["instance_of"].apply(process_data.eval_with_exception)
@@ -70,10 +75,14 @@ class Linker:
         if self.method in ["gnn"]:
             print("  > Loading wikidata entity and instance embeddings.")
             self.linking_resources["instance_ids"] = (
-                open(self.resources_path + "gazetteer_wkdtclass_ids.txt", "r").read().split("\n")
+                open(self.resources_path + "gazetteer_wkdtclass_ids.txt", "r")
+                .read()
+                .split("\n")
             )
             self.linking_resources["entity_ids"] = (
-                open(self.resources_path + "gazetteer_entity_ids.txt", "r").read().split("\n")
+                open(self.resources_path + "gazetteer_entity_ids.txt", "r")
+                .read()
+                .split("\n")
             )
 
             self.linking_resources["instance_embeddings"] = np.load(
@@ -93,9 +102,9 @@ class Linker:
             self.linking_resources["random_entity_embeddings"] = {}
 
             print("  > Mapping wikidata ids to instance ids.")
-            self.linking_resources["wikidata_id2inst_id"] = process_data.get_wikidata_instance_ids(
-                self
-            )
+            self.linking_resources[
+                "wikidata_id2inst_id"
+            ] = process_data.get_wikidata_instance_ids(self)
 
         # Load Wikidata mentions-to-wikidata (with absolute counts) to QID dictionary
         if self.method in [
@@ -119,10 +128,14 @@ class Linker:
         # REL disambiguates to Wikipedia, not Wikidata:
         if "reldisamb" in self.method:
             # WIkipedia to Wikidata
-            with open("/resources/wikipedia/extractedResources/wikipedia2wikidata.json", "r") as f:
+            with open(
+                "/resources/wikipedia/extractedResources/wikipedia2wikidata.json", "r"
+            ) as f:
                 self.linking_resources["wikipedia2wikidata"] = json.load(f)
             # Wikidata to Wikipedia
-            with open("/resources/wikipedia/extractedResources/wikidata2wikipedia.json", "r") as f:
+            with open(
+                "/resources/wikipedia/extractedResources/wikidata2wikipedia.json", "r"
+            ) as f:
                 self.linking_resources["wikidata2wikipedia"] = json.load(f)
 
             # Keep only wikipedia entities in the gazetteer:
@@ -158,7 +171,9 @@ class Linker:
             return self.rel_params
         if "gnn" in self.method:
             processed_df_notest = processed_df[processed_df[whichsplit] != "test"]
-            data = gnn_method.network_data(self, processed_df_notest, whichsplit=whichsplit)
+            data = gnn_method.network_data(
+                self, processed_df_notest, whichsplit=whichsplit
+            )
             model = EnhancedGATCN(data.x.shape[1], hidden_channels=64, edge_dim=4)
             criterion = torch.nn.CrossEntropyLoss(
                 weight=torch.tensor([1.0, 5.0]), reduction="mean"
@@ -214,12 +229,16 @@ class Linker:
 
         if "gnn" in self.method:
             data = gnn_method.network_data(self, test_df)
-            model_folder = Path(self.gnn_params["model_path"]) / f"best_model_{whichsplit}"
+            model_folder = (
+                Path(self.gnn_params["model_path"]) / f"best_model_{whichsplit}"
+            )
             model = EnhancedGATCN(data.x.shape[1], hidden_channels=64, edge_dim=4)
             model.load_state_dict(torch.load(model_folder / "best-model.pt"))
             model.eval()
             self.gnn_params["model"] = model
-            test_df_results = gnn_method.get_model_predictions(self, test_df, whichsplit)
+            test_df_results = gnn_method.get_model_predictions(
+                self, test_df, whichsplit
+            )
 
         return test_df_results
 
@@ -233,7 +252,7 @@ class Linker:
         wiki_version = self.rel_params["wiki_version"]
         # Instantiate REL mention detection:
         self.rel_params["mention_detection"] = MentionDetection(
-            base_path, wiki_version, locs_only=True, mylinker=self
+            base_path, wiki_version, mylinker=self
         )
         # Instantiate REL entity disambiguation:
         config = {
@@ -273,16 +292,18 @@ class Linker:
                         percent_encoded_title = hashlib.sha224(
                             percent_encoded_title.encode("utf-8")
                         ).hexdigest()
-                    returned_prediction = self.linking_resources["wikipedia2wikidata"].get(
-                        percent_encoded_title, "NIL"
-                    )
+                    returned_prediction = self.linking_resources[
+                        "wikipedia2wikidata"
+                    ].get(percent_encoded_title, "NIL")
 
                     # Disambiguation confidence:
                     returned_confidence = round(m.get("conf_ed", 0.0), 3)
 
                     if mentions_doc in dRELresults:
                         if mentions_sent in dRELresults[mentions_doc]:
-                            dRELresults[mentions_doc][mentions_sent][returned_mention] = (
+                            dRELresults[mentions_doc][mentions_sent][
+                                returned_mention
+                            ] = (
                                 returned_prediction,
                                 returned_confidence,
                             )
@@ -329,7 +350,9 @@ class Linker:
         if cands:
             for variation in cands:
                 for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][candidate]
+                    score = self.linking_resources["mentions_to_wikidata"][variation][
+                        candidate
+                    ]
                     total_score += score
                     if score > keep_highest_score:
                         keep_highest_score = score

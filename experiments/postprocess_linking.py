@@ -14,11 +14,10 @@ wqid_to_longitude = dict(zip(gaz.wikidata_id, gaz.longitude))
 
 dict_dataframes = dict()
 
-# TODO CHange this
-query = "noquery"
-output_path_csv = "../experiments/outputs/newspapers/csvs/"
-output_path_resolved = "../experiments/outputs/newspapers/resolved/"
-output_path_georesolved = "../experiments/outputs/newspapers/georesolved/"
+query = "unemploy"
+output_path_csv = "../experiments/outputs/newspapers/csvs/" + query + "/"
+output_path_resolved = "../experiments/outputs/newspapers/resolved/" + query + "/"
+output_path_georesolved = "../experiments/outputs/newspapers/georesolved/" + query + "/"
 Path(output_path_georesolved).mkdir(parents=True, exist_ok=True)
 
 folder = output_path_resolved + "*/*.json"
@@ -29,9 +28,6 @@ for i in glob.glob(folder):
 
 # Generate
 for publication in all_publications:
-    # TODO CHange this
-    if not "randsample" in publication:
-        continue
     publication_dfs = []
     for i in glob.glob(folder):
         current_publication = i.split("/")[-2]

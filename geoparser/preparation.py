@@ -272,13 +272,13 @@ class Experiment:
 
             if "reldisamb" in self.mylinker.method:
                 # Train according to method and store model:
-                self.rel_params = self.mylinker.perform_training(
+                self.mylinker.rel_params = self.mylinker.perform_training(
                     lwm_original_df, lwm_processed_df, split
                 )
 
             if "gnn" in self.mylinker.method:
                 # Train according to method and store model:
-                self.gnn_params = self.mylinker.perform_training(
+                self.mylinker.gnn_params = self.mylinker.perform_training(
                     lwm_original_df, lwm_processed_df, split
                 )
 

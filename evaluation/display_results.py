@@ -5,7 +5,9 @@ from pathlib import Path
 
 import pandas as pd
 
-warnings.filterwarnings("ignore", category=FutureWarning)  # To fix properly in the future
+warnings.filterwarnings(
+    "ignore", category=FutureWarning
+)  # To fix properly in the future
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath("CLEF-HIPE-2020-scorer/"))
@@ -32,6 +34,8 @@ true_files = []
 approach_names = []
 for dataset in datasets:
     for granularity in granularities:
+        if dataset == "hipe" and granularity == "fine":
+            continue
         for ner_model in ner_models:
 
             # String in common in pred and true filenames:
@@ -53,7 +57,12 @@ for dataset in datasets:
                 pred_files.append(pred_file)
                 true_files.append(true_file)
                 approach_names.append(
-                    dataset + "-" + ner_model.replace("_", "") + "-" + granularity + "-preds"
+                    dataset
+                    + "-"
+                    + ner_model.replace("_", "")
+                    + "-"
+                    + granularity
+                    + "-preds"
                 )
 
 for dataset in datasets:
@@ -137,9 +146,9 @@ for i in range(len(pred_files)):
                     overall_results_nerc[
                         setting.replace("_", "") + ":" + measure.split("_")[0]
                     ] = round(
-                        ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][setting][
-                            measure
-                        ],
+                        ner_score["NE-COARSE-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
+                            setting
+                        ][measure],
                         3,
                     )
         df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
@@ -332,18 +341,18 @@ for i in range(len(pred_files)):
                         overall_results_nel[
                             setting.replace("_", "") + ":" + measure.split("_")[0]
                         ] = round(
-                            linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][setting][
-                                measure
-                            ],
+                            linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
+                                setting
+                            ][measure],
                             3,
                         )
                     else:
-                        correct = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
-                            setting
-                        ]["correct"]
-                        incorrect = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][ne_tag][
-                            setting
-                        ]["incorrect"]
+                        correct = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][
+                            ne_tag
+                        ][setting]["correct"]
+                        incorrect = linking_score[1]["NEL-LIT"]["TIME-ALL"]["LED-ALL"][
+                            ne_tag
+                        ][setting]["incorrect"]
                         overall_results_nel[
                             setting.replace("_", "") + ":" + measure.split("_")[0]
                         ] = round(
