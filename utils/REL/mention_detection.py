@@ -82,7 +82,7 @@ class MentionDetection(MentionDetectionBase):
             else:
                 results[article_id] = {sent_idx: [dict_mention]}
 
-            if "publ" in self.mylinker.method:
+            if "publ" in mylinker.method:
                 # Add place of publication as an entity in each sentence:
                 # Wikipedia title of place of publication QID:
                 wiki_gold = "NIL"

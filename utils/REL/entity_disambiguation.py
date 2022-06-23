@@ -124,7 +124,7 @@ class EntityDisambiguation:
         default_config.update(user_config)
         config = default_config
 
-        model_dict = json.loads(pkg_resources.resource_string("REL.REL.models", "models.json"))
+        model_dict = json.loads(pkg_resources.resource_string("utils.REL.models", "models.json"))
         model_path: str = config["model_path"]
         # load aliased url if it exists, else keep original string
         config["model_path"] = model_dict.get(model_path, model_path)
