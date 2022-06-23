@@ -17,7 +17,7 @@ np.random.seed(RANDOM_SEED)
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from REL.REL.entity_disambiguation import EntityDisambiguation
 from REL.REL.mention_detection import MentionDetection
-from utils import process_data, training  # , gnn_method
+from utils import gnn_method, process_data, training
 
 # from utils.gnn_method import EnhancedGATCN
 
