@@ -138,3 +138,6 @@ evaluation/CLEF-HIPE-2020-scorer/
 experiments/tmp_*
 preprocessing/toponymmatching/experiments/
 experiments/REL/
+evaluation/results_table.pkl
+experiments/explore_data.ipynb
+experiments/examine_res.py
