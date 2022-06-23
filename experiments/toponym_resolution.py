@@ -13,16 +13,16 @@ dataset = "lwm"  # "hipe" or "lwm"
 # * partialmatch
 # * levenshtein
 # * deezymatch
-cand_select_method = "deezymatch"
+cand_select_method = "perfectmatch"
 
 # Toponym resolution approach, options are:
 # * mostpopular
 # * contextualized
 # * reldisamb:relcs # REL disambiguation with their candidates (our mentions)
 # * reldisamb:lwmcs # REL disambiguation with our candidates (our mentions)
-# top_res_method = "mostpopular"
+top_res_method = "mostpopular"
 # top_res_method = "reldisamb:lwmcs:relv"
-top_res_method = "reldisamb:lwmcs:relvpubl"
+# top_res_method = "reldisamb:lwmcs:relvpubl"
 # top_res_method = "reldisamb:relcs"
 # top_res_method = "reldisamb:lwmcs:dist"
 # top_res_method = "reldisamb:lwmcs:relvdist"

@@ -75,6 +75,8 @@ mylinker = linking.Linker(
     linking_resources=dict(),
     base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
     overwrite_training=False,
+    rel_params=dict(),
+    gnn_params=dict(),
 )
 
 # --------------------------------------
@@ -104,7 +106,9 @@ def end_to_end(sentence):
         linked_mention["mention"] = mention["mention"]
         linked_mention["ner_label"] = mention["ner_label"]
         # Run entity linking per mention:
-        selected_cand = mylinker.run({"candidates": wk_cands[mention["mention"]]})
+        selected_cand = mylinker.most_popular(
+            {"candidates": wk_cands[mention["mention"]]}
+        )
         linked_mention["wqid"] = selected_cand[0]
         linked_mention["wqid_score"] = selected_cand[1]
         linked_mentions.append(linked_mention)
@@ -117,14 +121,104 @@ def end_to_end(sentence):
 print("Start!")
 start = datetime.datetime.now()
 
-query = "accident"
+query = "unemploy"
 datasets = ["hmd", "lwm"]
 
-output_path_csv = "../experiments/outputs/newspapers/csvs/"
-output_path_resolved = "../experiments/outputs/newspapers/resolved/"
+output_path_csv = "../experiments/outputs/newspapers/csvs/" + query + "/"
+output_path_resolved = "../experiments/outputs/newspapers/resolved/" + query + "/"
 Path(output_path_csv).mkdir(parents=True, exist_ok=True)
 Path(output_path_resolved).mkdir(parents=True, exist_ok=True)
 
+
+# ----------------------------------------------------------
+# Filter data by query token:
+for dataset in datasets:
+    dataset_path = "/resources/" + dataset + "-newspapers/" + dataset + "_sentences/"
+
+    for i in tqdm(glob.glob(dataset_path + "*.csv")):
+        news_nlp = i.split("/")[-1].split("_")[0]
+        path_nlp_query = output_path_csv + query + "_" + news_nlp + ".csv"
+
+        if not Path(path_nlp_query).exists():
+            df_query = pd.DataFrame(
+                columns=["nlp_id", "article_id", "date", "sentence_id", "sentence"]
+            )
+
+            df = pd.read_csv(i, index_col=0, low_memory=False)
+            mask = df["sentence"].str.contains(query, re.IGNORECASE, na=False)
+            df_query = pd.concat([df_query, df[mask]])
+
+            if df_query.empty:
+                continue
+
+            df_query[["year", "month", "day"]] = df_query["date"].str.split(
+                "-", -1, expand=True
+            )
+
+            df_query.to_csv(path_nlp_query, index=False)
+
+
+# ----------------------------------------------------------
+# Run toponym resolution:
+for i in tqdm(glob.glob(output_path_csv + "*.csv")):
+
+    if not query in i:
+        continue
+
+    news_nlp = i.split("/")[-1].split("_")[-1].split(".csv")[0]
+    df_query = pd.read_csv(i)
+
+    months = list(df_query.month.unique())
+    years = list(df_query.year.unique())
+
+    for year in years:
+        for month in months:
+
+            output_name_toponyms = (
+                news_nlp + "/" + str(year) + str(month) + "_toponyms.json"
+            )
+            output_name_metadata = (
+                news_nlp + "/" + str(year) + str(month) + "_metadata.json"
+            )
+            Path(output_path_resolved + news_nlp + "/").mkdir(
+                parents=True, exist_ok=True
+            )
+
+            print(news_nlp, year, month)
+
+            if not Path(output_path_resolved + output_name_toponyms).exists():
+                df_tmp = df_query[
+                    (df_query["month"] == month) & (df_query["year"] == year)
+                ]
+
+                if not df_tmp.empty:
+                    df_tmp["toponyms"] = df_tmp.apply(
+                        lambda row: end_to_end(row["sentence"]), axis=1
+                    )
+
+                    metadata_dict = df_tmp[
+                        [
+                            "nlp_id",
+                            "article_id",
+                            "date",
+                            "sentence_id",
+                            "sentence",
+                            "year",
+                            "month",
+                            "day",
+                        ]
+                    ].to_dict("index")
+                    output_dict = dict(zip(df_tmp.index, df_tmp.toponyms))
+
+                    with open(output_path_resolved + output_name_toponyms, "w") as fp:
+                        json.dump(output_dict, fp)
+                    with open(output_path_resolved + output_name_metadata, "w") as fp:
+                        json.dump(metadata_dict, fp)
+
+end = datetime.datetime.now()
+print(end - start)
+
+"""
 # ------------------------------------------------------------
 # Run on all sentences in a subsample for a given newspaper publication:
 # ------------------------------------------------------------
@@ -185,94 +279,6 @@ for year in tqdm(years):
                     json.dump(output_dict, fp)
                 with open(output_path_resolved + output_name_metadata, "w") as fp:
                     json.dump(metadata_dict, fp)
-
-end = datetime.datetime.now()
-print(end - start)
-
-
-"""
-# ----------------------------------------------------------
-# Filter data by query token:
-for dataset in datasets:
-    dataset_path = "/resources/" + dataset + "-newspapers/" + dataset + "_sentences/"
-
-    for i in tqdm(glob.glob(dataset_path + "*.csv")):
-        news_nlp = i.split("/")[-1].split("_")[0]
-        path_nlp_query = output_path_csv + query + "_" + news_nlp + ".csv"
-
-        if not Path(path_nlp_query).exists():
-            df_query = pd.DataFrame(
-                columns=["nlp_id", "article_id", "date", "sentence_id", "sentence"]
-            )
-
-            df = pd.read_csv(i, index_col=0, low_memory=False)
-            mask = df["sentence"].str.contains(
-                r"\b" + query + r"\b", re.IGNORECASE, na=False
-            )
-            df_query = pd.concat([df_query, df[mask]])
-
-            df_query[["year", "month", "day"]] = df_query["date"].str.split(
-                "-", -1, expand=True
-            )
-
-            df_query.to_csv(path_nlp_query, index=False)
-
-
-# ----------------------------------------------------------
-# Run toponym resolution:
-for i in tqdm(glob.glob(output_path_csv + "*.csv")):
-
-    if not query in i:
-        continue
-
-    news_nlp = i.split("/")[-1].split("_")[-1].split(".csv")[0]
-    df_query = pd.read_csv(i)
-
-    months = list(df_query.month.unique())
-    years = list(df_query.year.unique())
-
-    for year in years:
-        for month in months:
-
-            output_name_toponyms = (
-                news_nlp + "/" + str(year) + str(month) + "_toponyms.json"
-            )
-            output_name_metadata = (
-                news_nlp + "/" + str(year) + str(month) + "_metadata.json"
-            )
-            Path(output_path_resolved + news_nlp + "/").mkdir(
-                parents=True, exist_ok=True
-            )
-
-            print(news_nlp, year, month)
-
-            if not Path(output_path_resolved + output_name_toponyms).exists():
-                df_tmp = df_query[
-                    (df_query["month"] == month) & (df_query["year"] == year)
-                ]
-
-                if not df_tmp.empty:
-                    df_tmp["toponyms"] = df_tmp.apply(
-                        lambda row: end_to_end(row["sentence"]), axis=1
-                    )
-
-                    metadata_dict = df_tmp[
-                        [
-                            "nlp_id",
-                            "article_id",
-                            "date",
-                            "sentence_id",
-                            "year",
-                            "month",
-                            "day",
-                        ]
-                    ].to_dict("index")
-                    output_dict = dict(zip(df_tmp.index, df_tmp.toponyms))
-
-                    with open(output_path_resolved + output_name_toponyms, "w") as fp:
-                        json.dump(output_dict, fp)
-                    with open(output_path_resolved + output_name_metadata, "w") as fp:
-                        json.dump(metadata_dict, fp)
 
 end = datetime.datetime.now()
 print(end - start)

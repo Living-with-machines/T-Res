@@ -7,7 +7,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -18,8 +17,9 @@ np.random.seed(RANDOM_SEED)
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from REL.REL.entity_disambiguation import EntityDisambiguation
 from REL.REL.mention_detection import MentionDetection
-from utils import gnn_method, process_data, training
-from utils.gnn_method import EnhancedGATCN
+from utils import process_data, training  # , gnn_method
+
+# from utils.gnn_method import EnhancedGATCN
 
 
 class Linker:
@@ -233,7 +233,7 @@ class Linker:
         wiki_version = self.rel_params["wiki_version"]
         # Instantiate REL mention detection:
         self.rel_params["mention_detection"] = MentionDetection(
-            base_path, wiki_version, locs_only=True, mylinker=self
+            base_path, wiki_version, mylinker=self
         )
         # Instantiate REL entity disambiguation:
         config = {
