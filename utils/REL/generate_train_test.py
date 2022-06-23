@@ -1,15 +1,15 @@
+import json
 import os
 import pickle
 import re
+import urllib
+from ast import literal_eval
 from xml.etree import ElementTree
 
 import pandas as pd
-import urllib
-import json
-from ast import literal_eval
 
-from REL.REL.mention_detection_base import MentionDetectionBase
-from REL.REL.utils import modify_uppercase_phrase, split_in_words_mention
+from utils.REL.mention_detection_base import MentionDetectionBase
+from utils.REL.utils import modify_uppercase_phrase, split_in_words_mention
 
 """
 Class responsible for formatting WNED and AIDA datasets that are required for ED local evaluation and training.
@@ -90,9 +90,7 @@ class GenTrainingTest(MentionDetectionBase):
                 )
                 continue
             exist_doc_names.append(doc_name)
-            doc_path = os.path.join(
-                self.wned_path, "{}/RawText/{}".format(dataset, doc_name)
-            )
+            doc_path = os.path.join(self.wned_path, "{}/RawText/{}".format(dataset, doc_name))
             with open(doc_path, "r", encoding="utf-8") as cf:
                 doc_text = " ".join(cf.readlines())
             cf.close()
@@ -114,10 +112,7 @@ class GenTrainingTest(MentionDetectionBase):
                 # Replace ground truth.
                 if ent_title not in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
                     ent_title_temp = self.wikipedia.preprocess_ent_name(ent_title)
-                    if (
-                        ent_title_temp
-                        in self.wikipedia.wiki_id_name_map["ent_name_to_id"]
-                    ):
+                    if ent_title_temp in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
                         ent_title = ent_title_temp
                         cnt_replaced += 1
 
@@ -125,9 +120,7 @@ class GenTrainingTest(MentionDetectionBase):
                 pos = doc_text.find(mention_gt, offset)
 
                 find_ment = doc_text[pos : pos + len(mention_gt)]
-                assert (
-                    find_ment == mention_gt
-                ), "Ground truth mention not found: {};{};{}".format(
+                assert find_ment == mention_gt, "Ground truth mention not found: {};{};{}".format(
                     mention_gt, find_ment, pos
                 )
                 if pos not in mentions_gt:
@@ -151,25 +144,23 @@ class GenTrainingTest(MentionDetectionBase):
                 gt_sent = [
                     [v[0], v[1], k - total_characters, v[2]]
                     for k, v in mentions_gt.items()
-                    if total_characters
-                    <= k
-                    <= total_characters + len(t) + len(split) - len(v[2])
+                    if total_characters <= k <= total_characters + len(t) + len(split) - len(v[2])
                 ]
                 total_assigned += len(gt_sent)
 
                 for _, _, pos, m in gt_sent:
-                    assert (
-                        m == t[pos : pos + len(m)]
-                    ), "Wrong position mention {};{};{}".format(m, pos, t)
+                    assert m == t[pos : pos + len(m)], "Wrong position mention {};{};{}".format(
+                        m, pos, t
+                    )
 
                 # Place ground truth in sentence.
                 sentences[i] = [t, gt_sent]
 
                 i += 1
                 total_characters += len(t) + len(split)
-            assert (
-                total_gt == total_assigned
-            ), "We missed a ground truth.. {};{}".format(total_gt, total_assigned)
+            assert total_gt == total_assigned, "We missed a ground truth.. {};{}".format(
+                total_gt, total_assigned
+            )
             contents[doc_name] = sentences
         print("Replaced {} ground truth entites".format(cnt_replaced))
 
@@ -210,8 +201,7 @@ class GenTrainingTest(MentionDetectionBase):
                         sentence_words = " ".join(sentence)
                         for gt in gt_sent:
                             assert (
-                                sentence_words[gt[2] : gt[2] + len(gt[3])].lower()
-                                == gt[3].lower()
+                                sentence_words[gt[2] : gt[2] + len(gt[3])].lower() == gt[3].lower()
                             ), "AIDA ground-truth incorrect position. {};{};{}".format(
                                 sentence_words, gt[2], gt[3]
                             )
@@ -257,17 +247,9 @@ class GenTrainingTest(MentionDetectionBase):
                         mention_gt = parts[2]
                         total_cnt += 1
 
-                        if (
-                            ent_title
-                            not in self.wikipedia.wiki_id_name_map["ent_name_to_id"]
-                        ):
-                            ent_title_temp = self.wikipedia.preprocess_ent_name(
-                                ent_title
-                            )
-                            if (
-                                ent_title_temp
-                                in self.wikipedia.wiki_id_name_map["ent_name_to_id"]
-                            ):
+                        if ent_title not in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
+                            ent_title_temp = self.wikipedia.preprocess_ent_name(ent_title)
+                            if ent_title_temp in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
                                 ent_title = ent_title_temp
                                 cnt_replaced += 1
 
@@ -286,8 +268,7 @@ class GenTrainingTest(MentionDetectionBase):
 
                     if len(parts) >= 2 and parts[1] == "B":
                         words = [
-                            modify_uppercase_phrase(x)
-                            for x in split_in_words_mention(parts[2])
+                            modify_uppercase_phrase(x) for x in split_in_words_mention(parts[2])
                         ]
                     elif len(parts) >= 2 and parts[1] == "I":
                         # Continuation of mention, which we have added prior
@@ -295,8 +276,7 @@ class GenTrainingTest(MentionDetectionBase):
                         continue
                     else:
                         words = [
-                            modify_uppercase_phrase(w)
-                            for w in split_in_words_mention(parts[0])
+                            modify_uppercase_phrase(w) for w in split_in_words_mention(parts[0])
                         ]  # WAS _mention
 
                     if (parts[0] == ".") and (len(sentence) > 0):
@@ -365,9 +345,9 @@ class GenTrainingTest(MentionDetectionBase):
         for i, row in original_df.iterrows():
             article_id = row["article_id"]
             for sentence in literal_eval(row["sentences"]):
-                dict_sentences[
-                    str(article_id) + "_" + str(sentence["sentence_pos"])
-                ] = sentence["sentence_text"]
+                dict_sentences[str(article_id) + "_" + str(sentence["sentence_pos"])] = sentence[
+                    "sentence_text"
+                ]
 
         if "reldisamb:lwmcs" in self.mylinker.method:
             dict_articles = dict()
@@ -377,9 +357,7 @@ class GenTrainingTest(MentionDetectionBase):
                 dict_mention["mention"] = prediction["pred_mention"]
                 sent_idx = int(prediction["sentence_pos"])
                 dict_mention["sent_idx"] = sent_idx
-                dict_mention["sentence"] = dict_sentences[
-                    str(article_id) + "_" + str(sent_idx)
-                ]
+                dict_mention["sentence"] = dict_sentences[str(article_id) + "_" + str(sent_idx)]
                 # Convert the gold standard Wikidata id to Wikipedia id (because
                 # of redirections, some times more than one Wikipedia title is
                 # assigned to each Wikidata id, we choose the most frequent one):
@@ -422,9 +400,9 @@ class GenTrainingTest(MentionDetectionBase):
                     # Add place of publication as a fake entity in each sentence:
                     # Wikipedia title of place of publication QID:
                     wiki_gold = "NIL"
-                    gold_ids = self.mylinker.linking_resources[
-                        "wikidata2wikipedia"
-                    ].get(prediction["place_wqid"])
+                    gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
+                        prediction["place_wqid"]
+                    )
                     max_freq = 0
                     if gold_ids:
                         for k in gold_ids:
@@ -432,11 +410,7 @@ class GenTrainingTest(MentionDetectionBase):
                                 max_freq = k["freq"]
                                 wiki_gold = k["title"]
                     wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
-                    sent2 = (
-                        dict_mention["sentence"]
-                        + " Published in "
-                        + prediction["place"]
-                    )
+                    sent2 = dict_mention["sentence"] + " Published in " + prediction["place"]
                     pos2 = len(dict_mention["sentence"]) + len(" Published in ")
                     end_pos2 = pos2 + len(prediction["place"])
                     dict_publ = {
@@ -468,9 +442,9 @@ class GenTrainingTest(MentionDetectionBase):
                     # of redirections, some times more than one Wikipedia title is
                     # assigned to each Wikidata id, we choose the most frequent one):
                     dict_mention["gold"] = "NIL"
-                    gold_ids = self.mylinker.linking_resources[
-                        "wikidata2wikipedia"
-                    ].get(annotation["wkdt_qid"])
+                    gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
+                        annotation["wkdt_qid"]
+                    )
                     max_freq = 0
                     if gold_ids:
                         for k in gold_ids:
@@ -492,9 +466,7 @@ class GenTrainingTest(MentionDetectionBase):
                         ]
                     dict_mention["pos"] = annotation["mention_start"]
                     dict_mention["end_pos"] = annotation["mention_end"]
-                    dict_mention["candidates"] = self.get_candidates(
-                        annotation["mention"]
-                    )
+                    dict_mention["candidates"] = self.get_candidates(annotation["mention"])
                     dict_articles[article_id].append(dict_mention)
 
         if dataset_split == "train":
@@ -542,8 +514,7 @@ class GenTrainingTest(MentionDetectionBase):
                         sentence_words = " ".join(sentence)
                         for gt in gt_sent:
                             assert (
-                                sentence_words[gt[2] : gt[2] + len(gt[3])].lower()
-                                == gt[3].lower()
+                                sentence_words[gt[2] : gt[2] + len(gt[3])].lower() == gt[3].lower()
                             ), "AIDA ground-truth incorrect position. {};{};{}".format(
                                 sentence_words, gt[2], gt[3]
                             )
@@ -589,17 +560,9 @@ class GenTrainingTest(MentionDetectionBase):
                         mention_gt = parts[2]
                         total_cnt += 1
 
-                        if (
-                            ent_title
-                            not in self.wikipedia.wiki_id_name_map["ent_name_to_id"]
-                        ):
-                            ent_title_temp = self.wikipedia.preprocess_ent_name(
-                                ent_title
-                            )
-                            if (
-                                ent_title_temp
-                                in self.wikipedia.wiki_id_name_map["ent_name_to_id"]
-                            ):
+                        if ent_title not in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
+                            ent_title_temp = self.wikipedia.preprocess_ent_name(ent_title)
+                            if ent_title_temp in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
                                 ent_title = ent_title_temp
                                 cnt_replaced += 1
 
@@ -618,8 +581,7 @@ class GenTrainingTest(MentionDetectionBase):
 
                     if len(parts) >= 2 and parts[1] == "B":
                         words = [
-                            modify_uppercase_phrase(x)
-                            for x in split_in_words_mention(parts[2])
+                            modify_uppercase_phrase(x) for x in split_in_words_mention(parts[2])
                         ]
                     elif len(parts) >= 2 and parts[1] == "I":
                         # Continuation of mention, which we have added prior
@@ -627,8 +589,7 @@ class GenTrainingTest(MentionDetectionBase):
                         continue
                     else:
                         words = [
-                            modify_uppercase_phrase(w)
-                            for w in split_in_words_mention(parts[0])
+                            modify_uppercase_phrase(w) for w in split_in_words_mention(parts[0])
                         ]  # WAS _mention
 
                     if (parts[0] == ".") and (len(sentence) > 0):
@@ -667,9 +628,9 @@ class GenTrainingTest(MentionDetectionBase):
         for i, row in original_df.iterrows():
             article_id = row["article_id"]
             for sentence in literal_eval(row["sentences"]):
-                dict_sentences[
-                    str(article_id) + "_" + str(sentence["sentence_pos"])
-                ] = sentence["sentence_text"]
+                dict_sentences[str(article_id) + "_" + str(sentence["sentence_pos"])] = sentence[
+                    "sentence_text"
+                ]
 
         if "reldisamb:lwmcs" in self.mylinker.method:
             dict_articles = dict()
@@ -679,9 +640,7 @@ class GenTrainingTest(MentionDetectionBase):
                 dict_mention["mention"] = prediction["pred_mention"]
                 sent_idx = int(prediction["sentence_pos"])
                 dict_mention["sent_idx"] = sent_idx
-                dict_mention["sentence"] = dict_sentences[
-                    str(article_id) + "_" + str(sent_idx)
-                ]
+                dict_mention["sentence"] = dict_sentences[str(article_id) + "_" + str(sent_idx)]
                 # Convert the gold standard Wikidata id to Wikipedia id (because
                 # of redirections, some times more than one Wikipedia title is
                 # assigned to each Wikidata id, we choose the most frequent one):
@@ -724,9 +683,9 @@ class GenTrainingTest(MentionDetectionBase):
                     # Add place of publication as a fake entity in each sentence:
                     # Wikipedia title of place of publication QID:
                     wiki_gold = "NIL"
-                    gold_ids = self.mylinker.linking_resources[
-                        "wikidata2wikipedia"
-                    ].get(prediction["place_wqid"])
+                    gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
+                        prediction["place_wqid"]
+                    )
                     max_freq = 0
                     if gold_ids:
                         for k in gold_ids:
@@ -734,11 +693,7 @@ class GenTrainingTest(MentionDetectionBase):
                                 max_freq = k["freq"]
                                 wiki_gold = k["title"]
                     wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
-                    sent2 = (
-                        dict_mention["sentence"]
-                        + " Published in "
-                        + prediction["place"]
-                    )
+                    sent2 = dict_mention["sentence"] + " Published in " + prediction["place"]
                     pos2 = len(dict_mention["sentence"]) + len(" Published in ")
                     end_pos2 = pos2 + len(prediction["place"])
                     dict_publ = {
@@ -770,9 +725,9 @@ class GenTrainingTest(MentionDetectionBase):
                     # of redirections, some times more than one Wikipedia title is
                     # assigned to each Wikidata id, we choose the most frequent one):
                     dict_mention["gold"] = "NIL"
-                    gold_ids = self.mylinker.linking_resources[
-                        "wikidata2wikipedia"
-                    ].get(annotation["wkdt_qid"])
+                    gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
+                        annotation["wkdt_qid"]
+                    )
                     max_freq = 0
                     if gold_ids:
                         for k in gold_ids:
@@ -794,9 +749,7 @@ class GenTrainingTest(MentionDetectionBase):
                         ]
                     dict_mention["pos"] = annotation["mention_start"]
                     dict_mention["end_pos"] = annotation["mention_end"]
-                    dict_mention["candidates"] = self.get_candidates(
-                        annotation["mention"]
-                    )
+                    dict_mention["candidates"] = self.get_candidates(annotation["mention"])
                     dict_articles[article_id].append(dict_mention)
 
         contents = self.__format(contents)

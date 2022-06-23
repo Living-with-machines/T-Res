@@ -1,10 +1,11 @@
 import os
 import re
-
-from REL.REL.db.generic import GenericLookup
-from REL.REL.utils import modify_uppercase_phrase, split_in_words
 import urllib
+
 from haversine import haversine
+
+from utils.REL.db.generic import GenericLookup
+from utils.REL.utils import modify_uppercase_phrase, split_in_words
 
 
 class MentionDetectionBase:
@@ -82,15 +83,11 @@ class MentionDetectionBase:
                 for c in lwm_cands:
                     for qc in lwm_cands[c]["Candidates"]:
                         # Mention-to-entity releavance:
-                        qcrlv = self.mylinker.linking_resources["mentions_to_wikidata"][
-                            c
-                        ][qc]
+                        qcrlv = self.mylinker.linking_resources["mentions_to_wikidata"][c][qc]
                         if qcrlv > max_cand_freq:
                             max_cand_freq = qcrlv
                         # Wikidata entity to Wikipedia:
-                        gold_ids = self.mylinker.linking_resources[
-                            "wikidata2wikipedia"
-                        ].get(qc)
+                        gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(qc)
                         qc_wikipedia = ""
                         max_freq = 0
                         if gold_ids:
@@ -113,27 +110,17 @@ class MentionDetectionBase:
                 for c in lwm_cands:
                     for qc in lwm_cands[c]["Candidates"]:
                         print(qc, publication)
-                        lat_publ = self.mylinker.linking_resources["dict_wqid_to_lat"][
-                            publication
-                        ]
-                        lon_publ = self.mylinker.linking_resources["dict_wqid_to_lon"][
-                            publication
-                        ]
-                        lat_cand = self.mylinker.linking_resources["dict_wqid_to_lat"][
-                            qc
-                        ]
-                        lon_cand = self.mylinker.linking_resources["dict_wqid_to_lon"][
-                            qc
-                        ]
+                        lat_publ = self.mylinker.linking_resources["dict_wqid_to_lat"][publication]
+                        lon_publ = self.mylinker.linking_resources["dict_wqid_to_lon"][publication]
+                        lat_cand = self.mylinker.linking_resources["dict_wqid_to_lat"][qc]
+                        lon_cand = self.mylinker.linking_resources["dict_wqid_to_lon"][qc]
                         # Distance between place of publication and candidate:
                         qcdist = haversine((lat_publ, lon_publ), (lat_cand, lon_cand))
                         # Keep max distance for later normalizing:
                         if qcdist > max_dist:
                             max_dist = qcdist
                         # Wikidata entity to Wikipedia:
-                        gold_ids = self.mylinker.linking_resources[
-                            "wikidata2wikipedia"
-                        ].get(qc)
+                        gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(qc)
                         qc_wikipedia = ""
                         max_freq = 0
                         if gold_ids:

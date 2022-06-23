@@ -4,12 +4,14 @@ import pickle as pkl
 import re
 import tarfile
 import time
+import urllib
 from pathlib import Path
 from random import shuffle
 from typing import Any, Dict
 from urllib.parse import urlparse
 
 import numpy as np
+import pandas as pd
 import pkg_resources
 import torch
 import torch.optim as optim
@@ -17,14 +19,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from torch.autograd import Variable
 
-import REL.REL.utils as utils
-from REL.REL.db.generic import GenericLookup
-from REL.REL.mulrel_ranker import MulRelRanker, PreRank
-from REL.REL.training_datasets import TrainingEvaluationDatasets
-from REL.REL.vocabulary import Vocabulary
-
-import pandas as pd
-import urllib
+import utils.REL.utils as utils
+from utils.REL.db.generic import GenericLookup
+from utils.REL.mulrel_ranker import MulRelRanker, PreRank
+from utils.REL.training_datasets import TrainingEvaluationDatasets
+from utils.REL.vocabulary import Vocabulary
 
 """
 Parent Entity Disambiguation class that directs the various subclasses used
@@ -57,9 +56,7 @@ class EntityDisambiguation:
 
         self.g_emb = GenericLookup("common_drawl", os.path.join(base_url, "generic"))
         test = self.g_emb.emb(["in"], "embeddings")[0]
-        assert (
-            test is not None
-        ), "Glove embeddings in wrong folder..? Test embedding not found.."
+        assert test is not None, "Glove embeddings in wrong folder..? Test embedding not found.."
 
         self.__load_embeddings()
         self.coref = TrainingEvaluationDatasets(base_url, wiki_version)
@@ -127,9 +124,7 @@ class EntityDisambiguation:
         default_config.update(user_config)
         config = default_config
 
-        model_dict = json.loads(
-            pkg_resources.resource_string("REL.REL.models", "models.json")
-        )
+        model_dict = json.loads(pkg_resources.resource_string("REL.REL.models", "models.json"))
         model_path: str = config["model_path"]
         # load aliased url if it exists, else keep original string
         config["model_path"] = model_dict.get(model_path, model_path)
@@ -231,14 +226,12 @@ class EntityDisambiguation:
                 s_mtoken_ids = [m["snd_ment"] for m in batch]
 
                 entity_ids = Variable(
-                    torch.LongTensor([m["selected_cands"]["cands"] for m in batch]).to(
-                        self.device
-                    )
+                    torch.LongTensor([m["selected_cands"]["cands"] for m in batch]).to(self.device)
                 )
                 true_pos = Variable(
-                    torch.LongTensor(
-                        [m["selected_cands"]["true_pos"] for m in batch]
-                    ).to(self.device)
+                    torch.LongTensor([m["selected_cands"]["true_pos"] for m in batch]).to(
+                        self.device
+                    )
                 )
                 p_e_m = Variable(
                     torch.FloatTensor([m["selected_cands"]["p_e_m"] for m in batch]).to(
@@ -246,9 +239,7 @@ class EntityDisambiguation:
                     )
                 )
                 entity_mask = Variable(
-                    torch.FloatTensor([m["selected_cands"]["mask"] for m in batch]).to(
-                        self.device
-                    )
+                    torch.FloatTensor([m["selected_cands"]["mask"] for m in batch]).to(self.device)
                 )
 
                 token_ids, token_mask = utils.make_equal_len(
@@ -270,21 +261,15 @@ class EntityDisambiguation:
                 token_mask = Variable(torch.FloatTensor(token_mask).to(self.device))
 
                 # too ugly but too lazy to fix it
-                self.model.s_ltoken_ids = Variable(
-                    torch.LongTensor(s_ltoken_ids).to(self.device)
-                )
+                self.model.s_ltoken_ids = Variable(torch.LongTensor(s_ltoken_ids).to(self.device))
                 self.model.s_ltoken_mask = Variable(
                     torch.FloatTensor(s_ltoken_mask).to(self.device)
                 )
-                self.model.s_rtoken_ids = Variable(
-                    torch.LongTensor(s_rtoken_ids).to(self.device)
-                )
+                self.model.s_rtoken_ids = Variable(torch.LongTensor(s_rtoken_ids).to(self.device))
                 self.model.s_rtoken_mask = Variable(
                     torch.FloatTensor(s_rtoken_mask).to(self.device)
                 )
-                self.model.s_mtoken_ids = Variable(
-                    torch.LongTensor(s_mtoken_ids).to(self.device)
-                )
+                self.model.s_mtoken_ids = Variable(torch.LongTensor(s_mtoken_ids).to(self.device))
                 self.model.s_mtoken_mask = Variable(
                     torch.FloatTensor(s_mtoken_mask).to(self.device)
                 )
@@ -320,15 +305,11 @@ class EntityDisambiguation:
                 dev_f1 = 0
                 for dname, data in dev_datasets:
                     predictions = self.__predict(data)
-                    f1, recall, precision, _ = self.__eval(
-                        org_dev_datasets[dname], predictions
-                    )
+                    f1, recall, precision, _ = self.__eval(org_dev_datasets[dname], predictions)
                     print(
                         dname,
                         utils.tokgreen(
-                            "Micro F1: {}, Recall: {}, Precision: {}".format(
-                                f1, recall, precision
-                            )
+                            "Micro F1: {}, Recall: {}, Precision: {}".format(f1, recall, precision)
                         ),
                     )
 
@@ -379,9 +360,7 @@ class EntityDisambiguation:
             print(
                 dname,
                 utils.tokgreen(
-                    "Micro F1: {}, Recall: {}, Precision: {}".format(
-                        f1, recall, precision
-                    )
+                    "Micro F1: {}, Recall: {}, Precision: {}".format(f1, recall, precision)
                 ),
             )
             print("Total NIL: {}".format(total_nil))
@@ -420,9 +399,7 @@ class EntityDisambiguation:
         """
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
-        train_dataset = self.get_data_items(
-            datasets["lwm_train"], "train", predict=False
-        )
+        train_dataset = self.get_data_items(datasets["lwm_train"], "train", predict=False)
 
         dev_datasets = []
         for dname, data in list(datasets.items()):
@@ -444,9 +421,7 @@ class EntityDisambiguation:
 
             decisions = (preds >= threshold).astype(int)
 
-            print(
-                utils.tokgreen("{}, F1-score: {}".format(dname, f1_score(y, decisions)))
-            )
+            print(utils.tokgreen("{}, F1-score: {}".format(dname, f1_score(y, decisions))))
 
         if store_offline:
             path = os.path.join(model_path_lr, "lr_model.pkl")
@@ -480,9 +455,7 @@ class EntityDisambiguation:
             for j in range(len(score)):
                 if j == pred:
                     continue
-                loss += max(
-                    0, score[j].item() - score[pred].item() + self.config["margin"]
-                )
+                loss += max(0, score[j].item() - score[pred].item() + self.config["margin"])
             if not self.__max_conf:
                 self.__max_conf = (
                     self.config["keep_ctx_ent"] + self.config["keep_p_e_m"] - 1
@@ -533,24 +506,16 @@ class EntityDisambiguation:
             s_mtoken_ids = [m["snd_ment"] for m in batch]
 
             entity_ids = Variable(
-                torch.LongTensor([m["selected_cands"]["cands"] for m in batch]).to(
-                    self.device
-                )
+                torch.LongTensor([m["selected_cands"]["cands"] for m in batch]).to(self.device)
             )
             p_e_m = Variable(
-                torch.FloatTensor([m["selected_cands"]["p_e_m"] for m in batch]).to(
-                    self.device
-                )
+                torch.FloatTensor([m["selected_cands"]["p_e_m"] for m in batch]).to(self.device)
             )
             entity_mask = Variable(
-                torch.FloatTensor([m["selected_cands"]["mask"] for m in batch]).to(
-                    self.device
-                )
+                torch.FloatTensor([m["selected_cands"]["mask"] for m in batch]).to(self.device)
             )
             true_pos = Variable(
-                torch.LongTensor([m["selected_cands"]["true_pos"] for m in batch]).to(
-                    self.device
-                )
+                torch.LongTensor([m["selected_cands"]["true_pos"] for m in batch]).to(self.device)
             )
 
             token_ids, token_mask = utils.make_equal_len(
@@ -571,24 +536,12 @@ class EntityDisambiguation:
             token_ids = Variable(torch.LongTensor(token_ids).to(self.device))
             token_mask = Variable(torch.FloatTensor(token_mask).to(self.device))
 
-            self.model.s_ltoken_ids = Variable(
-                torch.LongTensor(s_ltoken_ids).to(self.device)
-            )
-            self.model.s_ltoken_mask = Variable(
-                torch.FloatTensor(s_ltoken_mask).to(self.device)
-            )
-            self.model.s_rtoken_ids = Variable(
-                torch.LongTensor(s_rtoken_ids).to(self.device)
-            )
-            self.model.s_rtoken_mask = Variable(
-                torch.FloatTensor(s_rtoken_mask).to(self.device)
-            )
-            self.model.s_mtoken_ids = Variable(
-                torch.LongTensor(s_mtoken_ids).to(self.device)
-            )
-            self.model.s_mtoken_mask = Variable(
-                torch.FloatTensor(s_mtoken_mask).to(self.device)
-            )
+            self.model.s_ltoken_ids = Variable(torch.LongTensor(s_ltoken_ids).to(self.device))
+            self.model.s_ltoken_mask = Variable(torch.FloatTensor(s_ltoken_mask).to(self.device))
+            self.model.s_rtoken_ids = Variable(torch.LongTensor(s_rtoken_ids).to(self.device))
+            self.model.s_rtoken_mask = Variable(torch.FloatTensor(s_rtoken_mask).to(self.device))
+            self.model.s_mtoken_ids = Variable(torch.LongTensor(s_mtoken_ids).to(self.device))
+            self.model.s_mtoken_mask = Variable(torch.FloatTensor(s_mtoken_mask).to(self.device))
 
             scores, ent_scores = self.model.forward(
                 token_ids,
@@ -699,8 +652,7 @@ class EntityDisambiguation:
                 lctx_ids = [
                     m["context"][0][
                         max(
-                            len(m["context"][0])
-                            - self.config["prerank_ctx_window"] // 2,
+                            len(m["context"][0]) - self.config["prerank_ctx_window"] // 2,
                             0,
                         ) :
                     ]
@@ -708,17 +660,13 @@ class EntityDisambiguation:
                 ]
                 rctx_ids = [
                     m["context"][1][
-                        : min(
-                            len(m["context"][1]), self.config["prerank_ctx_window"] // 2
-                        )
+                        : min(len(m["context"][1]), self.config["prerank_ctx_window"] // 2)
                     ]
                     for m in content
                 ]
                 ment_ids = [[] for m in content]
                 token_ids = [
-                    l + m + r
-                    if len(l) + len(r) > 0
-                    else [self.embeddings["word_voca"].unk_id]
+                    l + m + r if len(l) + len(r) > 0 else [self.embeddings["word_voca"].unk_id]
                     for l, m, r in zip(lctx_ids, ment_ids, rctx_ids)
                 ]
 
@@ -729,9 +677,7 @@ class EntityDisambiguation:
                 entity_mask = Variable(torch.FloatTensor(entity_mask).to(self.device))
 
                 token_ids, token_offsets = utils.flatten_list_of_lists(token_ids)
-                token_offsets = Variable(
-                    torch.LongTensor(token_offsets).to(self.device)
-                )
+                token_offsets = Variable(torch.LongTensor(token_offsets).to(self.device))
                 token_ids = Variable(torch.LongTensor(token_ids).to(self.device))
 
                 entity_names = [m["named_cands"] for m in content]  # named_cands
@@ -762,10 +708,7 @@ class EntityDisambiguation:
 
                 selected = set(top_pos[i])
                 idx = 0
-                while (
-                    len(selected)
-                    < self.config["keep_ctx_ent"] + self.config["keep_p_e_m"]
-                ):
+                while len(selected) < self.config["keep_ctx_ent"] + self.config["keep_p_e_m"]:
                     if idx not in selected:
                         selected.add(idx)
                     idx += 1
@@ -791,9 +734,7 @@ class EntityDisambiguation:
                 if predict:
                     # only for oracle model, not used for eval
                     if sm["true_pos"] == -1:
-                        sm[
-                            "true_pos"
-                        ] = 0  # a fake gold, happens only 2%, but avoid the non-gold
+                        sm["true_pos"] = 0  # a fake gold, happens only 2%, but avoid the non-gold
 
             if len(items) > 0:
                 new_dataset.append(items)
@@ -914,24 +855,16 @@ class EntityDisambiguation:
                 ]  # split()
 
                 words_filt = set(
-                    [
-                        item
-                        for item in lctx + rctx
-                        if item not in self.embeddings["word_seen"]
-                    ]
+                    [item for item in lctx + rctx if item not in self.embeddings["word_seen"]]
                 )
 
                 self.__embed_words(words_filt, "word", "embeddings")
 
                 snd_lctx = m["sentence"][: m["pos"]].strip().split()
-                snd_lctx = [
-                    t for t in snd_lctx[-self.config["snd_local_ctx_window"] // 2 :]
-                ]
+                snd_lctx = [t for t in snd_lctx[-self.config["snd_local_ctx_window"] // 2 :]]
 
                 snd_rctx = m["sentence"][m["end_pos"] :].strip().split()
-                snd_rctx = [
-                    t for t in snd_rctx[: self.config["snd_local_ctx_window"] // 2]
-                ]
+                snd_rctx = [t for t in snd_rctx[: self.config["snd_local_ctx_window"] // 2]]
 
                 snd_ment = m["ngram"].strip().split()
 
@@ -981,28 +914,16 @@ class EntityDisambiguation:
                     if utils.is_important_word(t)
                 ]
 
-                lctx_ids = [
-                    tid
-                    for tid in lctx_ids
-                    if tid != self.embeddings["word_voca"].unk_id
-                ]
-                lctx_ids = lctx_ids[
-                    max(0, len(lctx_ids) - self.config["ctx_window"] // 2) :
-                ]
+                lctx_ids = [tid for tid in lctx_ids if tid != self.embeddings["word_voca"].unk_id]
+                lctx_ids = lctx_ids[max(0, len(lctx_ids) - self.config["ctx_window"] // 2) :]
 
                 rctx_ids = [
                     self.embeddings["word_voca"].get_id(t)
                     for t in rctx
                     if utils.is_important_word(t)
                 ]
-                rctx_ids = [
-                    tid
-                    for tid in rctx_ids
-                    if tid != self.embeddings["word_voca"].unk_id
-                ]
-                rctx_ids = rctx_ids[
-                    : min(len(rctx_ids), self.config["ctx_window"] // 2)
-                ]
+                rctx_ids = [tid for tid in rctx_ids if tid != self.embeddings["word_voca"].unk_id]
+                rctx_ids = rctx_ids[: min(len(rctx_ids), self.config["ctx_window"] // 2)]
 
                 ment = m["mention"].strip().split()
                 ment_ids = [
@@ -1010,11 +931,7 @@ class EntityDisambiguation:
                     for t in ment
                     if utils.is_important_word(t)
                 ]
-                ment_ids = [
-                    tid
-                    for tid in ment_ids
-                    if tid != self.embeddings["word_voca"].unk_id
-                ]
+                ment_ids = [tid for tid in ment_ids if tid != self.embeddings["word_voca"].unk_id]
 
                 m["sent"] = " ".join(lctx + rctx)
 
@@ -1124,9 +1041,7 @@ class EntityDisambiguation:
                 )
             )
 
-        model = MulRelRanker(self.config, self.device).to(
-            self.device
-        )  # , self.embeddings
+        model = MulRelRanker(self.config, self.device).to(self.device)  # , self.embeddings
 
         if not torch.cuda.is_available():
             model.load_state_dict(

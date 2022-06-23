@@ -4,14 +4,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from REL.REL.entity_disambiguation import EntityDisambiguation
-from REL.REL.generate_train_test import GenTrainingTest
-from REL.REL.training_datasets import TrainingEvaluationDatasets
-from REL.REL.wikipedia import Wikipedia
-from sklearn.metrics import f1_score
-
 import torch
 import torch.nn.functional as F
+from sklearn.metrics import f1_score
+
+from utils.REL.entity_disambiguation import EntityDisambiguation
+from utils.REL.generate_train_test import GenTrainingTest
+from utils.REL.training_datasets import TrainingEvaluationDatasets
+from utils.REL.wikipedia import Wikipedia
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -44,15 +44,11 @@ class Trainer(object):
         return loss.item()
 
     def set_split(self):
-        val_mask = np.array(
-            [True if s == "dev" else False for l in self.data.split for s in l]
-        )
+        val_mask = np.array([True if s == "dev" else False for l in self.data.split for s in l])
         train_mask = np.array(
             [True if s == "train" else False for l in self.data.split for s in l]
         )
-        test_mask = np.array(
-            [True if s == "test" else False for l in self.data.split for s in l]
-        )
+        test_mask = np.array([True if s == "test" else False for l in self.data.split for s in l])
         self.data.val_mask = torch.tensor(val_mask, dtype=torch.bool)
         self.data.train_mask = torch.tensor(train_mask, dtype=torch.bool)
         self.data.test_mask = torch.tensor(test_mask, dtype=torch.bool)
@@ -130,9 +126,7 @@ def train_rel_ed(mylinker, all_df, train_df, whichsplit):
         parents=True, exist_ok=True
     )
     wikipedia = Wikipedia(base_path, wiki_version)
-    data_handler = GenTrainingTest(
-        base_path, wiki_version, wikipedia, mylinker=mylinker
-    )
+    data_handler = GenTrainingTest(base_path, wiki_version, wikipedia, mylinker=mylinker)
     for ds in ["train", "dev"]:
         if "edaidalwm" in mylinker.method:
             data_handler.process_aidalwm(ds, all_df, train_df, whichsplit)

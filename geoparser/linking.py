@@ -15,11 +15,10 @@ np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from REL.REL.entity_disambiguation import EntityDisambiguation
-from REL.REL.mention_detection import MentionDetection
 from utils import gnn_method, process_data, training
-
-# from utils.gnn_method import EnhancedGATCN
+from utils.gnn_method import EnhancedGATCN
+from utils.REL.entity_disambiguation import EntityDisambiguation
+from utils.REL.mention_detection import MentionDetection
 
 
 class Linker:

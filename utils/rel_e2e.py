@@ -1,17 +1,18 @@
+import json
 import os
 import sys
-import json
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 # Import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_data
+from utils.REL.entity_disambiguation import EntityDisambiguation
 
 # REL imports
-from REL.REL.mention_detection import MentionDetection
-from REL.REL.ner import load_flair_ner
-from REL.REL.entity_disambiguation import EntityDisambiguation
+from utils.REL.mention_detection import MentionDetection
+from utils.REL.ner import load_flair_ner
 
 
 def run_rel_experiments(self):
