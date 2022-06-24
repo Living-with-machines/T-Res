@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
