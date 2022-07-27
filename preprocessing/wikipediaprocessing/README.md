@@ -46,7 +46,14 @@ To align the Wikipedia pages extracted from the dump to Wikidata you can use:
 ```
 python map_wikidata_wikipedia.py
 ```
-This script relies on the use of the WikiMapper and in particular to the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. It will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, using the flag `-t`.
+This script relies on the availability of a specific Wikipedia/Wikidata index, which we have created following [these instructions](https://github.com/jcklie/wikimapper#create-your-own-index), using a SQL dump from October 2021. Additionally, we have lowercased Wikipedia page titles in the database, to make sure we could match them with the extracted entities. We did that with the following SQL command:
+
+```
+"UPDATE or IGNORE mapping SET wikipedia_title = lower(wikipedia_title)"
+```
+
+
+Our Python script will produce two json files, mapping wikidata ids to wikipedia pages and viceversa. As above, you can run it in `test` mode as well, using the flag `-t`.
 
 ## 4. Extract locations from Wikidata
 
@@ -72,7 +79,7 @@ The output is in the form of `.csv` files that will be created in `../resources/
 The following script creates the gazetteer.
 
 ```
-python create_wk_gazetteer
+python create_wk_gazetteer.py
 ```
 
 To create the gazetteer, it follows these steps:
