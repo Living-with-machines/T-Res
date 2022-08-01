@@ -333,6 +333,7 @@ def aggregate_hipe_entities(entity, lEntities):
             "wkdt_qid": entity["wkdt_qid"],
             "start": prevEntity["start"],
             "end": entity["end"],
+            "meto_type": prevEntity["meto_type"],
         }
 
     lEntities.append(newEntity)
@@ -407,6 +408,7 @@ def process_hipe_for_linking(hipe_path):
                     etag = line[1]
                     elink = line[7]
                     comment = line[-1]
+                    meto_tag = line[2]
 
                     # If a sentence starts with "I-", it means it's not a new sentence,
                     # just an error in sentence splitting. The indices of the word offsets
@@ -461,15 +463,17 @@ def process_hipe_for_linking(hipe_path):
                     if article_id in dAnnotations:
                         if sent_index in dAnnotations[article_id]:
                             dAnnotations[article_id][sent_index].append(
-                                (token, etag, elink, start_char, end_char)
+                                (token, etag, elink, start_char, end_char, meto_tag)
                             )
                         else:
                             dAnnotations[article_id][sent_index] = [
-                                (token, etag, elink, start_char, end_char)
+                                (token, etag, elink, start_char, end_char, meto_tag)
                             ]
                     else:
                         dAnnotations[article_id] = {
-                            sent_index: [(token, etag, elink, start_char, end_char)]
+                            sent_index: [
+                                (token, etag, elink, start_char, end_char, meto_tag)
+                            ]
                         }
 
             if article_id and new_document:
@@ -504,6 +508,7 @@ def process_hipe_for_linking(hipe_path):
                         "wkdt_qid": a[2],
                         "start": a[3] - start_sentence_pos,
                         "end": a[4] - start_sentence_pos,
+                        "meto_type": a[5],
                     }
                 )
 
@@ -514,9 +519,11 @@ def process_hipe_for_linking(hipe_path):
                 wkdt = p["wkdt_qid"]
                 if not wkdt in gazetteer_ids:
                     wkdt = "NIL"
-                # Only keep entities that are "loc" or whose Wikidata ID
-                # is in the KB (for metonymic uses of locations):
-                if not wkdt == "NIL" or p["ne_type"][2:].lower() == "loc":
+                # Only keep entities that are "loc", or metonymic use of "loc":
+                if (
+                    p["ne_type"][2:].lower() == "loc"
+                    or p["meto_type"][2:].lower() == "loc"
+                ):
                     mentions = {
                         "mention_pos": mention_counter,
                         "mention": p["word"],

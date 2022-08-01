@@ -160,7 +160,14 @@ def test_hipe_linking_conversion():
     for x in df_linking.place_wqid:
         assert type(x) == str
         assert x != ""
+    # Do HIPE stats match https://github.com/hipe-eval/HIPE-2022-data/blob/main/notebooks/hipe2022-datasets-stats.ipynb
+    number_locs = 0
     for x in df_linking.annotations:
         x = literal_eval(x)
         for ann in x:
             assert ann["wkdt_qid"] == "NIL" or ann["wkdt_qid"].startswith("Q")
+        for ann in x:
+            if ann["entity_type"] == "LOC":
+                number_locs += 1
+    number_locs_stats = 573  # locs in test+dev, meto locs in test+dev
+    assert number_locs == number_locs_stats
