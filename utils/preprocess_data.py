@@ -1,26 +1,20 @@
+import os
 import re
+import sys
 import glob
 import json
-import urllib
-import hashlib
 
 import pandas as pd
 from pathlib import Path
+
+# Add "../" to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+from utils import process_wikipedia
 
 
 """
 This script reads the original data sources and formats them for our experiments.
 """
-
-
-# Load wikipedia2wikidata mapper:
-path = "/resources/wikipedia/extractedResources/"
-wikipedia2wikidata = dict()
-if Path(path + "wikipedia2wikidata.json").exists():
-    with open(path + "wikipedia2wikidata.json", "r") as f:
-        wikipedia2wikidata = json.load(f)
-else:
-    print("Warning: wikipedia2wikidata.json does not exist.")
 
 
 # Load gazetteer (our knowledge base):
@@ -34,26 +28,31 @@ gazetteer_ids = set(
 
 
 # ------------------------------
+# From wikipedia to wikidata:
+
+# Path to wikipedia2wikidata mapper:
+db = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
+
+
+# ------------------------------
 def turn_wikipedia2wikidata(wikipedia_title):
     """
     Get wikidata ID from wikipedia URL
     """
     if not wikipedia_title == "NIL" and not wikipedia_title == "*":
         wikipedia_title = wikipedia_title.split("/wiki/")[-1]
-        wikipedia_title = urllib.parse.unquote(wikipedia_title)
-        wikipedia_title = wikipedia_title.replace("_", " ")
-        wikipedia_title = urllib.parse.quote(wikipedia_title)
-        if "/" in wikipedia_title or len(wikipedia_title) > 200:
-            wikipedia_title = hashlib.sha224(
-                wikipedia_title.encode("utf-8")
-            ).hexdigest()
-        if not wikipedia_title in wikipedia2wikidata:
+        wikipedia_title = process_wikipedia.make_wikilinks_consistent(wikipedia_title)
+        processed_wikipedia_title = process_wikipedia.make_wikipedia2wikidata_consisent(
+            wikipedia_title
+        )
+        linked_wqid = process_wikipedia.title_to_id(db, processed_wikipedia_title)
+        if not linked_wqid:
             print(
                 "Warning: "
-                + wikipedia_title
+                + processed_wikipedia_title
                 + " is not in wikipedia2wikidata, the wkdt_qid will be None."
             )
-        return wikipedia2wikidata.get(wikipedia_title)
+        return linked_wqid
     return None
 
 
@@ -146,14 +145,16 @@ def process_lwm_for_ner(tsv_topres_path):
     """
     lwm_data = []
 
-    for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
+    for fid in glob.glob(os.path.join(f"{tsv_topres_path}", "annotated_tsv", "*")):
 
         filename = fid.split("/")[-1]  # Full document name
         file_id = filename.split("_")[0]  # Document id
 
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
-        dMTokens, dTokens = process_tsv(tsv_topres_path + "annotated_tsv/" + filename)
+        dMTokens, dTokens = process_tsv(
+            os.path.join(f"{tsv_topres_path}", "annotated_tsv", f"{filename}")
+        )
 
         ner_tags = []
         tokens = []
@@ -215,10 +216,10 @@ def process_lwm_for_linking(tsv_topres_path):
     )
 
     metadata_df = pd.read_csv(
-        tsv_topres_path + "metadata.tsv", sep="\t", index_col="fname"
+        os.path.join(f"{tsv_topres_path}", "metadata.tsv"), sep="\t", index_col="fname"
     )
 
-    for fid in glob.glob(tsv_topres_path + "annotated_tsv/*"):
+    for fid in glob.glob(os.path.join(f"{tsv_topres_path}", "annotated_tsv", "*")):
         filename = fid.split("/")[-1].split(".tsv")[0]  # Full document name
 
         # Fields to fill:
@@ -236,7 +237,7 @@ def process_lwm_for_linking(tsv_topres_path):
         # Dictionary that maps each token in a document with its
         # positional information and associated annotations:
         dMTokens, dTokens = process_tsv(
-            tsv_topres_path + "annotated_tsv/" + filename + ".tsv"
+            os.path.join(f"{tsv_topres_path}", "annotated_tsv", f"{filename}" + ".tsv")
         )
 
         # Dictionary of reconstructed sentences:
@@ -370,28 +371,33 @@ def process_hipe_for_linking(hipe_path):
     char_index = 0
     sent_index = 0
     newspaper_id = ""
-    date = ""
+    year = ""
     end_sentence = False
     start_document = False
     with open(hipe_path) as fr:
         lines = fr.readlines()
         previous_endchar = 0
         adding_chars = 0  # To readjust the indices of badly split sentences.
+        iline = 0
         for line in lines[1:]:
-            if line.startswith("# newspaper"):
-                newspaper_id = line.split("= ")[-1].strip()
-            elif line.startswith("# date"):
-                date = int(line.split("= ")[-1].strip()[:4])
-            elif line.startswith("# document_id"):
+            iline += 1
+            if line.startswith("# hipe2022:document_id"):
                 if new_sentence:
                     new_document.append(new_sentence)
                     sent_index = 0
                 new_document = []
                 new_sentence = ""
                 article_id = line.split("= ")[-1].strip()
+                newspaper_id = article_id.split("-")[0]
+                year = article_id.split("-")[1]
                 start_document = True
-                dMetadata[article_id] = {"newspaper_id": newspaper_id, "date": date}
+                dMetadata[article_id] = {"newspaper_id": newspaper_id, "year": year}
                 adding_chars = 0
+            elif iline == len(lines) - 1:  # If it's the last line in the doc:
+                if new_sentence:
+                    new_document.append(new_sentence)
+                    sent_index = 0
+                dMetadata[article_id] = {"newspaper_id": newspaper_id, "year": year}
             elif not line.startswith("#"):
                 line = line.strip().split()
                 if len(line) == 10:
@@ -409,7 +415,7 @@ def process_hipe_for_linking(hipe_path):
                         end_sentence = False
                         adding_chars += previous_endchar
 
-                    if "PySBDSegment" in comment:
+                    if "EndOfSentence" in comment:
                         if end_sentence == True:
                             if start_document == False:
                                 new_document.append(new_sentence)
@@ -468,6 +474,9 @@ def process_hipe_for_linking(hipe_path):
 
             if article_id and new_document:
                 dSentences[article_id] = new_document
+
+    if not article_id in dSentences:
+        dSentences[article_id] = new_document
 
     for k in dSentences:
         sentence_counter = 0
@@ -528,8 +537,8 @@ def process_hipe_for_linking(hipe_path):
             dSentencesFile,  # sentences
             dAnnotationsFile,  # annotations
             "",  # place_publication
-            int(str(dMetadata[k]["date"])[:3] + "0"),  # decade
-            dMetadata[k]["date"],  # year
+            int(str(dMetadata[k]["year"])[:3] + "0"),  # decade
+            dMetadata[k]["year"],  # year
             None,  # ocr_quality_mean
             None,  # ocr_quality_sd
             "",  # publication_title
