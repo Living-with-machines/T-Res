@@ -5,7 +5,6 @@ import os
 import json
 import pandas as pd
 from pathlib import Path
-from collections import Counter
 
 large_resources = "/resources/"  # path to large resources
 small_resources = "resources/"  # path to small resources
