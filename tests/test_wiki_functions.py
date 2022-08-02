@@ -22,6 +22,10 @@ def test_wikidata2wikipedia():
     assert process_wikipedia.title_to_id(db, "Bologna") == None
     assert process_wikipedia.title_to_id(db, "bologna") == "Q1891"
     assert process_wikipedia.title_to_id(db, "new_york_city") == "Q60"
+    prepare_url = process_wikipedia.make_wikipedia2wikidata_consisent("New_York_City#")
+    assert process_wikipedia.title_to_id(db, prepare_url) == "Q60"
+    prepare_url = process_wikipedia.make_wikipedia2wikidata_consisent("New_York_City#Boroughs")
+    assert process_wikipedia.title_to_id(db, prepare_url) == "Q60"
     assert process_wikipedia.title_to_id(db, "new%20york%20city") == None
     prepare_url = process_wikipedia.make_wikipedia2wikidata_consisent("New York City")
     assert process_wikipedia.title_to_id(db, prepare_url) == "Q60"
