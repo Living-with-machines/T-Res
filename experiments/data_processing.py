@@ -9,14 +9,29 @@ from utils import preprocess_data
 from sklearn.model_selection import train_test_split
 import random
 import json
+import os
 
 RANDOM_SEED = 42
 
 random.seed(RANDOM_SEED)
 
+large_resources = "/resources/"  # path to large resources
+small_resources = "../resources/"  # path to small resources
+output_path_lwm = "outputs/data/lwm/"
+output_path_hipe = "outputs/data/hipe/"
+# Create output folders for processed data if they do not exist:
+Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
+Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
 
-with open("../resources/publication_metadata.json") as jsonfile:
+
+# ------------------------------------------------------
+# Publication metadata
+# ------------------------------------------------------
+
+# Load publication metadata
+with open(os.path.join(f"{small_resources}", "publication_metadata.json")) as jsonfile:
     df_metadata = json.load(jsonfile)
+
 dict_titles = {k: df_metadata[k]["publication_title"] for k in df_metadata}
 dict_place = {k: df_metadata[k]["publication_place"] for k in df_metadata}
 dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
@@ -26,30 +41,36 @@ dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
 # LWM dataset
 # ------------------------------------------------------
 
+# Path of the manually annotated data:
+news_path = os.path.join(f"{small_resources}", "news_datasets")
+
 # Download the annotated data from the BL repository:
-# get_data.download_lwm_data()
+get_data.download_lwm_data(news_path)
 
-# Path for the output dataset dataframes:
-output_path_lwm = "outputs/data/lwm/"
-Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
+# Training data from the manually annotated data:
+topres_path_train = os.path.join(
+    f"{small_resources}", "news_datasets", "topRes19th_v2", "train"
+)
 
-# Path of the annotated data:
-# !TODO: Change path to that where downloaded data is stored.
-topres_path_train = "/resources/newsdataset/fmp_lwm/train/"
-topres_path_test = "/resources/newsdataset/fmp_lwm/test/"
+# Test data from the manually annotated data:
+topres_path_test = os.path.join(
+    f"{small_resources}", "news_datasets", "topRes19th_v2", "test"
+)
 
 # Process data for training a named entity recognition model:
 lwm_df = preprocess_data.process_lwm_for_ner(topres_path_train)
 
 # Split NER-formatted training set into train and dev, and store them.
 # They will be used by the ner_training.py script:
-lwm_train_ner, lwm_dev_ner = train_test_split(lwm_df, test_size=0.2, random_state=RANDOM_SEED)
+lwm_train_ner, lwm_dev_ner = train_test_split(
+    lwm_df, test_size=0.2, random_state=RANDOM_SEED
+)
 lwm_train_ner.to_json(
     output_path_lwm + "ner_df_train.json", orient="records", lines=True
 )
 lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines=True)
 
-# Process data for resolution:
+# Process data for the resolution experiments:
 lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train)
 lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test)
 
@@ -98,7 +119,7 @@ for group in groups:
 
 # Store dataframe:
 lwm_all_df.to_csv(
-    output_path_lwm + "linking_df_split.tsv",
+    os.path.join(f"{output_path_lwm}", "linking_df_split.tsv"),
     sep="\t",
     index=False,
 )
@@ -117,18 +138,18 @@ print()
 # CLEF HIPE dataset
 # ------------------------------------------------------
 
-# Path for the output dataset dataframes:
-output_path_hipe = "outputs/data/hipe/"
-Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
+# Path to HIPE data:
+hipe_path = os.path.join(f"{news_path}", "hipe")
 
-# Path to folder with HIPE original data (v1.4):
-hipe_path = "/resources/newsdataset/clef_hipe/"
+# Download the annotated data from the BL repository:
+get_data.download_hipe_data(hipe_path)
 
 hipe_dev_df = preprocess_data.process_hipe_for_linking(
-    hipe_path + "HIPE-data-v1.4-dev-en.tsv"
+    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-dev-en.tsv")
 )
+
 hipe_test_df = preprocess_data.process_hipe_for_linking(
-    hipe_path + "HIPE-data-v1.4-test-en.tsv"
+    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-test-en.tsv")
 )
 
 hipe_all_df = pd.concat([hipe_dev_df, hipe_test_df])
