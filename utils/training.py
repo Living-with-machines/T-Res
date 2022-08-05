@@ -44,11 +44,15 @@ class Trainer(object):
         return loss.item()
 
     def set_split(self):
-        val_mask = np.array([True if s == "dev" else False for l in self.data.split for s in l])
+        val_mask = np.array(
+            [True if s == "dev" else False for l in self.data.split for s in l]
+        )
         train_mask = np.array(
             [True if s == "train" else False for l in self.data.split for s in l]
         )
-        test_mask = np.array([True if s == "test" else False for l in self.data.split for s in l])
+        test_mask = np.array(
+            [True if s == "test" else False for l in self.data.split for s in l]
+        )
         self.data.val_mask = torch.tensor(val_mask, dtype=torch.bool)
         self.data.train_mask = torch.tensor(train_mask, dtype=torch.bool)
         self.data.test_mask = torch.tensor(test_mask, dtype=torch.bool)
@@ -126,7 +130,9 @@ def train_rel_ed(mylinker, all_df, train_df, whichsplit):
         parents=True, exist_ok=True
     )
     wikipedia = Wikipedia(base_path, wiki_version)
-    data_handler = GenTrainingTest(base_path, wiki_version, wikipedia, mylinker=mylinker)
+    data_handler = GenTrainingTest(
+        base_path, wiki_version, wikipedia, mylinker=mylinker
+    )
     for ds in ["train", "dev"]:
         if "edaidalwm" in mylinker.method:
             data_handler.process_aidalwm(ds, all_df, train_df, whichsplit)

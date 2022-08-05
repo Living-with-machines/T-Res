@@ -1,12 +1,13 @@
 import os
 import sys
 import pandas as pd
+from pathlib import Path
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from geoparser import preparation, recogniser, ranking, linking
 
-dataset = "lwm"  # "hipe" or "lwm"
+dataset = "hipe"  # "hipe" or "lwm"
 
 # Candidate selection approach, options are:
 # * perfectmatch
@@ -20,19 +21,17 @@ cand_select_method = "perfectmatch"
 # * contextualized
 # * reldisamb:relcs # REL disambiguation with their candidates (our mentions)
 # * reldisamb:lwmcs # REL disambiguation with our candidates (our mentions)
-top_res_method = "mostpopular"
-# top_res_method = "reldisamb:lwmcs:relv"
-# top_res_method = "reldisamb:lwmcs:relvpubl"
-# top_res_method = "reldisamb:relcs"
-# top_res_method = "reldisamb:lwmcs:dist"
-# top_res_method = "reldisamb:lwmcs:relvdist"
-# top_res_method = "gnn"
+# * "reldisamb:lwmcs:relv"
+# * "reldisamb:lwmcs:relvpubl"
+# * "reldisamb:relcs"
+# * "reldisamb:lwmcs:dist"
+# * "reldisamb:lwmcs:relvdist"
+top_res_method = "reldisamb:relcs"
 
 
 # --------------------------------------
 # Instantiate the recogniser:
 myner = recogniser.Recogniser(
-    method="lwm",  # NER method
     model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
     model=None,  # We'll store the NER model here
     pipe=None,  # We'll store the NER pipeline here
@@ -48,9 +47,8 @@ myner = recogniser.Recogniser(
     },
     overwrite_training=False,  # Set to True if you want to overwrite model if existing
     do_test=False,  # Set to True if you want to train on test mode
-    training_tagset="fine",  # Options are: "coarse" or "fine"
+    training_tagset="coarse",  # Options are: "coarse" or "fine"
 )
-
 
 # --------------------------------------
 # Instantiate the ranker:
@@ -58,22 +56,38 @@ myranker = ranking.Ranker(
     method=cand_select_method,
     resources_path="/resources/wikidata/",
     mentions_to_wikidata=dict(),
+    wikidata_to_mentions=dict(),
+    wiki_filtering={
+        "top_mentions": 3,  # Filter mentions to top N mentions
+        "minimum_relv": 0.03,  # Filter mentions with more than X relv
+    },
+    strvar_parameters={
+        # Parameters to create the string pair dataset:
+        "ocr_threshold": 60,
+        "top_threshold": 85,
+        "min_len": 5,
+        "max_len": 15,
+    },
     deezy_parameters={
         # Paths and filenames of DeezyMatch models and data:
-        "dm_path": "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/deezymatch/",
+        "dm_path": str(Path("outputs/deezymatch/").resolve()),
         "dm_cands": "wkdtalts",
-        "dm_model": "ocr_avgpool",
+        "dm_model": "w2v_ocr",
         "dm_output": "deezymatch_on_the_fly",
         # Ranking measures:
         "ranking_metric": "faiss",
-        "selection_threshold": 10,
-        "num_candidates": 2,
-        "search_size": 2,
+        "selection_threshold": 1000,
+        "num_candidates": 3,
+        "search_size": 3,
         "use_predict": False,
         "verbose": False,
+        # DeezyMatch training:
+        "overwrite_training": False,
+        "w2v_ocr_path": str(Path("outputs/models/").resolve()),
+        "w2v_ocr_model": "w2v_*_news",
+        "do_test": False,
     },
 )
-
 
 # --------------------------------------
 # Instantiate the linker:
@@ -83,12 +97,6 @@ mylinker = linking.Linker(
     linking_resources=dict(),
     base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
     rel_params={"base_path": "/resources/rel_db/", "wiki_version": "wiki_2019/"},
-    gnn_params={
-        "level": "sentence_id",
-        "max_distance": 200,
-        "similarity_threshold": 0.7,
-        "model_path": "/resources/develop/mcollardanuy/toponym-resolution/experiments/outputs/gnn_models/",
-    },
     overwrite_training=False,
 )
 
@@ -105,7 +113,7 @@ experiment = preparation.Experiment(
     mylinker=mylinker,
     overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
     processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
-    test_split="test",  # "dev" while experimenting, "test" when running final experiments.
+    test_split="dev",  # "dev" while experimenting, "test" when running final experiments.
     rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
 )
 
@@ -120,11 +128,6 @@ experiment.processed_data = experiment.load_data()
 
 # Perform data postprocessing:
 experiment.processed_data = experiment.prepare_data()
-
-# Linker load resources:
-print("\n* Load linking resources...")
-mylinker.linking_resources = mylinker.load_resources()
-print("... resources loaded, linking in progress!\n")
 
 # Do the linking experiments:
 experiment.linking_experiments()

@@ -14,7 +14,7 @@ from ast import literal_eval
 
 # Load Wikidata resource:
 print("Loading the wikidata gazetteer.")
-wikidata_path = '/resources/wikidata/'
+wikidata_path = "/resources/wikidata/"
 df = pd.DataFrame()
 if not Path(wikidata_path + "wikidata_gazetteer.csv").exists():
     all_files = glob.glob(wikidata_path + "extracted/*.csv")
@@ -25,41 +25,40 @@ if not Path(wikidata_path + "wikidata_gazetteer.csv").exists():
         li.append(df_temp)
 
     df = pd.concat(li, axis=0, ignore_index=True)
-    df = df.drop(columns=['Unnamed: 0'])
+    df = df.drop(columns=["Unnamed: 0"])
 
     df.to_csv(wikidata_path + "wikidata_gazetteer.csv", index=False)
 
 else:
     df = pd.read_csv(wikidata_path + "wikidata_gazetteer.csv", low_memory=False)
 
-    
+
 # ---------------
 # 2. ALTNAMES
 # Collect altnames and mentions and link them to Wikidata locations.
 # ---------------
 
-if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
-    
+if not Path(wikidata_path + "mentions_to_wikidata.json").exists():
+
     # ---------------
     # Load resources
     # ---------------
 
     # Load Wikipedia resources:
-    wikipedia_path = '/resources/wikipedia/extractedResources/'
+    wikipedia_path = "/resources/wikipedia/extractedResources/"
 
     print("Loading mention_overall_dict.")
-    with open(wikipedia_path+'mention_overall_dict.json', 'r') as f:
+    with open(wikipedia_path + "mention_overall_dict.json", "r") as f:
         mention_overall_dict = json.load(f)
-        mention_overall_dict = {x:Counter(y) for x,y in mention_overall_dict.items()}
+        mention_overall_dict = {x: Counter(y) for x, y in mention_overall_dict.items()}
 
     print("Loading wikipedia2wikidata.")
-    with open(wikipedia_path+'wikipedia2wikidata.json', 'r') as f:
+    with open(wikipedia_path + "wikipedia2wikidata.json", "r") as f:
         wikipedia2wikidata = json.load(f)
 
     print("Loading wikidata2wikipedia.")
-    with open(wikipedia_path+'wikidata2wikipedia.json', 'r') as f:
+    with open(wikipedia_path + "wikidata2wikipedia.json", "r") as f:
         wikidata2wikipedia = json.load(f)
-
 
     # all_wikidata_keys is the set of all wikidata entries that have a
     # corresponding wikipedia entry:
@@ -70,8 +69,7 @@ if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
     # wikidata entries in our wikidata df). all_wikidata_locs should
     # be a subset of all_wikidata_keys.
     all_wikidata_locs = set(list(df["wikidata_id"].unique()))
-    
-    
+
     # Collect altnames from the Wikidata dataframe (columns alias_dict,
     # english_label, and nativelabel). Create a dictionary where the
     # altname is the key and a counter of Wikidata entries potentially
@@ -101,7 +99,6 @@ if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
     for aln in wikidata_altnames:
         wikidata_altnames_counter[aln] = Counter(wikidata_altnames[aln])
 
-
     # Collect altnames from the mention_overall_dict dictionary.
 
     # mentions_to_wikidata is a dictionary where the key is a
@@ -119,16 +116,21 @@ if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
                 if wikipedia2wikidata[wk] in all_wikidata_locs:
                     if m in mentions_to_wikidata:
                         if wikipedia2wikidata[wk] in mentions_to_wikidata[m]:
-                            mentions_to_wikidata[m][wikipedia2wikidata[wk]] += mention_overall_dict[m][wk]
+                            mentions_to_wikidata[m][
+                                wikipedia2wikidata[wk]
+                            ] += mention_overall_dict[m][wk]
                         else:
-                            mentions_to_wikidata[m][wikipedia2wikidata[wk]] = mention_overall_dict[m][wk]
+                            mentions_to_wikidata[m][
+                                wikipedia2wikidata[wk]
+                            ] = mention_overall_dict[m][wk]
                     else:
-                        mentions_to_wikidata[m] = {wikipedia2wikidata[wk]: mention_overall_dict[m][wk]}
+                        mentions_to_wikidata[m] = {
+                            wikipedia2wikidata[wk]: mention_overall_dict[m][wk]
+                        }
     for m in mentions_to_wikidata:
         mentions_to_wikidata[m] = Counter(mentions_to_wikidata[m])
         if m in wikidata_altnames_counter:
             mentions_to_wikidata[m] += wikidata_altnames_counter[m]
-
 
     # wikidata_to_mentions is the reverse dictionary of mentions_to_wikidata:
     print("Creating the wikidata2mentions dictionary.")
@@ -138,10 +140,9 @@ if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
             if wk in wikidata_to_mentions:
                 wikidata_to_mentions[wk][m] = mentions_to_wikidata[m][wk]
             else:
-                wikidata_to_mentions[wk] = {m : mentions_to_wikidata[m][wk]}
+                wikidata_to_mentions[wk] = {m: mentions_to_wikidata[m][wk]}
 
-
-    # wikidata_to_mentions_normalized is the normalized version of 
+    # wikidata_to_mentions_normalized is the normalized version of
     # wikidata_to_mentions: each wikidata ID has one or more mentions
     # with a relative frequency that adds up to one, indicating the
     # probabilities of a certain wikidata ID to being referred by the
@@ -149,9 +150,10 @@ if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
     print("Creating the normalized wikidata2mentions dictionary.")
     wikidata_to_mentions_normalized = dict()
     for wk in wikidata_to_mentions:
-        factor = 1.0/sum(wikidata_to_mentions[wk].values())
-        wikidata_to_mentions_normalized[wk] = Counter({key : value * factor for key, value in wikidata_to_mentions[wk].items()})
-
+        factor = 1.0 / sum(wikidata_to_mentions[wk].values())
+        wikidata_to_mentions_normalized[wk] = Counter(
+            {key: value * factor for key, value in wikidata_to_mentions[wk].items()}
+        )
 
     # mentions_to_wikidata_normalized is the normalized version of
     # mentions_to_wikidata. For a given mention, each Wikidata ID
@@ -168,48 +170,55 @@ if not Path(wikidata_path + 'mentions_to_wikidata.json').exists():
     for m in mentions_to_wikidata:
         for wk in mentions_to_wikidata[m]:
             if m in mentions_to_wikidata_normalized:
-                mentions_to_wikidata_normalized[m][wk] = wikidata_to_mentions_normalized[wk][m]
+                mentions_to_wikidata_normalized[m][
+                    wk
+                ] = wikidata_to_mentions_normalized[wk][m]
             else:
-                mentions_to_wikidata_normalized[m] = {wk : wikidata_to_mentions_normalized[wk][m]}
-
+                mentions_to_wikidata_normalized[m] = {
+                    wk: wikidata_to_mentions_normalized[wk][m]
+                }
 
     print("Storing the dictionaries.")
-    with open(wikidata_path + 'mentions_to_wikidata_normalized.json', 'w') as fp:
+    with open(wikidata_path + "mentions_to_wikidata_normalized.json", "w") as fp:
         json.dump(mentions_to_wikidata_normalized, fp)
-    with open(wikidata_path + 'wikidata_to_mentions_normalized.json', 'w') as fp:
+    with open(wikidata_path + "wikidata_to_mentions_normalized.json", "w") as fp:
         json.dump(wikidata_to_mentions_normalized, fp)
 
-    with open(wikidata_path + 'mentions_to_wikidata.json', 'w') as fp:
+    with open(wikidata_path + "mentions_to_wikidata.json", "w") as fp:
         json.dump(mentions_to_wikidata, fp)
-    with open(wikidata_path + 'wikidata_to_mentions.json', 'w') as fp:
+    with open(wikidata_path + "wikidata_to_mentions.json", "w") as fp:
         json.dump(wikidata_to_mentions, fp)
-    
+
 # ---------------
 # 3. RELEVANCE
 # Create a dictionary of Wikidata entity relevance
 # ---------------
 
 
-if not Path(wikidata_path + 'overall_entity_freq_wikidata.json').exists():
-    
+if not Path(wikidata_path + "overall_entity_freq_wikidata.json").exists():
+
     print("Creating the wikidata overall frequency dictionary.")
 
-    wikipedia_path = '/resources/wikipedia/extractedResources/'
+    wikipedia_path = "/resources/wikipedia/extractedResources/"
 
-    with open(wikipedia_path + 'overall_entity_freq.json', 'r') as f:
+    with open(wikipedia_path + "overall_entity_freq.json", "r") as f:
         overall_entity_freq = json.load(f)
 
-    with open(wikipedia_path + 'wikipedia2wikidata.json', 'r') as f:
+    with open(wikipedia_path + "wikipedia2wikidata.json", "r") as f:
         wikipedia2wikidata = json.load(f)
 
     # Dictionary overall_entity_freq_wikidata:
     overall_entity_freq_wikidata = dict()
     for wk in wikipedia2wikidata:
         if wikipedia2wikidata[wk] in overall_entity_freq_wikidata:
-            overall_entity_freq_wikidata[wikipedia2wikidata[wk]] += overall_entity_freq[wk]
+            overall_entity_freq_wikidata[wikipedia2wikidata[wk]] += overall_entity_freq[
+                wk
+            ]
         else:
-            overall_entity_freq_wikidata[wikipedia2wikidata[wk]] = overall_entity_freq[wk]
-            
+            overall_entity_freq_wikidata[wikipedia2wikidata[wk]] = overall_entity_freq[
+                wk
+            ]
+
     print("Storing the wikidata overall frequency dictionary.")
-    with open(wikidata_path + 'overall_entity_freq_wikidata.json', 'w') as fp:
+    with open(wikidata_path + "overall_entity_freq_wikidata.json", "w") as fp:
         json.dump(overall_entity_freq_wikidata, fp)

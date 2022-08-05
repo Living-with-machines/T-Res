@@ -62,18 +62,29 @@ class Experiment:
         self.rel_experiments = rel_experiments
 
         # Load the dataset as a dataframe:
-        self.dataset_df = pd.read_csv(
-            self.data_path + self.dataset + "/linking_df_split.tsv",
-            sep="\t",
+        dataset_path = os.path.join(
+            self.data_path, self.dataset, "linking_df_split.tsv"
         )
+
+        if Path(dataset_path).exists():
+            self.dataset_df = pd.read_csv(
+                dataset_path,
+                sep="\t",
+            )
+        else:
+            sys.exit(
+                "\nError: The dataset has not been created, you should first run the data_processing.py script.\n"
+            )
 
     def __str__(self):
         """
         Prints the characteristics of the experiment.
         """
-        msg = "\nData processing in the " + self.dataset.upper() + " dataset."
-        msg += "\n* Overwrite processing: " + str(self.overwrite_processing)
-        msg += "\n* Experiments run on the >>> " + self.test_split + " <<< set.\n"
+        msg = "\n>>> Experiment\n"
+        msg += "    * Dataset: {0}\n".format(self.dataset.upper())
+        msg += "    * Overwrite processing: {0}\n".format(self.overwrite_processing)
+        msg += "    * Experiments on: {0}\n".format(self.test_split)
+        msg += "    * Run end-to-end REL experiments: {0}".format(self.rel_experiments)
         return msg
 
     def load_data(self):
@@ -104,7 +115,14 @@ class Experiment:
             "deezymatch",
         ]:
             print(
-                """\n!!! Coherence check failed. This is due to: \n\t* Nonexistent candidate ranking method.\n"""
+                "\n!!! Coherence check failed. "
+                "This is because the candidate ranking method does not exist.\n"
+            )
+            sys.exit(0)
+        if self.dataset == "hipe" and self.myner.training_tagset != "coarse":
+            print(
+                "\n!!! Coherence check failed. "
+                "HIPE should be run with the coarse tagset.\n"
             )
             sys.exit(0)
 
@@ -126,13 +144,6 @@ class Experiment:
                 self.dataset_df
             )
 
-            # Print information on the Recogniser:
-            print(self.myner)
-
-            # Train the NER models if needed:
-            print("*** Training the toponym recognition model...")
-            self.myner.train()
-
             print("** Load NER pipeline!")
             self.myner.model, self.myner.pipe = self.myner.create_pipeline()
 
@@ -142,6 +153,7 @@ class Experiment:
             output_lwm_ner = process_data.ner_and_process(
                 dSentences, dAnnotated, self.myner
             )
+
             dPreds = output_lwm_ner[0]
             dTrues = output_lwm_ner[1]
             dSkys = output_lwm_ner[2]
@@ -151,9 +163,6 @@ class Experiment:
 
             # -------------------------------------------
             # Perform candidate ranking:
-            # Load ranking resources
-            print("\n* Load ranking resources:")
-            self.myranker.mentions_to_wikidata = self.myranker.load_resources()
             print("\n* Perform candidate ranking:")
             # Obtain candidates per sentence:
             dCandidates = dict()
@@ -221,6 +230,7 @@ class Experiment:
                     "Manchester1860",
                     "Poole1860",
                 ]
+
         # ------------------------------------------
         # HIPE dataset has no train set, so we always use LwM dataset for training.
         # Try to load the LwM dataset, otherwise raise a warning and create
@@ -273,12 +283,6 @@ class Experiment:
             if "reldisamb" in self.mylinker.method:
                 # Train according to method and store model:
                 self.mylinker.rel_params = self.mylinker.perform_training(
-                    lwm_original_df, lwm_processed_df, split
-                )
-
-            if "gnn" in self.mylinker.method:
-                # Train according to method and store model:
-                self.mylinker.gnn_params = self.mylinker.perform_training(
                     lwm_original_df, lwm_processed_df, split
                 )
 

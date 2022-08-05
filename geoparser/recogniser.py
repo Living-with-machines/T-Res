@@ -24,7 +24,6 @@ from utils import ner
 class Recogniser:
     def __init__(
         self,
-        method,
         model_name,
         model,
         pipe,
@@ -37,7 +36,6 @@ class Recogniser:
         do_test,
         training_tagset,
     ):
-        self.method = method
         self.model_name = model_name
         self.model = model
         self.pipe = pipe
@@ -50,11 +48,22 @@ class Recogniser:
         self.do_test = do_test
         self.training_tagset = training_tagset
         self.model_name = self.model_name + "-" + self.training_tagset
+        # Train the NER models if needed:
+        self.train()
+        # Load the NER pipeline:
+        self.model, self.pipe = self.create_pipeline()
 
     # -------------------------------------------------------------
     def __str__(self):
-        s = """\n>>> Toponym recogniser:\n    * Method: {0}\n    * Model name: {1}\n    * Base model: {2}\n    * Overwrite model if exists: {3}\n    * Train in test mode: {4}\n    * Training args: {5}\n    * Training tagset: {6}\n""".format(
-            self.method,
+        s = (
+            "\n>>> Toponym recogniser:\n"
+            "    * Model name: {0}\n"
+            "    * Base model: {1}\n"
+            "    * Overwrite model if exists: {2}\n"
+            "    * Train in test mode: {3}\n"
+            "    * Training args: {4}\n"
+            "    * Training tagset: {5}\n"
+        ).format(
             self.model_name,
             self.base_model,
             str(self.overwrite_training),
@@ -76,6 +85,12 @@ class Recogniser:
 
         Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
+
+        if self.overwrite_training == False:
+            print("\nThe NER model is already trained!\n")
+            return None
+
+        print("*** Training the toponym recognition model...")
 
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
         metric = load_metric("seqeval")
