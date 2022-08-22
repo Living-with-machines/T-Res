@@ -5,9 +5,9 @@ from pathlib import Path
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import preparation, recogniser, ranking, linking
+from geoparser import experiment, recogniser, ranking, linking
 
-dataset = "hipe"  # "hipe" or "lwm"
+dataset = "lwm"  # "hipe" or "lwm"
 
 # Candidate selection approach, options are:
 # * perfectmatch
@@ -26,7 +26,7 @@ cand_select_method = "perfectmatch"
 # * "reldisamb:relcs"
 # * "reldisamb:lwmcs:dist"
 # * "reldisamb:lwmcs:relvdist"
-top_res_method = "reldisamb:relcs"
+top_res_method = "mostpopular"
 
 
 # --------------------------------------
@@ -103,7 +103,7 @@ mylinker = linking.Linker(
 
 # --------------------------------------
 # Instantiate the experiment:
-experiment = preparation.Experiment(
+myexperiment = experiment.Experiment(
     dataset=dataset,
     data_path="outputs/data/",
     dataset_df=pd.DataFrame(),
@@ -118,16 +118,16 @@ experiment = preparation.Experiment(
 )
 
 # Print experiment information:
-print(experiment)
+print(myexperiment)
 print(myner)
 print(myranker)
 print(mylinker)
 
 # Load processed data if existing:
-experiment.processed_data = experiment.load_data()
+myexperiment.processed_data = myexperiment.load_data()
 
 # Perform data postprocessing:
-experiment.processed_data = experiment.prepare_data()
+myexperiment.processed_data = myexperiment.prepare_data()
 
 # Do the linking experiments:
-experiment.linking_experiments()
+myexperiment.linking_experiments()

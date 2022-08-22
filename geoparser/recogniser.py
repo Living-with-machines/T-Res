@@ -48,10 +48,6 @@ class Recogniser:
         self.do_test = do_test
         self.training_tagset = training_tagset
         self.model_name = self.model_name + "-" + self.training_tagset
-        # Train the NER models if needed:
-        self.train()
-        # Load the NER pipeline:
-        self.model, self.pipe = self.create_pipeline()
 
     # -------------------------------------------------------------
     def __str__(self):
@@ -215,6 +211,7 @@ class Recogniser:
             self.pipe (Pipeline): a pipeline object which performs
                 named entity recognition given a model.
         """
+        print("*** Creating and loading a NER pipeline.")
         # Path to NER Model:
         self.model = self.output_path + self.model_name + ".model"
         self.pipe = pipeline("ner", model=self.model)

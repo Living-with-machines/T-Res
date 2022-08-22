@@ -104,6 +104,25 @@ class Pipeline:
                 overwrite_training=False,
             )
 
+        # -----------------------------------------
+        # NER training and creating pipeline:
+        # Train the NER models if needed:
+        self.myner.train()
+        # Load the NER pipeline:
+        self.myner.model, self.myner.pipe = self.myner.create_pipeline()
+
+        # -----------------------------------------
+        # Ranker loading resources and training a model:
+        # Load the resources:
+        self.myranker.mentions_to_wikidata = self.myranker.load_resources()
+        # Train a DeezyMatch model if needed:
+        self.myranker.train()
+
+        # -----------------------------------------
+        # Linker loading resources:
+        # Load linking resources:
+        self.mylinker.linking_resources = self.mylinker.load_resources()
+
     def run_text(self, text, place_publication="", year=""):
         predictions = self.myner.ner_predict(text)
         procpreds = [

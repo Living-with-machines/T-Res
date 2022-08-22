@@ -131,63 +131,72 @@ class Experiment:
         # otherwise process the data.
         if self.processed_data and self.overwrite_processing == False:
             print("\nData already postprocessed and loaded!\n")
+            return self.processed_data
 
         # ----------------------------------
         # If data has not been processed, or overwrite is set to True, then:
-        else:
 
-            # Create the results directory if it does not exist:
-            Path(self.results_path).mkdir(parents=True, exist_ok=True)
+        # Create the results directory if it does not exist:
+        Path(self.results_path).mkdir(parents=True, exist_ok=True)
 
-            # Prepare data per sentence:
-            dAnnotated, dSentences, dMetadata = process_data.prepare_sents(
-                self.dataset_df
-            )
+        # Prepare data per sentence:
+        dAnnotated, dSentences, dMetadata = process_data.prepare_sents(self.dataset_df)
 
-            print("** Load NER pipeline!")
-            self.myner.model, self.myner.pipe = self.myner.create_pipeline()
+        # -----------------------------------------
+        # NER training and creating pipeline:
+        # Train the NER models if needed:
+        self.myner.train()
+        # Load the NER pipeline:
+        self.myner.model, self.myner.pipe = self.myner.create_pipeline()
 
-            # -------------------------------------------
-            # Parse with NER in the LwM way
-            print("\nPerform NER with our model:")
-            output_lwm_ner = process_data.ner_and_process(
-                dSentences, dAnnotated, self.myner
-            )
+        # -----------------------------------------
+        # Ranker loading resources and training a model:
+        # Load the resources:
+        self.myranker.mentions_to_wikidata = self.myranker.load_resources()
+        # Train a DeezyMatch model if needed:
+        self.myranker.train()
 
-            dPreds = output_lwm_ner[0]
-            dTrues = output_lwm_ner[1]
-            dSkys = output_lwm_ner[2]
-            gold_tokenization = output_lwm_ner[3]
-            dMentionsPred = output_lwm_ner[4]
-            dMentionsGold = output_lwm_ner[5]
+        # -------------------------------------------
+        # Parse with NER in the LwM way
+        print("\nPerform NER with our model:")
+        output_lwm_ner = process_data.ner_and_process(
+            dSentences, dAnnotated, self.myner
+        )
 
-            # -------------------------------------------
-            # Perform candidate ranking:
-            print("\n* Perform candidate ranking:")
-            # Obtain candidates per sentence:
-            dCandidates = dict()
-            for sentence_id in tqdm(dMentionsPred):
-                pred_mentions_sent = dMentionsPred[sentence_id]
-                (
-                    wk_cands,
-                    self.myranker.already_collected_cands,
-                ) = self.myranker.find_candidates(pred_mentions_sent)
-                dCandidates[sentence_id] = wk_cands
+        dPreds = output_lwm_ner[0]
+        dTrues = output_lwm_ner[1]
+        dSkys = output_lwm_ner[2]
+        gold_tokenization = output_lwm_ner[3]
+        dMentionsPred = output_lwm_ner[4]
+        dMentionsGold = output_lwm_ner[5]
 
-            # -------------------------------------------
-            # Store temporary postprocessed data
-            self.processed_data = process_data.store_processed_data(
-                self,
-                dPreds,
-                dTrues,
-                dSkys,
-                gold_tokenization,
-                dSentences,
-                dMetadata,
-                dMentionsPred,
-                dMentionsGold,
-                dCandidates,
-            )
+        # -------------------------------------------
+        # Perform candidate ranking:
+        print("\n* Perform candidate ranking:")
+        # Obtain candidates per sentence:
+        dCandidates = dict()
+        for sentence_id in tqdm(dMentionsPred):
+            pred_mentions_sent = dMentionsPred[sentence_id]
+            (
+                wk_cands,
+                self.myranker.already_collected_cands,
+            ) = self.myranker.find_candidates(pred_mentions_sent)
+            dCandidates[sentence_id] = wk_cands
+
+        # -------------------------------------------
+        # Store temporary postprocessed data
+        self.processed_data = process_data.store_processed_data(
+            self,
+            dPreds,
+            dTrues,
+            dSkys,
+            gold_tokenization,
+            dSentences,
+            dMetadata,
+            dMentionsPred,
+            dMentionsGold,
+            dCandidates,
+        )
 
         # -------------------------------------------
         # Store results in the CLEF-HIPE scorer-required format
@@ -195,13 +204,16 @@ class Experiment:
             self, task="ner", how_split="originalsplit", which_split="test"
         )
 
+        return self.processed_data
+
+    def linking_experiments(self):
+
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
         self.processed_data["processed_df"] = processed_df
 
-        return self.processed_data
-
-    def linking_experiments(self):
+        # Load linking resources:
+        self.mylinker.linking_resources = self.mylinker.load_resources()
 
         # Experiments data splits:
         if self.dataset == "hipe":

@@ -40,10 +40,6 @@ class Ranker:
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
         self.already_collected_cands = already_collected_cands
-        # Load the resources:
-        self.mentions_to_wikidata = self.load_resources()
-        # Train a DeezyMatch model if needed:
-        self.train()
 
     def __str__(self):
         """
@@ -86,6 +82,8 @@ class Ranker:
                 Q84, Q2477346) and mapped each entity with their relevance (i.e.
                 number of inlinks) on Wikipedia.
         """
+        print("*** Loading the ranker resources.")
+
         # Load Wikidata mentions-to-wqid:
         with open(
             self.resources_path + "mentions_to_wikidata_normalized.json", "r"

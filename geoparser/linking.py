@@ -35,8 +35,6 @@ class Linker:
         self.base_model = base_model
         self.overwrite_training = overwrite_training
         self.rel_params = rel_params
-        # Load linking resources:
-        self.linking_resources = self.load_resources()
 
     def __str__(self):
         s = (
@@ -60,6 +58,7 @@ class Linker:
             self.linking_resources (dict): a dictionary storing the resources
                 that will be needed for a specific linking method.
         """
+        print("*** Load linking resources.")
         # Load Wikidata gazetteer
         gaz = pd.read_csv(
             self.resources_path + "wikidata_gazetteer.csv", low_memory=False
@@ -149,8 +148,6 @@ class Linker:
         """
 
         test_df_results = test_df.copy()
-
-        print(test_df_results)
 
         if "mostpopular" in self.method:
             test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
