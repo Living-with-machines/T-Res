@@ -135,6 +135,21 @@ def test_lwm_linking_conversion():
         x = literal_eval(x)
         for ann in x:
             assert ann["wkdt_qid"] == "NIL" or ann["wkdt_qid"].startswith("Q")
+    assert df_linking[df_linking["originalsplit"] == "train"].shape[0] == 229
+    assert df_linking[df_linking["originalsplit"] == "dev"].shape[0] == 114
+    assert df_linking[df_linking["originalsplit"] == "test"].shape[0] == 112
+    assert df_linking[df_linking["withouttest"] == "train"].shape[0] == 153
+    assert df_linking[df_linking["withouttest"] == "dev"].shape[0] == 76
+    assert df_linking[df_linking["withouttest"] == "test"].shape[0] == 114
+    assert df_linking[df_linking["withouttest"] == "left_out"].shape[0] == 112
+    test_withouttest = set(
+        list(df_linking[df_linking["withouttest"] == "test"].article_id)
+    )
+    test_originalsplit = set(
+        list(df_linking[df_linking["originalsplit"] == "test"].article_id)
+    )
+    # Test articles of the original split and without test should not overlap:
+    assert not (test_withouttest & test_originalsplit)
 
 
 def test_hipe_linking_conversion():
@@ -149,8 +164,17 @@ def test_hipe_linking_conversion():
     assert df_linking.shape[0] == 126
     assert df_linking[df_linking["originalsplit"] == "dev"].shape[0] == 80
     assert df_linking[df_linking["originalsplit"] == "test"].shape[0] == 46
-    assert df_linking[df_linking["traindevtest"] == "dev"].shape[0] == 40
-    assert df_linking[df_linking["traindevtest"] == "test"].shape[0] == 46
+    assert df_linking[df_linking["withouttest"] == "dev"].shape[0] == 40
+    assert df_linking[df_linking["withouttest"] == "test"].shape[0] == 40
+    assert df_linking[df_linking["withouttest"] == "left_out"].shape[0] == 46
+    test_withouttest = set(
+        list(df_linking[df_linking["withouttest"] == "test"].article_id)
+    )
+    test_originalsplit = set(
+        list(df_linking[df_linking["originalsplit"] == "test"].article_id)
+    )
+    # Test articles of the original split and without test should not overlap:
+    assert not (test_withouttest & test_originalsplit)
     # Assert if place has been filled correctly:
     for x in df_linking.place:
         assert type(x) == str

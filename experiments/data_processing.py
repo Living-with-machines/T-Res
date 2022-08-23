@@ -83,18 +83,29 @@ lwm_train_df, lwm_dev_df = train_test_split(
 lwm_all_df = pd.concat([lwm_train_df, lwm_dev_df, lwm_test_df])
 lwm_all_df["place_wqid"] = lwm_all_df["publication_code"].map(dict_placewqid)
 
-# Keep the original train/test split for assessing NER:
-ner_split_train = list(lwm_train_df["article_id"].unique())
-ner_split_dev = list(lwm_dev_df["article_id"].unique())
-ner_split_test = list(lwm_test_df["article_id"].unique())
-
 # Add a column for the ner_split (i.e. the original split)
 lwm_all_df["originalsplit"] = lwm_all_df["article_id"].apply(
     lambda x: "test"
-    if x in ner_split_test
+    if x in list(lwm_test_df["article_id"].unique())
     else "train"
-    if x in ner_split_train
+    if x in list(lwm_train_df["article_id"].unique())
     else "dev"
+)
+
+# Split the train set into train and dev for development
+# (i.e. when test is not used):
+lwm_train_dev_df, lwm_dev_dev_df = train_test_split(
+    lwm_train_df, test_size=0.33, random_state=RANDOM_SEED
+)
+# Add a column for the ner_split (i.e. the original split)
+lwm_all_df["withouttest"] = lwm_all_df["article_id"].apply(
+    lambda x: "test"
+    if x in list(lwm_dev_df["article_id"].unique())
+    else "train"
+    if x in list(lwm_train_dev_df["article_id"].unique())
+    else "dev"
+    if x in list(lwm_dev_dev_df["article_id"].unique())
+    else "left_out"
 )
 
 groups = [i for i, group in lwm_all_df.groupby(["place", "decade"])]
@@ -132,6 +143,7 @@ for group in groups:
     group_name = group[0].split("-")[0] + str(group[1])
     print(lwm_all_df[group_name].value_counts())
 print(lwm_all_df["originalsplit"].value_counts())
+print(lwm_all_df["withouttest"].value_counts())
 print()
 
 # ------------------------------------------------------
@@ -168,19 +180,19 @@ test_ids = list(hipe_dev_df.article_id.unique())
 dev_test = []  # Original split: into dev and test only
 train_dev_test = []  # Following the original split, but dev split into train and dev
 for i, row in hipe_all_df.iterrows():
-    if row["article_id"] in train_ids:
-        dev_test.append("dev")
-        train_dev_test.append("train")
-    elif row["article_id"] in dev_ids:
+    if row["article_id"] in list(hipe_train_df.article_id.unique()):
         dev_test.append("dev")
         train_dev_test.append("dev")
+    elif row["article_id"] in list(hipe_dev_df.article_id.unique()):
+        dev_test.append("dev")
+        train_dev_test.append("test")
     else:
         dev_test.append("test")
-        train_dev_test.append("test")
+        train_dev_test.append("left_out")
 
 # Store the split in a column named after the experiment:
 hipe_all_df["originalsplit"] = dev_test
-hipe_all_df["traindevtest"] = train_dev_test
+hipe_all_df["withouttest"] = train_dev_test
 
 # Store dataframe:
 hipe_all_df.to_csv(output_path_hipe + "linking_df_split.tsv", sep="\t", index=False)
@@ -188,6 +200,6 @@ hipe_all_df.to_csv(output_path_hipe + "linking_df_split.tsv", sep="\t", index=Fa
 print("===================")
 print("### HIPE experiments")
 print("===================\n")
-for group_name in ["originalsplit", "traindevtest"]:
+for group_name in ["originalsplit", "withouttest"]:
     print(hipe_all_df[group_name].value_counts())
 print()
