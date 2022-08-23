@@ -96,10 +96,10 @@ class Recogniser:
             # If test is True, train on 5% of the train and test sets, and add "_test" to the model name.
             self.model_name = self.model_name + "_test"
             lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:5%]"
+                "json", data_files=self.train_dataset, split="train[:10]"
             )
             lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:5%]"
+                "json", data_files=self.train_dataset, split="train[:10]"
             )
         else:
             lwm_train = load_dataset(
