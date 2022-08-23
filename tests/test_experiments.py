@@ -47,9 +47,9 @@ def test_load_data():
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
         base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-        train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="outputs/models/",  # Path where the NER model is or will be stored
+        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
+        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
