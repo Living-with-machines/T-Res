@@ -216,67 +216,65 @@ class Experiment:
         self.mylinker.linking_resources = self.mylinker.load_resources()
 
         # Experiments data splits:
-        if self.dataset == "hipe":
-            # Test split used in experiments:
-            list_test_splits = ["originalsplit"]
-        if self.dataset == "lwm":
-            # Data splits for experiments:
-            list_test_splits = []
-            # We use the original split for developing the code:
-            if self.test_split == "dev":
+        if self.test_split == "dev":
+            list_test_splits = ["withouttest"]
+        if self.test_split == "test":
+            if self.dataset == "hipe":
                 list_test_splits = ["originalsplit"]
-            # N-cross validation (we use the originalsplit for developing the
-            # code, when running the code for real we'll uncomment the following
-            # block of code):
-            if self.test_split == "test":
-                list_test_splits += [
+            elif self.dataset == "lwm":
+                list_test_splits = [
                     "originalsplit",
-                    "Ashton1860",
-                    "Dorchester1820",
-                    "Dorchester1830",
-                    "Dorchester1860",
-                    "Manchester1780",
-                    "Manchester1800",
-                    "Manchester1820",
-                    "Manchester1830",
-                    "Manchester1860",
-                    "Poole1860",
+                    # "Ashton1860",
+                    # "Dorchester1820",
+                    # "Dorchester1830",
+                    # "Dorchester1860",
+                    # "Manchester1780",
+                    # "Manchester1800",
+                    # "Manchester1820",
+                    # "Manchester1830",
+                    # "Manchester1860",
+                    # "Poole1860",
                 ]
 
+        """
+        ##### Training set
+        
         # ------------------------------------------
         # HIPE dataset has no train set, so we always use LwM dataset for training.
         # Try to load the LwM dataset, otherwise raise a warning and create
         # an empty dataframe (we're not raising an error because not all
         # linking approaches will need a training set).
         lwm_processed_df = pd.DataFrame()
-        lwm_original_df = pd.DataFrame()
-        try:
-            # Load training set:
-            output_path = self.data_path + "lwm/" + self.myner.model_name
-            # Add the candidate experiment info to the path:
-            cand_approach = self.myranker.method
-            if self.myranker.method == "deezymatch":
-                cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["num_candidates"]
-                )
-                cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["selection_threshold"]
-                )
 
-            output_path += "_" + cand_approach
-            lwm_processed_df = pd.read_csv(output_path + "_mentions.tsv", sep="\t")
-            lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
-            lwm_processed_df["candidates"] = lwm_processed_df["candidates"].apply(
-                process_data.eval_with_exception
+        # Load training set (add the candidate experiment info to the path):
+        cand_approach = self.myranker.method
+        if self.myranker.method == "deezymatch":
+            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+            cand_approach += "+" + str(
+                self.myranker.deezy_parameters["selection_threshold"]
             )
-            lwm_original_df = pd.read_csv(
-                self.data_path + "lwm/linking_df_split.tsv",
-                sep="\t",
+        processed_file = os.path.join(
+            self.data_path,
+            "lwm/" + self.myner.model_name + "_" + cand_approach + "_mentions.tsv",
+        )
+        original_file = os.path.join(self.data_path, "lwm/linking_df_split.tsv")
+
+        if not Path(processed_file).exists():
+            sys.exit(
+                (
+                    "* WARNING! The training set has not been generated yet. To do so,\n"
+                    "please run the same experiment with the LwM dataset. If the linking\n"
+                    "method you're using is unsupervised, please ignore this warning.\n"
+                )
             )
-        except FileNotFoundError:
-            print(
-                "* WARNING! The training set has not been generated yet. To do so,\nplease run the same experiment with the LwM dataset. If the linking\nmethod you're using is unsupervised, please ignore this warning.\n"
-            )
+
+        lwm_processed_df = pd.read_csv(processed_file, sep="\t")
+        lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
+        lwm_processed_df["candidates"] = lwm_processed_df["candidates"].apply(
+            process_data.eval_with_exception
+        )
+        lwm_original_df = pd.read_csv(original_file, sep="\t")
+        """
 
         # ------------------------------------------
         # Iterate over each linking experiments, each will have its own
@@ -288,23 +286,23 @@ class Experiment:
             # Get ids of articles in each split:
             test_article_ids = list(
                 original_df_current[
-                    original_df_current[split] == self.test_split
+                    original_df_current[split] == "test"
                 ].article_id.astype(str)
             )
 
-            if "reldisamb" in self.mylinker.method:
-                # Train according to method and store model:
-                self.mylinker.rel_params = self.mylinker.perform_training(
-                    lwm_original_df, lwm_processed_df, split
-                )
+            """
+            To fix: supervised methods TODO
+            """
+            # if "reldisamb" in self.mylinker.method:
+            #     # Train according to method and store model:
+            #     self.mylinker.rel_params = self.mylinker.perform_training(
+            #         lwm_original_df, lwm_processed_df, split
+            #     )
 
             # Resolve according to method:
-            test_df = processed_df_current[
-                processed_df_current[split] == self.test_split
-            ]
-            original_df_test = self.dataset_df[
-                self.dataset_df[split] == self.test_split
-            ]
+            test_df = processed_df_current[processed_df_current[split] == "test"]
+            original_df_test = self.dataset_df[self.dataset_df[split] == "test"]
+
             test_df = self.mylinker.perform_linking(test_df, original_df_test, split)
 
             # Prepare data for scorer:

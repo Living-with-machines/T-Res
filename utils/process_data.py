@@ -944,7 +944,7 @@ def create_mentions_df(experiment):
     keep_columns = [
         "article_id",
         "originalsplit",
-        "traindevtest",
+        "withouttest",
         "Ashton1860",
         "Dorchester1820",
         "Dorchester1830",
@@ -1067,7 +1067,7 @@ def store_results(experiment, task, how_split, which_split):
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
     all = experiment.dataset_df
-    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = list(all[all[how_split] == "test"].article_id.unique())
     test_articles = [str(art) for art in test_articles]
 
     # Store predictions results formatted for CLEF-HIPE scorer:
@@ -1112,7 +1112,7 @@ def store_rel(experiment, dREL, approach, how_split, which_split):
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
     all = experiment.dataset_df
-    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = list(all[all[how_split] == "test"].article_id.unique())
     test_articles = [str(art) for art in test_articles]
 
     # Store REL results formatted for CLEF-HIPE scorer:

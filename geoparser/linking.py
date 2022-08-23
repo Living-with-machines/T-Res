@@ -41,11 +41,9 @@ class Linker:
             ">>> Entity Linking:\n"
             "    * Method: {0}\n"
             "    * Overwrite training: {1}\n"
-            "    * Linking resources: {2}\n"
         ).format(
             self.method,
             str(self.overwrite_training),
-            ",".join(list(self.linking_resources.keys())),
         )
         return s
 
@@ -59,18 +57,8 @@ class Linker:
                 that will be needed for a specific linking method.
         """
         print("*** Load linking resources.")
-        # Load Wikidata gazetteer
-        gaz = pd.read_csv(
-            self.resources_path + "wikidata_gazetteer.csv", low_memory=False
-        )
 
-        # Gazetteer entity classes:
-        gaz["instance_of"] = gaz["instance_of"].apply(process_data.eval_with_exception)
-
-        # Gazetteer:
-        self.linking_resources["gazetteer"] = gaz
-
-        # Load Wikidata mentions-to-wikidata (with absolute counts) to QID dictionary
+        # Load Wikidata mentions-to-QID with absolute counts:
         if self.method in [
             "mostpopular",
             "reldisamb:lwmcs:relv",
@@ -81,36 +69,49 @@ class Linker:
             with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
                 self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
-        if self.method in ["reldisamb:lwmcs:dist", "reldisamb:lwmcs:relvdist"]:
-            print("  > Mapping coordinates to wikidata ids.")
-            dict_wqid_to_lat = dict(zip(gaz.wikidata_id, gaz.latitude))
-            dict_wqid_to_lon = dict(zip(gaz.wikidata_id, gaz.longitude))
-            self.linking_resources["dict_wqid_to_lat"] = dict_wqid_to_lat
-            self.linking_resources["dict_wqid_to_lon"] = dict_wqid_to_lon
+        # # Load Wikidata gazetteer
+        # gaz = pd.read_csv(
+        #     self.resources_path + "wikidata_gazetteer.csv", low_memory=False
+        # )
 
-        # REL disambiguates to Wikipedia, not Wikidata:
-        if "reldisamb" in self.method:
-            # WIkipedia to Wikidata
-            with open(
-                "/resources/wikipedia/extractedResources/wikipedia2wikidata.json", "r"
-            ) as f:
-                self.linking_resources["wikipedia2wikidata"] = json.load(f)
-            # Wikidata to Wikipedia
-            with open(
-                "/resources/wikipedia/extractedResources/wikidata2wikipedia.json", "r"
-            ) as f:
-                self.linking_resources["wikidata2wikipedia"] = json.load(f)
+        # # Gazetteer entity classes:
+        # gaz["instance_of"] = gaz["instance_of"].apply(process_data.eval_with_exception)
 
-            # Keep only wikipedia entities in the gazetteer:
-            wkdt_allcands = set(gaz["wikidata_id"].tolist())
-            self.linking_resources["wikipedia_locs"] = set(
-                dict(
-                    filter(
-                        lambda x: x[1] in wkdt_allcands,
-                        self.linking_resources["wikipedia2wikidata"].items(),
-                    )
-                ).keys()
-            )
+        # # Gazetteer:
+        # self.linking_resources["gazetteer"] = gaz
+
+        # if self.method in ["reldisamb:lwmcs:dist", "reldisamb:lwmcs:relvdist"]:
+        #     print("  > Mapping coordinates to wikidata ids.")
+        #     dict_wqid_to_lat = dict(zip(gaz.wikidata_id, gaz.latitude))
+        #     dict_wqid_to_lon = dict(zip(gaz.wikidata_id, gaz.longitude))
+        #     self.linking_resources["dict_wqid_to_lat"] = dict_wqid_to_lat
+        #     self.linking_resources["dict_wqid_to_lon"] = dict_wqid_to_lon
+
+        # # REL disambiguates to Wikipedia, not Wikidata:
+        # if "reldisamb" in self.method:
+        #     # WIkipedia to Wikidata
+        #     with open(
+        #         "/resources/wikipedia/extractedResources/wikipedia2wikidata.json", "r"
+        #     ) as f:
+        #         self.linking_resources["wikipedia2wikidata"] = json.load(f)
+        #     # Wikidata to Wikipedia
+        #     with open(
+        #         "/resources/wikipedia/extractedResources/wikidata2wikipedia.json", "r"
+        #     ) as f:
+        #         self.linking_resources["wikidata2wikipedia"] = json.load(f)
+
+        #     # Keep only wikipedia entities in the gazetteer:
+        #     wkdt_allcands = set(gaz["wikidata_id"].tolist())
+        #     self.linking_resources["wikipedia_locs"] = set(
+        #         dict(
+        #             filter(
+        #                 lambda x: x[1] in wkdt_allcands,
+        #                 self.linking_resources["wikipedia2wikidata"].items(),
+        #             )
+        #         ).keys()
+        #     )
+
+        print("*** Linking resources loaded!\n")
         return self.linking_resources
 
     # ----------------------------------------------
