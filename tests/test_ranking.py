@@ -10,7 +10,9 @@ from geoparser import ranking
 
 
 def test_initialise_method():
-
+    """
+    Test initialisation works fine
+    """
     myranker = ranking.Ranker(
         method="perfectmatch",
         resources_path="/resources/wikidata/",
@@ -21,7 +23,9 @@ def test_initialise_method():
 
 
 def test_load_resources():
-
+    """
+    Tests resources are loaded and processed correctly
+    """
     with open("/resources/wikidata/mentions_to_wikidata_normalized.json", "r") as f:
         mentions_to_wikidata = json.load(f)
 
@@ -35,14 +39,17 @@ def test_load_resources():
             "minimum_relv": 0.03,  # Filter mentions with more than X relv
         },
     )
-    loaded_mentions = myranker.load_resources()
-    assert len(loaded_mentions) <= len(mentions_to_wikidata)
-    assert len(loaded_mentions["London"]) <= len(mentions_to_wikidata["London"])
-    assert len(loaded_mentions["London"]) > 0
-    assert loaded_mentions["London"]["Q84"] == mentions_to_wikidata["London"]["Q84"]
+    filtered_mentions = myranker.load_resources()
+    assert len(filtered_mentions) < len(mentions_to_wikidata)
+    assert len(filtered_mentions["London"]) < len(mentions_to_wikidata["London"])
+    assert len(filtered_mentions["London"]) > 0
+    assert filtered_mentions["London"]["Q84"] == mentions_to_wikidata["London"]["Q84"]
 
 
 def test_perfect_match():
+    """
+    Test that perfect_match returns only perfect matching cases
+    """
     myranker = ranking.Ranker(
         method="perfectmatch",
         resources_path="/resources/wikidata/",
@@ -57,11 +64,17 @@ def test_perfect_match():
     candidates, already_collected_cands = myranker.perfect_match(["London"])
     assert candidates["London"]["London"] == 1.0
 
+    candidates, already_collected_cands = myranker.perfect_match(["Lvndon"])
+    assert candidates["Lvndon"] == {}
+
     candidates, already_collected_cands = myranker.perfect_match(["Paperopoli"])
     assert candidates["Paperopoli"] == {}
 
 
 def test_damlev():
+    """
+    Test that damlev returns correctly
+    """
     myranker = ranking.Ranker(
         method="partialmatch",
         resources_path="/resources/wikidata/",
@@ -84,6 +97,10 @@ def test_damlev():
 
 
 def test_check_if_contained():
+    """
+    Test that check_if_contained returns score only when there is an overlap
+    """
+
     myranker = ranking.Ranker(
         method="partialmatch",
         resources_path="/resources/wikidata/",
@@ -103,5 +120,5 @@ def test_check_if_contained():
         found = True
         myranker.check_if_contained("Lvndon", "London")
     assert found == True
-    
+
     assert None == myranker.check_if_contained("London", {"mentions": "New York"})
