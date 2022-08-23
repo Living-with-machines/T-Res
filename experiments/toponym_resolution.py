@@ -47,7 +47,7 @@ myner = recogniser.Recogniser(
     },
     overwrite_training=False,  # Set to True if you want to overwrite model if existing
     do_test=False,  # Set to True if you want to train on test mode
-    training_tagset="coarse",  # Options are: "coarse" or "fine"
+    training_tagset="fine",  # Options are: "coarse" or "fine"
 )
 
 # --------------------------------------
@@ -76,7 +76,7 @@ myranker = ranking.Ranker(
         "dm_output": "deezymatch_on_the_fly",
         # Ranking measures:
         "ranking_metric": "faiss",
-        "selection_threshold": 1000,
+        "selection_threshold": 50,
         "num_candidates": 3,
         "search_size": 3,
         "use_predict": False,
