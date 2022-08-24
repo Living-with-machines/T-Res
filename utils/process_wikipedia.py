@@ -127,7 +127,7 @@ def title_to_id(path_to_db: str, page_title: str) -> Optional[str]:
 
     with sqlite3.connect(path_to_db) as conn:
         c = conn.cursor()
-        c.execute("SELECT wikidata_id FROM mapping WHERE wikipedia_title=?", (page_title,))
+        c.execute("SELECT wikidata_id FROM mapping WHERE lower_wikipedia_title=?", (page_title,))
         result = c.fetchone()
 
     if result is not None and result[0] is not None:

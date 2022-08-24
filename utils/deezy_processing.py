@@ -1,21 +1,22 @@
-import os
 import glob
-import time
-import random
 import itertools
-from tqdm import tqdm
+import os
+import random
+import time
 from pathlib import Path
-from thefuzz import fuzz
-from gensim.models import Word2Vec
-from DeezyMatch import combine_vecs
-from DeezyMatch import train as dm_train
-from DeezyMatch import inference as dm_inference
+
+import gensim
+import gensim.downloader
 
 # Resources for English words (these will need to change if language is different):
 import nltk
-from nltk.corpus import words, brown
-import gensim
-import gensim.downloader
+from DeezyMatch import combine_vecs
+from DeezyMatch import inference as dm_inference
+from DeezyMatch import train as dm_train
+from gensim.models import Word2Vec
+from nltk.corpus import brown, words
+from thefuzz import fuzz
+from tqdm import tqdm
 
 
 def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
@@ -96,9 +97,7 @@ def create_training_set(myranker):
     string_matching_filename = os.path.join(
         myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs.txt"
     )
-    Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(
-        parents=True, exist_ok=True
-    )
+    Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(parents=True, exist_ok=True)
 
     # Path to the output string pairs dataset if we're in test mode:
     if myranker.deezy_parameters["do_test"] == True:
@@ -150,7 +149,7 @@ def create_training_set(myranker):
 
         # filter w2v_words
         if myranker.deezy_parameters["do_test"] == True:
-            seedwords_cutoff = 1000
+            seedwords_cutoff = 1
             w2v_words = w2v_words[:seedwords_cutoff]
 
         # For each word in the w2v model, keep likely positive and negative matches:
@@ -185,12 +184,8 @@ def create_training_set(myranker):
                 negative = negative[:shortest_length]
                 positive = positive[:shortest_length]
                 # Prepare for writing into file:
-                negative_matches += [
-                    word + "\t" + x + "\t" + "FALSE\n" for x in negative
-                ]
-                positive_matches += [
-                    word + "\t" + x + "\t" + "TRUE\n" for x in positive
-                ]
+                negative_matches += [word + "\t" + x + "\t" + "FALSE\n" for x in negative]
+                positive_matches += [word + "\t" + x + "\t" + "TRUE\n" for x in positive]
 
     # Get variations from mentions_to_wikidata:
     for wq in myranker.wikidata_to_mentions.keys():
@@ -234,9 +229,7 @@ def train_deezy_model(myranker):
     input_file_path = os.path.join(
         myranker.deezy_parameters["dm_path"], "inputs", "input_dfm.yaml"
     )
-    dataset_path = os.path.join(
-        myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt"
-    )
+    dataset_path = os.path.join(myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt")
     model_name = myranker.deezy_parameters["dm_model"]
     if myranker.deezy_parameters["do_test"] == True:
         dataset_path = os.path.join(
@@ -311,9 +304,7 @@ def generate_candidates(myranker):
             input_file_path=os.path.join(
                 deezymatch_outputs_path, "models", dm_model, "input_dfm.yaml"
             ),
-            dataset_path=os.path.join(
-                deezymatch_outputs_path, "data", candidates + ".txt"
-            ),
+            dataset_path=os.path.join(deezymatch_outputs_path, "data", candidates + ".txt"),
             pretrained_model_path=os.path.join(
                 deezymatch_outputs_path, "models", dm_model, dm_model + ".model"
             ),
