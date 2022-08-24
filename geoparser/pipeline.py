@@ -77,8 +77,8 @@ class Pipeline:
                     "dm_model": "w2v_ocr",
                     "dm_output": "deezymatch_on_the_fly",
                     # Ranking measures:
-                    "ranking_metric": "faiss",
-                    "selection_threshold": 1000,
+                    "ranking_metric": "cosine",
+                    "selection_threshold": 0.9,
                     "num_candidates": 3,
                     "search_size": 3,
                     "use_predict": False,

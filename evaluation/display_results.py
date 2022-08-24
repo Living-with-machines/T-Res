@@ -176,6 +176,7 @@ ranking_approaches = [
 linking_approaches = [
     "mostpopular",
     "skys",
+    "bydistance",
     "reldisamb:relcs",
     "reldisamb:lwmcs:relv",
     "reldisamb:lwmcs:dist",

@@ -291,13 +291,13 @@ class Experiment:
             )
 
             """
-            To fix: supervised methods TODO
-            """
+            ###### To fix: supervised methods TODO
             # if "reldisamb" in self.mylinker.method:
             #     # Train according to method and store model:
             #     self.mylinker.rel_params = self.mylinker.perform_training(
             #         lwm_original_df, lwm_processed_df, split
             #     )
+            """
 
             # Resolve according to method:
             test_df = processed_df_current[processed_df_current[split] == "test"]

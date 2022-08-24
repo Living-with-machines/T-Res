@@ -6,6 +6,7 @@ import urllib
 
 import numpy as np
 import pandas as pd
+from haversine import haversine
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -59,15 +60,23 @@ class Linker:
         print("*** Load linking resources.")
 
         # Load Wikidata mentions-to-QID with absolute counts:
-        if self.method in [
-            "mostpopular",
-            "reldisamb:lwmcs:relv",
-            "reldisamb:lwmcs:relvpubl",
-            "reldisamb:lwmcs:relvdist",
-        ]:
+        if self.method in ["mostpopular"]:
             print("  > Loading mentions to wikidata mapping.")
             with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
                 self.linking_resources["mentions_to_wikidata"] = json.load(f)
+
+        if self.method in ["bydistance"]:
+            print("  > Loading gazetteer.")
+            gaz = pd.read_csv(
+                self.resources_path + "wikidata_gazetteer.csv",
+                usecols=["wikidata_id", "latitude", "longitude"],
+            )
+            gaz["latitude"] = gaz["latitude"].astype(float)
+            gaz["longitude"] = gaz["longitude"].astype(float)
+            gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
+            wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
+            self.linking_resources["wqid_to_coords"] = wqid_to_coords
+            gaz = ""
 
         # # Load Wikidata gazetteer
         # gaz = pd.read_csv(
@@ -128,6 +137,8 @@ class Linker:
         """
         if "mostpopular" in self.method:
             return None
+        if "bydistance" in self.method:
+            return None
         if "reldisamb" in self.method:
             self.rel_params["model"] = training.train_rel_ed(
                 self, all_df, processed_df, whichsplit
@@ -153,6 +164,13 @@ class Linker:
         if "mostpopular" in self.method:
             test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
                 lambda row: self.most_popular(row.to_dict()),
+                axis=1,
+                result_type="expand",
+            )
+
+        if "bydistance" in self.method:
+            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
+                lambda row: self.by_distance(row.to_dict()),
                 axis=1,
                 result_type="expand",
             )
@@ -288,3 +306,38 @@ class Linker:
             final_score = keep_highest_score / total_score
 
         return keep_most_popular, final_score
+
+    # ----------------------------------------------
+    # Select candidate to place of publication:
+    def by_distance(self, dict_mention):
+        """
+        The by_distance disambiguation method is another baseline, an unsupervised
+        disambiguation approach. Given a set of candidates for a given mention and
+        the place of publication of the original text, it returns as a prediction the
+        location that is the closest to the place of publication.
+
+        Arguments:
+            dict_mention (dict): dictionary with all the relevant information needed
+                to disambiguate a certain mention.
+
+        Returns:
+            keep_most_popular (str): the Wikidata ID (e.g. "Q84") or "NIL".
+            final_score (float): the confidence of the predicted link.
+        """
+        cands = dict_mention["candidates"]
+        origin_wqid = dict_mention["place_wqid"]
+        origin_coords = self.linking_resources["wqid_to_coords"][origin_wqid]
+        keep_closest_cand = "NIL"
+        keep_lowest_distance = 20000  # 20000 km, max on Earth
+        if cands:
+            l = [list(cands[x]["Candidates"].keys()) for x in cands]
+            l = [item for sublist in l for item in sublist]
+            l = list(set(l))
+            for candidate in l:
+                cand_coords = self.linking_resources["wqid_to_coords"][candidate]
+                geodist = haversine(origin_coords, cand_coords)
+                if geodist < keep_lowest_distance:
+                    keep_lowest_distance = geodist
+                    keep_closest_cand = candidate
+
+        return keep_closest_cand, round(keep_lowest_distance, 3)
