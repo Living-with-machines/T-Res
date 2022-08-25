@@ -1,11 +1,15 @@
 import os
 import re
+import sys
 import urllib
 
 from haversine import haversine
 
 from utils.REL.db.generic import GenericLookup
 from utils.REL.utils import modify_uppercase_phrase, split_in_words
+
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+from utils import process_wikipedia
 
 
 class MentionDetectionBase:
@@ -54,7 +58,7 @@ class MentionDetectionBase:
             print("No mylinker object found, using the default REL approach")
             cs_method = "relcs"
         else:
-            cs_method = self.mylinker.method.split(":")[1]
+            cs_method = self.mylinker.rel_params["candidates"]
 
         #### CANDIDATE SELECTION FROM REL
         if cs_method == "relcs":
@@ -62,11 +66,12 @@ class MentionDetectionBase:
             cands = self.wiki_db.wiki(mention, "wiki")
             if cands:
                 cands = cands[:100]
+                # Keep only candidates that are locations:
                 cands = [
                     c
                     for c in cands
-                    if urllib.parse.quote(c[0].replace("_", " "))
-                    in self.mylinker.linking_resources["wikipedia_locs"]
+                    if process_wikipedia.title_to_id(c[0], lower=False)
+                    in self.mylinker.linking_resources["wikidata_locs"]
                 ]
                 return cands
             else:
@@ -74,7 +79,7 @@ class MentionDetectionBase:
 
         elif cs_method == "lwmcs":
 
-            cs_ranking = self.mylinker.method.split(":")[2]
+            cs_ranking = self.mylinker.rel_params["ranking"]
 
             ### CANDIDATE RANKING: Based on distance from publication
             if cs_ranking == "dist":
@@ -83,17 +88,27 @@ class MentionDetectionBase:
                 max_dist = 0
                 for c in lwm_cands:
                     for qc in lwm_cands[c]["Candidates"]:
-                        lat_publ = self.mylinker.linking_resources["dict_wqid_to_lat"][publication]
-                        lon_publ = self.mylinker.linking_resources["dict_wqid_to_lon"][publication]
-                        lat_cand = self.mylinker.linking_resources["dict_wqid_to_lat"][qc]
-                        lon_cand = self.mylinker.linking_resources["dict_wqid_to_lon"][qc]
+                        lat_publ = self.mylinker.linking_resources["dict_wqid_to_lat"][
+                            publication
+                        ]
+                        lon_publ = self.mylinker.linking_resources["dict_wqid_to_lon"][
+                            publication
+                        ]
+                        lat_cand = self.mylinker.linking_resources["dict_wqid_to_lat"][
+                            qc
+                        ]
+                        lon_cand = self.mylinker.linking_resources["dict_wqid_to_lon"][
+                            qc
+                        ]
                         # Distance between place of publication and candidate:
                         qcdist = haversine((lat_publ, lon_publ), (lat_cand, lon_cand))
                         # Keep max distance for later normalizing:
                         if qcdist > max_dist:
                             max_dist = qcdist
                         # Wikidata entity to Wikipedia:
-                        gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(qc)
+                        gold_ids = self.mylinker.linking_resources[
+                            "wikidata2wikipedia"
+                        ].get(qc)
                         qc_wikipedia = ""
                         max_freq = 0
                         if gold_ids:
@@ -117,11 +132,15 @@ class MentionDetectionBase:
                 for c in lwm_cands:
                     for qc in lwm_cands[c]["Candidates"]:
                         # Mention-to-entity releavance:
-                        qcrlv = self.mylinker.linking_resources["mentions_to_wikidata"][c][qc]
+                        qcrlv = self.mylinker.linking_resources["mentions_to_wikidata"][
+                            c
+                        ][qc]
                         if qcrlv > max_cand_freq:
                             max_cand_freq = qcrlv
                         # Wikidata entity to Wikipedia:
-                        gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(qc)
+                        gold_ids = self.mylinker.linking_resources[
+                            "wikidata2wikipedia"
+                        ].get(qc)
                         qc_wikipedia = ""
                         max_freq = 0
                         if gold_ids:
@@ -137,7 +156,9 @@ class MentionDetectionBase:
                     cands.append([qc_wikipedia, qc_score])
                 return cands
         else:
-            print("Candidate selection method not currently covered, returning empty cands list")
+            print(
+                "Candidate selection method not currently covered, returning empty cands list"
+            )
             return []
 
     def preprocess_mention(self, m):

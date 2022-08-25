@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 
 ### Processing pages ####
 
+# Path to wikipedia2wikidata mapper:
+db = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
+
 
 def make_wikilinks_consistent(url):
     url = url.lower()
@@ -30,7 +33,8 @@ def clean_page(page):
     entities = [
         x
         for x in page.findAll("a")
-        if (x.has_attr("href")) and ("https://" not in x["href"] or "http://" not in x["href"])
+        if (x.has_attr("href"))
+        and ("https://" not in x["href"] or "http://" not in x["href"])
     ]
     box_mentions = Counter([x.text for x in entities])
     box_entities = Counter(
@@ -83,7 +87,12 @@ def process_doc(filename):
 
 
 def fill_dicts(
-    res, mentions_freq, entity_freq, mention_overall_dict, entity_inlink_dict, entity_outlink_dict
+    res,
+    mentions_freq,
+    entity_freq,
+    mention_overall_dict,
+    entity_inlink_dict,
+    entity_outlink_dict,
 ):
 
     title, box_mentions, box_entities, mentions_dict = res[0], res[1], res[2], res[3]
@@ -113,7 +122,7 @@ def fill_dicts(
     )
 
 
-def title_to_id(path_to_db: str, page_title: str) -> Optional[str]:
+def title_to_id(page_title, lower=False, path_to_db=db) -> Optional[str]:
     """This function is adapted from https://github.com/jcklie/wikimapper
     Given a Wikipedia page title, returns the corresponding Wikidata ID.
     The page title is the last part of a Wikipedia url **unescaped** and spaces
@@ -129,10 +138,44 @@ def title_to_id(path_to_db: str, page_title: str) -> Optional[str]:
 
     with sqlite3.connect(path_to_db) as conn:
         c = conn.cursor()
-        c.execute("SELECT wikidata_id FROM mapping WHERE wikipedia_title=?", (page_title,))
+        if lower == True:
+            c.execute(
+                "SELECT wikidata_id FROM mapping WHERE lower_wikipedia_title=?",
+                (page_title,),
+            )
+        else:
+            c.execute(
+                "SELECT wikidata_id FROM mapping WHERE wikipedia_title=?",
+                (page_title,),
+            )
         result = c.fetchone()
 
     if result is not None and result[0] is not None:
         return result[0]
     else:
         return None
+
+
+def id_to_title(wikidata_id, path_to_db=db) -> Optional[str]:
+    """This function is adapted from https://github.com/jcklie/wikimapper
+    Given a Wikipedia page title, returns the corresponding Wikidata ID.
+    The page title is the last part of a Wikipedia url **unescaped** and spaces
+    replaced by underscores , e.g. for `https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem`,
+    the title would be `Fermat's_Last_Theorem`.
+    Args:
+        path_to_db: The path to the wikidata2wikipedia db
+        page_title: The page title of the Wikipedia entry, e.g. `Manatee`.
+    Returns:
+        Optional[str]: If a mapping could be found for `wiki_page_title`, then return
+                        it, else return `None`.
+    """
+
+    with sqlite3.connect(path_to_db) as conn:
+        c = conn.cursor()
+        c.execute(
+            "SELECT wikipedia_title FROM mapping WHERE wikidata_id=?",
+            (wikidata_id,),
+        )
+        result = c.fetchall()
+
+    return [r[0] for r in result]

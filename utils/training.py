@@ -1,12 +1,8 @@
-import json
 import os
 import sys
+import pandas as pd
 from pathlib import Path
-
-import numpy as np
-import torch
-import torch.nn.functional as F
-from sklearn.metrics import f1_score
+from ast import literal_eval
 
 from utils.REL.entity_disambiguation import EntityDisambiguation
 from utils.REL.generate_train_test import GenTrainingTest
@@ -17,131 +13,113 @@ from utils.REL.wikipedia import Wikipedia
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 
-class Trainer(object):
-    def __init__(self, data, model, criterion, optimizer, path, whichsplit):
-        self.data = data
-        self.model = model
-        self.criterion = criterion
-        self.optimizer = optimizer
-        self.path = path
-        self.whichsplit = whichsplit
+# ----------------------------------------------------
+def eval_with_exception(str2parse, in_case=""):
+    """
+    Given a string in the form or a list or dictionary, parse it
+    to read it as such.
 
-    def train(self):
-        self.model.train()
-        self.optimizer.zero_grad()  # Clear gradients
-        out = self.model(
-            self.data.x.float(),
-            self.data.x_ext.float(),
-            self.data.edge_index,
-            self.data.weight.float(),
-        )  # Perform a single forward pass.
-        loss = self.criterion(
-            out[self.data.train_mask].float(), self.data.y[self.data.train_mask]
-        )  # Compute the loss solely based on the training nodes.
+    Arguments:
+        str2parse (str): the string to parse.
+        in_case (str): what should be returned in case of error.
+    """
+    try:
+        return literal_eval(str2parse)
+    except ValueError:
+        return in_case
 
-        loss.backward()  # Derive gradients.
-        self.optimizer.step()  # Update parameters based on gradients.
-        return loss.item()
 
-    def set_split(self):
-        val_mask = np.array([True if s == "dev" else False for l in self.data.split for s in l])
-        train_mask = np.array(
-            [True if s == "train" else False for l in self.data.split for s in l]
+def load_training_lwm_data(myexperiment):
+    # ------------------------------------------
+    # Try to load the LwM dataset, otherwise raise a warning and create
+    # an empty dataframe (we're not raising an error because not all
+    # linking approaches will need a training set).
+    lwm_processed_df = pd.DataFrame()
+
+    # Load training set (add the candidate experiment info to the path):
+    cand_approach = myexperiment.myranker.method
+    if myexperiment.myranker.method == "deezymatch":
+        cand_approach += "+" + str(
+            myexperiment.myranker.deezy_parameters["num_candidates"]
         )
-        test_mask = np.array([True if s == "test" else False for l in self.data.split for s in l])
-        self.data.val_mask = torch.tensor(val_mask, dtype=torch.bool)
-        self.data.train_mask = torch.tensor(train_mask, dtype=torch.bool)
-        self.data.test_mask = torch.tensor(test_mask, dtype=torch.bool)
+        cand_approach += "+" + str(
+            myexperiment.myranker.deezy_parameters["selection_threshold"]
+        )
+    processed_file = os.path.join(
+        myexperiment.data_path,
+        "lwm/" + myexperiment.myner.model_name + "_" + cand_approach + "_mentions.tsv",
+    )
+    original_file = os.path.join(myexperiment.data_path, "lwm/linking_df_split.tsv")
 
-    def print_split(self):
-        print(
-            "\nNumber of training nodes",
-            self.data.train_mask.sum(),
-            "\nNumber of dev nodes",
-            self.data.val_mask.sum(),
-            "\nNumber of test nodes",
-            self.data.test_mask.sum(),
+    if not Path(processed_file).exists():
+        sys.exit(
+            (
+                "* WARNING! The training set has not been generated yet. To do so,\n"
+                "please run the same experiment (i.e. same settings) with the LwM\n"
+                "dataset. If the linking method you're using is unsupervised, please\n"
+                "ignore this warning.\n"
+            )
         )
 
-    def print_network_statistics(self):
-        print(f"Number of nodes: {self.data.num_nodes}")
-        print(f"Number of edges: {self.data.num_edges}")
-        print(f"Average node degree: {self.data.num_edges / self.data.num_nodes:.2f}")
-        print(f"Number of training nodes: {self.data.train_mask.sum()}")
-        print(
-            f"Training node label rate: {int(self.data.train_mask.sum()) / self.data.num_nodes:.2f}"
-        )
-        print(f"Has isolated nodes: {self.data.has_isolated_nodes()}")
-        print(f"Has self-loops: {self.data.has_self_loops()}")
-        print(f"Is undirected: {self.data.is_undirected()}")
+    lwm_processed_df = pd.read_csv(processed_file, sep="\t")
+    lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
+    lwm_processed_df["candidates"] = lwm_processed_df["candidates"].apply(
+        eval_with_exception
+    )
+    lwm_original_df = pd.read_csv(original_file, sep="\t")
 
-    @torch.no_grad()
-    def evaluate(self):
-        self.model.eval()
-        self.optimizer.zero_grad()  # Clear gradients
-        out = self.model(
-            self.data.x.float(),
-            self.data.x_ext.float(),
-            self.data.edge_index,
-            self.data.weight.float(),
-        )  # Perform a single forward pass.
-
-        # loss = self.criterion(out[self.data.val_mask].float(), self.data.y[self.data.val_mask])  # Compute the loss solely based on the validation nodes.
-        pred = out.argmax(dim=1)
-        f1score = f1_score(pred[self.data.val_mask], self.data.y[self.data.val_mask])
-        return f1score
-
-    def training_routine(self, epochs=500):
-
-        out_folder = Path(self.path)
-        out_folder.mkdir(exist_ok=True)
-        model_folder = out_folder / Path(f"best_model_{self.whichsplit}")
-        model_folder.mkdir(exist_ok=True)
-        print("Saving model in: ", model_folder)
-
-        highest_f1 = 0.0
-        try:
-            for epoch in range(1, epochs):
-                new_f1 = self.evaluate()
-                print(
-                    f"Epoch {epoch} Training loss : {self.train():.4f} Validation F1 :,{new_f1:.4f}"
-                )
-                if new_f1 > highest_f1:
-                    print(f"Saving new best model with f1={new_f1:.4f}")
-
-                    torch.save(self.model.state_dict(), model_folder / "best-model.pt")
-                    highest_f1 = new_f1
-        except KeyboardInterrupt:
-            print(f"Quiting training loop. Best model {highest_f1:.4f}")
+    return lwm_original_df, lwm_processed_df
 
 
 # ==============================================================
 # --------------------------------------------------------------
 # Train REL entity disambiguation
-def train_rel_ed(mylinker, all_df, train_df, whichsplit):
+def train_rel_ed(
+    mylinker,
+    train_original,
+    train_processed,
+    dev_original,
+    dev_processed,
+    experiment_name,
+):
     base_path = mylinker.rel_params["base_path"]
     wiki_version = mylinker.rel_params["wiki_version"]
+    training_data = mylinker.rel_params["training_data"]
 
-    Path("{}/{}/generated/test_train_data/".format(base_path, wiki_version)).mkdir(
+    experiment_path = os.path.join(
+        base_path, wiki_version, "generated", experiment_name
+    )
+
+    # Check if the model already exists and has to be overwritten:
+    if (
+        Path(os.path.join(experiment_path, "lr_model.pkl")).exists()
+        and mylinker.rel_params["overwrite_training"] == False
+    ):
+        print("The model already exists. The training won't be overwritten.")
+        return None
+
+    Path(os.path.join(base_path, wiki_version, "generated", "test_train_data")).mkdir(
         parents=True, exist_ok=True
     )
     wikipedia = Wikipedia(base_path, wiki_version)
-    data_handler = GenTrainingTest(base_path, wiki_version, wikipedia, mylinker=mylinker)
+    data_handler = GenTrainingTest(
+        base_path, wiki_version, wikipedia, mylinker=mylinker
+    )
     for ds in ["train", "dev"]:
-        if "edaidalwm" in mylinker.method:
-            data_handler.process_aidalwm(ds, all_df, train_df, whichsplit)
-        elif "edaida" in mylinker.method:
+        if training_data == "lwm":
+            data_handler.process_lwm(
+                ds, train_original, train_processed, dev_original, dev_processed
+            )
+        if training_data == "aida":
             data_handler.process_aida(ds)
-        elif "edlwm" in mylinker.method:
-            data_handler.process_lwm(ds, all_df, train_df, whichsplit)
-        else:
-            data_handler.process_lwm(ds, all_df, train_df, whichsplit)
 
     datasets = TrainingEvaluationDatasets(base_path, wiki_version).load()
 
+    # Create a folder for the model:
+    Path(experiment_path).mkdir(parents=True, exist_ok=True)
     config = {
         "mode": "train",
-        "model_path": "{}{}generated/model".format(base_path, wiki_version),
+        "model_path": os.path.join(experiment_path, "model"),
     }
     model = EntityDisambiguation(base_path, wiki_version, config)
 
@@ -151,6 +129,4 @@ def train_rel_ed(mylinker, all_df, train_df, whichsplit):
         {k: v for k, v in datasets.items() if k != "lwm_train"},
     )
     # Train and predict using LR (to obtain confidence scores)
-    model_path_lr = "{}/{}/generated/".format(base_path, wiki_version)
-    model.train_LR(datasets, model_path_lr)
-    return model
+    model.train_LR(datasets, experiment_path)

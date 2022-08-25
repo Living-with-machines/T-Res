@@ -168,35 +168,33 @@ print(df_ner.to_latex(index=False))
 datasets = ["lwm", "hipe"]
 ner_approaches = ["blb_lwm-ner"]
 ranking_approaches = [
-    # "perfectmatch",
+    "perfectmatch",
     "deezymatch+2+10",
-    # "deezymatch+2+20",
+    "deezymatch+3+50",
+    "deezymatch+3+1000",
 ]
 linking_approaches = [
     "mostpopular",
     "skys",
-    "reldisamb:relcs",
-    "reldisamb:lwmcs:relv",
-    "reldisamb:lwmcs:dist",
-    "reldisamb:lwmcs:relvdist",
-    "reldisamb:lwmcs:relvpubl",
-    "gnn",
+    "bydistance",
+    "reldisamb",
 ]
 granularities = ["fine", "coarse"]
 splits = [
     "originalsplit",
-    "Ashton1860",
-    "Dorchester1820",
-    "Dorchester1830",
-    "Dorchester1860",
-    "Manchester1780",
-    "Manchester1800",
-    "Manchester1820",
-    "Manchester1830",
-    "Manchester1860",
-    "Poole1860",
+    "withouttest",
+    # "Ashton1860",
+    # "Dorchester1820",
+    # "Dorchester1830",
+    # "Dorchester1860",
+    # "Manchester1780",
+    # "Manchester1800",
+    # "Manchester1820",
+    # "Manchester1830",
+    # "Manchester1860",
+    # "Poole1860",
 ]
-devtest_list = ["test"]  # "dev",
+devtest_list = ["dev", "test"]
 
 df_nel = pd.DataFrame()
 overall_results_nel = dict()

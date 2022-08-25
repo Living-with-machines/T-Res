@@ -331,6 +331,7 @@ def ner_and_process(dSentences, dAnnotated, myner):
         dMentionsGold[sent_id] = ner.aggregate_mentions(
             sentence_postprocessing["sentence_trues"], "gold"
         )
+
     return dPreds, dTrues, dSkys, gold_tokenization, dMentionsPred, dMentionsGold
 
 
@@ -451,8 +452,8 @@ def load_processed_data(experiment):
             processed data is stored.
     """
 
-    output_path = (
-        experiment.data_path + experiment.dataset + "/" + experiment.myner.model_name
+    output_path = os.path.join(
+        experiment.data_path, experiment.dataset, experiment.myner.model_name
     )
 
     # Add the candidate experiment info to the path:
@@ -943,7 +944,7 @@ def create_mentions_df(experiment):
     keep_columns = [
         "article_id",
         "originalsplit",
-        "traindevtest",
+        "withouttest",
         "Ashton1860",
         "Dorchester1820",
         "Dorchester1830",
@@ -999,7 +1000,7 @@ def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles
     """
     # Bundle 2 associated tasks: NERC-coarse and NEL
     with open(
-        hipe_scorer_results_path + "/" + scenario_name + ".tsv",
+        os.path.join(hipe_scorer_results_path, scenario_name + ".tsv"),
         "w",
     ) as fw:
         fw.write(
@@ -1049,7 +1050,8 @@ def store_results(experiment, task, how_split, which_split):
             It can be "dev" while we're developing the code, or "test"
             when we run it in the final experiments.
     """
-    hipe_scorer_results_path = experiment.results_path + experiment.dataset + "/"
+    hipe_scorer_results_path = os.path.join(experiment.results_path, experiment.dataset)
+    Path(hipe_scorer_results_path).mkdir(parents=True, exist_ok=True)
     scenario_name = task + "_" + experiment.myner.model_name + "_"
     if task == "linking":
         cand_approach = experiment.myranker.method
@@ -1065,7 +1067,7 @@ def store_results(experiment, task, how_split, which_split):
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
     all = experiment.dataset_df
-    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = list(all[all[how_split] == "test"].article_id.unique())
     test_articles = [str(art) for art in test_articles]
 
     # Store predictions results formatted for CLEF-HIPE scorer:
@@ -1096,7 +1098,7 @@ def store_results(experiment, task, how_split, which_split):
 
 
 def store_rel(experiment, dREL, approach, how_split, which_split):
-    hipe_scorer_results_path = experiment.results_path + experiment.dataset + "/"
+    hipe_scorer_results_path = os.path.join(experiment.results_path, experiment.dataset)
     scenario_name = (
         approach
         + "_"
@@ -1110,7 +1112,7 @@ def store_rel(experiment, dREL, approach, how_split, which_split):
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
     all = experiment.dataset_df
-    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = list(all[all[how_split] == "test"].article_id.unique())
     test_articles = [str(art) for art in test_articles]
 
     # Store REL results formatted for CLEF-HIPE scorer:

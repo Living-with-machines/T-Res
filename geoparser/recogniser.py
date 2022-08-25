@@ -24,7 +24,6 @@ from utils import ner
 class Recogniser:
     def __init__(
         self,
-        method,
         model_name,
         model,
         pipe,
@@ -37,7 +36,6 @@ class Recogniser:
         do_test,
         training_tagset,
     ):
-        self.method = method
         self.model_name = model_name
         self.model = model
         self.pipe = pipe
@@ -53,8 +51,15 @@ class Recogniser:
 
     # -------------------------------------------------------------
     def __str__(self):
-        s = """\n>>> Toponym recogniser:\n    * Method: {0}\n    * Model name: {1}\n    * Base model: {2}\n    * Overwrite model if exists: {3}\n    * Train in test mode: {4}\n    * Training args: {5}\n    * Training tagset: {6}\n""".format(
-            self.method,
+        s = (
+            "\n>>> Toponym recogniser:\n"
+            "    * Model name: {0}\n"
+            "    * Base model: {1}\n"
+            "    * Overwrite model if exists: {2}\n"
+            "    * Train in test mode: {3}\n"
+            "    * Training args: {4}\n"
+            "    * Training tagset: {5}\n"
+        ).format(
             self.model_name,
             self.base_model,
             str(self.overwrite_training),
@@ -77,6 +82,12 @@ class Recogniser:
         Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
 
+        if self.overwrite_training == False:
+            print("\nThe NER model is already trained!\n")
+            return None
+
+        print("*** Training the toponym recognition model...")
+
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
         metric = load_metric("seqeval")
 
@@ -85,10 +96,10 @@ class Recogniser:
             # If test is True, train on 5% of the train and test sets, and add "_test" to the model name.
             self.model_name = self.model_name + "_test"
             lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:5%]"
+                "json", data_files=self.train_dataset, split="train[:10]"
             )
             lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:5%]"
+                "json", data_files=self.train_dataset, split="train[:10]"
             )
         else:
             lwm_train = load_dataset(
@@ -200,6 +211,7 @@ class Recogniser:
             self.pipe (Pipeline): a pipeline object which performs
                 named entity recognition given a model.
         """
+        print("*** Creating and loading a NER pipeline.")
         # Path to NER Model:
         self.model = self.output_path + self.model_name + ".model"
         self.pipe = pipeline("ner", model=self.model)

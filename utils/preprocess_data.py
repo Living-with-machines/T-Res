@@ -26,12 +26,6 @@ gazetteer_ids = set(
 
 # ------------------------------
 # From wikipedia to wikidata:
-
-# Path to wikipedia2wikidata mapper:
-db = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
-
-
-# ------------------------------
 def turn_wikipedia2wikidata(wikipedia_title):
     """
     Get wikidata ID from wikipedia URL
@@ -42,7 +36,9 @@ def turn_wikipedia2wikidata(wikipedia_title):
         processed_wikipedia_title = process_wikipedia.make_wikipedia2wikidata_consisent(
             wikipedia_title
         )
-        linked_wqid = process_wikipedia.title_to_id(db, processed_wikipedia_title)
+        linked_wqid = process_wikipedia.title_to_id(
+            processed_wikipedia_title, lower=True
+        )
         if not linked_wqid:
             print(
                 "Warning: "

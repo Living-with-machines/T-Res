@@ -31,12 +31,6 @@ class TrainingEvaluationDatasets:
                 os.path.join(self.base_url, "generated/test_train_data/", f"{ds}.pkl")
             )
 
-            # if ds == "wned-wikipedia":
-            #     if "Jiří_Třanovský" in datasets[ds]:
-            #         del datasets[ds]["Jiří_Třanovský"]
-            #     if "Jiří_Třanovský Jiří_Třanovský" in datasets[ds]:
-            #         del datasets[ds]["Jiří_Třanovský Jiří_Třanovský"]
-
             self.with_coref(datasets[ds])
 
         return datasets
