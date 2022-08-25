@@ -16,6 +16,8 @@ def make_wikilinks_consistent(url):
     unquote = urllib.parse.unquote(url)
     if "_" in unquote:
         unquote = unquote.replace("_", " ")
+    if "#" in unquote:
+        unquote = unquote.split("#")[0]
     quote = urllib.parse.quote(unquote)
     return quote
 
