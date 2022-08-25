@@ -98,7 +98,7 @@ def train_rel_ed(
         print("The model already exists. The training won't be overwritten.")
         return None
 
-    Path("{}/{}/generated/test_train_data/".format(base_path, wiki_version)).mkdir(
+    Path(os.path.join(base_path, wiki_version, "generated", "test_train_data")).mkdir(
         parents=True, exist_ok=True
     )
     wikipedia = Wikipedia(base_path, wiki_version)
@@ -130,4 +130,3 @@ def train_rel_ed(
     )
     # Train and predict using LR (to obtain confidence scores)
     model.train_LR(datasets, experiment_path)
-    return None
