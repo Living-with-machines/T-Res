@@ -34,9 +34,9 @@ class MentionDetection(MentionDetectionBase):
         for i, row in original_df.iterrows():
             article_id = row["article_id"]
             for sentence in literal_eval(row["sentences"]):
-                dict_sentences[str(article_id) + "_" + str(sentence["sentence_pos"])] = sentence[
-                    "sentence_text"
-                ]
+                dict_sentences[
+                    str(article_id) + "_" + str(sentence["sentence_pos"])
+                ] = sentence["sentence_text"]
 
         # Get REL candidates for our recognized toponyms:
         for i, prediction in test_df.iterrows():
@@ -45,7 +45,9 @@ class MentionDetection(MentionDetectionBase):
             dict_mention["mention"] = prediction["pred_mention"]
             sent_idx = int(prediction["sentence_pos"])
             dict_mention["sent_idx"] = sent_idx
-            dict_mention["sentence"] = dict_sentences[str(article_id) + "_" + str(sent_idx)]
+            dict_mention["sentence"] = dict_sentences[
+                str(article_id) + "_" + str(sent_idx)
+            ]
             dict_mention["ngram"] = prediction["pred_mention"]
             dict_mention["context"] = ["", ""]
             if str(article_id) + "_" + str(sent_idx - 1) in dict_sentences:
@@ -58,8 +60,14 @@ class MentionDetection(MentionDetectionBase):
                 ]
             dict_mention["pos"] = prediction["char_start"]
             dict_mention["end_pos"] = prediction["char_end"]
-            if "reldisamb:relcs" in mylinker.method:
-                dict_mention["candidates"] = self.get_candidates(dict_mention["mention"])
+
+            if mylinker.rel_params.get("candidates") == "relcs":
+                dict_mention["candidates"] = self.get_candidates(
+                    dict_mention["mention"]
+                )
+
+            """
+            ##### TODO FIX
             # Use LwM candidates weighted by mention2wikidata relevance and candselection conf:
             # TODO Actually this should happen in the get_candidates function, so it's in the training as well.
             # TODO Convert to Wikipedia......
@@ -69,6 +77,7 @@ class MentionDetection(MentionDetectionBase):
                     prediction["candidates"],
                     prediction["place_wqid"],
                 )
+            """
             dict_mention["gold"] = ["NONE"]
             dict_mention["tag"] = prediction["pred_ner_label"]
             dict_mention["conf_md"] = prediction["ner_score"]
@@ -96,7 +105,9 @@ class MentionDetection(MentionDetectionBase):
                             max_freq = k["freq"]
                             wiki_gold = k["title"]
                 wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
-                sent2 = dict_mention["sentence"] + " Published in " + prediction["place"]
+                sent2 = (
+                    dict_mention["sentence"] + " Published in " + prediction["place"]
+                )
                 pos2 = len(dict_mention["sentence"]) + len(" Published in ")
                 end_pos2 = pos2 + len(prediction["place"])
                 dict_publ = {
@@ -213,7 +224,9 @@ class MentionDetection(MentionDetectionBase):
             )
         # Verify if Flair, else ngram or custom.
         is_flair = isinstance(tagger, SequenceTagger)
-        dataset_sentences_raw, processed_sentences, splits = self.split_text(dataset, is_flair)
+        dataset_sentences_raw, processed_sentences, splits = self.split_text(
+            dataset, is_flair
+        )
         results = {}
         total_ment = 0
         if is_flair:
@@ -235,7 +248,9 @@ class MentionDetection(MentionDetectionBase):
                     offset = raw_text.find(sentence, cum_sent_length)
 
                 for entity in (
-                    snt.get_spans("ner") if is_flair else tagger.predict(snt, processed_sentences)
+                    snt.get_spans("ner")
+                    if is_flair
+                    else tagger.predict(snt, processed_sentences)
                 ):
                     text, start_pos, end_pos, conf, tag = (
                         entity.text,

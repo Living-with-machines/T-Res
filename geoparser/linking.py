@@ -7,6 +7,9 @@ import urllib
 import numpy as np
 import pandas as pd
 from haversine import haversine
+from tqdm import tqdm
+
+tqdm.pandas()
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -15,7 +18,7 @@ np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, training
+from utils import process_data, training, process_wikipedia
 from utils.REL.entity_disambiguation import EntityDisambiguation
 from utils.REL.mention_detection import MentionDetection
 
@@ -78,6 +81,19 @@ class Linker:
             self.linking_resources["wqid_to_coords"] = wqid_to_coords
             gaz = ""
 
+        if self.method in ["reldisamb"]:
+            # Load gazetteer
+            print("  > Loading gazetteer.")
+            gaz_ids = set(
+                pd.read_csv(
+                    self.resources_path + "wikidata_gazetteer.csv",
+                    usecols=["wikidata_id"],
+                )["wikidata_id"].tolist()
+            )
+
+            # Keep only wikipedia entities in the gazetteer:
+            self.linking_resources["wikidata_locs"] = gaz_ids
+
         # # Load Wikidata gazetteer
         # gaz = pd.read_csv(
         #     self.resources_path + "wikidata_gazetteer.csv", low_memory=False
@@ -109,28 +125,27 @@ class Linker:
         #     ) as f:
         #         self.linking_resources["wikidata2wikipedia"] = json.load(f)
 
-        #     # Keep only wikipedia entities in the gazetteer:
-        #     wkdt_allcands = set(gaz["wikidata_id"].tolist())
-        #     self.linking_resources["wikipedia_locs"] = set(
-        #         dict(
-        #             filter(
-        #                 lambda x: x[1] in wkdt_allcands,
-        #                 self.linking_resources["wikipedia2wikidata"].items(),
-        #             )
-        #         ).keys()
-        #     )
-
         print("*** Linking resources loaded!\n")
         return self.linking_resources
 
     # ----------------------------------------------
-    def perform_training(self, all_df, processed_df, whichsplit):
+    def perform_training(
+        self,
+        train_original,
+        train_processed,
+        dev_original,
+        dev_processed,
+        experiment_name,
+    ):
         """
         TODO: Here will go the code to perform training, checking
         variable overwrite_training.
 
         Arguments:
-            training_df (pd.DataFrame): a dataframe with a mention per row, for training.
+            train_original (pd.DataFrame):
+            train_processed (pd.DataFrame): a dataframe with a mention per row, for training.
+            dev_original (pd.DataFrame):
+            dev_processed (pd.DataFrame): a dataframe with a mention per row, for dev.
 
         Returns:
             xxxxxxx
@@ -140,13 +155,18 @@ class Linker:
         if "bydistance" in self.method:
             return None
         if "reldisamb" in self.method:
-            self.rel_params["model"] = training.train_rel_ed(
-                self, all_df, processed_df, whichsplit
+            training.train_rel_ed(
+                self,
+                train_original,
+                train_processed,
+                dev_original,
+                dev_processed,
+                experiment_name,
             )
             return self.rel_params
 
     # ----------------------------------------------
-    def perform_linking(self, test_df, original_df, whichsplit):
+    def perform_linking(self, test_df, original_df, experiment_name):
         """
         Perform the linking.
 
@@ -176,8 +196,10 @@ class Linker:
             )
 
         if "reldisamb" in self.method:
-            dRELresults = self.rel_disambiguation(test_df, original_df)
-            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
+            dRELresults = self.rel_disambiguation(test_df, original_df, experiment_name)
+            test_df_results[
+                ["pred_wqid", "pred_wqid_score"]
+            ] = test_df_results.progress_apply(
                 lambda row: dRELresults[row["article_id"]][int(row["sentence_pos"])][
                     row["pred_mention"]
                 ],
@@ -187,22 +209,23 @@ class Linker:
 
         return test_df_results
 
-    def rel_disambiguation(self, test_df, original_df):
+    def rel_disambiguation(self, test_df, original_df, experiment_name):
         # Warning: no model has been trained, the latest one that's been trained will be loaded.
-        if not "model" in self.rel_params:
-            print(
-                "WARNING! There is no ED model in memory, we will load the latest model that has been trained."
-            )
+
         base_path = self.rel_params["base_path"]
         wiki_version = self.rel_params["wiki_version"]
         # Instantiate REL mention detection:
         self.rel_params["mention_detection"] = MentionDetection(
             base_path, wiki_version, mylinker=self
         )
+
         # Instantiate REL entity disambiguation:
+        experiment_path = os.path.join(
+            base_path, wiki_version, "generated", experiment_name
+        )
         config = {
             "mode": "eval",
-            "model_path": "{}/{}/generated/model".format(base_path, wiki_version),
+            "model_path": os.path.join(experiment_path, "model"),
         }
         self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
 
@@ -219,7 +242,7 @@ class Linker:
             )
 
         # Given the mentions dataset, predict and return linking:
-        for mentions_doc in mentions_dataset:
+        for mentions_doc in tqdm(mentions_dataset):
             link_predictions, timing = self.rel_params["model"].predict(
                 mentions_dataset[mentions_doc]
             )
@@ -229,17 +252,20 @@ class Linker:
                     returned_mention = m["mention"]
                     returned_prediction = m["prediction"]
 
-                    # Wikipedia prediction to Wikidata:
-                    percent_encoded_title = urllib.parse.quote(
-                        returned_prediction.replace("_", " ")
+                    # REL returns a wikipedia title, provide the wikidata QID:
+                    wikipedia_title = process_wikipedia.make_wikilinks_consistent(
+                        returned_prediction
                     )
-                    if "/" in percent_encoded_title or len(percent_encoded_title) > 200:
-                        percent_encoded_title = hashlib.sha224(
-                            percent_encoded_title.encode("utf-8")
-                        ).hexdigest()
-                    returned_prediction = self.linking_resources[
-                        "wikipedia2wikidata"
-                    ].get(percent_encoded_title, "NIL")
+                    processed_wikipedia_title = (
+                        process_wikipedia.make_wikipedia2wikidata_consisent(
+                            wikipedia_title
+                        )
+                    )
+                    returned_prediction = process_wikipedia.title_to_id(
+                        processed_wikipedia_title, lower=True
+                    )
+                    if not returned_prediction:
+                        returned_prediction = "NIL"
 
                     # Disambiguation confidence:
                     returned_confidence = round(m.get("conf_ed", 0.0), 3)

@@ -14,7 +14,7 @@ dataset = "lwm"  # "hipe" or "lwm"
 # * partialmatch
 # * levenshtein
 # * deezymatch
-cand_select_method = "perfectmatch"
+cand_select_method = "deezymatch"
 
 # Toponym resolution approach, options are:
 # * mostpopular
@@ -26,7 +26,7 @@ cand_select_method = "perfectmatch"
 # * "reldisamb:relcs"
 # * "reldisamb:lwmcs:dist"
 # * "reldisamb:lwmcs:relvdist"
-top_res_method = "mostpopular"
+top_res_method = "reldisamb"
 
 
 # --------------------------------------
@@ -96,7 +96,14 @@ mylinker = linking.Linker(
     resources_path="/resources/wikidata/",
     linking_resources=dict(),
     base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
-    rel_params={"base_path": "/resources/rel_db/", "wiki_version": "wiki_2019/"},
+    rel_params={
+        "base_path": "/resources/rel_db/",
+        "wiki_version": "wiki_2019/",
+        "training_data": "lwm",  # lwm, aida
+        "candidates": "relcs",  # lwm, rel
+        "ranking": "relv",  # relv, dist, relvdist
+        "overwrite_training": False,
+    },
     overwrite_training=False,
 )
 

@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data
+from utils import process_data, training
 
 
 class Experiment:
@@ -236,74 +236,57 @@ class Experiment:
                     # "Poole1860",
                 ]
 
-        """
-        ##### Training set
-        
-        # ------------------------------------------
-        # HIPE dataset has no train set, so we always use LwM dataset for training.
-        # Try to load the LwM dataset, otherwise raise a warning and create
-        # an empty dataframe (we're not raising an error because not all
-        # linking approaches will need a training set).
-        lwm_processed_df = pd.DataFrame()
-
-        # Load training set (add the candidate experiment info to the path):
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
-            cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
-            )
-        processed_file = os.path.join(
-            self.data_path,
-            "lwm/" + self.myner.model_name + "_" + cand_approach + "_mentions.tsv",
-        )
-        original_file = os.path.join(self.data_path, "lwm/linking_df_split.tsv")
-
-        if not Path(processed_file).exists():
-            sys.exit(
-                (
-                    "* WARNING! The training set has not been generated yet. To do so,\n"
-                    "please run the same experiment with the LwM dataset. If the linking\n"
-                    "method you're using is unsupervised, please ignore this warning.\n"
-                )
-            )
-
-        lwm_processed_df = pd.read_csv(processed_file, sep="\t")
-        lwm_processed_df = lwm_processed_df.drop(columns=["Unnamed: 0"])
-        lwm_processed_df["candidates"] = lwm_processed_df["candidates"].apply(
-            process_data.eval_with_exception
-        )
-        lwm_original_df = pd.read_csv(original_file, sep="\t")
-        """
+        train_original = pd.DataFrame()
+        train_processed = pd.DataFrame()
+        if self.mylinker.rel_params.get("training_data") == "lwm":
+            train_original, train_processed = training.load_training_lwm_data(self)
 
         # ------------------------------------------
         # Iterate over each linking experiments, each will have its own
         # results file:
         for split in list_test_splits:
-            processed_df_current = self.processed_data["processed_df"]
-            original_df_current = self.dataset_df
+
+            processed_df = self.processed_data["processed_df"]
+            original_df = self.dataset_df
+
+            dev_processed = processed_df[processed_df[split] == "dev"]
+            test_processed = processed_df[processed_df[split] == "test"]
+            dev_original = original_df[original_df[split] == "dev"]
+            test_original = original_df[original_df[split] == "test"]
 
             # Get ids of articles in each split:
-            test_article_ids = list(
-                original_df_current[
-                    original_df_current[split] == "test"
-                ].article_id.astype(str)
-            )
+            test_article_ids = list(test_original.article_id.astype(str))
 
-            """
-            ###### To fix: supervised methods TODO
-            # if "reldisamb" in self.mylinker.method:
-            #     # Train according to method and store model:
-            #     self.mylinker.rel_params = self.mylinker.perform_training(
-            #         lwm_original_df, lwm_processed_df, split
-            #     )
-            """
+            # Get the experiment name:
+            cand_approach = self.myranker.method
+            if self.myranker.method == "deezymatch":
+                cand_approach += "+" + str(
+                    self.myranker.deezy_parameters["num_candidates"]
+                )
+                cand_approach += "+" + str(
+                    self.myranker.deezy_parameters["selection_threshold"]
+                )
+            link_approach = self.mylinker.method
+            if self.mylinker.method == "reldisamb":
+                link_approach += "+" + str(self.mylinker.rel_params["training_data"])
+                link_approach += "+" + str(self.mylinker.rel_params["candidates"])
+                link_approach += "+" + str(self.mylinker.rel_params["ranking"])
+            experiment_name = cand_approach + "_" + link_approach + "_" + split
+
+            # If method is supervised, train and store model:
+            if "reldisamb" in self.mylinker.method:
+                self.mylinker.rel_params = self.mylinker.perform_training(
+                    train_original,
+                    train_processed,
+                    dev_original,
+                    dev_processed,
+                    experiment_name,
+                )
 
             # Resolve according to method:
-            test_df = processed_df_current[processed_df_current[split] == "test"]
-            original_df_test = self.dataset_df[self.dataset_df[split] == "test"]
-
-            test_df = self.mylinker.perform_linking(test_df, original_df_test, split)
+            test_df = self.mylinker.perform_linking(
+                test_processed, test_original, experiment_name
+            )
 
             # Prepare data for scorer:
             self.processed_data = process_data.prepare_storing_links(

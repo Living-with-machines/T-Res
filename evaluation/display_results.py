@@ -177,12 +177,7 @@ linking_approaches = [
     "mostpopular",
     "skys",
     "bydistance",
-    "reldisamb:relcs",
-    "reldisamb:lwmcs:relv",
-    "reldisamb:lwmcs:dist",
-    "reldisamb:lwmcs:relvdist",
-    "reldisamb:lwmcs:relvpubl",
-    "gnn",
+    "reldisamb",
 ]
 granularities = ["fine", "coarse"]
 splits = [
