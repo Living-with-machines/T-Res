@@ -73,8 +73,6 @@ def test_by_distance():
     assert pred == "Q84"
     assert final_score == 1.0
 
-    myranker.load_resources()
-
     dict_mention = {
         "candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}}},
         "place_wqid": "Q172",
@@ -82,3 +80,11 @@ def test_by_distance():
     pred, final_score = myranker.by_distance(dict_mention)
     assert pred == "Q92561"
     assert final_score == 0.992
+
+    dict_mention = {
+        "candidates": {},
+        "place_wqid": "Q84",
+    }
+    pred, final_score = myranker.by_distance(dict_mention)
+    assert pred == "NIL"
+    assert final_score == 0.0
