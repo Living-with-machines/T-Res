@@ -1,8 +1,8 @@
 import json
 import os
 import pathlib
+import sqlite3
 import sys
-import urllib
 from argparse import ArgumentParser
 
 from tqdm import tqdm
@@ -20,8 +20,11 @@ args = parser.parse_args()
 
 if args.test:
     path = "/resources/wikipedia/test-extractedResources/"
+    mapper = "/resources/wikipedia/wikidata2wikipedia/test_index_enwiki-latest.db"
+
 else:
     path = "/resources/wikipedia/extractedResources/"
+    mapper = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
 
 if pathlib.Path(path).is_dir() == False:
     print("Error! You need to have extracted entity and mention counts in " + path)
@@ -32,8 +35,12 @@ if pathlib.Path(path).is_dir() == False:
 with open(path + "overall_entity_freq.json", "r") as f:
     overall_entity_freq = json.load(f)
 
-# and a mapper of wikipedia / wikidata
-mapper = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
+
+with sqlite3.connect(mapper) as conn:
+    c = conn.cursor()
+    c.execute("ALTER TABLE mapping ADD COLUMN lower_wikipedia_title")
+    c.execute("UPDATE or IGNORE mapping SET lower_wikipedia_title = lower(wikipedia_title)")
+    c.execute("CREATE INDEX lower_idx_wikipedia_title ON mapping(lower_wikipedia_title);")
 
 wikidata2wikipedia = {}
 

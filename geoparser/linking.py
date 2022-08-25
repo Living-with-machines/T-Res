@@ -18,7 +18,7 @@ np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, training, process_wikipedia
+from utils import process_data, process_wikipedia, training
 from utils.REL.entity_disambiguation import EntityDisambiguation
 from utils.REL.mention_detection import MentionDetection
 
@@ -42,9 +42,7 @@ class Linker:
 
     def __str__(self):
         s = (
-            ">>> Entity Linking:\n"
-            "    * Method: {0}\n"
-            "    * Overwrite training: {1}\n"
+            ">>> Entity Linking:\n" "    * Method: {0}\n" "    * Overwrite training: {1}\n"
         ).format(
             self.method,
             str(self.overwrite_training),
@@ -197,9 +195,7 @@ class Linker:
 
         if "reldisamb" in self.method:
             dRELresults = self.rel_disambiguation(test_df, original_df, experiment_name)
-            test_df_results[
-                ["pred_wqid", "pred_wqid_score"]
-            ] = test_df_results.progress_apply(
+            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.progress_apply(
                 lambda row: dRELresults[row["article_id"]][int(row["sentence_pos"])][
                     row["pred_mention"]
                 ],
@@ -220,9 +216,7 @@ class Linker:
         )
 
         # Instantiate REL entity disambiguation:
-        experiment_path = os.path.join(
-            base_path, wiki_version, "generated", experiment_name
-        )
+        experiment_path = os.path.join(base_path, wiki_version, "generated", experiment_name)
         config = {
             "mode": "eval",
             "model_path": os.path.join(experiment_path, "model"),
@@ -257,9 +251,7 @@ class Linker:
                         returned_prediction
                     )
                     processed_wikipedia_title = (
-                        process_wikipedia.make_wikipedia2wikidata_consisent(
-                            wikipedia_title
-                        )
+                        process_wikipedia.make_wikipedia2wikidata_consisent(wikipedia_title)
                     )
                     returned_prediction = process_wikipedia.title_to_id(
                         processed_wikipedia_title, lower=True
@@ -272,9 +264,7 @@ class Linker:
 
                     if mentions_doc in dRELresults:
                         if mentions_sent in dRELresults[mentions_doc]:
-                            dRELresults[mentions_doc][mentions_sent][
-                                returned_mention
-                            ] = (
+                            dRELresults[mentions_doc][mentions_sent][returned_mention] = (
                                 returned_prediction,
                                 returned_confidence,
                             )
@@ -321,9 +311,7 @@ class Linker:
         if cands:
             for variation in cands:
                 for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][
-                        candidate
-                    ]
+                    score = self.linking_resources["mentions_to_wikidata"][variation][candidate]
                     total_score += score
                     if score > keep_highest_score:
                         keep_highest_score = score
@@ -354,7 +342,9 @@ class Linker:
         origin_wqid = dict_mention["place_wqid"]
         origin_coords = self.linking_resources["wqid_to_coords"][origin_wqid]
         keep_closest_cand = "NIL"
-        keep_lowest_distance = 20000  # 20000 km, max on Earth
+        max_on_earth = 20000  # 20000 km, max on Earth
+        keep_lowest_distance = max_on_earth  # 20000 km, max on Earth
+
         if cands:
             l = [list(cands[x]["Candidates"].keys()) for x in cands]
             l = [item for sublist in l for item in sublist]
@@ -365,5 +355,10 @@ class Linker:
                 if geodist < keep_lowest_distance:
                     keep_lowest_distance = geodist
                     keep_closest_cand = candidate
+
+        if keep_lowest_distance == 0.0:
+            keep_lowest_distance = 1.0
+        else:
+            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_earth)
 
         return keep_closest_cand, round(keep_lowest_distance, 3)
