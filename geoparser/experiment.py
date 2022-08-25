@@ -268,10 +268,16 @@ class Experiment:
                 )
             link_approach = self.mylinker.method
             if self.mylinker.method == "reldisamb":
-                link_approach += "+" + str(self.mylinker.rel_params["training_data"])
                 link_approach += "+" + str(self.mylinker.rel_params["candidates"])
                 link_approach += "+" + str(self.mylinker.rel_params["ranking"])
-            experiment_name = cand_approach + "_" + link_approach + "_" + split
+            experiment_name = self.mylinker.rel_params["training_data"]
+            if self.mylinker.rel_params["training_data"] == "lwm":
+                experiment_name += "_" + cand_approach
+                experiment_name += "_" + link_approach
+                experiment_name += "_" + split
+            if self.mylinker.rel_params["training_data"] == "aida":
+                experiment_name += "_" + cand_approach
+                experiment_name += "_" + link_approach
 
             # If method is supervised, train and store model:
             if "reldisamb" in self.mylinker.method:
