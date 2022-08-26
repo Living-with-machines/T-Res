@@ -74,40 +74,40 @@ def run_rel_experiments(self):
     )
     dict_rel_approaches[rel_approach_name] = {"results": dREL}
 
-    # -------------------------------------------
-    # 2. END TO END USING 2019 WIKI DUMP, TRAINED ON AIDA
-    # -------------------------------------------
-    print("* REL: Approach 2")
+    # # -------------------------------------------
+    # # 2. END TO END USING 2019 WIKI DUMP, TRAINED ON AIDA
+    # # -------------------------------------------
+    # print("* REL: Approach 2")
 
-    rel_approach_name = "rel_wiki2019_aida"
-    base_path = "/resources/rel_db"
-    wiki_version = "wiki_2019"
-    model_name = "ed-wiki-2019"
-    config = {
-        "mode": "eval",
-        "model_path": "{}/{}/model".format(base_path, model_name),
-    }
-    mention_detection = MentionDetection(base_path, wiki_version)
-    tagger_ner = load_flair_ner("ner-fast")
-    linking_model = EntityDisambiguation(base_path, wiki_version, config)
-    rel_preds = process_data.get_rel_locally(
-        self.processed_data["dSentences"],
-        mention_detection,
-        tagger_ner,
-        linking_model,
-    )
-    dREL = process_data.postprocess_rel(
-        rel_preds,
-        self.processed_data["dSentences"],
-        self.processed_data["gold_tok"],
-    )
+    # rel_approach_name = "rel_wiki2019_aida"
+    # base_path = "/resources/rel_db"
+    # wiki_version = "wiki_2019"
+    # model_name = "ed-wiki-2019"
+    # config = {
+    #     "mode": "eval",
+    #     "model_path": "{}/{}/model".format(base_path, model_name),
+    # }
+    # mention_detection = MentionDetection(base_path, wiki_version)
+    # tagger_ner = load_flair_ner("ner-fast")
+    # linking_model = EntityDisambiguation(base_path, wiki_version, config)
+    # rel_preds = process_data.get_rel_locally(
+    #     self.processed_data["dSentences"],
+    #     mention_detection,
+    #     tagger_ner,
+    #     linking_model,
+    # )
+    # dREL = process_data.postprocess_rel(
+    #     rel_preds,
+    #     self.processed_data["dSentences"],
+    #     self.processed_data["gold_tok"],
+    # )
 
-    dict_rel_approaches[rel_approach_name] = {
-        "base_path": base_path,
-        "wiki_version": wiki_version,
-        "model_name": model_name,
-        "results": dREL,
-    }
+    # dict_rel_approaches[rel_approach_name] = {
+    #     "base_path": base_path,
+    #     "wiki_version": wiki_version,
+    #     "model_name": model_name,
+    #     "results": dREL,
+    # }
 
     # -------------------------------------------
     # N. STORE RESULTS PER EVAL SCENARIO

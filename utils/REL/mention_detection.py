@@ -91,37 +91,37 @@ class MentionDetection(MentionDetectionBase):
             else:
                 results[article_id] = {sent_idx: [dict_mention]}
 
-            if "publ" in mylinker.method:
-                # Add place of publication as an entity in each sentence:
-                # Wikipedia title of place of publication QID:
-                wiki_gold = "NIL"
-                gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
-                    prediction["place_wqid"]
-                )
-                max_freq = 0
-                if gold_ids:
-                    for k in gold_ids:
-                        if k["freq"] > max_freq:
-                            max_freq = k["freq"]
-                            wiki_gold = k["title"]
-                wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
-                sent2 = (
-                    dict_mention["sentence"] + " Published in " + prediction["place"]
-                )
-                pos2 = len(dict_mention["sentence"]) + len(" Published in ")
-                end_pos2 = pos2 + len(prediction["place"])
-                dict_publ = {
-                    "mention": "publication",
-                    "sent_idx": dict_mention["sent_idx"],
-                    "sentence": sent2,
-                    "gold": [wiki_gold],
-                    "ngram": "publication",
-                    "context": dict_mention["context"],
-                    "pos": pos2,
-                    "end_pos": end_pos2,
-                    "candidates": [[wiki_gold, 1.0]],
-                }
-                results[article_id][sent_idx].append(dict_publ)
+            # if "publ" in mylinker.method:
+            #     # Add place of publication as an entity in each sentence:
+            #     # Wikipedia title of place of publication QID:
+            #     wiki_gold = "NIL"
+            #     gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
+            #         prediction["place_wqid"]
+            #     )
+            #     max_freq = 0
+            #     if gold_ids:
+            #         for k in gold_ids:
+            #             if k["freq"] > max_freq:
+            #                 max_freq = k["freq"]
+            #                 wiki_gold = k["title"]
+            #     wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
+            #     sent2 = (
+            #         dict_mention["sentence"] + " Published in " + prediction["place"]
+            #     )
+            #     pos2 = len(dict_mention["sentence"]) + len(" Published in ")
+            #     end_pos2 = pos2 + len(prediction["place"])
+            #     dict_publ = {
+            #         "mention": "publication",
+            #         "sent_idx": dict_mention["sent_idx"],
+            #         "sentence": sent2,
+            #         "gold": [wiki_gold],
+            #         "ngram": "publication",
+            #         "context": dict_mention["context"],
+            #         "pos": pos2,
+            #         "end_pos": end_pos2,
+            #         "candidates": [[wiki_gold, 1.0]],
+            #     }
+            #     results[article_id][sent_idx].append(dict_publ)
 
         return results, total_ment
 

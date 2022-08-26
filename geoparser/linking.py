@@ -42,7 +42,9 @@ class Linker:
 
     def __str__(self):
         s = (
-            ">>> Entity Linking:\n" "    * Method: {0}\n" "    * Overwrite training: {1}\n"
+            ">>> Entity Linking:\n"
+            "    * Method: {0}\n"
+            "    * Overwrite training: {1}\n"
         ).format(
             self.method,
             str(self.overwrite_training),
@@ -91,37 +93,6 @@ class Linker:
 
             # Keep only wikipedia entities in the gazetteer:
             self.linking_resources["wikidata_locs"] = gaz_ids
-
-        # # Load Wikidata gazetteer
-        # gaz = pd.read_csv(
-        #     self.resources_path + "wikidata_gazetteer.csv", low_memory=False
-        # )
-
-        # # Gazetteer entity classes:
-        # gaz["instance_of"] = gaz["instance_of"].apply(process_data.eval_with_exception)
-
-        # # Gazetteer:
-        # self.linking_resources["gazetteer"] = gaz
-
-        # if self.method in ["reldisamb:lwmcs:dist", "reldisamb:lwmcs:relvdist"]:
-        #     print("  > Mapping coordinates to wikidata ids.")
-        #     dict_wqid_to_lat = dict(zip(gaz.wikidata_id, gaz.latitude))
-        #     dict_wqid_to_lon = dict(zip(gaz.wikidata_id, gaz.longitude))
-        #     self.linking_resources["dict_wqid_to_lat"] = dict_wqid_to_lat
-        #     self.linking_resources["dict_wqid_to_lon"] = dict_wqid_to_lon
-
-        # # REL disambiguates to Wikipedia, not Wikidata:
-        # if "reldisamb" in self.method:
-        #     # WIkipedia to Wikidata
-        #     with open(
-        #         "/resources/wikipedia/extractedResources/wikipedia2wikidata.json", "r"
-        #     ) as f:
-        #         self.linking_resources["wikipedia2wikidata"] = json.load(f)
-        #     # Wikidata to Wikipedia
-        #     with open(
-        #         "/resources/wikipedia/extractedResources/wikidata2wikipedia.json", "r"
-        #     ) as f:
-        #         self.linking_resources["wikidata2wikipedia"] = json.load(f)
 
         print("*** Linking resources loaded!\n")
         return self.linking_resources
@@ -195,7 +166,9 @@ class Linker:
 
         if "reldisamb" in self.method:
             dRELresults = self.rel_disambiguation(test_df, original_df, experiment_name)
-            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.progress_apply(
+            test_df_results[
+                ["pred_wqid", "pred_wqid_score"]
+            ] = test_df_results.progress_apply(
                 lambda row: dRELresults[row["article_id"]][int(row["sentence_pos"])][
                     row["pred_mention"]
                 ],
@@ -216,7 +189,9 @@ class Linker:
         )
 
         # Instantiate REL entity disambiguation:
-        experiment_path = os.path.join(base_path, wiki_version, "generated", experiment_name)
+        experiment_path = os.path.join(
+            base_path, wiki_version, "generated", experiment_name
+        )
         config = {
             "mode": "eval",
             "model_path": os.path.join(experiment_path, "model"),
@@ -251,7 +226,9 @@ class Linker:
                         returned_prediction
                     )
                     processed_wikipedia_title = (
-                        process_wikipedia.make_wikipedia2wikidata_consisent(wikipedia_title)
+                        process_wikipedia.make_wikipedia2wikidata_consisent(
+                            wikipedia_title
+                        )
                     )
                     returned_prediction = process_wikipedia.title_to_id(
                         processed_wikipedia_title, lower=True
@@ -264,7 +241,9 @@ class Linker:
 
                     if mentions_doc in dRELresults:
                         if mentions_sent in dRELresults[mentions_doc]:
-                            dRELresults[mentions_doc][mentions_sent][returned_mention] = (
+                            dRELresults[mentions_doc][mentions_sent][
+                                returned_mention
+                            ] = (
                                 returned_prediction,
                                 returned_confidence,
                             )
@@ -311,7 +290,9 @@ class Linker:
         if cands:
             for variation in cands:
                 for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][candidate]
+                    score = self.linking_resources["mentions_to_wikidata"][variation][
+                        candidate
+                    ]
                     total_score += score
                     if score > keep_highest_score:
                         keep_highest_score = score

@@ -10,17 +10,7 @@ import pandas as pd
 import requests
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import ner
-
-
-# Load wikipedia2wikidata mapper:
-path = "/resources/wikipedia/extractedResources/"
-wikipedia2wikidata = dict()
-if Path(path + "wikipedia2wikidata.json").exists():
-    with open(path + "wikipedia2wikidata.json", "r") as f:
-        wikipedia2wikidata = json.load(f)
-else:
-    print("Warning: wikipedia2wikidata.json does not exist.")
+from utils import ner, process_wikipedia
 
 
 # Load gazetteer (our knowledge base):
@@ -728,14 +718,10 @@ def match_wikipedia_to_wikidata(wiki_title):
     Returns:
         a string, either the Wikidata QID corresponding entity, or NIL.
     """
-    el = urllib.parse.quote(wiki_title.replace("_", " "))
-    try:
-        el = wikipedia2wikidata[el]
-        return el
-    except Exception:
-        # to be checked but it seems some Wikipedia pages are not in our Wikidata
-        # see for instance Zante%2C%20California
-        return "NIL"
+    wqid = process_wikipedia.title_to_id(wiki_title, lower=False)
+    if not wqid:
+        wqid = "NIL"
+    return wqid
 
 
 # ----------------------------------------------------
