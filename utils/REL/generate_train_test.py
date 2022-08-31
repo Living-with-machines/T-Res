@@ -225,6 +225,7 @@ class GenTrainingTest(MentionDetectionBase):
         train_processed,
         dev_original,
         dev_processed,
+        cand_selection,
     ):
         """
         Preprocesses LwM dataset in the format that is necessary for training and evaluating
@@ -247,90 +248,8 @@ class GenTrainingTest(MentionDetectionBase):
                     str(article_id) + "_" + str(sentence["sentence_pos"])
                 ] = sentence["sentence_text"]
 
-        if "reldisamb:lwmcs" in self.mylinker.method:
-            dict_articles = dict()
-            for i, prediction in processed_df.iterrows():
-                article_id = prediction["article_id"]
-                dict_mention = dict()
-                dict_mention["mention"] = prediction["pred_mention"]
-                sent_idx = int(prediction["sentence_pos"])
-                dict_mention["sent_idx"] = sent_idx
-                dict_mention["sentence"] = dict_sentences[
-                    str(article_id) + "_" + str(sent_idx)
-                ]
-                # Convert the gold standard Wikidata id to Wikipedia id (because
-                # of redirections, some times more than one Wikipedia title is
-                # assigned to each Wikidata id, we choose the most frequent one):
-                dict_mention["gold"] = "NIL"
-                gold_ids = self.mylinker.linking_resources["wikidata2wikipedia"].get(
-                    prediction["gold_entity_link"]
-                )
-                max_freq = 0
-                if gold_ids:
-                    for k in gold_ids:
-                        if k["freq"] > max_freq:
-                            max_freq = k["freq"]
-                            dict_mention["gold"] = k["title"]
-                dict_mention["gold"] = [
-                    urllib.parse.unquote(dict_mention["gold"]).replace(" ", "_")
-                ]
-                dict_mention["ngram"] = prediction["pred_mention"]
-                dict_mention["context"] = ["", ""]
-                if str(article_id) + "_" + str(sent_idx - 1) in dict_sentences:
-                    dict_mention["context"][0] = dict_sentences[
-                        str(article_id) + "_" + str(sent_idx - 1)
-                    ]
-                if str(article_id) + "_" + str(sent_idx + 1) in dict_sentences:
-                    dict_mention["context"][1] = dict_sentences[
-                        str(article_id) + "_" + str(sent_idx + 1)
-                    ]
-                dict_mention["pos"] = prediction["char_start"]
-                dict_mention["end_pos"] = prediction["char_end"]
-                dict_mention["candidates"] = self.get_candidates(
-                    prediction["pred_mention"],
-                    prediction["candidates"],
-                    prediction["place_wqid"],  # place of publication (wikidata id)
-                )
-                if article_id in dict_articles:
-                    dict_articles[article_id].append(dict_mention)
-                else:
-                    dict_articles[article_id] = [dict_mention]
-
-                if "publ" in self.mylinker.method:
-                    # Add place of publication as a fake entity in each sentence:
-                    # Wikipedia title of place of publication QID:
-                    wiki_gold = "NIL"
-                    gold_ids = self.mylinker.linking_resources[
-                        "wikidata2wikipedia"
-                    ].get(prediction["place_wqid"])
-                    max_freq = 0
-                    if gold_ids:
-                        for k in gold_ids:
-                            if k["freq"] > max_freq:
-                                max_freq = k["freq"]
-                                wiki_gold = k["title"]
-                    wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
-                    sent2 = (
-                        dict_mention["sentence"]
-                        + " Published in "
-                        + prediction["place"]
-                    )
-                    pos2 = len(dict_mention["sentence"]) + len(" Published in ")
-                    end_pos2 = pos2 + len(prediction["place"])
-                    dict_publ = {
-                        "mention": "publication",
-                        "sent_idx": dict_mention["sent_idx"],
-                        "sentence": sent2,
-                        "gold": [wiki_gold],
-                        "ngram": "publication",
-                        "context": dict_mention["context"],
-                        "pos": pos2,
-                        "end_pos": end_pos2,
-                        "candidates": [[wiki_gold, 1.0]],
-                    }
-                    dict_articles[article_id].append(dict_publ)
-        else:
-            dict_articles = dict()
+        dict_articles = dict()
+        if cand_selection == "relcs":
             for i, row in original_df.iterrows():
                 article_id = row["article_id"]
                 dict_articles[article_id] = []
@@ -367,6 +286,82 @@ class GenTrainingTest(MentionDetectionBase):
                         annotation["mention"]
                     )
                     dict_articles[article_id].append(dict_mention)
+
+        if cand_selection == "lwmcs":
+            # If cand_selection method comes from LwM code, load and process
+            # already detected candidates:
+            for i, prediction in processed_df.iterrows():
+                prediction = prediction.to_dict()
+                article_id = prediction["article_id"]
+                dict_mention = dict()
+                dict_mention["mention"] = prediction["pred_mention"]
+                sent_idx = int(prediction["sentence_pos"])
+                dict_mention["sent_idx"] = sent_idx
+                dict_mention["sentence"] = dict_sentences[
+                    str(article_id) + "_" + str(sent_idx)
+                ]
+                # Convert the gold standard Wikidata id to Wikipedia id (because
+                # of redirections, some times more than one Wikipedia title is
+                # assigned to each Wikidata id, we choose the most frequent one):
+                dict_mention["gold"] = "NIL"
+                gold_ids = process_wikipedia.id_to_title(prediction["gold_entity_link"])
+                # Get the first of the wikipedia titles returned (they're sorted
+                # by their autoincrement id):
+                if gold_ids:
+                    dict_mention["gold"] = [gold_ids[0]]
+                dict_mention["ngram"] = prediction["pred_mention"]
+                dict_mention["context"] = ["", ""]
+                if str(article_id) + "_" + str(sent_idx - 1) in dict_sentences:
+                    dict_mention["context"][0] = dict_sentences[
+                        str(article_id) + "_" + str(sent_idx - 1)
+                    ]
+                if str(article_id) + "_" + str(sent_idx + 1) in dict_sentences:
+                    dict_mention["context"][1] = dict_sentences[
+                        str(article_id) + "_" + str(sent_idx + 1)
+                    ]
+                dict_mention["pos"] = prediction["char_start"]
+                dict_mention["end_pos"] = prediction["char_end"]
+                dict_mention["candidates"] = self.get_candidates(
+                    prediction["pred_mention"], cand_selection, prediction["candidates"]
+                )
+                if article_id in dict_articles:
+                    dict_articles[article_id].append(dict_mention)
+                else:
+                    dict_articles[article_id] = [dict_mention]
+
+                # if "publ" in self.mylinker.method:
+                #     # Add place of publication as a fake entity in each sentence:
+                #     # Wikipedia title of place of publication QID:
+                #     wiki_gold = "NIL"
+                #     gold_ids = self.mylinker.linking_resources[
+                #         "wikidata2wikipedia"
+                #     ].get(prediction["place_wqid"])
+                #     max_freq = 0
+                #     if gold_ids:
+                #         for k in gold_ids:
+                #             if k["freq"] > max_freq:
+                #                 max_freq = k["freq"]
+                #                 wiki_gold = k["title"]
+                #     wiki_gold = urllib.parse.unquote(wiki_gold).replace(" ", "_")
+                #     sent2 = (
+                #         dict_mention["sentence"]
+                #         + " Published in "
+                #         + prediction["place"]
+                #     )
+                #     pos2 = len(dict_mention["sentence"]) + len(" Published in ")
+                #     end_pos2 = pos2 + len(prediction["place"])
+                #     dict_publ = {
+                #         "mention": "publication",
+                #         "sent_idx": dict_mention["sent_idx"],
+                #         "sentence": sent2,
+                #         "gold": [wiki_gold],
+                #         "ngram": "publication",
+                #         "context": dict_mention["context"],
+                #         "pos": pos2,
+                #         "end_pos": end_pos2,
+                #         "candidates": [[wiki_gold, 1.0]],
+                #     }
+                #     dict_articles[article_id].append(dict_publ)
 
         if dataset_split == "train":
             self.__save(dict_articles, "lwm_train")

@@ -106,13 +106,14 @@ class Experiment:
         """
 
         # ----------------------------------
-        # Coherence check:
+        # Coherence checks:
         # Some scenarios do not make sense. Warn and exit:
         if self.myranker.method not in [
             "perfectmatch",
             "partialmatch",
             "levenshtein",
             "deezymatch",
+            "relcs",
         ]:
             print(
                 "\n!!! Coherence check failed. "
@@ -123,6 +124,13 @@ class Experiment:
             print(
                 "\n!!! Coherence check failed. "
                 "HIPE should be run with the coarse tagset.\n"
+            )
+            sys.exit(0)
+        if self.myranker.method == "relcs" and not self.mylinker.method == "reldisamb":
+            print(
+                "\n!!! Coherence check failed. "
+                "The REL candidate selection method only works with the reldisamb.\n"
+                "linking method.\n"
             )
             sys.exit(0)
 
@@ -173,15 +181,21 @@ class Experiment:
         # -------------------------------------------
         # Perform candidate ranking:
         print("\n* Perform candidate ranking:")
-        # Obtain candidates per sentence:
         dCandidates = dict()
+        # Obtain candidates per sentence:
         for sentence_id in tqdm(dMentionsPred):
-            pred_mentions_sent = dMentionsPred[sentence_id]
-            (
-                wk_cands,
-                self.myranker.already_collected_cands,
-            ) = self.myranker.find_candidates(pred_mentions_sent)
-            dCandidates[sentence_id] = wk_cands
+            if self.myranker.method == "relcs":
+                # REL match is performed in in a later stage, during the
+                # linking. Therefore at this point we just return an empty
+                # dictionary.
+                dCandidates[sentence_id] = dict()
+            else:
+                pred_mentions_sent = dMentionsPred[sentence_id]
+                (
+                    wk_cands,
+                    self.myranker.already_collected_cands,
+                ) = self.myranker.find_candidates(pred_mentions_sent)
+                dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
         # Store temporary postprocessed data
@@ -207,6 +221,9 @@ class Experiment:
         return self.processed_data
 
     def linking_experiments(self):
+
+        # Candidates:
+        cand_selection = "relcs" if self.myranker.method == "relcs" else "lwmcs"
 
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
@@ -268,7 +285,6 @@ class Experiment:
                 )
             link_approach = self.mylinker.method
             if self.mylinker.method == "reldisamb":
-                link_approach += "+" + str(self.mylinker.rel_params["candidates"])
                 link_approach += "+" + str(self.mylinker.rel_params["ranking"])
             experiment_name = self.mylinker.rel_params["training_data"]
             if self.mylinker.rel_params["training_data"] == "lwm":
@@ -287,11 +303,15 @@ class Experiment:
                     dev_original,
                     dev_processed,
                     experiment_name,
+                    cand_selection,
                 )
 
             # Resolve according to method:
             test_df = self.mylinker.perform_linking(
-                test_processed, test_original, experiment_name
+                test_processed,
+                test_original,
+                experiment_name,
+                cand_selection,
             )
 
             # Prepare data for scorer:

@@ -136,6 +136,8 @@ class Ranker:
                     }
         self.mentions_to_wikidata = mentions_to_wikidata_filtered
         self.wikidata_to_mentions = wikidata_to_mentions_filtered
+        del mentions_to_wikidata_filtered
+        del wikidata_to_mentions_filtered
 
         # Parallelize if ranking method is one of the following:
         if self.method in ["partialmatch", "levenshtein"]:

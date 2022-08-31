@@ -63,7 +63,7 @@ class Linker:
         print("*** Load linking resources.")
 
         # Load Wikidata mentions-to-QID with absolute counts:
-        if self.method in ["mostpopular"]:
+        if self.method in ["mostpopular", "reldisamb"]:
             print("  > Loading mentions to wikidata mapping.")
             with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
                 self.linking_resources["mentions_to_wikidata"] = json.load(f)
@@ -105,6 +105,7 @@ class Linker:
         dev_original,
         dev_processed,
         experiment_name,
+        cand_selection,
     ):
         """
         TODO: Here will go the code to perform training, checking
@@ -131,11 +132,14 @@ class Linker:
                 dev_original,
                 dev_processed,
                 experiment_name,
+                cand_selection,
             )
             return self.rel_params
 
     # ----------------------------------------------
-    def perform_linking(self, test_df, original_df, experiment_name):
+    def perform_linking(
+        self, test_df, original_df, experiment_name, cand_selection=None
+    ):
         """
         Perform the linking.
 
@@ -165,7 +169,9 @@ class Linker:
             )
 
         if "reldisamb" in self.method:
-            dRELresults = self.rel_disambiguation(test_df, original_df, experiment_name)
+            dRELresults = self.rel_disambiguation(
+                test_df, original_df, experiment_name, cand_selection
+            )
             test_df_results[
                 ["pred_wqid", "pred_wqid_score"]
             ] = test_df_results.progress_apply(
@@ -178,7 +184,7 @@ class Linker:
 
         return test_df_results
 
-    def rel_disambiguation(self, test_df, original_df, experiment_name):
+    def rel_disambiguation(self, test_df, original_df, experiment_name, cand_selection):
         # Warning: no model has been trained, the latest one that's been trained will be loaded.
 
         base_path = self.rel_params["base_path"]
@@ -207,6 +213,7 @@ class Linker:
             ].format_detected_spans(
                 test_df,
                 original_df,
+                cand_selection,
                 mylinker=self,
             )
 

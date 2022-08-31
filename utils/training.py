@@ -81,6 +81,7 @@ def train_rel_ed(
     dev_original,
     dev_processed,
     experiment_name,
+    cand_selection,
 ):
     base_path = mylinker.rel_params["base_path"]
     wiki_version = mylinker.rel_params["wiki_version"]
@@ -98,6 +99,7 @@ def train_rel_ed(
         print("The model already exists. The training won't be overwritten.")
         return None
 
+    print(">>> Start the training of the Entity Disambiguation model...")
     Path(os.path.join(base_path, wiki_version, "generated", "test_train_data")).mkdir(
         parents=True, exist_ok=True
     )
@@ -108,7 +110,12 @@ def train_rel_ed(
     for ds in ["train", "dev"]:
         if training_data == "lwm":
             data_handler.process_lwm(
-                ds, train_original, train_processed, dev_original, dev_processed
+                ds,
+                train_original,
+                train_processed,
+                dev_original,
+                dev_processed,
+                cand_selection,
             )
         if training_data == "aida":
             data_handler.process_aida(ds)
@@ -130,3 +137,5 @@ def train_rel_ed(
     )
     # Train and predict using LR (to obtain confidence scores)
     model.train_LR(datasets, experiment_path)
+
+    print(">>> The Entity Disambiguation model is now trained!")

@@ -864,7 +864,7 @@ def create_mentions_df(experiment):
                         gold_mention = gs["mention"]
                         gold_standard_link = gs["entity_link"]
                         gold_standard_ner = gs["ner_label"]
-                candidates = dCandidates[sentence_id][mention["mention"]]
+                candidates = dCandidates[sentence_id].get(mention["mention"], dict())
 
                 rows.append(
                     [
@@ -1073,8 +1073,9 @@ def store_results(experiment, task, how_split, which_split):
         test_articles,
     )
 
-    if task == "linking":
-        # If task is "linking", store the skyline results:
+    if task == "linking" and not experiment.myranker.method == "relcs":
+        # If task is "linking", store the skyline results (but not for the
+        # ranking method of REL):
         store_for_scorer(
             hipe_scorer_results_path,
             scenario_name + "skys",

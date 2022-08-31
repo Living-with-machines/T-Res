@@ -172,6 +172,7 @@ ranking_approaches = [
     "deezymatch+2+10",
     "deezymatch+3+50",
     "deezymatch+3+1000",
+    "relcs",
 ]
 linking_approaches = [
     "mostpopular",

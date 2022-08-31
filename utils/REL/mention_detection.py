@@ -20,7 +20,9 @@ class MentionDetection(MentionDetectionBase):
 
         super().__init__(base_url, wiki_version, mylinker)
 
-    def format_detected_spans(self, test_df, original_df, mylinker=None):
+    def format_detected_spans(
+        self, test_df, original_df, cand_selection="relcs", mylinker=None
+    ):
         """
         Responsible for formatting given spans into dataset for the ED step. More specifically,
         it returns the mention, its left/right context and a set of candidates.
@@ -61,23 +63,10 @@ class MentionDetection(MentionDetectionBase):
             dict_mention["pos"] = prediction["char_start"]
             dict_mention["end_pos"] = prediction["char_end"]
 
-            if mylinker.rel_params.get("candidates") == "relcs":
-                dict_mention["candidates"] = self.get_candidates(
-                    dict_mention["mention"]
-                )
+            dict_mention["candidates"] = self.get_candidates(
+                dict_mention["mention"], cand_selection, prediction["candidates"]
+            )
 
-            """
-            ##### TODO FIX
-            # Use LwM candidates weighted by mention2wikidata relevance and candselection conf:
-            # TODO Actually this should happen in the get_candidates function, so it's in the training as well.
-            # TODO Convert to Wikipedia......
-            if "reldisamb:lwmcs" in mylinker.method:
-                dict_mention["candidates"] = self.get_candidates(
-                    dict_mention["mention"],
-                    prediction["candidates"],
-                    prediction["place_wqid"],
-                )
-            """
             dict_mention["gold"] = ["NONE"]
             dict_mention["tag"] = prediction["pred_ner_label"]
             dict_mention["conf_md"] = prediction["ner_score"]
