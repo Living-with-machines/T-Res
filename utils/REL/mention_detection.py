@@ -20,6 +20,51 @@ class MentionDetection(MentionDetectionBase):
 
         super().__init__(base_url, wiki_version, mylinker)
 
+    def format_for_rel(self, prediction, dict_sentences, cand_selection):
+        """
+        Formats input as required by EL.
+        """
+        results = dict()
+
+        article_id = str(prediction["article_id"])
+        dict_mention = dict()
+        dict_mention["mention"] = prediction["pred_mention"]
+        sent_idx = int(prediction["sentence_pos"])
+        dict_mention["sent_idx"] = sent_idx
+        dict_mention["ngram"] = prediction["pred_mention"]
+        dict_mention["sentence"] = ""
+        dict_mention["context"] = ["", ""]
+        if article_id in dict_sentences:
+            dict_mention["sentence"] = dict_sentences[article_id][str(sent_idx)]
+            if str(sent_idx - 1) in dict_sentences[article_id]:
+                dict_mention["context"][0] = dict_sentences[article_id][
+                    str(sent_idx - 1)
+                ]
+            if str(sent_idx + 1) in dict_sentences[article_id]:
+                dict_mention["context"][1] = dict_sentences[article_id][
+                    str(sent_idx + 1)
+                ]
+        dict_mention["pos"] = prediction["char_start"]
+        dict_mention["end_pos"] = prediction["char_end"]
+        dict_mention["candidates"] = self.get_candidates(
+            dict_mention["mention"], cand_selection, prediction["candidates"]
+        )
+        dict_mention["gold"] = ["NONE"]
+        dict_mention["tag"] = prediction["pred_ner_label"]
+        dict_mention["conf_md"] = prediction["ner_score"]
+
+        if sent_idx in results:
+            results[sent_idx].append(dict_mention)
+        else:
+            results[sent_idx] = [dict_mention]
+
+        return results
+
+    # def format_score(linked_predictions):
+    #     """
+    #     Formats the result of the ED.
+    #     """
+
     def format_detected_spans(
         self, test_df, original_df, cand_selection="relcs", mylinker=None
     ):
@@ -201,77 +246,77 @@ class MentionDetection(MentionDetectionBase):
             splits.append(splits[-1] + i)
         return res, processed_sentences, splits
 
-    def find_mentions(self, dataset, tagger=None):
-        """
-        Responsible for finding mentions given a set of documents in a batch-wise manner. More specifically,
-        it returns the mention, its left/right context and a set of candidates.
-        :return: Dictionary with mentions per document.
-        """
-        if tagger is None:
-            raise Exception(
-                "No NER tagger is set, but you are attempting to perform Mention Detection.."
-            )
-        # Verify if Flair, else ngram or custom.
-        is_flair = isinstance(tagger, SequenceTagger)
-        dataset_sentences_raw, processed_sentences, splits = self.split_text(
-            dataset, is_flair
-        )
-        results = {}
-        total_ment = 0
-        if is_flair:
-            tagger.predict(processed_sentences)
-        for i, doc in enumerate(dataset_sentences_raw):
-            contents = dataset_sentences_raw[doc]
-            raw_text = dataset[doc][0]
-            sentences_doc = [v[0] for v in contents.values()]
-            sentences = processed_sentences[splits[i] : splits[i + 1]]
-            result_doc = []
-            cum_sent_length = 0
-            offset = 0
-            for (idx_sent, (sentence, ground_truth_sentence)), snt in zip(
-                contents.items(), sentences
-            ):
+    # def find_mentions(self, dataset, tagger=None):
+    #     """
+    #     Responsible for finding mentions given a set of documents in a batch-wise manner. More specifically,
+    #     it returns the mention, its left/right context and a set of candidates.
+    #     :return: Dictionary with mentions per document.
+    #     """
+    #     if tagger is None:
+    #         raise Exception(
+    #             "No NER tagger is set, but you are attempting to perform Mention Detection.."
+    #         )
+    #     # Verify if Flair, else ngram or custom.
+    #     is_flair = isinstance(tagger, SequenceTagger)
+    #     dataset_sentences_raw, processed_sentences, splits = self.split_text(
+    #         dataset, is_flair
+    #     )
+    #     results = {}
+    #     total_ment = 0
+    #     if is_flair:
+    #         tagger.predict(processed_sentences)
+    #     for i, doc in enumerate(dataset_sentences_raw):
+    #         contents = dataset_sentences_raw[doc]
+    #         raw_text = dataset[doc][0]
+    #         sentences_doc = [v[0] for v in contents.values()]
+    #         sentences = processed_sentences[splits[i] : splits[i + 1]]
+    #         result_doc = []
+    #         cum_sent_length = 0
+    #         offset = 0
+    #         for (idx_sent, (sentence, ground_truth_sentence)), snt in zip(
+    #             contents.items(), sentences
+    #         ):
 
-                # Only include offset if using Flair.
-                if is_flair:
-                    offset = raw_text.find(sentence, cum_sent_length)
+    #             # Only include offset if using Flair.
+    #             if is_flair:
+    #                 offset = raw_text.find(sentence, cum_sent_length)
 
-                for entity in (
-                    snt.get_spans("ner")
-                    if is_flair
-                    else tagger.predict(snt, processed_sentences)
-                ):
-                    text, start_pos, end_pos, conf, tag = (
-                        entity.text,
-                        entity.start_pos,
-                        entity.end_pos,
-                        entity.score,
-                        entity.tag,
-                    )
-                    total_ment += 1
-                    m = self.preprocess_mention(text)
-                    cands = self.get_candidates(m)
-                    if len(cands) == 0:
-                        continue
-                    # Re-create ngram as 'text' is at times changed by Flair (e.g. double spaces are removed).
-                    ngram = sentence[start_pos:end_pos]
-                    left_ctxt, right_ctxt = self.get_ctxt(
-                        start_pos, end_pos, idx_sent, sentence, sentences_doc
-                    )
-                    res = {
-                        "mention": m,
-                        "context": (left_ctxt, right_ctxt),
-                        "candidates": cands,
-                        "gold": ["NONE"],
-                        "pos": start_pos + offset,
-                        "sent_idx": idx_sent,
-                        "ngram": ngram,
-                        "end_pos": end_pos + offset,
-                        "sentence": sentence,
-                        "conf_md": conf,
-                        "tag": tag,
-                    }
-                    result_doc.append(res)
-                cum_sent_length += len(sentence) + (offset - cum_sent_length)
-            results[doc] = result_doc
-        return results, total_ment
+    #             for entity in (
+    #                 snt.get_spans("ner")
+    #                 if is_flair
+    #                 else tagger.predict(snt, processed_sentences)
+    #             ):
+    #                 text, start_pos, end_pos, conf, tag = (
+    #                     entity.text,
+    #                     entity.start_pos,
+    #                     entity.end_pos,
+    #                     entity.score,
+    #                     entity.tag,
+    #                 )
+    #                 total_ment += 1
+    #                 m = self.preprocess_mention(text)
+    #                 cands = self.get_candidates(m)
+    #                 if len(cands) == 0:
+    #                     continue
+    #                 # Re-create ngram as 'text' is at times changed by Flair (e.g. double spaces are removed).
+    #                 ngram = sentence[start_pos:end_pos]
+    #                 left_ctxt, right_ctxt = self.get_ctxt(
+    #                     start_pos, end_pos, idx_sent, sentence, sentences_doc
+    #                 )
+    #                 res = {
+    #                     "mention": m,
+    #                     "context": (left_ctxt, right_ctxt),
+    #                     "candidates": cands,
+    #                     "gold": ["NONE"],
+    #                     "pos": start_pos + offset,
+    #                     "sent_idx": idx_sent,
+    #                     "ngram": ngram,
+    #                     "end_pos": end_pos + offset,
+    #                     "sentence": sentence,
+    #                     "conf_md": conf,
+    #                     "tag": tag,
+    #                 }
+    #                 result_doc.append(res)
+    #             cum_sent_length += len(sentence) + (offset - cum_sent_length)
+    #         results[doc] = result_doc
+    #     return results, total_ment

@@ -94,7 +94,7 @@ def train_rel_ed(
     # Check if the model already exists and has to be overwritten:
     if (
         Path(os.path.join(experiment_path, "lr_model.pkl")).exists()
-        and mylinker.rel_params["overwrite_training"] == False
+        and mylinker.overwrite_training == False
     ):
         print("The model already exists. The training won't be overwritten.")
         return None

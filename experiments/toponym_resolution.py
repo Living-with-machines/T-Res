@@ -14,19 +14,13 @@ dataset = "lwm"  # "hipe" or "lwm"
 # * partialmatch
 # * levenshtein
 # * deezymatch
-# * relcs # only works with linking method reldisamb
+# * relcs # only for "reldisamb" linking method
 cand_select_method = "deezymatch"
 
 # Toponym resolution approach, options are:
 # * mostpopular
-# * contextualized
-# * reldisamb:relcs # REL disambiguation with their candidates (our mentions)
-# * reldisamb:lwmcs # REL disambiguation with our candidates (our mentions)
-# * "reldisamb:lwmcs:relv"
-# * "reldisamb:lwmcs:relvpubl"
-# * "reldisamb:relcs"
-# * "reldisamb:lwmcs:dist"
-# * "reldisamb:lwmcs:relvdist"
+# * bydistance
+# * reldisamb
 top_res_method = "mostpopular"
 
 
@@ -102,7 +96,6 @@ mylinker = linking.Linker(
         "wiki_version": "wiki_2019/",
         "training_data": "lwm",  # lwm, aida
         "ranking": "relv",  # relv, dist, relvdist
-        "overwrite_training": False,
     },
     overwrite_training=False,
 )

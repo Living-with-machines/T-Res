@@ -1073,7 +1073,7 @@ def store_results(experiment, task, how_split, which_split):
         test_articles,
     )
 
-    if task == "linking" and not experiment.myranker.method == "relcs":
+    if task == "linking":
         # If task is "linking", store the skyline results (but not for the
         # ranking method of REL):
         store_for_scorer(

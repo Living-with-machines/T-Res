@@ -184,18 +184,12 @@ class Experiment:
         dCandidates = dict()
         # Obtain candidates per sentence:
         for sentence_id in tqdm(dMentionsPred):
-            if self.myranker.method == "relcs":
-                # REL match is performed in in a later stage, during the
-                # linking. Therefore at this point we just return an empty
-                # dictionary.
-                dCandidates[sentence_id] = dict()
-            else:
-                pred_mentions_sent = dMentionsPred[sentence_id]
-                (
-                    wk_cands,
-                    self.myranker.already_collected_cands,
-                ) = self.myranker.find_candidates(pred_mentions_sent)
-                dCandidates[sentence_id] = wk_cands
+            pred_mentions_sent = dMentionsPred[sentence_id]
+            (
+                wk_cands,
+                self.myranker.already_collected_cands,
+            ) = self.myranker.find_candidates(pred_mentions_sent)
+            dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
         # Store temporary postprocessed data
@@ -296,7 +290,7 @@ class Experiment:
                 experiment_name += "_" + link_approach
 
             # If method is supervised, train and store model:
-            if "reldisamb" in self.mylinker.method:
+            if self.mylinker.method == "reldisamb":
                 self.mylinker.rel_params = self.mylinker.perform_training(
                     train_original,
                     train_processed,
@@ -306,13 +300,117 @@ class Experiment:
                     cand_selection,
                 )
 
-            # Resolve according to method:
-            test_df = self.mylinker.perform_linking(
-                test_processed,
-                test_original,
-                experiment_name,
-                cand_selection,
-            )
+            if self.mylinker.method == "reldisamb":
+                self.mylinker.disambiguation_setup(experiment_name)
+                mention_prediction = self.mylinker.rel_params["mention_detection"]
+                linking_model = self.mylinker.rel_params["model"]
+
+            # Dictionary of sentences:
+            # {k1 : {k2 : v}}, where k1 is article id, k2 is
+            # sentence pos, and v is the sentence text.
+            nested_sentences_dict = dict()
+            for key, val in self.processed_data["dSentences"].items():
+                key1, key2 = key.split("_")
+                if key1 in nested_sentences_dict:
+                    nested_sentences_dict[key1][key2] = val
+                else:
+                    nested_sentences_dict[key1] = {key2: val}
+
+            dict_mentions_sentence = dict()
+
+            # Predict:
+            print("Process data into sentences.")
+            for i, row in tqdm(test_processed.iterrows()):
+
+                mention_data = row.to_dict()
+                mention_data["mention"] = mention_data["pred_mention"]
+                mention_data["context"] = ("", "")
+                mention_data["gold"] = ["NONE"]
+                mention_data["pos"] = mention_data["char_start"]
+                mention_data["sent_idx"] = mention_data["sentence_id"]
+                mention_data["end_pos"] = mention_data["char_end"]
+                mention_data["ngram"] = mention_data["pred_mention"]
+                mention_data["conf_md"] = 0.0
+                mention_data["tag"] = mention_data["pred_ner_label"]
+
+                if self.mylinker.method == "reldisamb":
+                    mention_data["candidates"] = mention_prediction.get_candidates(
+                        mention_data["mention"],
+                        cand_selection,
+                        mention_data["candidates"],
+                    )
+
+                if row["sentence_id"] in dict_mentions_sentence:
+                    dict_mentions_sentence[row["sentence_id"]].append(mention_data)
+                else:
+                    dict_mentions_sentence[row["sentence_id"]] = [mention_data]
+
+            sentence_dataset = dict()
+            for sentence_id in dict_mentions_sentence:
+                mentions_dataset = dict_mentions_sentence[sentence_id]
+                for i in range(len(mentions_dataset)):
+                    article_id = mentions_dataset[i]["article_id"]
+                    sentence_pos = mentions_dataset[i]["sentence_pos"]
+                    prev_sent = nested_sentences_dict[article_id].get(
+                        str(int(sentence_pos) - 1), ""
+                    )
+                    next_sent = nested_sentences_dict[article_id].get(
+                        str(int(sentence_pos) + 1), ""
+                    )
+                    mentions_dataset[i]["context"] = (prev_sent, next_sent)
+
+                sentence_dataset[sentence_id] = mentions_dataset
+
+            print("Predict.")
+            disambiguated_mentions = []
+            if self.mylinker.method == "reldisamb":
+                for sentence_id in tqdm(sentence_dataset):
+                    mentions_dataset = sentence_dataset[sentence_id]
+                    predictions, timing = linking_model.predict(
+                        {sentence_id: mentions_dataset}
+                    )
+                    for i in range(len(mentions_dataset)):
+                        mention_dataset = mentions_dataset[i]
+                        prediction = predictions[sentence_id][i]
+                        if mention_dataset["mention"] == prediction["mention"]:
+                            mentions_dataset[i]["prediction"] = prediction["prediction"]
+                            # If entity is NIL, conf_ed is 0.0:
+                            mentions_dataset[i]["ed_score"] = prediction.get(
+                                "conf_ed", 0.0
+                            )
+                    mentions_dataset = self.mylinker.format_linking_dataset(
+                        mentions_dataset
+                    )
+                    for dis_mention in mentions_dataset:
+                        disambiguated_mentions.append(dis_mention)
+
+            else:
+                for sentence_id in tqdm(sentence_dataset):
+                    mentions_dataset = sentence_dataset[sentence_id]
+                    for mention_data in mentions_dataset:
+                        prediction = self.mylinker.run(mention_data)
+                        mention_data["prediction"] = prediction[0]
+                        mention_data["ed_score"] = prediction[1]
+                        disambiguated_mentions.append(mention_data)
+
+            to_append = []
+            for i, row in test_processed.iterrows():
+                for disamb_mention in disambiguated_mentions:
+                    if (
+                        disamb_mention["sentence_id"] == row["sentence_id"]
+                        and disamb_mention["char_start"] == row["char_start"]
+                        and disamb_mention["char_end"] == row["char_end"]
+                    ):
+                        to_append.append(
+                            [
+                                disamb_mention["prediction"],
+                                round(disamb_mention["ed_score"], 3),
+                                disamb_mention["candidates"],
+                            ]
+                        )
+
+            test_df = test_processed.copy()
+            test_df[["pred_wqid", "ed_score", "candidates"]] = to_append
 
             # Prepare data for scorer:
             self.processed_data = process_data.prepare_storing_links(

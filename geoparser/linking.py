@@ -136,142 +136,159 @@ class Linker:
             )
             return self.rel_params
 
-    # ----------------------------------------------
-    def perform_linking(
-        self, test_df, original_df, experiment_name, cand_selection=None
-    ):
-        """
-        Perform the linking.
+    def run(self, dict_mention):
+        if self.method == "mostpopular":
+            return self.most_popular(dict_mention)
+        if self.method == "bydistance":
+            return self.by_distance(dict_mention)
 
-        Arguments:
-            test_df (pd.DataFrame): a dataframe with a mention per row, for testing.
-
-        Returns:
-            test_df_results (pd.DataFrame): the same dataframe, with two additional
-                columns: "pred_wqid" for the linked wikidata Id and "pred_wqid_score"
-                for the linking score.
-        """
-
-        test_df_results = test_df.copy()
-
-        if "mostpopular" in self.method:
-            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
-                lambda row: self.most_popular(row.to_dict()),
-                axis=1,
-                result_type="expand",
+    def disambiguation_setup(self, experiment_name):
+        if self.method == "reldisamb":
+            base_path = self.rel_params["base_path"]
+            wiki_version = self.rel_params["wiki_version"]
+            # Instantiate REL mention detection:
+            self.rel_params["mention_detection"] = MentionDetection(
+                base_path, wiki_version, mylinker=self
             )
 
-        if "bydistance" in self.method:
-            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
-                lambda row: self.by_distance(row.to_dict()),
-                axis=1,
-                result_type="expand",
+            # Instantiate REL entity disambiguation:
+            experiment_path = os.path.join(
+                base_path, wiki_version, "generated", experiment_name
+            )
+            config = {
+                "mode": "eval",
+                "model_path": os.path.join(experiment_path, "model"),
+            }
+            self.rel_params["model"] = EntityDisambiguation(
+                base_path, wiki_version, config
             )
 
-        if "reldisamb" in self.method:
-            dRELresults = self.rel_disambiguation(
-                test_df, original_df, experiment_name, cand_selection
+            return self.rel_params["mention_detection"], self.rel_params["model"]
+
+    def format_linking_dataset(self, mentions_dataset):
+        formatted_dataset = []
+        for m in mentions_dataset:
+            formatted_cands = m.copy()
+            mention = m["mention"]
+            formatted_cands["candidates"] = dict()
+            formatted_cands["candidates"][mention] = {"Score": None}
+            formatted_cands["candidates"][mention]["Candidates"] = dict()
+            candidates = m["candidates"]
+            for c in candidates:
+                cand_wiki = c[0]
+                cand_wiki = process_wikipedia.title_to_id(cand_wiki)
+                cand_score = round(c[1], 3)
+                formatted_cands["candidates"][mention]["Candidates"][
+                    cand_wiki
+                ] = cand_score
+            if formatted_cands["gold"][0] != "NONE":
+                formatted_cands["gold"] = process_wikipedia.title_to_id(
+                    formatted_cands["gold"][0]
+                )
+            formatted_cands["prediction"] = process_wikipedia.title_to_id(
+                formatted_cands["prediction"]
             )
-            test_df_results[
-                ["pred_wqid", "pred_wqid_score"]
-            ] = test_df_results.progress_apply(
-                lambda row: dRELresults[row["article_id"]][int(row["sentence_pos"])][
-                    row["pred_mention"]
-                ],
-                axis=1,
-                result_type="expand",
-            )
+            formatted_dataset.append(formatted_cands)
+        return formatted_dataset
 
-        return test_df_results
+    # def lwm_format_linking_dataset(self, mentions_dataset):
+    #     formatted_dataset = []
+    #     for m in mentions_dataset:
+    #         formatted_cands = m.copy()
+    #         if "pred_mention" in formatted_cands:
+    #             formatted_cands["mention"] = formatted_cands["pred_mention"]
+    #         formatted_dataset.append(formatted_cands)
+    #     return formatted_dataset
 
-    def rel_disambiguation(self, test_df, original_df, experiment_name, cand_selection):
-        # Warning: no model has been trained, the latest one that's been trained will be loaded.
+    # def rel_disambiguation(self, test_df, original_df, experiment_name, cand_selection):
+    #     # Warning: no model has been trained, the latest one that's been trained will be loaded.
 
-        base_path = self.rel_params["base_path"]
-        wiki_version = self.rel_params["wiki_version"]
-        # Instantiate REL mention detection:
-        self.rel_params["mention_detection"] = MentionDetection(
-            base_path, wiki_version, mylinker=self
-        )
+    #     base_path = self.rel_params["base_path"]
+    #     wiki_version = self.rel_params["wiki_version"]
+    #     # Instantiate REL mention detection:
+    #     self.rel_params["mention_detection"] = MentionDetection(
+    #         base_path, wiki_version, mylinker=self
+    #     )
 
-        # Instantiate REL entity disambiguation:
-        experiment_path = os.path.join(
-            base_path, wiki_version, "generated", experiment_name
-        )
-        config = {
-            "mode": "eval",
-            "model_path": os.path.join(experiment_path, "model"),
-        }
-        self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
+    #     # Instantiate REL entity disambiguation:
+    #     experiment_path = os.path.join(
+    #         base_path, wiki_version, "generated", experiment_name
+    #     )
+    #     config = {
+    #         "mode": "eval",
+    #         "model_path": os.path.join(experiment_path, "model"),
+    #     }
+    #     self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
 
-        dRELresults = dict()
-        mentions_dataset = dict()
-        # Given our mentions, use REL candidate selection module:
-        if "reldisamb" in self.method:
-            mentions_dataset, n_mentions = self.rel_params[
-                "mention_detection"
-            ].format_detected_spans(
-                test_df,
-                original_df,
-                cand_selection,
-                mylinker=self,
-            )
+    #     dRELresults = dict()
+    #     mentions_dataset = dict()
+    #     # Given our mentions, use REL candidate selection module:
+    #     if "reldisamb" in self.method:
+    #         mentions_dataset, n_mentions = self.rel_params[
+    #             "mention_detection"
+    #         ].format_detected_spans(
+    #             test_df,
+    #             original_df,
+    #             cand_selection,
+    #             mylinker=self,
+    #         )
 
-        # Given the mentions dataset, predict and return linking:
-        for mentions_doc in tqdm(mentions_dataset):
-            link_predictions, timing = self.rel_params["model"].predict(
-                mentions_dataset[mentions_doc]
-            )
-            for p in link_predictions:
-                mentions_sent = p
-                for m in link_predictions[p]:
-                    returned_mention = m["mention"]
-                    returned_prediction = m["prediction"]
+    #     # Given the mentions dataset, predict and return linking:
+    #     for mentions_doc in tqdm(mentions_dataset):
+    #         link_predictions, timing = self.rel_params["model"].predict(
+    #             mentions_dataset[mentions_doc]
+    #         )
+    #         for p in link_predictions:
+    #             mentions_sent = p
+    #             for m in link_predictions[p]:
+    #                 returned_mention = m["mention"]
+    #                 returned_prediction = m["prediction"]
+    #                 returned_candidates = m["candidates"]
 
-                    # REL returns a wikipedia title, provide the wikidata QID:
-                    wikipedia_title = process_wikipedia.make_wikilinks_consistent(
-                        returned_prediction
-                    )
-                    processed_wikipedia_title = (
-                        process_wikipedia.make_wikipedia2wikidata_consisent(
-                            wikipedia_title
-                        )
-                    )
-                    returned_prediction = process_wikipedia.title_to_id(
-                        processed_wikipedia_title, lower=True
-                    )
-                    if not returned_prediction:
-                        returned_prediction = "NIL"
+    #                 # REL returns a wikipedia title, provide the wikidata QID:
+    #                 wikipedia_title = process_wikipedia.make_wikilinks_consistent(
+    #                     returned_prediction
+    #                 )
+    #                 processed_wikipedia_title = (
+    #                     process_wikipedia.make_wikipedia2wikidata_consisent(
+    #                         wikipedia_title
+    #                     )
+    #                 )
+    #                 returned_prediction = process_wikipedia.title_to_id(
+    #                     processed_wikipedia_title, lower=True
+    #                 )
+    #                 if not returned_prediction:
+    #                     returned_prediction = "NIL"
 
-                    # Disambiguation confidence:
-                    returned_confidence = round(m.get("conf_ed", 0.0), 3)
+    #                 # Disambiguation confidence:
+    #                 returned_confidence = round(m.get("conf_ed", 0.0), 3)
 
-                    if mentions_doc in dRELresults:
-                        if mentions_sent in dRELresults[mentions_doc]:
-                            dRELresults[mentions_doc][mentions_sent][
-                                returned_mention
-                            ] = (
-                                returned_prediction,
-                                returned_confidence,
-                            )
-                        else:
-                            dRELresults[mentions_doc][mentions_sent] = {
-                                returned_mention: (
-                                    returned_prediction,
-                                    returned_confidence,
-                                )
-                            }
-                    else:
-                        dRELresults[mentions_doc] = {
-                            mentions_sent: {
-                                returned_mention: (
-                                    returned_prediction,
-                                    returned_confidence,
-                                )
-                            }
-                        }
+    #                 if mentions_doc in dRELresults:
+    #                     if mentions_sent in dRELresults[mentions_doc]:
+    #                         dRELresults[mentions_doc][mentions_sent][
+    #                             returned_mention
+    #                         ] = (
+    #                             returned_prediction,
+    #                             returned_confidence,
+    #                         )
+    #                     else:
+    #                         dRELresults[mentions_doc][mentions_sent] = {
+    #                             returned_mention: (
+    #                                 returned_prediction,
+    #                                 returned_confidence,
+    #                             )
+    #                         }
+    #                 else:
+    #                     dRELresults[mentions_doc] = {
+    #                         mentions_sent: {
+    #                             returned_mention: (
+    #                                 returned_prediction,
+    #                                 returned_confidence,
+    #                             )
+    #                         }
+    #                     }
 
-        return dRELresults
+    #     return dRELresults
 
     # ----------------------------------------------
     # Most popular candidate:
