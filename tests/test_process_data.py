@@ -141,6 +141,7 @@ def test_align_gold():
                     continue
                 else:
                     empty_list.append(sent_id)
+                    
     assert len(empty_list) == 0
 
 
@@ -196,6 +197,6 @@ def test_ner_and_process():
                 continue
             else:
                 misaligned_labels.append(l)
+                
     # we are aware that one sentence currently is misaligned
-    
     assert len(set(misaligned_labels)) == 0
