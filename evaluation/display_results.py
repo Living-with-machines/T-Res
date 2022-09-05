@@ -169,16 +169,15 @@ datasets = ["lwm", "hipe"]
 ner_approaches = ["blb_lwm-ner"]
 ranking_approaches = [
     "perfectmatch",
-    "deezymatch+2+10",
-    "deezymatch+3+50",
-    "deezymatch+3+1000",
+    "deezymatch+3+25",
     "relcs",
 ]
 linking_approaches = [
     "mostpopular",
     "skys",
     "bydistance",
-    "reldisamb",
+    "reldisamb+lwm+publ",
+    "reldisamb+lwm+relv",
 ]
 granularities = ["fine", "coarse"]
 splits = [
@@ -195,7 +194,6 @@ splits = [
     # "Manchester1860",
     # "Poole1860",
 ]
-devtest_list = ["dev", "test"]
 
 df_nel = pd.DataFrame()
 overall_results_nel = dict()
@@ -210,56 +208,49 @@ for dataset in datasets:
             for linking_approach in linking_approaches:
                 for granularity in granularities:
                     for split in splits:
-                        for devtest in devtest_list:
-                            pred = (
-                                "../experiments/outputs/results/"
-                                + dataset
-                                + "/linking_"
-                                + ner_approach
-                                + "-"
-                                + granularity
-                                + "_"
-                                + ranking_approach
-                                + "_"
-                                + split
-                                + "-"
-                                + devtest
-                                + "_"
-                                + linking_approach
-                                + ".tsv"
-                            )
-                            true = (
-                                "../experiments/outputs/results/"
-                                + dataset
-                                + "/linking_"
-                                + ner_approach
-                                + "-"
-                                + granularity
-                                + "_"
-                                + ranking_approach
-                                + "_"
-                                + split
-                                + "-"
-                                + devtest
-                                + "_trues.tsv"
-                            )
+                        pred = (
+                            "../experiments/outputs/results/"
+                            + dataset
+                            + "/linking_"
+                            + ner_approach
+                            + "-"
+                            + granularity
+                            + "_"
+                            + ranking_approach
+                            + "_"
+                            + split
+                            + "_"
+                            + linking_approach
+                            + ".tsv"
+                        )
+                        true = (
+                            "../experiments/outputs/results/"
+                            + dataset
+                            + "/linking_"
+                            + ner_approach
+                            + "-"
+                            + granularity
+                            + "_"
+                            + ranking_approach
+                            + "_"
+                            + split
+                            + "_trues.tsv"
+                        )
 
-                            if Path(pred).exists() and Path(true).exists():
-                                pred_files.append(pred)
-                                true_files.append(true)
-                                approach_names.append(
-                                    dataset
-                                    + "+"
-                                    + split
-                                    + "+"
-                                    + devtest
-                                    + ":"
-                                    + granularity
-                                    + "+"
-                                    + ranking_approach.replace("match", "")
-                                    + "+"
-                                    + linking_approach
-                                )
+                        if Path(pred).exists() and Path(true).exists():
+                            pred_files.append(pred)
+                            true_files.append(true)
+                            approach_names.append(
+                                dataset
+                                + "+"
+                                + split
+                                + ":"
+                                + granularity
+                                + "+"
+                                + ranking_approach.replace("match", "")
+                                + "+"
+                                + linking_approach
+                            )
 
 # GET RELEVANT REL FILES:
 for dataset in datasets:
@@ -267,50 +258,43 @@ for dataset in datasets:
         for ner_approach in ner_approaches:
             for rel_approach in dApprNames.keys():
                 for split in splits:
-                    for devtest in devtest_list:
-                        pred_file = (
-                            "../experiments/outputs/results/"
-                            + dataset
-                            + "/"
-                            + rel_approach
-                            + "_"
-                            + ner_approach
-                            + "-"
-                            + granularity
-                            + "_"
-                            + split
-                            + "-"
-                            + devtest
-                            + ".tsv"
-                        )
-                        true_file = (
-                            "../experiments/outputs/results/"
-                            + dataset
-                            + "/linking_"
-                            + ner_approach
-                            + "-"
-                            + granularity
-                            + "_perfectmatch_"
-                            + split
-                            + "-"
-                            + devtest
-                            + "_trues.tsv"
-                        )
+                    pred_file = (
+                        "../experiments/outputs/results/"
+                        + dataset
+                        + "/"
+                        + rel_approach
+                        + "_"
+                        + ner_approach
+                        + "-"
+                        + granularity
+                        + "_"
+                        + split
+                        + ".tsv"
+                    )
+                    true_file = (
+                        "../experiments/outputs/results/"
+                        + dataset
+                        + "/linking_"
+                        + ner_approach
+                        + "-"
+                        + granularity
+                        + "_perfectmatch_"
+                        + split
+                        + "_trues.tsv"
+                    )
 
-                        if Path(pred_file).exists() and Path(true_file).exists():
-                            pred_files.append(pred_file)
-                            true_files.append(true_file)
-                            approach_names.append(
-                                dataset
-                                + "+"
-                                + split
-                                + "+"
-                                + devtest
-                                + ":"
-                                + granularity
-                                + "+"
-                                + dApprNames[rel_approach]
-                            )
+                    if Path(pred_file).exists() and Path(true_file).exists():
+                        pred_files.append(pred_file)
+                        true_files.append(true_file)
+                        approach_names.append(
+                            dataset
+                            + "+"
+                            + split
+                            + ":"
+                            + granularity
+                            + "+"
+                            + dApprNames[rel_approach]
+                        )
 
 # RUN SCORER:
 for i in range(len(pred_files)):

@@ -1,8 +1,6 @@
-import hashlib
 import json
 import os
 import sys
-import urllib
 
 import numpy as np
 import pandas as pd
@@ -14,11 +12,9 @@ tqdm.pandas()
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 
-# from transformers import AutoTokenizer, pipeline
-
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, process_wikipedia, training
+from utils import process_wikipedia, training
 from utils.REL.entity_disambiguation import EntityDisambiguation
 from utils.REL.mention_detection import MentionDetection
 
@@ -191,105 +187,6 @@ class Linker:
             formatted_dataset.append(formatted_cands)
         return formatted_dataset
 
-    # def lwm_format_linking_dataset(self, mentions_dataset):
-    #     formatted_dataset = []
-    #     for m in mentions_dataset:
-    #         formatted_cands = m.copy()
-    #         if "pred_mention" in formatted_cands:
-    #             formatted_cands["mention"] = formatted_cands["pred_mention"]
-    #         formatted_dataset.append(formatted_cands)
-    #     return formatted_dataset
-
-    # def rel_disambiguation(self, test_df, original_df, experiment_name, cand_selection):
-    #     # Warning: no model has been trained, the latest one that's been trained will be loaded.
-
-    #     base_path = self.rel_params["base_path"]
-    #     wiki_version = self.rel_params["wiki_version"]
-    #     # Instantiate REL mention detection:
-    #     self.rel_params["mention_detection"] = MentionDetection(
-    #         base_path, wiki_version, mylinker=self
-    #     )
-
-    #     # Instantiate REL entity disambiguation:
-    #     experiment_path = os.path.join(
-    #         base_path, wiki_version, "generated", experiment_name
-    #     )
-    #     config = {
-    #         "mode": "eval",
-    #         "model_path": os.path.join(experiment_path, "model"),
-    #     }
-    #     self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
-
-    #     dRELresults = dict()
-    #     mentions_dataset = dict()
-    #     # Given our mentions, use REL candidate selection module:
-    #     if "reldisamb" in self.method:
-    #         mentions_dataset, n_mentions = self.rel_params[
-    #             "mention_detection"
-    #         ].format_detected_spans(
-    #             test_df,
-    #             original_df,
-    #             cand_selection,
-    #             mylinker=self,
-    #         )
-
-    #     # Given the mentions dataset, predict and return linking:
-    #     for mentions_doc in tqdm(mentions_dataset):
-    #         link_predictions, timing = self.rel_params["model"].predict(
-    #             mentions_dataset[mentions_doc]
-    #         )
-    #         for p in link_predictions:
-    #             mentions_sent = p
-    #             for m in link_predictions[p]:
-    #                 returned_mention = m["mention"]
-    #                 returned_prediction = m["prediction"]
-    #                 returned_candidates = m["candidates"]
-
-    #                 # REL returns a wikipedia title, provide the wikidata QID:
-    #                 wikipedia_title = process_wikipedia.make_wikilinks_consistent(
-    #                     returned_prediction
-    #                 )
-    #                 processed_wikipedia_title = (
-    #                     process_wikipedia.make_wikipedia2wikidata_consisent(
-    #                         wikipedia_title
-    #                     )
-    #                 )
-    #                 returned_prediction = process_wikipedia.title_to_id(
-    #                     processed_wikipedia_title, lower=True
-    #                 )
-    #                 if not returned_prediction:
-    #                     returned_prediction = "NIL"
-
-    #                 # Disambiguation confidence:
-    #                 returned_confidence = round(m.get("conf_ed", 0.0), 3)
-
-    #                 if mentions_doc in dRELresults:
-    #                     if mentions_sent in dRELresults[mentions_doc]:
-    #                         dRELresults[mentions_doc][mentions_sent][
-    #                             returned_mention
-    #                         ] = (
-    #                             returned_prediction,
-    #                             returned_confidence,
-    #                         )
-    #                     else:
-    #                         dRELresults[mentions_doc][mentions_sent] = {
-    #                             returned_mention: (
-    #                                 returned_prediction,
-    #                                 returned_confidence,
-    #                             )
-    #                         }
-    #                 else:
-    #                     dRELresults[mentions_doc] = {
-    #                         mentions_sent: {
-    #                             returned_mention: (
-    #                                 returned_prediction,
-    #                                 returned_confidence,
-    #                             )
-    #                         }
-    #                     }
-
-    #     return dRELresults
-
     # ----------------------------------------------
     # Most popular candidate:
     def most_popular(self, dict_mention):
@@ -367,3 +264,68 @@ class Linker:
             keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_earth)
 
         return keep_closest_cand, round(keep_lowest_distance, 3)
+
+    def perform_linking_rel(self, mentions_dataset, sentence_id, linking_model):
+        publication_entry = dict()
+        if self.rel_params["ranking"] == "publ":
+            # If "publ", add an artificial publication entry:
+            publication_entry = self.add_publication_mention(mentions_dataset)
+            mentions_dataset.append(publication_entry)
+        # Predict mentions in one sentence:
+        predictions, timing = linking_model.predict({sentence_id: mentions_dataset})
+        if self.rel_params["ranking"] == "publ":
+            # ... and if "publ", now remove the artificial publication entry!
+            mentions_dataset.remove(publication_entry)
+        # Postprocess the predictions:
+        for i in range(len(mentions_dataset)):
+            mention_dataset = mentions_dataset[i]
+            prediction = predictions[sentence_id][i]
+            if mention_dataset["mention"] == prediction["mention"]:
+                mentions_dataset[i]["prediction"] = prediction["prediction"]
+                # If entity is NIL, conf_ed is 0.0:
+                mentions_dataset[i]["ed_score"] = round(
+                    prediction.get("conf_ed", 0.0), 3
+                )
+        # Format the predictions to match the output of the other approaches:
+        mentions_dataset = self.format_linking_dataset(mentions_dataset)
+        mentions_dataset = {sentence_id: mentions_dataset}
+        return mentions_dataset
+
+    def perform_linking_mention(self, mention_data):
+        # This predicts one mention at a time (does not look at context):
+        prediction = self.run(mention_data)
+        mention_data["prediction"] = prediction[0]
+        mention_data["ed_score"] = prediction[1]
+        return mention_data
+
+    def add_publication_mention(self, mention_data):
+        # Add artificial publication entity that is already disambiguated,
+        # per sentence:
+        sentence = mention_data[0]["sentence"]
+        sent_idx = mention_data[0]["sent_idx"]
+        context = mention_data[0]["context"]
+        place_wqid = mention_data[0]["place_wqid"]
+        place = mention_data[0]["place"]
+        # Add place of publication as a fake entity in each sentence:
+        # Wikipedia title of place of publication QID:
+        wiki_gold = "NIL"
+        gold_ids = process_wikipedia.id_to_title(place_wqid)
+        # Get the first of the wikipedia titles returned (they're sorted
+        # by their autoincrement id):
+        if gold_ids:
+            wiki_gold = [gold_ids[0]]
+        sent2 = sentence + " Published in " + place
+        pos2 = len(sentence) + len(" Published in ")
+        end_pos2 = pos2 + len(place)
+        dict_publ = {
+            "mention": "publication",
+            "sent_idx": sent_idx,
+            "sentence": sent2,
+            "gold": wiki_gold,
+            "ngram": "publication",
+            "context": context,
+            "pos": pos2,
+            "end_pos": end_pos2,
+            "candidates": [[wiki_gold[0], 1.0]],
+        }
+        return dict_publ

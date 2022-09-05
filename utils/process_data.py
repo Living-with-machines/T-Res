@@ -1038,8 +1038,12 @@ def store_results(experiment, task, how_split, which_split):
     """
     hipe_scorer_results_path = os.path.join(experiment.results_path, experiment.dataset)
     Path(hipe_scorer_results_path).mkdir(parents=True, exist_ok=True)
-    scenario_name = task + "_" + experiment.myner.model_name + "_"
+
+    scenario_name = ""
+    if task == "ner":
+        scenario_name += task + "_" + experiment.myner.model_name + "_"
     if task == "linking":
+        scenario_name += task + "_" + experiment.myner.model_name + "_"
         cand_approach = experiment.myranker.method
         if experiment.myranker.method == "deezymatch":
             cand_approach += "+" + str(
@@ -1048,7 +1052,13 @@ def store_results(experiment, task, how_split, which_split):
             cand_approach += "+" + str(
                 experiment.myranker.deezy_parameters["selection_threshold"]
             )
-        scenario_name += cand_approach + "_" + how_split + "-" + which_split + "_"
+
+        scenario_name += cand_approach + "_" + how_split + "_"
+
+    link_approach = experiment.mylinker.method
+    if experiment.mylinker.method == "reldisamb":
+        link_approach += "+" + str(experiment.mylinker.rel_params["training_data"])
+        link_approach += "+" + str(experiment.mylinker.rel_params["ranking"])
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
@@ -1057,7 +1067,7 @@ def store_results(experiment, task, how_split, which_split):
     test_articles = [str(art) for art in test_articles]
 
     # Store predictions results formatted for CLEF-HIPE scorer:
-    preds_name = experiment.mylinker.method if task == "linking" else "preds"
+    preds_name = link_approach if task == "linking" else "preds"
     store_for_scorer(
         hipe_scorer_results_path,
         scenario_name + preds_name,
@@ -1092,8 +1102,6 @@ def store_rel(experiment, dREL, approach, how_split, which_split):
         + experiment.myner.model_name  # The model name is needed due to tokenization
         + "_"
         + how_split
-        + "-"
-        + which_split
     )
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,

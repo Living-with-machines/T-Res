@@ -67,6 +67,8 @@ class MentionDetectionBase:
                     in self.mylinker.linking_resources["wikidata_locs"]
                 ]
                 return cands
+
+        #### CANDIDATE SELECTION FROM LWM
         if cand_selection == "lwmcs":
             cands = []
             tmp_cands = []

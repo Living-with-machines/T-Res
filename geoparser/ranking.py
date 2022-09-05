@@ -307,8 +307,22 @@ class Ranker:
 
                 for idx, row in candidates.iterrows():
                     # Reverse cosine distance to cosine similarity:
-                    returned_cands = row["cosine_dist"]
-                    returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
+                    returned_cands = dict()
+                    if self.deezy_parameters["ranking_metric"] == "faiss":
+                        returned_cands = row["faiss_distance"]
+                        returned_cands = {
+                            k: (
+                                self.deezy_parameters["selection_threshold"]
+                                - returned_cands[k]
+                            )
+                            / self.deezy_parameters["selection_threshold"]
+                            for k in returned_cands
+                        }
+                    else:
+                        returned_cands = row["cosine_dist"]
+                        returned_cands = {
+                            k: 1 - returned_cands[k] for k in returned_cands
+                        }
                     cands_dict[row["query"]] = returned_cands
                     self.already_collected_cands[row["query"]] = returned_cands
             except TypeError:

@@ -133,7 +133,9 @@ class Pipeline:
                 self.mylinker.rel_params["model"],
             ) = self.mylinker.disambiguation_setup(experiment_name)
 
-    def run_sentence(self, sentence, sent_idx=0, context=("", "")):
+    def run_sentence(
+        self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""
+    ):
 
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
@@ -172,6 +174,8 @@ class Pipeline:
             prediction["tag"] = m["ner_label"]
             prediction["sentence"] = sentence
             prediction["candidates"] = wk_cands.get(m["mention"], dict())
+            prediction["place"] = place
+            prediction["place_wqid"] = place_wqid
             mentions_dataset["linking"].append(prediction)
             if self.mylinker.method == "reldisamb":
                 prediction["candidates"] = mention_prediction.get_candidates(
@@ -179,19 +183,8 @@ class Pipeline:
                 )
 
         if self.mylinker.method == "reldisamb":
-            predictions, timing = linking_model.predict(mentions_dataset)
-            for i in range(len(mentions_dataset["linking"])):
-                mention_dataset = mentions_dataset["linking"][i]
-                prediction = predictions["linking"][i]
-                if mention_dataset["mention"] == prediction["mention"]:
-                    mentions_dataset["linking"][i]["prediction"] = prediction[
-                        "prediction"
-                    ]
-                    mentions_dataset["linking"][i]["ed_score"] = round(
-                        prediction["conf_ed"], 3
-                    )
-            mentions_dataset["linking"] = self.mylinker.format_linking_dataset(
-                mentions_dataset["linking"]
+            mentions_dataset = self.mylinker.perform_linking_rel(
+                mentions_dataset["linking"], "linking", linking_model
             )
         if self.mylinker.method in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
@@ -220,11 +213,17 @@ class Pipeline:
             sentence_dataset.append(md)
         return sentence_dataset
 
-    def run_text(self, text, place_publication="", year=""):
+    def run_text(self, text, place="", place_wqid="", year=""):
         sentences = split_text_into_sentences(text, language="en")
         document_dataset = []
         for i in range(len(sentences)):
-            sentence_dataset = self.run_sentence(sentences[i], sent_idx=i)
+            sentence_dataset = self.run_sentence(
+                sentences[i],
+                sent_idx=i,
+                context=("", ""),
+                place=place,
+                place_wqid=place_wqid,
+            )
             for sd in sentence_dataset:
                 document_dataset.append(sd)
         return document_dataset

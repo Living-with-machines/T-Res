@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, training
+from utils import process_data, training, pipeline_utils
 
 
 class Experiment:
@@ -289,6 +289,8 @@ class Experiment:
                 experiment_name += "_" + cand_approach
                 experiment_name += "_" + link_approach
 
+            experiment_name = pipeline_utils.get_experiment_name(self, split)
+
             # If method is supervised, train and store model:
             if self.mylinker.method == "reldisamb":
                 self.mylinker.rel_params = self.mylinker.perform_training(
@@ -366,46 +368,37 @@ class Experiment:
             if self.mylinker.method == "reldisamb":
                 for sentence_id in tqdm(sentence_dataset):
                     mentions_dataset = sentence_dataset[sentence_id]
-                    predictions, timing = linking_model.predict(
-                        {sentence_id: mentions_dataset}
+                    mentions_dataset = self.mylinker.perform_linking_rel(
+                        sentence_dataset[sentence_id], sentence_id, linking_model
                     )
-                    for i in range(len(mentions_dataset)):
-                        mention_dataset = mentions_dataset[i]
-                        prediction = predictions[sentence_id][i]
-                        if mention_dataset["mention"] == prediction["mention"]:
-                            mentions_dataset[i]["prediction"] = prediction["prediction"]
-                            # If entity is NIL, conf_ed is 0.0:
-                            mentions_dataset[i]["ed_score"] = prediction.get(
-                                "conf_ed", 0.0
-                            )
-                    mentions_dataset = self.mylinker.format_linking_dataset(
-                        mentions_dataset
-                    )
-                    for dis_mention in mentions_dataset:
-                        disambiguated_mentions.append(dis_mention)
+                    for sentence_id in mentions_dataset:
+                        for mention_data in mentions_dataset[sentence_id]:
+                            disambiguated_mentions.append(mention_data)
 
             else:
                 for sentence_id in tqdm(sentence_dataset):
                     mentions_dataset = sentence_dataset[sentence_id]
                     for mention_data in mentions_dataset:
-                        prediction = self.mylinker.run(mention_data)
-                        mention_data["prediction"] = prediction[0]
-                        mention_data["ed_score"] = prediction[1]
-                        disambiguated_mentions.append(mention_data)
+                        disambiguated_mentions.append(
+                            self.mylinker.perform_linking_mention(mention_data)
+                        )
 
+            # Add predictions to dataframe:
             to_append = []
             for i, row in test_processed.iterrows():
-                for disamb_mention in disambiguated_mentions:
+                for mention_data in disambiguated_mentions:
+                    # Check that it's the same mention:
                     if (
-                        disamb_mention["sentence_id"] == row["sentence_id"]
-                        and disamb_mention["char_start"] == row["char_start"]
-                        and disamb_mention["char_end"] == row["char_end"]
+                        mention_data["sentence_id"] == row["sentence_id"]
+                        and mention_data["char_start"] == row["char_start"]
+                        and mention_data["char_end"] == row["char_end"]
                     ):
+                        # Keep scores to append to the test dataframe:
                         to_append.append(
                             [
-                                disamb_mention["prediction"],
-                                round(disamb_mention["ed_score"], 3),
-                                disamb_mention["candidates"],
+                                mention_data["prediction"],
+                                round(mention_data["ed_score"], 3),
+                                mention_data["candidates"],
                             ]
                         )
 
