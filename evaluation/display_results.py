@@ -313,8 +313,8 @@ for i in range(len(pred_files)):
         )
 
         ne_tags = ["ALL"]
-        settings = ["strict"]
-        measures = ["P_micro", "R_micro", "F1_micro", "Acc"]
+        settings = ["strict", "ent_type"]
+        measures = ["P_micro", "R_micro", "F1_micro"]
 
         overall_results_nel["dataset:approach"] = [str(i) + " > " + approach_fullname]
         for ne_tag in ne_tags:

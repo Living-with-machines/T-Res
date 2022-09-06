@@ -115,7 +115,7 @@ class Ranker:
                 top_keys = [
                     wm
                     for wm in wikipedia_mentions
-                    if wikipedia_mentions[wm] > self.wiki_filtering["minimum_relv"]
+                    # if wikipedia_mentions[wm] > self.wiki_filtering["minimum_relv"]
                 ]
                 top_keys = set(top_keys)
             wikidata_to_mentions_filtered[wk] = dict(

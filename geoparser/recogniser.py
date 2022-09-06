@@ -36,21 +36,24 @@ class Recogniser:
         do_test,
         training_tagset,
     ):
-        self.model_name = model_name
-        self.model = model
-        self.pipe = pipe
-        self.base_model = base_model
-        self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
-        self.output_path = output_model_path
-        self.training_args = training_args
-        self.overwrite_training = overwrite_training
-        self.do_test = do_test
-        self.training_tagset = training_tagset
-        self.model_name = self.model_name + "-" + self.training_tagset
+        self.model_name = model_name  # NER model name prefix
+        self.model = model  # We'll store the NER model here:
+        self.pipe = pipe  # We'll store the NER pipeline here
+        self.base_model = base_model  # Path to base model to fine-tune
+        self.train_dataset = train_dataset  # Path to training dataset
+        self.test_dataset = test_dataset  # Path to test dataset
+        self.output_path = output_model_path  # Path to output folder
+        self.training_args = training_args  # Dictionary of fine-tuning args
+        self.overwrite_training = overwrite_training  # Bool: True to overwrite training
+        self.do_test = do_test  # Bool: True to run it on test mode
+        self.training_tagset = training_tagset  # Use fine or coarse tagset
+        self.model_name = self.model_name + "-" + self.training_tagset  # Rename model
 
     # -------------------------------------------------------------
     def __str__(self):
+        """
+        Print the string representation of the Recogniser object.
+        """
         s = (
             "\n>>> Toponym recogniser:\n"
             "    * Model name: {0}\n"
@@ -72,7 +75,7 @@ class Recogniser:
     # -------------------------------------------------------------
     def train(self):
         """
-        Training a NER model. The training will be skipped if the model already
+        Train a NER model. The training will be skipped if the model already
         exists and self.overwrite_training it set to False. The training will
         be run on test mode if self.do_test is set to True.
 
@@ -93,7 +96,7 @@ class Recogniser:
 
         # Load train and test sets:
         if self.do_test == True:
-            # If test is True, train on 5% of the train and test sets, and add "_test" to the model name.
+            # If test is True, train on a portion of the train and test sets, and add "_test" to the model name.
             self.model_name = self.model_name + "_test"
             lwm_train = load_dataset(
                 "json", data_files=self.train_dataset, split="train[:10]"
@@ -197,8 +200,13 @@ class Recogniser:
             compute_metrics=compute_metrics,
         )
 
+        # Train the model:
         trainer.train()
+
+        # Evaluate the training:
         trainer.evaluate()
+
+        # Save the model:
         trainer.save_model(self.output_path + self.model_name + ".model")
 
     # -------------------------------------------------------------

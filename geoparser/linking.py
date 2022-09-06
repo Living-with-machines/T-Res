@@ -64,7 +64,7 @@ class Linker:
             with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
                 self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
-        if self.method in ["bydistance"]:
+        if self.method in ["bydistance"] or self.rel_params["two_step"] == True:
             print("  > Loading gazetteer.")
             gaz = pd.read_csv(
                 self.resources_path + "wikidata_gazetteer.csv",
@@ -167,7 +167,7 @@ class Linker:
             formatted_cands = m.copy()
             mention = m["mention"]
             formatted_cands["candidates"] = dict()
-            formatted_cands["candidates"][mention] = {"Score": None}
+            formatted_cands["candidates"][mention] = {"Score": 1.0}
             formatted_cands["candidates"][mention]["Candidates"] = dict()
             candidates = m["candidates"]
             for c in candidates:
@@ -181,9 +181,10 @@ class Linker:
                 formatted_cands["gold"] = process_wikipedia.title_to_id(
                     formatted_cands["gold"][0]
                 )
-            formatted_cands["prediction"] = process_wikipedia.title_to_id(
-                formatted_cands["prediction"]
-            )
+            if not formatted_cands["prediction"] == "NIL":
+                formatted_cands["prediction"] = process_wikipedia.title_to_id(
+                    formatted_cands["prediction"]
+                )
             formatted_dataset.append(formatted_cands)
         return formatted_dataset
 
@@ -225,7 +226,7 @@ class Linker:
 
     # ----------------------------------------------
     # Select candidate to place of publication:
-    def by_distance(self, dict_mention):
+    def by_distance(self, dict_mention, origin_wqid=""):
         """
         The by_distance disambiguation method is another baseline, an unsupervised
         disambiguation approach. Given a set of candidates for a given mention and
@@ -241,39 +242,48 @@ class Linker:
             final_score (float): the confidence of the predicted link.
         """
         cands = dict_mention["candidates"]
-        origin_wqid = dict_mention["place_wqid"]
-        origin_coords = self.linking_resources["wqid_to_coords"][origin_wqid]
+        origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
+        if not origin_coords:
+            origin_coords = self.linking_resources["wqid_to_coords"].get(
+                dict_mention["place_wqid"]
+            )
         keep_closest_cand = "NIL"
-        max_on_earth = 20000  # 20000 km, max on Earth
-        keep_lowest_distance = max_on_earth  # 20000 km, max on Earth
+        max_on_gb = 1000  # 1000 km, max on GB
+        keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
+        keep_lowest_relv = 1.0
 
         if cands:
-            l = [list(cands[x]["Candidates"].keys()) for x in cands]
-            l = [item for sublist in l for item in sublist]
-            l = list(set(l))
-            for candidate in l:
-                cand_coords = self.linking_resources["wqid_to_coords"][candidate]
-                geodist = haversine(origin_coords, cand_coords)
-                if geodist < keep_lowest_distance:
-                    keep_lowest_distance = geodist
-                    keep_closest_cand = candidate
+            for x in cands:
+                matching_score = cands[x]["Score"]
+                for candidate, score in cands[x]["Candidates"].items():
+                    cand_coords = self.linking_resources["wqid_to_coords"][candidate]
+                    geodist = haversine(origin_coords, cand_coords)
+                    if geodist < keep_lowest_distance:
+                        keep_lowest_distance = geodist
+                        keep_closest_cand = candidate
+                        keep_lowest_relv = (matching_score + score) / 2.0
 
         if keep_lowest_distance == 0.0:
             keep_lowest_distance = 1.0
         else:
-            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_earth)
+            keep_lowest_distance = (
+                max_on_gb if keep_lowest_distance > max_on_gb else keep_lowest_distance
+            )
+            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
 
-        return keep_closest_cand, round(keep_lowest_distance, 3)
+        resulting_score = round(keep_lowest_relv * keep_lowest_distance, 3)
+
+        return keep_closest_cand, resulting_score
 
     def perform_linking_rel(self, mentions_dataset, sentence_id, linking_model):
         publication_entry = dict()
-        if self.rel_params["ranking"] == "publ":
+        if self.rel_params["ranking"] == "publ" and mentions_dataset:
             # If "publ", add an artificial publication entry:
             publication_entry = self.add_publication_mention(mentions_dataset)
             mentions_dataset.append(publication_entry)
         # Predict mentions in one sentence:
         predictions, timing = linking_model.predict({sentence_id: mentions_dataset})
-        if self.rel_params["ranking"] == "publ":
+        if self.rel_params["ranking"] == "publ" and mentions_dataset:
             # ... and if "publ", now remove the artificial publication entry!
             mentions_dataset.remove(publication_entry)
         # Postprocess the predictions:
@@ -288,7 +298,28 @@ class Linker:
                 )
         # Format the predictions to match the output of the other approaches:
         mentions_dataset = self.format_linking_dataset(mentions_dataset)
+        if self.rel_params["two_step"] == True:
+            mentions_dataset = self.two_step_resolution(mentions_dataset)
         mentions_dataset = {sentence_id: mentions_dataset}
+        return mentions_dataset
+
+    def two_step_resolution(self, mentions_dataset):
+        for i in range(len(mentions_dataset)):
+            if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
+                context_place = ""
+                if (i - 1) < len(mentions_dataset):
+                    if mentions_dataset[i - 1]["tag"] == "LOC":
+                        context_place = mentions_dataset[i - 1]["prediction"]
+                elif (i + 1) < len(mentions_dataset):
+                    if mentions_dataset[i + 1]["tag"] == "LOC":
+                        context_place = mentions_dataset[i + 1]["prediction"]
+                else:
+                    context_place = mentions_dataset[i]["place_wqid"]
+                resolved_by_distance = self.by_distance(
+                    mentions_dataset[i], context_place
+                )
+                mentions_dataset[i]["prediction"] = resolved_by_distance[0]
+                mentions_dataset[i]["ed_score"] = resolved_by_distance[1]
         return mentions_dataset
 
     def perform_linking_mention(self, mention_data):

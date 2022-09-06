@@ -9,21 +9,22 @@ from geoparser import experiment, recogniser, ranking, linking
 
 # List of experiments:
 experiments = [
-    ["lwm", "perfectmatch", "mostpopular", "fine", ""],
-    ["lwm", "perfectmatch", "mostpopular", "coarse", ""],
-    ["hipe", "perfectmatch", "mostpopular", "coarse", ""],
-    ["lwm", "deezymatch", "mostpopular", "fine", ""],
-    ["lwm", "deezymatch", "mostpopular", "coarse", ""],
-    ["hipe", "deezymatch", "mostpopular", "coarse", ""],
-    ["lwm", "deezymatch", "bydistance", "fine", ""],
-    ["hipe", "deezymatch", "bydistance", "coarse", ""],
-    ["lwm", "relcs", "reldisamb", "fine", "relv"],
-    ["lwm", "relcs", "reldisamb", "coarse", "relv"],
-    ["hipe", "relcs", "reldisamb", "coarse", "relv"],
-    ["lwm", "deezymatch", "reldisamb", "fine", "relv"],
-    ["hipe", "deezymatch", "reldisamb", "coarse", "relv"],
-    ["lwm", "deezymatch", "reldisamb", "fine", "publ"],
-    ["hipe", "deezymatch", "reldisamb", "coarse", "publ"],
+    ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
+    ["lwm", "perfectmatch", "mostpopular", "coarse", "", ""],
+    ["hipe", "perfectmatch", "mostpopular", "coarse", "", ""],
+    ["lwm", "deezymatch", "mostpopular", "fine", "", ""],
+    ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
+    ["lwm", "deezymatch", "bydistance", "fine", "", ""],
+    ["hipe", "deezymatch", "bydistance", "coarse", "", ""],
+    ["lwm", "relcs", "reldisamb", "fine", "relv", ""],
+    ["lwm", "relcs", "reldisamb", "coarse", "relv", ""],
+    ["hipe", "relcs", "reldisamb", "coarse", "relv", ""],
+    ["lwm", "deezymatch", "reldisamb", "fine", "relv", ""],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "relv", ""],
+    ["lwm", "deezymatch", "reldisamb", "fine", "publ", False],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", False],
+    ["lwm", "deezymatch", "reldisamb", "fine", "publ", True],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", True],
 ]
 
 # Mapping experiment parameters:
@@ -36,6 +37,7 @@ for exp_param in experiments:
     top_res_method = exp_param[2]
     training_tagset = exp_param[3]
     link_rank = exp_param[4]
+    two_step = exp_param[5]
 
     # --------------------------------------
     # Instantiate the recogniser:
@@ -43,7 +45,7 @@ for exp_param in experiments:
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="/resources/models/bert/bert_1760_1900/",  # Path to the base model to fine-tune
         train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="outputs/models/",  # Path where the NER model is or will be stored
@@ -66,8 +68,7 @@ for exp_param in experiments:
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
+            "minimum_relv": 0.005,  # Filter mentions with more than X relv
         },
         strvar_parameters={
             # Parameters to create the string pair dataset:
@@ -109,6 +110,7 @@ for exp_param in experiments:
             "wiki_version": "wiki_2019/",
             "training_data": "lwm",  # lwm, aida
             "ranking": link_rank,  # relv, dist, relvdist
+            "two_step": two_step,
         },
         overwrite_training=False,
     )

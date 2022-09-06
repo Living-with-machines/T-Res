@@ -79,7 +79,7 @@ class Pipeline:
                     "dm_output": "deezymatch_on_the_fly",
                     # Ranking measures:
                     "ranking_metric": "faiss",
-                    "selection_threshold": 50,
+                    "selection_threshold": 25,
                     "num_candidates": 3,
                     "search_size": 3,
                     "use_predict": False,
@@ -136,7 +136,7 @@ class Pipeline:
     def run_sentence(
         self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""
     ):
-
+        sentence = sentence.replace("—", ";")
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
