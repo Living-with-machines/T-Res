@@ -120,12 +120,12 @@ class Experiment:
                 "This is because the candidate ranking method does not exist.\n"
             )
             sys.exit(0)
-        if self.dataset == "hipe" and self.myner.training_tagset != "coarse":
-            print(
-                "\n!!! Coherence check failed. "
-                "HIPE should be run with the coarse tagset.\n"
-            )
-            sys.exit(0)
+        # if self.dataset == "hipe" and self.myner.training_tagset != "coarse":
+        #     print(
+        #         "\n!!! Coherence check failed. "
+        #         "HIPE should be run with the coarse tagset.\n"
+        #     )
+        #     sys.exit(0)
         if self.myranker.method == "relcs" and not self.mylinker.method == "reldisamb":
             print(
                 "\n!!! Coherence check failed. "
@@ -249,7 +249,10 @@ class Experiment:
 
         train_original = pd.DataFrame()
         train_processed = pd.DataFrame()
-        if self.mylinker.rel_params.get("training_data") == "lwm":
+        if (
+            self.mylinker.rel_params.get("training_data") == "lwm"
+            and self.mylinker.method == "reldisamb"
+        ):
             train_original, train_processed = training.load_training_lwm_data(self)
 
         # ------------------------------------------

@@ -64,7 +64,7 @@ class Linker:
             with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
                 self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
-        if self.method in ["bydistance"] or self.rel_params["two_step"] == True:
+        if self.method in ["bydistance"] or self.rel_params["micro_locs"] == "dist":
             print("  > Loading gazetteer.")
             gaz = pd.read_csv(
                 self.resources_path + "wikidata_gazetteer.csv",
@@ -257,7 +257,12 @@ class Linker:
                 matching_score = cands[x]["Score"]
                 for candidate, score in cands[x]["Candidates"].items():
                     cand_coords = self.linking_resources["wqid_to_coords"][candidate]
-                    geodist = haversine(origin_coords, cand_coords)
+                    geodist = 20000
+                    # if origin_coords and cand_coords:  # If there are coordinates
+                    try:
+                        geodist = haversine(origin_coords, cand_coords)
+                    except ValueError:  # We have one candidate with coordinates in Venus!
+                        pass
                     if geodist < keep_lowest_distance:
                         keep_lowest_distance = geodist
                         keep_closest_cand = candidate
@@ -271,7 +276,9 @@ class Linker:
             )
             keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
 
-        resulting_score = round(keep_lowest_relv * keep_lowest_distance, 3)
+        resulting_score = 0.0
+        if not keep_closest_cand == "NIL":
+            resulting_score = round(keep_lowest_relv * keep_lowest_distance, 3)
 
         return keep_closest_cand, resulting_score
 
@@ -298,9 +305,21 @@ class Linker:
                 )
         # Format the predictions to match the output of the other approaches:
         mentions_dataset = self.format_linking_dataset(mentions_dataset)
-        if self.rel_params["two_step"] == True:
+        if self.rel_params["micro_locs"] == "dist":
+            # Disambiguate micro locations by distance respect neighbouring
+            # resolved places or place of publication:
             mentions_dataset = self.two_step_resolution(mentions_dataset)
+        if self.rel_params["micro_locs"] == "nil":
+            # Assign NIL to micro locations:
+            mentions_dataset = self.micro_no_resolution(mentions_dataset)
         mentions_dataset = {sentence_id: mentions_dataset}
+        return mentions_dataset
+
+    def micro_no_resolution(self, mentions_dataset):
+        for i in range(len(mentions_dataset)):
+            if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
+                mentions_dataset[i]["prediction"] = "NIL"
+                mentions_dataset[i]["ed_score"] = 0.0
         return mentions_dataset
 
     def two_step_resolution(self, mentions_dataset):

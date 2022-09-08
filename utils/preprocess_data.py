@@ -14,16 +14,6 @@ This script reads the original data sources and formats them for our experiments
 """
 
 
-# Load gazetteer (our knowledge base):
-gazetteer_ids = set(
-    list(
-        pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)[
-            "wikidata_id"
-        ].unique()
-    )
-)
-
-
 # ------------------------------
 # From wikipedia to wikidata:
 def turn_wikipedia2wikidata(wikipedia_title):
@@ -185,7 +175,7 @@ def process_lwm_for_ner(tsv_topres_path):
 
 
 # ------------------------------
-def process_lwm_for_linking(tsv_topres_path):
+def process_lwm_for_linking(tsv_topres_path, gazetteer_ids):
     """
     Process LwM data for performing entity linking, resulting in a dataframe with
     one toponym per row and its annotation and resolution in columns.
@@ -334,7 +324,7 @@ def aggregate_hipe_entities(entity, lEntities):
 
 
 # ------------------------------
-def process_hipe_for_linking(hipe_path):
+def process_hipe_for_linking(hipe_path, gazetteer_ids):
     """
     Process LwM data for performing entity linking, resulting in a dataframe with
     one toponym per row and its annotation and resolution in columns.

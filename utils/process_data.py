@@ -13,16 +13,6 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import ner, process_wikipedia
 
 
-# Load gazetteer (our knowledge base):
-gazetteer_ids = set(
-    list(
-        pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)[
-            "wikidata_id"
-        ].unique()
-    )
-)
-
-
 # ----------------------------------------------------
 def eval_with_exception(str2parse, in_case=""):
     """
@@ -725,7 +715,7 @@ def match_wikipedia_to_wikidata(wiki_title):
 
 
 # ----------------------------------------------------
-def match_ent(pred_ents, start, end, prev_ann):
+def match_ent(pred_ents, start, end, prev_ann, gazetteer_ids):
     """
     Function that, given the position in a sentence of a
     specific gold standard token, finds the corresponding
@@ -771,7 +761,7 @@ def match_ent(pred_ents, start, end, prev_ann):
 
 
 # ----------------------------------------------------
-def postprocess_rel(rel_preds, dSentences, gold_tokenization):
+def postprocess_rel(rel_preds, dSentences, gold_tokenization, wikigaz_ids):
     """
     For each sentence, retokenizes the REL output to match the gold
     standard tokenization.
@@ -796,7 +786,9 @@ def postprocess_rel(rel_preds, dSentences, gold_tokenization):
             end = token["end"]
             word = token["word"]
             current_preds = rel_preds.get(sent_id, [])
-            n, el, prev_ann = match_ent(current_preds, start, end, prev_ann)
+            n, el, prev_ann = match_ent(
+                current_preds, start, end, prev_ann, wikigaz_ids
+            )
             sentence_preds.append([word, n, el])
         dREL[sent_id] = sentence_preds
     return dREL
@@ -1059,6 +1051,8 @@ def store_results(experiment, task, how_split, which_split):
     if experiment.mylinker.method == "reldisamb":
         link_approach += "+" + str(experiment.mylinker.rel_params["training_data"])
         link_approach += "+" + str(experiment.mylinker.rel_params["ranking"])
+        if experiment.mylinker.rel_params.get("micro_locs", "") != "":
+            link_approach += "+" + str(experiment.mylinker.rel_params["micro_locs"])
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):

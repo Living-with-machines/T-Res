@@ -97,7 +97,9 @@ def create_training_set(myranker):
     string_matching_filename = os.path.join(
         myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs.txt"
     )
-    Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(parents=True, exist_ok=True)
+    Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(
+        parents=True, exist_ok=True
+    )
 
     # Path to the output string pairs dataset if we're in test mode:
     if myranker.deezy_parameters["do_test"] == True:
@@ -111,6 +113,18 @@ def create_training_set(myranker):
         and myranker.deezy_parameters["overwrite_training"] == False
     ):
         print("The string match dataset already exists!")
+        return None
+
+    if (
+        myranker.deezy_parameters["overwrite_training"] == False
+        and Path(
+            os.path.join(
+                myranker.deezy_parameters["dm_path"],
+                "models",
+                myranker.deezy_parameters["dm_model"],
+            )
+        ).exists()
+    ):
         return None
 
     print("Create a string match dataset!")
@@ -184,8 +198,12 @@ def create_training_set(myranker):
                 negative = negative[:shortest_length]
                 positive = positive[:shortest_length]
                 # Prepare for writing into file:
-                negative_matches += [word + "\t" + x + "\t" + "FALSE\n" for x in negative]
-                positive_matches += [word + "\t" + x + "\t" + "TRUE\n" for x in positive]
+                negative_matches += [
+                    word + "\t" + x + "\t" + "FALSE\n" for x in negative
+                ]
+                positive_matches += [
+                    word + "\t" + x + "\t" + "TRUE\n" for x in positive
+                ]
 
     # Get variations from mentions_to_wikidata:
     for wq in myranker.wikidata_to_mentions.keys():
@@ -229,7 +247,9 @@ def train_deezy_model(myranker):
     input_file_path = os.path.join(
         myranker.deezy_parameters["dm_path"], "inputs", "input_dfm.yaml"
     )
-    dataset_path = os.path.join(myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt")
+    dataset_path = os.path.join(
+        myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt"
+    )
     model_name = myranker.deezy_parameters["dm_model"]
     if myranker.deezy_parameters["do_test"] == True:
         dataset_path = os.path.join(
@@ -294,9 +314,8 @@ def generate_candidates(myranker):
     if not Path(
         os.path.join(
             deezymatch_outputs_path,
-            "candidate_vectors",
+            "combined",
             candidates + "_" + dm_model,
-            "embeddings",
         )
     ).is_dir():
         start_time = time.time()
@@ -304,7 +323,9 @@ def generate_candidates(myranker):
             input_file_path=os.path.join(
                 deezymatch_outputs_path, "models", dm_model, "input_dfm.yaml"
             ),
-            dataset_path=os.path.join(deezymatch_outputs_path, "data", candidates + ".txt"),
+            dataset_path=os.path.join(
+                deezymatch_outputs_path, "data", candidates + ".txt"
+            ),
             pretrained_model_path=os.path.join(
                 deezymatch_outputs_path, "models", dm_model, dm_model + ".model"
             ),

@@ -15,13 +15,28 @@ RANDOM_SEED = 42
 
 random.seed(RANDOM_SEED)
 
-large_resources = "/resources/"  # path to large resources
+large_resources = "../resources/"  # path to large resources
 small_resources = "../resources/"  # path to small resources
-output_path_lwm = "outputs/data/lwm/"
-output_path_hipe = "outputs/data/hipe/"
+output_path_lwm = "../experiments/outputs/data/lwm/"
+output_path_hipe = "../experiments/outputs/data/hipe/"
 # Create output folders for processed data if they do not exist:
 Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
 Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
+
+
+# ------------------------------------------------------
+# Gazetteer data
+# ------------------------------------------------------
+
+# Load gazetteer (our knowledge base):
+gazetteer_ids = set(
+    list(
+        pd.read_csv(
+            os.path.join(large_resources, "wikidata", "wikidata_gazetteer.csv"),
+            low_memory=False,
+        )["wikidata_id"].unique()
+    )
+)
 
 
 # ------------------------------------------------------
@@ -71,8 +86,8 @@ lwm_train_ner.to_json(
 lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines=True)
 
 # Process data for the resolution experiments:
-lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train)
-lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test)
+lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train, gazetteer_ids)
+lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test, gazetteer_ids)
 
 # Split train set into train and dev set, by article:
 lwm_train_df, lwm_dev_df = train_test_split(
@@ -157,11 +172,11 @@ hipe_path = os.path.join(f"{news_path}", "hipe")
 get_data.download_hipe_data(hipe_path)
 
 hipe_dev_df = preprocess_data.process_hipe_for_linking(
-    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-dev-en.tsv")
+    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-dev-en.tsv"), gazetteer_ids
 )
 
 hipe_test_df = preprocess_data.process_hipe_for_linking(
-    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-test-en.tsv")
+    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-test-en.tsv"), gazetteer_ids
 )
 
 hipe_all_df = pd.concat([hipe_dev_df, hipe_test_df])

@@ -71,6 +71,7 @@ def run_rel_experiments(self):
         rel_preds,
         self.processed_data["dSentences"],
         self.processed_data["gold_tok"],
+        self.mylinker.linking_resources["wikidata_locs"],
     )
     dict_rel_approaches[rel_approach_name] = {"results": dREL}
 

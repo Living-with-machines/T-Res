@@ -21,6 +21,12 @@ dApprNames["rel_wikilwm_lwm_locs"] = "rel-19lwmlocs"
 
 
 # -------------------------------------
+# CREATE TEMPORARY RESULTS FOLDER
+# -------------------------------------
+
+Path("results").mkdir(parents=True, exist_ok=True)
+
+# -------------------------------------
 # NAMED ENTITY RECOGNITION
 # -------------------------------------
 
@@ -177,9 +183,13 @@ linking_approaches = [
     "skys",
     "bydistance",
     "reldisamb+lwm+publ",
+    "reldisamb+lwm+publ+dist",
+    "reldisamb+lwm+publ+nil",
     "reldisamb+lwm+relv",
+    "reldisamb+lwm+relv+dist",
+    "reldisamb+lwm+relv+nil",
 ]
-granularities = ["fine", "coarse"]
+granularities = ["fine"]
 splits = [
     "originalsplit",
     "withouttest",
@@ -282,7 +292,6 @@ for dataset in datasets:
                         + split
                         + "_trues.tsv"
                     )
-
                     if Path(pred_file).exists() and Path(true_file).exists():
                         pred_files.append(pred_file)
                         true_files.append(true_file)

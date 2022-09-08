@@ -7,24 +7,44 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from geoparser import experiment, recogniser, ranking, linking
 
+# Choose test scenario:
+test_scenario = "dev"  # "dev" while experimenting, "test" for the final numbers
+
 # List of experiments:
 experiments = [
     ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
-    ["lwm", "perfectmatch", "mostpopular", "coarse", "", ""],
-    ["hipe", "perfectmatch", "mostpopular", "coarse", "", ""],
     ["lwm", "deezymatch", "mostpopular", "fine", "", ""],
-    ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
+    ["lwm", "perfectmatch", "bydistance", "fine", "", ""],
     ["lwm", "deezymatch", "bydistance", "fine", "", ""],
-    ["hipe", "deezymatch", "bydistance", "coarse", "", ""],
     ["lwm", "relcs", "reldisamb", "fine", "relv", ""],
-    ["lwm", "relcs", "reldisamb", "coarse", "relv", ""],
-    ["hipe", "relcs", "reldisamb", "coarse", "relv", ""],
     ["lwm", "deezymatch", "reldisamb", "fine", "relv", ""],
+    ["lwm", "deezymatch", "reldisamb", "fine", "relv", "dist"],
+    ["lwm", "deezymatch", "reldisamb", "fine", "relv", "nil"],
+    ["lwm", "deezymatch", "reldisamb", "fine", "publ", ""],
+    ["lwm", "deezymatch", "reldisamb", "fine", "publ", "dist"],
+    ["lwm", "deezymatch", "reldisamb", "fine", "publ", "nil"],
+    ["hipe", "perfectmatch", "mostpopular", "coarse", "", ""],
+    ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
+    ["hipe", "perfectmatch", "bydistance", "coarse", "", ""],
+    ["hipe", "deezymatch", "bydistance", "coarse", "", ""],
+    ["hipe", "relcs", "reldisamb", "coarse", "relv", ""],
     ["hipe", "deezymatch", "reldisamb", "coarse", "relv", ""],
-    ["lwm", "deezymatch", "reldisamb", "fine", "publ", False],
-    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", False],
-    ["lwm", "deezymatch", "reldisamb", "fine", "publ", True],
-    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", True],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "relv", "dist"],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "relv", "nil"],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", ""],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", "dist"],
+    ["hipe", "deezymatch", "reldisamb", "coarse", "publ", "nil"],
+    ["hipe", "perfectmatch", "mostpopular", "fine", "", ""],
+    ["hipe", "deezymatch", "mostpopular", "fine", "", ""],
+    ["hipe", "perfectmatch", "bydistance", "fine", "", ""],
+    ["hipe", "deezymatch", "bydistance", "fine", "", ""],
+    ["hipe", "relcs", "reldisamb", "fine", "relv", ""],
+    ["hipe", "deezymatch", "reldisamb", "fine", "relv", ""],
+    ["hipe", "deezymatch", "reldisamb", "fine", "relv", "dist"],
+    ["hipe", "deezymatch", "reldisamb", "fine", "relv", "nil"],
+    ["hipe", "deezymatch", "reldisamb", "fine", "publ", ""],
+    ["hipe", "deezymatch", "reldisamb", "fine", "publ", "dist"],
+    ["hipe", "deezymatch", "reldisamb", "fine", "publ", "nil"],
 ]
 
 # Mapping experiment parameters:
@@ -37,7 +57,7 @@ for exp_param in experiments:
     top_res_method = exp_param[2]
     training_tagset = exp_param[3]
     link_rank = exp_param[4]
-    two_step = exp_param[5]
+    micro_locs = exp_param[5]
 
     # --------------------------------------
     # Instantiate the recogniser:
@@ -109,8 +129,8 @@ for exp_param in experiments:
             "base_path": "/resources/rel_db/",
             "wiki_version": "wiki_2019/",
             "training_data": "lwm",  # lwm, aida
-            "ranking": link_rank,  # relv, dist, relvdist
-            "two_step": two_step,
+            "ranking": link_rank,  # relv, publ
+            "micro_locs": micro_locs,  # "dist", "nil", ""
         },
         overwrite_training=False,
     )
@@ -127,7 +147,7 @@ for exp_param in experiments:
         mylinker=mylinker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
-        test_split="dev",  # "dev" while experimenting, "test" when running final experiments.
+        test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
         rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
     )
 

@@ -47,7 +47,11 @@ def load_training_lwm_data(myexperiment):
         )
     processed_file = os.path.join(
         myexperiment.data_path,
-        "lwm/" + myexperiment.myner.model_name + "_" + cand_approach + "_mentions.tsv",
+        "lwm/"
+        + myexperiment.myner.model_name.replace("coarse", "fine")
+        + "_"
+        + cand_approach
+        + "_mentions.tsv",
     )
     original_file = os.path.join(myexperiment.data_path, "lwm/linking_df_split.tsv")
 
