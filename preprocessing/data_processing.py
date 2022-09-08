@@ -15,7 +15,7 @@ RANDOM_SEED = 42
 
 random.seed(RANDOM_SEED)
 
-large_resources = "../resources/"  # path to large resources
+large_resources = "/resources/"  # path to large resources
 small_resources = "../resources/"  # path to small resources
 output_path_lwm = "../experiments/outputs/data/lwm/"
 output_path_hipe = "../experiments/outputs/data/hipe/"
