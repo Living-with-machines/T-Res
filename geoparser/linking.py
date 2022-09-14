@@ -278,7 +278,7 @@ class Linker:
 
         resulting_score = 0.0
         if not keep_closest_cand == "NIL":
-            resulting_score = round(keep_lowest_relv * keep_lowest_distance, 3)
+            resulting_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
 
         return keep_closest_cand, resulting_score
 
