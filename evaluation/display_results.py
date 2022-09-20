@@ -85,7 +85,7 @@ for dataset in datasets:
                     + "-ner-"
                     + granularity
                     + "_"
-                    + "originalsplit-test.tsv"
+                    + "originalsplit.tsv"
                 )
                 true_file = (
                     "../experiments/outputs/results/"
@@ -192,17 +192,17 @@ linking_approaches = [
 granularities = ["fine"]
 splits = [
     "originalsplit",
-    "withouttest",
-    # "Ashton1860",
-    # "Dorchester1820",
-    # "Dorchester1830",
-    # "Dorchester1860",
-    # "Manchester1780",
-    # "Manchester1800",
-    # "Manchester1820",
-    # "Manchester1830",
-    # "Manchester1860",
-    # "Poole1860",
+    # "withouttest",
+    "Ashton1860",
+    "Dorchester1820",
+    "Dorchester1830",
+    "Dorchester1860",
+    "Manchester1780",
+    "Manchester1800",
+    "Manchester1820",
+    "Manchester1830",
+    "Manchester1860",
+    "Poole1860",
 ]
 
 df_nel = pd.DataFrame()
@@ -213,11 +213,11 @@ approach_names = []
 
 # GET RELEVANT OUR-METHOD FILES:
 for dataset in datasets:
-    for ner_approach in ner_approaches:
-        for ranking_approach in ranking_approaches:
-            for linking_approach in linking_approaches:
-                for granularity in granularities:
-                    for split in splits:
+    for split in splits:
+        for ner_approach in ner_approaches:
+            for ranking_approach in ranking_approaches:
+                for linking_approach in linking_approaches:
+                    for granularity in granularities:
                         pred = (
                             "../experiments/outputs/results/"
                             + dataset
@@ -322,7 +322,7 @@ for i in range(len(pred_files)):
         )
 
         ne_tags = ["ALL"]
-        settings = ["strict", "ent_type"]
+        settings = ["ent_type"]  # ["strict", "ent_type"]
         measures = ["P_micro", "R_micro", "F1_micro"]
 
         overall_results_nel["dataset:approach"] = [str(i) + " > " + approach_fullname]

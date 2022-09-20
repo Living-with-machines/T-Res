@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from pathlib import Path
 from sentence_splitter import split_text_into_sentences
 
@@ -126,7 +127,7 @@ class Pipeline:
         # TODO Add as part of the pipeline:
         # # Train a linking model if needed:
         # self.mylinker.train()
-        experiment_name = pipeline_utils.get_experiment_name(self, "withouttest")
+        experiment_name = pipeline_utils.get_experiment_name(self, "originalsplit")
         if self.mylinker.method == "reldisamb":
             (
                 self.mylinker.rel_params["mention_detection"],
@@ -210,6 +211,12 @@ class Pipeline:
         sentence_dataset = []
         for md in mentions_dataset["linking"]:
             md = dict((k, md[k]) for k in md if k in keys)
+            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
+                md["prediction"]
+            )
+            md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
+                md["prediction"]
+            )
             sentence_dataset.append(md)
         return sentence_dataset
 

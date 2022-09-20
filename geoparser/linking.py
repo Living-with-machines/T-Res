@@ -59,36 +59,29 @@ class Linker:
         print("*** Load linking resources.")
 
         # Load Wikidata mentions-to-QID with absolute counts:
-        if self.method in ["mostpopular", "reldisamb"]:
-            print("  > Loading mentions to wikidata mapping.")
-            with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
-                self.linking_resources["mentions_to_wikidata"] = json.load(f)
+        print("  > Loading mentions to wikidata mapping.")
+        with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
+            self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
-        if self.method in ["bydistance"] or self.rel_params["micro_locs"] == "dist":
-            print("  > Loading gazetteer.")
-            gaz = pd.read_csv(
-                self.resources_path + "wikidata_gazetteer.csv",
-                usecols=["wikidata_id", "latitude", "longitude"],
-            )
-            gaz["latitude"] = gaz["latitude"].astype(float)
-            gaz["longitude"] = gaz["longitude"].astype(float)
-            gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
-            wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
-            self.linking_resources["wqid_to_coords"] = wqid_to_coords
-            gaz = ""
+        print("  > Loading gazetteer.")
+        gaz = pd.read_csv(
+            self.resources_path + "wikidata_gazetteer.csv",
+            usecols=["wikidata_id", "latitude", "longitude"],
+        )
+        gaz["latitude"] = gaz["latitude"].astype(float)
+        gaz["longitude"] = gaz["longitude"].astype(float)
+        gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
+        wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
+        self.linking_resources["wqid_to_coords"] = wqid_to_coords
+        gaz_ids = set(gaz["wikidata_id"].tolist())
+        # Keep only wikipedia entities in the gazetteer:
+        self.linking_resources["wikidata_locs"] = gaz_ids
+        gaz_ids = ""
+        gaz = ""
 
-        if self.method in ["reldisamb"]:
-            # Load gazetteer
-            print("  > Loading gazetteer.")
-            gaz_ids = set(
-                pd.read_csv(
-                    self.resources_path + "wikidata_gazetteer.csv",
-                    usecols=["wikidata_id"],
-                )["wikidata_id"].tolist()
-            )
-
-            # Keep only wikipedia entities in the gazetteer:
-            self.linking_resources["wikidata_locs"] = gaz_ids
+        # The entity2class.txt file is created as the last step in wikipediaprocessing:
+        with open("../resources/entity2class.txt", "r") as fr:
+            self.linking_resources["entity2class"] = json.load(fr)
 
         print("*** Linking resources loaded!\n")
         return self.linking_resources
