@@ -10,27 +10,7 @@ import pandas as pd
 import requests
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import ner
-
-
-# Load wikipedia2wikidata mapper:
-path = "/resources/wikipedia/extractedResources/"
-wikipedia2wikidata = dict()
-if Path(path + "wikipedia2wikidata.json").exists():
-    with open(path + "wikipedia2wikidata.json", "r") as f:
-        wikipedia2wikidata = json.load(f)
-else:
-    print("Warning: wikipedia2wikidata.json does not exist.")
-
-
-# Load gazetteer (our knowledge base):
-gazetteer_ids = set(
-    list(
-        pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)[
-            "wikidata_id"
-        ].unique()
-    )
-)
+from utils import ner, process_wikipedia
 
 
 # ----------------------------------------------------
@@ -331,6 +311,7 @@ def ner_and_process(dSentences, dAnnotated, myner):
         dMentionsGold[sent_id] = ner.aggregate_mentions(
             sentence_postprocessing["sentence_trues"], "gold"
         )
+
     return dPreds, dTrues, dSkys, gold_tokenization, dMentionsPred, dMentionsGold
 
 
@@ -451,8 +432,8 @@ def load_processed_data(experiment):
             processed data is stored.
     """
 
-    output_path = (
-        experiment.data_path + experiment.dataset + "/" + experiment.myner.model_name
+    output_path = os.path.join(
+        experiment.data_path, experiment.dataset, experiment.myner.model_name
     )
 
     # Add the candidate experiment info to the path:
@@ -727,18 +708,14 @@ def match_wikipedia_to_wikidata(wiki_title):
     Returns:
         a string, either the Wikidata QID corresponding entity, or NIL.
     """
-    el = urllib.parse.quote(wiki_title.replace("_", " "))
-    try:
-        el = wikipedia2wikidata[el]
-        return el
-    except Exception:
-        # to be checked but it seems some Wikipedia pages are not in our Wikidata
-        # see for instance Zante%2C%20California
-        return "NIL"
+    wqid = process_wikipedia.title_to_id(wiki_title, lower=False)
+    if not wqid:
+        wqid = "NIL"
+    return wqid
 
 
 # ----------------------------------------------------
-def match_ent(pred_ents, start, end, prev_ann):
+def match_ent(pred_ents, start, end, prev_ann, gazetteer_ids):
     """
     Function that, given the position in a sentence of a
     specific gold standard token, finds the corresponding
@@ -784,7 +761,7 @@ def match_ent(pred_ents, start, end, prev_ann):
 
 
 # ----------------------------------------------------
-def postprocess_rel(rel_preds, dSentences, gold_tokenization):
+def postprocess_rel(rel_preds, dSentences, gold_tokenization, wikigaz_ids):
     """
     For each sentence, retokenizes the REL output to match the gold
     standard tokenization.
@@ -809,7 +786,9 @@ def postprocess_rel(rel_preds, dSentences, gold_tokenization):
             end = token["end"]
             word = token["word"]
             current_preds = rel_preds.get(sent_id, [])
-            n, el, prev_ann = match_ent(current_preds, start, end, prev_ann)
+            n, el, prev_ann = match_ent(
+                current_preds, start, end, prev_ann, wikigaz_ids
+            )
             sentence_preds.append([word, n, el])
         dREL[sent_id] = sentence_preds
     return dREL
@@ -877,7 +856,7 @@ def create_mentions_df(experiment):
                         gold_mention = gs["mention"]
                         gold_standard_link = gs["entity_link"]
                         gold_standard_ner = gs["ner_label"]
-                candidates = dCandidates[sentence_id][mention["mention"]]
+                candidates = dCandidates[sentence_id].get(mention["mention"], dict())
 
                 rows.append(
                     [
@@ -943,7 +922,7 @@ def create_mentions_df(experiment):
     keep_columns = [
         "article_id",
         "originalsplit",
-        "traindevtest",
+        "withouttest",
         "Ashton1860",
         "Dorchester1820",
         "Dorchester1830",
@@ -999,7 +978,7 @@ def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles
     """
     # Bundle 2 associated tasks: NERC-coarse and NEL
     with open(
-        hipe_scorer_results_path + "/" + scenario_name + ".tsv",
+        os.path.join(hipe_scorer_results_path, scenario_name + ".tsv"),
         "w",
     ) as fw:
         fw.write(
@@ -1049,9 +1028,14 @@ def store_results(experiment, task, how_split, which_split):
             It can be "dev" while we're developing the code, or "test"
             when we run it in the final experiments.
     """
-    hipe_scorer_results_path = experiment.results_path + experiment.dataset + "/"
-    scenario_name = task + "_" + experiment.myner.model_name + "_"
+    hipe_scorer_results_path = os.path.join(experiment.results_path, experiment.dataset)
+    Path(hipe_scorer_results_path).mkdir(parents=True, exist_ok=True)
+
+    scenario_name = ""
+    if task == "ner":
+        scenario_name += task + "_" + experiment.myner.model_name + "_"
     if task == "linking":
+        scenario_name += task + "_" + experiment.myner.model_name + "_"
         cand_approach = experiment.myranker.method
         if experiment.myranker.method == "deezymatch":
             cand_approach += "+" + str(
@@ -1060,16 +1044,24 @@ def store_results(experiment, task, how_split, which_split):
             cand_approach += "+" + str(
                 experiment.myranker.deezy_parameters["selection_threshold"]
             )
-        scenario_name += cand_approach + "_" + how_split + "-" + which_split + "_"
+
+        scenario_name += cand_approach + "_" + how_split + "_"
+
+    link_approach = experiment.mylinker.method
+    if experiment.mylinker.method == "reldisamb":
+        link_approach += "+" + str(experiment.mylinker.rel_params["training_data"])
+        link_approach += "+" + str(experiment.mylinker.rel_params["ranking"])
+        if experiment.mylinker.rel_params.get("micro_locs", "") != "":
+            link_approach += "+" + str(experiment.mylinker.rel_params["micro_locs"])
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
     all = experiment.dataset_df
-    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = list(all[all[how_split] == "test"].article_id.unique())
     test_articles = [str(art) for art in test_articles]
 
     # Store predictions results formatted for CLEF-HIPE scorer:
-    preds_name = experiment.mylinker.method if task == "linking" else "preds"
+    preds_name = link_approach if task == "linking" else "preds"
     store_for_scorer(
         hipe_scorer_results_path,
         scenario_name + preds_name,
@@ -1086,7 +1078,8 @@ def store_results(experiment, task, how_split, which_split):
     )
 
     if task == "linking":
-        # If task is "linking", store the skyline results:
+        # If task is "linking", store the skyline results (but not for the
+        # ranking method of REL):
         store_for_scorer(
             hipe_scorer_results_path,
             scenario_name + "skys",
@@ -1096,21 +1089,19 @@ def store_results(experiment, task, how_split, which_split):
 
 
 def store_rel(experiment, dREL, approach, how_split, which_split):
-    hipe_scorer_results_path = experiment.results_path + experiment.dataset + "/"
+    hipe_scorer_results_path = os.path.join(experiment.results_path, experiment.dataset)
     scenario_name = (
         approach
         + "_"
         + experiment.myner.model_name  # The model name is needed due to tokenization
         + "_"
         + how_split
-        + "-"
-        + which_split
     )
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
     all = experiment.dataset_df
-    test_articles = list(all[all[how_split] == which_split].article_id.unique())
+    test_articles = list(all[all[how_split] == "test"].article_id.unique())
     test_articles = [str(art) for art in test_articles]
 
     # Store REL results formatted for CLEF-HIPE scorer:

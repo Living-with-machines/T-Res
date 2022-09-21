@@ -36,8 +36,25 @@ def map_tag_label(training_tagset):
 def encode_dict(training_tagset):
     """
     During training, encodes the gold standard label
-    as an integer, for the BERT model to take as input,
-    distinguishing between coarse and fine.
+    as an integer, for the BERT model to take as input.
+    If the training_tagset is set to `coarse`, we will
+    only have three labels, one for the `O` tokens, one
+    for `B-` tokens, and one for `I-` tokens (therefore
+    not distinguishing between types of locations). If
+    the `training_tagset` flag is set to `fine`, each
+    fine-grained tag will be one label (therefore distinguishing
+    between types of locations).
+
+    This needs to be adapted depending on the training data.
+
+    Arguments:
+        training_tagset (str): a string indicating whether
+        the tagset used to train/load the model is fine-grained
+        or coarse.
+
+    Returns:
+        label_endoding_dict (dict): a dictionary mapping
+        the gold standard NE label to an integer.
     """
     label_encoding_dict = dict()
     if training_tagset == "coarse":

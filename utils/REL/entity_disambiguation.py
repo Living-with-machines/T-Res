@@ -4,12 +4,14 @@ import pickle as pkl
 import re
 import tarfile
 import time
+import urllib
 from pathlib import Path
 from random import shuffle
 from typing import Any, Dict
 from urllib.parse import urlparse
 
 import numpy as np
+import pandas as pd
 import pkg_resources
 import torch
 import torch.optim as optim
@@ -17,11 +19,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from torch.autograd import Variable
 
-import REL.utils as utils
-from REL.db.generic import GenericLookup
-from REL.mulrel_ranker import MulRelRanker, PreRank
-from REL.training_datasets import TrainingEvaluationDatasets
-from REL.vocabulary import Vocabulary
+import utils.REL.utils as utils
+from utils.REL.db.generic import GenericLookup
+from utils.REL.mulrel_ranker import MulRelRanker, PreRank
+from utils.REL.training_datasets import TrainingEvaluationDatasets
+from utils.REL.vocabulary import Vocabulary
 
 """
 Parent Entity Disambiguation class that directs the various subclasses used
@@ -32,7 +34,13 @@ wiki_prefix = "en.wikipedia.org/wiki/"
 
 
 class EntityDisambiguation:
-    def __init__(self, base_url, wiki_version, user_config, reset_embeddings=False):
+    def __init__(
+        self,
+        base_url,
+        wiki_version,
+        user_config,
+        reset_embeddings=False,
+    ):
         self.base_url = base_url
         self.wiki_version = wiki_version
         self.embeddings = {}
@@ -119,11 +127,12 @@ class EntityDisambiguation:
         config = default_config
 
         model_dict = json.loads(
-            pkg_resources.resource_string("REL.models", "models.json")
+            pkg_resources.resource_string("utils.REL.models", "models.json")
         )
         model_path: str = config["model_path"]
         # load aliased url if it exists, else keep original string
         config["model_path"] = model_dict.get(model_path, model_path)
+        print("Model path:", config["model_path"])
 
         if urlparse(str(config["model_path"])).scheme in ("http", "https"):
             model_path = utils.fetch_model(
@@ -190,6 +199,7 @@ class EntityDisambiguation:
         train_dataset = self.get_data_items(org_train_dataset, "train", predict=False)
         dev_datasets = []
         for dname, data in org_dev_datasets.items():
+            print(dname)
             dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
 
         print("Creating optimizer")
@@ -322,7 +332,7 @@ class EntityDisambiguation:
                         ),
                     )
 
-                    if dname == "aida_testA":
+                    if dname == "lwm_dev":
                         dev_f1 = f1
 
                 if (
@@ -411,19 +421,19 @@ class EntityDisambiguation:
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
         train_dataset = self.get_data_items(
-            datasets["aida_train"], "train", predict=False
+            datasets["lwm_train"], "train", predict=False
         )
 
         dev_datasets = []
         for dname, data in list(datasets.items()):
-            if dname == "aida_train":
+            if dname == "lwm_train":
                 continue
             dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
 
         model = LogisticRegression()
 
         predictions = self.__predict(train_dataset, eval_raw=True)
-        X, y, meta = self.__create_dataset_LR(datasets, predictions, "aida_train")
+        X, y, meta = self.__create_dataset_LR(datasets, predictions, "lwm_train")
         model.fit(X, y)
 
         for dname, data in dev_datasets:
@@ -734,7 +744,6 @@ class EntityDisambiguation:
                 log_probs = (log_probs * entity_mask).add_((entity_mask - 1).mul_(1e10))
                 _, top_pos = torch.topk(log_probs, dim=1, k=self.config["keep_ctx_ent"])
                 top_pos = top_pos.data.cpu().numpy()
-
             else:
                 top_pos = [[]] * len(content)
 
@@ -751,6 +760,7 @@ class EntityDisambiguation:
                 m["selected_cands"] = sm
 
                 selected = set(top_pos[i])
+
                 idx = 0
                 while (
                     len(selected)
@@ -761,6 +771,7 @@ class EntityDisambiguation:
                     idx += 1
 
                 selected = sorted(list(selected))
+
                 for idx in selected:
                     sm["cands"].append(m["cands"][idx])
                     sm["named_cands"].append(m["named_cands"][idx])
@@ -792,6 +803,7 @@ class EntityDisambiguation:
         if dname != "raw":
             print("Recall for {}: {}".format(dname, has_gold / total))
             print("-----------------------------------------------")
+
         return new_dataset
 
     def __update_embeddings(self, emb_name, embs):

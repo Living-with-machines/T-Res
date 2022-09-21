@@ -5,8 +5,7 @@ import numpy as np
 from gensim import utils
 from numpy import float32 as REAL
 from numpy import zeros
-
-from REL.db.base import DB
+from utils.REL.db.base import DB
 
 
 class GenericLookup(DB):
@@ -70,14 +69,13 @@ class GenericLookup(DB):
                         "unexpected end of input; is count incorrect or file otherwise damaged?"
                     )
 
-                parts = utils.to_unicode(
-                    line.rstrip(), encoding="utf-8", errors="strict"
-                ).split(" ")
+                parts = utils.to_unicode(line.rstrip(), encoding="utf-8", errors="strict").split(
+                    " "
+                )
 
                 if len(parts) != vector_size + 1:
                     raise ValueError(
-                        "invalid vector on line %s (is this really the text format?)"
-                        % line_no
+                        "invalid vector on line %s (is this really the text format?)" % line_no
                     )
 
                 word, vec = parts[0], np.array([REAL(x) for x in parts[1:]])
@@ -160,12 +158,8 @@ if __name__ == "__main__":
     # lowercase = wiki.wiki("Netherlands".lower(), "wiki", "lower")
 
     # Embedding load.
-    emb = GenericLookup(
-        "entity_word_embedding", save_dir=save_dir, table_name="embeddings"
-    )
-    emb.load_word2emb(
-        "D:/enwiki-20190701-model-w2v-dim300", batch_size=5000, reset=True
-    )
+    emb = GenericLookup("entity_word_embedding", save_dir=save_dir, table_name="embeddings")
+    emb.load_word2emb("D:/enwiki-20190701-model-w2v-dim300", batch_size=5000, reset=True)
 
     # Query
     import torch

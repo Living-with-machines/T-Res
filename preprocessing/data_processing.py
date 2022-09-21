@@ -9,14 +9,44 @@ from utils import preprocess_data
 from sklearn.model_selection import train_test_split
 import random
 import json
+import os
 
 RANDOM_SEED = 42
 
 random.seed(RANDOM_SEED)
 
+large_resources = "/resources/"  # path to large resources
+small_resources = "../resources/"  # path to small resources
+output_path_lwm = "../experiments/outputs/data/lwm/"
+output_path_hipe = "../experiments/outputs/data/hipe/"
+# Create output folders for processed data if they do not exist:
+Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
+Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
 
-with open("../resources/publication_metadata.json") as jsonfile:
+
+# ------------------------------------------------------
+# Gazetteer data
+# ------------------------------------------------------
+
+# Load gazetteer (our knowledge base):
+gazetteer_ids = set(
+    list(
+        pd.read_csv(
+            os.path.join(large_resources, "wikidata", "wikidata_gazetteer.csv"),
+            low_memory=False,
+        )["wikidata_id"].unique()
+    )
+)
+
+
+# ------------------------------------------------------
+# Publication metadata
+# ------------------------------------------------------
+
+# Load publication metadata
+with open(os.path.join(f"{small_resources}", "publication_metadata.json")) as jsonfile:
     df_metadata = json.load(jsonfile)
+
 dict_titles = {k: df_metadata[k]["publication_title"] for k in df_metadata}
 dict_place = {k: df_metadata[k]["publication_place"] for k in df_metadata}
 dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
@@ -26,32 +56,38 @@ dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
 # LWM dataset
 # ------------------------------------------------------
 
+# Path of the manually annotated data:
+news_path = os.path.join(f"{small_resources}", "news_datasets")
+
 # Download the annotated data from the BL repository:
-# get_data.download_lwm_data()
+get_data.download_lwm_data(news_path)
 
-# Path for the output dataset dataframes:
-output_path_lwm = "outputs/data/lwm/"
-Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
+# Training data from the manually annotated data:
+topres_path_train = os.path.join(
+    f"{small_resources}", "news_datasets", "topRes19th_v2", "train"
+)
 
-# Path of the annotated data:
-# !TODO: Change path to that where downloaded data is stored.
-topres_path_train = "/resources/newsdataset/fmp_lwm/train/"
-topres_path_test = "/resources/newsdataset/fmp_lwm/test/"
+# Test data from the manually annotated data:
+topres_path_test = os.path.join(
+    f"{small_resources}", "news_datasets", "topRes19th_v2", "test"
+)
 
 # Process data for training a named entity recognition model:
 lwm_df = preprocess_data.process_lwm_for_ner(topres_path_train)
 
 # Split NER-formatted training set into train and dev, and store them.
 # They will be used by the ner_training.py script:
-lwm_train_ner, lwm_dev_ner = train_test_split(lwm_df, test_size=0.2, random_state=RANDOM_SEED)
+lwm_train_ner, lwm_dev_ner = train_test_split(
+    lwm_df, test_size=0.2, random_state=RANDOM_SEED
+)
 lwm_train_ner.to_json(
     output_path_lwm + "ner_df_train.json", orient="records", lines=True
 )
 lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines=True)
 
-# Process data for resolution:
-lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train)
-lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test)
+# Process data for the resolution experiments:
+lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train, gazetteer_ids)
+lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test, gazetteer_ids)
 
 # Split train set into train and dev set, by article:
 lwm_train_df, lwm_dev_df = train_test_split(
@@ -62,18 +98,29 @@ lwm_train_df, lwm_dev_df = train_test_split(
 lwm_all_df = pd.concat([lwm_train_df, lwm_dev_df, lwm_test_df])
 lwm_all_df["place_wqid"] = lwm_all_df["publication_code"].map(dict_placewqid)
 
-# Keep the original train/test split for assessing NER:
-ner_split_train = list(lwm_train_df["article_id"].unique())
-ner_split_dev = list(lwm_dev_df["article_id"].unique())
-ner_split_test = list(lwm_test_df["article_id"].unique())
-
 # Add a column for the ner_split (i.e. the original split)
 lwm_all_df["originalsplit"] = lwm_all_df["article_id"].apply(
     lambda x: "test"
-    if x in ner_split_test
+    if x in list(lwm_test_df["article_id"].unique())
     else "train"
-    if x in ner_split_train
+    if x in list(lwm_train_df["article_id"].unique())
     else "dev"
+)
+
+# Split the train set into train and dev for development
+# (i.e. when test is not used):
+lwm_train_dev_df, lwm_dev_dev_df = train_test_split(
+    lwm_train_df, test_size=0.33, random_state=RANDOM_SEED
+)
+# Add a column for the ner_split (i.e. the original split)
+lwm_all_df["withouttest"] = lwm_all_df["article_id"].apply(
+    lambda x: "test"
+    if x in list(lwm_dev_df["article_id"].unique())
+    else "train"
+    if x in list(lwm_train_dev_df["article_id"].unique())
+    else "dev"
+    if x in list(lwm_dev_dev_df["article_id"].unique())
+    else "left_out"
 )
 
 groups = [i for i, group in lwm_all_df.groupby(["place", "decade"])]
@@ -98,7 +145,7 @@ for group in groups:
 
 # Store dataframe:
 lwm_all_df.to_csv(
-    output_path_lwm + "linking_df_split.tsv",
+    os.path.join(f"{output_path_lwm}", "linking_df_split.tsv"),
     sep="\t",
     index=False,
 )
@@ -111,24 +158,25 @@ for group in groups:
     group_name = group[0].split("-")[0] + str(group[1])
     print(lwm_all_df[group_name].value_counts())
 print(lwm_all_df["originalsplit"].value_counts())
+print(lwm_all_df["withouttest"].value_counts())
 print()
 
 # ------------------------------------------------------
 # CLEF HIPE dataset
 # ------------------------------------------------------
 
-# Path for the output dataset dataframes:
-output_path_hipe = "outputs/data/hipe/"
-Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
+# Path to HIPE data:
+hipe_path = os.path.join(f"{news_path}", "hipe")
 
-# Path to folder with HIPE original data (v1.4):
-hipe_path = "/resources/newsdataset/clef_hipe/"
+# Download the annotated data from the BL repository:
+get_data.download_hipe_data(hipe_path)
 
 hipe_dev_df = preprocess_data.process_hipe_for_linking(
-    hipe_path + "HIPE-data-v1.4-dev-en.tsv"
+    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-dev-en.tsv"), gazetteer_ids
 )
+
 hipe_test_df = preprocess_data.process_hipe_for_linking(
-    hipe_path + "HIPE-data-v1.4-test-en.tsv"
+    os.path.join(f"{hipe_path}", "HIPE-2022-v2.1-hipe2020-test-en.tsv"), gazetteer_ids
 )
 
 hipe_all_df = pd.concat([hipe_dev_df, hipe_test_df])
@@ -147,19 +195,19 @@ test_ids = list(hipe_dev_df.article_id.unique())
 dev_test = []  # Original split: into dev and test only
 train_dev_test = []  # Following the original split, but dev split into train and dev
 for i, row in hipe_all_df.iterrows():
-    if row["article_id"] in train_ids:
-        dev_test.append("dev")
-        train_dev_test.append("train")
-    elif row["article_id"] in dev_ids:
+    if row["article_id"] in list(hipe_train_df.article_id.unique()):
         dev_test.append("dev")
         train_dev_test.append("dev")
+    elif row["article_id"] in list(hipe_dev_df.article_id.unique()):
+        dev_test.append("dev")
+        train_dev_test.append("test")
     else:
         dev_test.append("test")
-        train_dev_test.append("test")
+        train_dev_test.append("left_out")
 
 # Store the split in a column named after the experiment:
 hipe_all_df["originalsplit"] = dev_test
-hipe_all_df["traindevtest"] = train_dev_test
+hipe_all_df["withouttest"] = train_dev_test
 
 # Store dataframe:
 hipe_all_df.to_csv(output_path_hipe + "linking_df_split.tsv", sep="\t", index=False)
@@ -167,6 +215,6 @@ hipe_all_df.to_csv(output_path_hipe + "linking_df_split.tsv", sep="\t", index=Fa
 print("===================")
 print("### HIPE experiments")
 print("===================\n")
-for group_name in ["originalsplit", "traindevtest"]:
+for group_name in ["originalsplit", "withouttest"]:
     print(hipe_all_df[group_name].value_counts())
 print()

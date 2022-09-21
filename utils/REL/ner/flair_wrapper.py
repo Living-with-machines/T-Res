@@ -1,7 +1,6 @@
 from flair import cache_root
 from flair.models import SequenceTagger
-
-from REL.utils import fetch_model
+from utils.REL.utils import fetch_model
 
 
 def load_flair_ner(path_or_url):

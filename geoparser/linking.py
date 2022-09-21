@@ -1,25 +1,22 @@
-import hashlib
 import json
 import os
 import sys
-import urllib
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from haversine import haversine
+from tqdm import tqdm
+
+tqdm.pandas()
 
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 
-# from transformers import AutoTokenizer, pipeline
-
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from REL.REL.entity_disambiguation import EntityDisambiguation
-from REL.REL.mention_detection import MentionDetection
-from utils import gnn_method, process_data, training
-
-# from utils.gnn_method import EnhancedGATCN
+from utils import process_wikipedia, training
+from utils.REL.entity_disambiguation import EntityDisambiguation
+from utils.REL.mention_detection import MentionDetection
 
 
 class Linker:
@@ -31,7 +28,6 @@ class Linker:
         base_model,
         overwrite_training,
         rel_params,
-        gnn_params,
     ):
         self.method = method
         self.resources_path = resources_path
@@ -39,13 +35,15 @@ class Linker:
         self.base_model = base_model
         self.overwrite_training = overwrite_training
         self.rel_params = rel_params
-        self.gnn_params = gnn_params
 
     def __str__(self):
-        s = ">>> Entity Linking:\n\t* Method: {0}\n\t* Overwrite training: {1}\n\t* Linking resources: {2}\n".format(
+        s = (
+            ">>> Entity Linking:\n"
+            "    * Method: {0}\n"
+            "    * Overwrite training: {1}\n"
+        ).format(
             self.method,
             str(self.overwrite_training),
-            ",".join(list(self.linking_resources.keys())),
         )
         return s
 
@@ -58,252 +56,130 @@ class Linker:
             self.linking_resources (dict): a dictionary storing the resources
                 that will be needed for a specific linking method.
         """
-        # Load Wikidata gazetteer
-        gaz = pd.read_csv(self.resources_path + "wikidata_gazetteer.csv", low_memory=False)
+        print("*** Load linking resources.")
 
-        # Gazetteer entity classes:
-        gaz["instance_of"] = gaz["instance_of"].apply(process_data.eval_with_exception)
+        # Load Wikidata mentions-to-QID with absolute counts:
+        print("  > Loading mentions to wikidata mapping.")
+        with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
+            self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
-        # Gazetteer:
-        self.linking_resources["gazetteer"] = gaz
+        print("  > Loading gazetteer.")
+        gaz = pd.read_csv(
+            self.resources_path + "wikidata_gazetteer.csv",
+            usecols=["wikidata_id", "latitude", "longitude"],
+        )
+        gaz["latitude"] = gaz["latitude"].astype(float)
+        gaz["longitude"] = gaz["longitude"].astype(float)
+        gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
+        wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
+        self.linking_resources["wqid_to_coords"] = wqid_to_coords
+        gaz_ids = set(gaz["wikidata_id"].tolist())
+        # Keep only wikipedia entities in the gazetteer:
+        self.linking_resources["wikidata_locs"] = gaz_ids
+        gaz_ids = ""
+        gaz = ""
 
-        if self.method in ["gnn"]:
-            print("  > Loading wikidata entity and instance embeddings.")
-            self.linking_resources["instance_ids"] = (
-                open(self.resources_path + "gazetteer_wkdtclass_ids.txt", "r").read().split("\n")
-            )
-            self.linking_resources["entity_ids"] = (
-                open(self.resources_path + "gazetteer_entity_ids.txt", "r").read().split("\n")
-            )
+        # The entity2class.txt file is created as the last step in wikipediaprocessing:
+        with open("../resources/entity2class.txt", "r") as fr:
+            self.linking_resources["entity2class"] = json.load(fr)
 
-            self.linking_resources["instance_embeddings"] = np.load(
-                self.resources_path + "gazetteer_wkdtclass_embeddings.npy"
-            )
-            self.linking_resources["entity_embeddings"] = np.load(
-                self.resources_path + "gazetteer_entity_embeddings.npy"
-            )
-
-            # create a random embedding for entities without a instance ids
-            # this will make sure the embedding is the same in case there is not instance id
-            self.linking_resources["random_instance_embedding"] = np.random.uniform(
-                low=-1.0, high=1.0, size=(1, 128)
-            )
-            # for entities for which we do not have an embedding, we will create an
-            # a random embedding for each entity
-            self.linking_resources["random_entity_embeddings"] = {}
-
-            print("  > Mapping wikidata ids to instance ids.")
-            self.linking_resources["wikidata_id2inst_id"] = process_data.get_wikidata_instance_ids(
-                self
-            )
-
-        # Load Wikidata mentions-to-wikidata (with absolute counts) to QID dictionary
-        if self.method in [
-            "mostpopular",
-            "reldisamb:lwmcs:relv",
-            "reldisamb:lwmcs:relvpubl",
-            "reldisamb:lwmcs:relvdist",
-            "gnn",
-        ]:
-            print("  > Loading mentions to wikidata mapping.")
-            with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
-                self.linking_resources["mentions_to_wikidata"] = json.load(f)
-
-        if self.method in ["reldisamb:lwmcs:dist", "reldisamb:lwmcs:relvdist", "gnn"]:
-            print("  > Mapping coordinates to wikidata ids.")
-            dict_wqid_to_lat = dict(zip(gaz.wikidata_id, gaz.latitude))
-            dict_wqid_to_lon = dict(zip(gaz.wikidata_id, gaz.longitude))
-            self.linking_resources["dict_wqid_to_lat"] = dict_wqid_to_lat
-            self.linking_resources["dict_wqid_to_lon"] = dict_wqid_to_lon
-
-        # REL disambiguates to Wikipedia, not Wikidata:
-        if "reldisamb" in self.method:
-            # WIkipedia to Wikidata
-            with open("/resources/wikipedia/extractedResources/wikipedia2wikidata.json", "r") as f:
-                self.linking_resources["wikipedia2wikidata"] = json.load(f)
-            # Wikidata to Wikipedia
-            with open("/resources/wikipedia/extractedResources/wikidata2wikipedia.json", "r") as f:
-                self.linking_resources["wikidata2wikipedia"] = json.load(f)
-
-            # Keep only wikipedia entities in the gazetteer:
-            wkdt_allcands = set(gaz["wikidata_id"].tolist())
-            self.linking_resources["wikipedia_locs"] = set(
-                dict(
-                    filter(
-                        lambda x: x[1] in wkdt_allcands,
-                        self.linking_resources["wikipedia2wikidata"].items(),
-                    )
-                ).keys()
-            )
+        print("*** Linking resources loaded!\n")
         return self.linking_resources
 
     # ----------------------------------------------
-    def perform_training(self, all_df, processed_df, whichsplit):
+    def perform_training(
+        self,
+        train_original,
+        train_processed,
+        dev_original,
+        dev_processed,
+        experiment_name,
+        cand_selection,
+    ):
         """
         TODO: Here will go the code to perform training, checking
         variable overwrite_training.
 
         Arguments:
-            training_df (pd.DataFrame): a dataframe with a mention per row, for training.
+            train_original (pd.DataFrame):
+            train_processed (pd.DataFrame): a dataframe with a mention per row, for training.
+            dev_original (pd.DataFrame):
+            dev_processed (pd.DataFrame): a dataframe with a mention per row, for dev.
 
         Returns:
             xxxxxxx
         """
         if "mostpopular" in self.method:
             return None
+        if "bydistance" in self.method:
+            return None
         if "reldisamb" in self.method:
-            self.rel_params["model"] = training.train_rel_ed(
-                self, all_df, processed_df, whichsplit
+            training.train_rel_ed(
+                self,
+                train_original,
+                train_processed,
+                dev_original,
+                dev_processed,
+                experiment_name,
+                cand_selection,
             )
             return self.rel_params
-        if "gnn" in self.method:
-            processed_df_notest = processed_df[processed_df[whichsplit] != "test"]
-            data = gnn_method.network_data(self, processed_df_notest, whichsplit=whichsplit)
-            model = EnhancedGATCN(data.x.shape[1], hidden_channels=64, edge_dim=4)
-            criterion = torch.nn.CrossEntropyLoss(
-                weight=torch.tensor([1.0, 5.0]), reduction="mean"
-            )
-            optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
-            trainer = training.Trainer(
-                data,
-                model,
-                criterion,
-                optimizer,
-                self.gnn_params["model_path"],
-                whichsplit,
-            )
-            trainer.set_split()
-            trainer.print_split()
-            print("\n")
-            trainer.print_network_statistics()
-            trainer.training_routine(1000)
-            return self.gnn_params
 
-    # ----------------------------------------------
-    def perform_linking(self, test_df, original_df, whichsplit):
-        """
-        Perform the linking.
+    def run(self, dict_mention):
+        if self.method == "mostpopular":
+            return self.most_popular(dict_mention)
+        if self.method == "bydistance":
+            return self.by_distance(dict_mention)
 
-        Arguments:
-            test_df (pd.DataFrame): a dataframe with a mention per row, for testing.
-
-        Returns:
-            test_df_results (pd.DataFrame): the same dataframe, with two additional
-                columns: "pred_wqid" for the linked wikidata Id and "pred_wqid_score"
-                for the linking score.
-        """
-
-        test_df_results = test_df.copy()
-
-        if "mostpopular" in self.method:
-            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
-                lambda row: self.most_popular(row.to_dict()),
-                axis=1,
-                result_type="expand",
+    def disambiguation_setup(self, experiment_name):
+        if self.method == "reldisamb":
+            base_path = self.rel_params["base_path"]
+            wiki_version = self.rel_params["wiki_version"]
+            # Instantiate REL mention detection:
+            self.rel_params["mention_detection"] = MentionDetection(
+                base_path, wiki_version, mylinker=self
             )
 
-        if "reldisamb" in self.method:
-            dRELresults = self.rel_disambiguation(test_df, original_df)
-            test_df_results[["pred_wqid", "pred_wqid_score"]] = test_df_results.apply(
-                lambda row: dRELresults[row["article_id"]][int(row["sentence_pos"])][
-                    row["pred_mention"]
-                ],
-                axis=1,
-                result_type="expand",
+            # Instantiate REL entity disambiguation:
+            experiment_path = os.path.join(
+                base_path, wiki_version, "generated", experiment_name
+            )
+            config = {
+                "mode": "eval",
+                "model_path": os.path.join(experiment_path, "model"),
+            }
+            self.rel_params["model"] = EntityDisambiguation(
+                base_path, wiki_version, config
             )
 
-        if "gnn" in self.method:
-            data = gnn_method.network_data(self, test_df)
-            model_folder = Path(self.gnn_params["model_path"]) / f"best_model_{whichsplit}"
-            model = EnhancedGATCN(data.x.shape[1], hidden_channels=64, edge_dim=4)
-            model.load_state_dict(torch.load(model_folder / "best-model.pt"))
-            model.eval()
-            self.gnn_params["model"] = model
-            test_df_results = gnn_method.get_model_predictions(self, test_df, whichsplit)
+            return self.rel_params["mention_detection"], self.rel_params["model"]
 
-        return test_df_results
-
-    def rel_disambiguation(self, test_df, original_df):
-        # Warning: no model has been trained, the latest one that's been trained will be loaded.
-        if not "model" in self.rel_params:
-            print(
-                "WARNING! There is no ED model in memory, we will load the latest model that has been trained."
-            )
-        base_path = self.rel_params["base_path"]
-        wiki_version = self.rel_params["wiki_version"]
-        # Instantiate REL mention detection:
-        self.rel_params["mention_detection"] = MentionDetection(
-            base_path, wiki_version, mylinker=self
-        )
-        # Instantiate REL entity disambiguation:
-        config = {
-            "mode": "eval",
-            "model_path": "{}/{}/generated/model".format(base_path, wiki_version),
-        }
-        self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
-
-        dRELresults = dict()
-        mentions_dataset = dict()
-        # Given our mentions, use REL candidate selection module:
-        if "reldisamb" in self.method:
-            mentions_dataset, n_mentions = self.rel_params[
-                "mention_detection"
-            ].format_detected_spans(
-                test_df,
-                original_df,
-                mylinker=self,
-            )
-
-        # Given the mentions dataset, predict and return linking:
-        for mentions_doc in mentions_dataset:
-            link_predictions, timing = self.rel_params["model"].predict(
-                mentions_dataset[mentions_doc]
-            )
-            for p in link_predictions:
-                mentions_sent = p
-                for m in link_predictions[p]:
-                    returned_mention = m["mention"]
-                    returned_prediction = m["prediction"]
-
-                    # Wikipedia prediction to Wikidata:
-                    percent_encoded_title = urllib.parse.quote(
-                        returned_prediction.replace("_", " ")
-                    )
-                    if "/" in percent_encoded_title or len(percent_encoded_title) > 200:
-                        percent_encoded_title = hashlib.sha224(
-                            percent_encoded_title.encode("utf-8")
-                        ).hexdigest()
-                    returned_prediction = self.linking_resources["wikipedia2wikidata"].get(
-                        percent_encoded_title, "NIL"
-                    )
-
-                    # Disambiguation confidence:
-                    returned_confidence = round(m.get("conf_ed", 0.0), 3)
-
-                    if mentions_doc in dRELresults:
-                        if mentions_sent in dRELresults[mentions_doc]:
-                            dRELresults[mentions_doc][mentions_sent][returned_mention] = (
-                                returned_prediction,
-                                returned_confidence,
-                            )
-                        else:
-                            dRELresults[mentions_doc][mentions_sent] = {
-                                returned_mention: (
-                                    returned_prediction,
-                                    returned_confidence,
-                                )
-                            }
-                    else:
-                        dRELresults[mentions_doc] = {
-                            mentions_sent: {
-                                returned_mention: (
-                                    returned_prediction,
-                                    returned_confidence,
-                                )
-                            }
-                        }
-
-        return dRELresults
+    def format_linking_dataset(self, mentions_dataset):
+        formatted_dataset = []
+        for m in mentions_dataset:
+            formatted_cands = m.copy()
+            mention = m["mention"]
+            formatted_cands["candidates"] = dict()
+            formatted_cands["candidates"][mention] = {"Score": 1.0}
+            formatted_cands["candidates"][mention]["Candidates"] = dict()
+            candidates = m["candidates"]
+            for c in candidates:
+                cand_wiki = c[0]
+                cand_wiki = process_wikipedia.title_to_id(cand_wiki)
+                cand_score = round(c[1], 3)
+                formatted_cands["candidates"][mention]["Candidates"][
+                    cand_wiki
+                ] = cand_score
+            if formatted_cands["gold"][0] != "NONE":
+                formatted_cands["gold"] = process_wikipedia.title_to_id(
+                    formatted_cands["gold"][0]
+                )
+            if not formatted_cands["prediction"] == "NIL":
+                formatted_cands["prediction"] = process_wikipedia.title_to_id(
+                    formatted_cands["prediction"]
+                )
+            formatted_dataset.append(formatted_cands)
+        return formatted_dataset
 
     # ----------------------------------------------
     # Most popular candidate:
@@ -329,7 +205,9 @@ class Linker:
         if cands:
             for variation in cands:
                 for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][candidate]
+                    score = self.linking_resources["mentions_to_wikidata"][variation][
+                        candidate
+                    ]
                     total_score += score
                     if score > keep_highest_score:
                         keep_highest_score = score
@@ -338,3 +216,159 @@ class Linker:
             final_score = keep_highest_score / total_score
 
         return keep_most_popular, final_score
+
+    # ----------------------------------------------
+    # Select candidate to place of publication:
+    def by_distance(self, dict_mention, origin_wqid=""):
+        """
+        The by_distance disambiguation method is another baseline, an unsupervised
+        disambiguation approach. Given a set of candidates for a given mention and
+        the place of publication of the original text, it returns as a prediction the
+        location that is the closest to the place of publication.
+
+        Arguments:
+            dict_mention (dict): dictionary with all the relevant information needed
+                to disambiguate a certain mention.
+
+        Returns:
+            keep_most_popular (str): the Wikidata ID (e.g. "Q84") or "NIL".
+            final_score (float): the confidence of the predicted link.
+        """
+        cands = dict_mention["candidates"]
+        origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
+        if not origin_coords:
+            origin_coords = self.linking_resources["wqid_to_coords"].get(
+                dict_mention["place_wqid"]
+            )
+        keep_closest_cand = "NIL"
+        max_on_gb = 1000  # 1000 km, max on GB
+        keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
+        keep_lowest_relv = 1.0
+
+        if cands:
+            for x in cands:
+                matching_score = cands[x]["Score"]
+                for candidate, score in cands[x]["Candidates"].items():
+                    cand_coords = self.linking_resources["wqid_to_coords"][candidate]
+                    geodist = 20000
+                    # if origin_coords and cand_coords:  # If there are coordinates
+                    try:
+                        geodist = haversine(origin_coords, cand_coords)
+                    except ValueError:  # We have one candidate with coordinates in Venus!
+                        pass
+                    if geodist < keep_lowest_distance:
+                        keep_lowest_distance = geodist
+                        keep_closest_cand = candidate
+                        keep_lowest_relv = (matching_score + score) / 2.0
+
+        if keep_lowest_distance == 0.0:
+            keep_lowest_distance = 1.0
+        else:
+            keep_lowest_distance = (
+                max_on_gb if keep_lowest_distance > max_on_gb else keep_lowest_distance
+            )
+            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
+
+        resulting_score = 0.0
+        if not keep_closest_cand == "NIL":
+            resulting_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
+
+        return keep_closest_cand, resulting_score
+
+    def perform_linking_rel(self, mentions_dataset, sentence_id, linking_model):
+        publication_entry = dict()
+        if self.rel_params["ranking"] == "publ" and mentions_dataset:
+            # If "publ", add an artificial publication entry:
+            publication_entry = self.add_publication_mention(mentions_dataset)
+            mentions_dataset.append(publication_entry)
+        # Predict mentions in one sentence:
+        predictions, timing = linking_model.predict({sentence_id: mentions_dataset})
+        if self.rel_params["ranking"] == "publ" and mentions_dataset:
+            # ... and if "publ", now remove the artificial publication entry!
+            mentions_dataset.remove(publication_entry)
+        # Postprocess the predictions:
+        for i in range(len(mentions_dataset)):
+            mention_dataset = mentions_dataset[i]
+            prediction = predictions[sentence_id][i]
+            if mention_dataset["mention"] == prediction["mention"]:
+                mentions_dataset[i]["prediction"] = prediction["prediction"]
+                # If entity is NIL, conf_ed is 0.0:
+                mentions_dataset[i]["ed_score"] = round(
+                    prediction.get("conf_ed", 0.0), 3
+                )
+        # Format the predictions to match the output of the other approaches:
+        mentions_dataset = self.format_linking_dataset(mentions_dataset)
+        if self.rel_params["micro_locs"] == "dist":
+            # Disambiguate micro locations by distance respect neighbouring
+            # resolved places or place of publication:
+            mentions_dataset = self.two_step_resolution(mentions_dataset)
+        if self.rel_params["micro_locs"] == "nil":
+            # Assign NIL to micro locations:
+            mentions_dataset = self.micro_no_resolution(mentions_dataset)
+        mentions_dataset = {sentence_id: mentions_dataset}
+        return mentions_dataset
+
+    def micro_no_resolution(self, mentions_dataset):
+        for i in range(len(mentions_dataset)):
+            if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
+                mentions_dataset[i]["prediction"] = "NIL"
+                mentions_dataset[i]["ed_score"] = 0.0
+        return mentions_dataset
+
+    def two_step_resolution(self, mentions_dataset):
+        for i in range(len(mentions_dataset)):
+            if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
+                context_place = ""
+                if (i - 1) < len(mentions_dataset):
+                    if mentions_dataset[i - 1]["tag"] == "LOC":
+                        context_place = mentions_dataset[i - 1]["prediction"]
+                elif (i + 1) < len(mentions_dataset):
+                    if mentions_dataset[i + 1]["tag"] == "LOC":
+                        context_place = mentions_dataset[i + 1]["prediction"]
+                else:
+                    context_place = mentions_dataset[i]["place_wqid"]
+                resolved_by_distance = self.by_distance(
+                    mentions_dataset[i], context_place
+                )
+                mentions_dataset[i]["prediction"] = resolved_by_distance[0]
+                mentions_dataset[i]["ed_score"] = resolved_by_distance[1]
+        return mentions_dataset
+
+    def perform_linking_mention(self, mention_data):
+        # This predicts one mention at a time (does not look at context):
+        prediction = self.run(mention_data)
+        mention_data["prediction"] = prediction[0]
+        mention_data["ed_score"] = prediction[1]
+        return mention_data
+
+    def add_publication_mention(self, mention_data):
+        # Add artificial publication entity that is already disambiguated,
+        # per sentence:
+        sentence = mention_data[0]["sentence"]
+        sent_idx = mention_data[0]["sent_idx"]
+        context = mention_data[0]["context"]
+        place_wqid = mention_data[0]["place_wqid"]
+        place = mention_data[0]["place"]
+        # Add place of publication as a fake entity in each sentence:
+        # Wikipedia title of place of publication QID:
+        wiki_gold = "NIL"
+        gold_ids = process_wikipedia.id_to_title(place_wqid)
+        # Get the first of the wikipedia titles returned (they're sorted
+        # by their autoincrement id):
+        if gold_ids:
+            wiki_gold = [gold_ids[0]]
+        sent2 = sentence + " Published in " + place
+        pos2 = len(sentence) + len(" Published in ")
+        end_pos2 = pos2 + len(place)
+        dict_publ = {
+            "mention": "publication",
+            "sent_idx": sent_idx,
+            "sentence": sent2,
+            "gold": wiki_gold,
+            "ngram": "publication",
+            "context": context,
+            "pos": pos2,
+            "end_pos": end_pos2,
+            "candidates": [[wiki_gold[0], 1.0]],
+        }
+        return dict_publ

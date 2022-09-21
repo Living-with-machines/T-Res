@@ -1,15 +1,23 @@
 import os
 import re
+import sys
+import urllib
 
-from REL.db.generic import GenericLookup
-from REL.utils import modify_uppercase_phrase, split_in_words
+from haversine import haversine
+
+from utils.REL.db.generic import GenericLookup
+from utils.REL.utils import modify_uppercase_phrase, split_in_words
+
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+from utils import process_wikipedia
 
 
 class MentionDetectionBase:
-    def __init__(self, base_url, wiki_version):
+    def __init__(self, base_url, wiki_version, mylinker=None):
         self.wiki_db = GenericLookup(
             "entity_word_embedding", os.path.join(base_url, wiki_version, "generated")
         )
+        self.mylinker = mylinker
 
     def get_ctxt(self, start, end, idx_sent, sentence, sentences_doc):
         """
@@ -39,19 +47,61 @@ class MentionDetectionBase:
 
         return left_ctxt, right_ctxt
 
-    def get_candidates(self, mention):
+    def get_candidates(self, mention, cand_selection="relcs", lwm_cands=None):
         """
         Retrieves a maximum of 100 candidates from the sqlite3 database for a given mention.
 
         :return: set of candidates
         """
 
-        # Performs extra check for ED.
-        cands = self.wiki_db.wiki(mention, "wiki")
-        if cands:
-            return cands[:100]
-        else:
-            return []
+        #### CANDIDATE SELECTION FROM REL
+        if cand_selection == "relcs":
+            cands = self.wiki_db.wiki(mention, "wiki")
+            if cands:
+                cands = cands[:100]
+                # Keep only candidates that are locations:
+                cands = [
+                    c
+                    for c in cands
+                    if process_wikipedia.title_to_id(c[0], lower=False)
+                    in self.mylinker.linking_resources["wikidata_locs"]
+                ]
+                return cands
+
+        #### CANDIDATE SELECTION FROM LWM
+        if cand_selection == "lwmcs":
+            cands = []
+            tmp_cands = []
+            max_cand_freq = 0
+            for c in lwm_cands:
+                cand_selection_score = lwm_cands[c]["Score"]
+                for qc in lwm_cands[c]["Candidates"]:
+                    qcrlv_score = self.mylinker.linking_resources[
+                        "mentions_to_wikidata"
+                    ][c][qc]
+                    if qcrlv_score > max_cand_freq:
+                        max_cand_freq = qcrlv_score
+                    qcm2w_score = lwm_cands[c]["Candidates"][qc]
+                    # Average of CS conf score and mention2wiki norm relv:
+                    if cand_selection_score:
+                        qcm2w_score = (qcm2w_score + cand_selection_score) / 2
+                    # Wikidata entity to Wikipedia
+                    qc_wikipedia = ""
+                    gold_ids = process_wikipedia.id_to_title(qc)
+                    if gold_ids:
+                        qc_wikipedia = gold_ids[0]
+                    tmp_cands.append((qc_wikipedia, qcrlv_score, qcm2w_score))
+            # Append candidate and normalized score weighted by candidate selection conf:
+            for cand in tmp_cands:
+                qc_wikipedia = cand[0]
+                qc_score_1 = round(cand[1] / max_cand_freq, 3)
+                qc_score_2 = round(cand[2], 3)
+                qc_score = (qc_score_1 + qc_score_2) / 2
+                cands.append([qc_wikipedia, qc_score])
+            # Sort candidates and normalize between 0 and 1, and so they add up to 1.
+            cands = sorted(cands, key=lambda x: (x[1], x[0]), reverse=True)
+            return cands
+        return []
 
     def preprocess_mention(self, m):
         """

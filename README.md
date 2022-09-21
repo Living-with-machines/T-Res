@@ -84,6 +84,12 @@ Install all dependencies using `poetry`:
 poetry install
 ```
 
+You then need to add a couple of NLTK resources, needed by DeezyMatch:
+
+```
+poetry run python -m nltk.downloader brown words
+```
+
 To use Jupyter notebooks, you will need to add the Jupyter package:
 ```
 poetry add -D jupyter

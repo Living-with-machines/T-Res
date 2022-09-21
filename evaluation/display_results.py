@@ -21,6 +21,12 @@ dApprNames["rel_wikilwm_lwm_locs"] = "rel-19lwmlocs"
 
 
 # -------------------------------------
+# CREATE TEMPORARY RESULTS FOLDER
+# -------------------------------------
+
+Path("results").mkdir(parents=True, exist_ok=True)
+
+# -------------------------------------
 # NAMED ENTITY RECOGNITION
 # -------------------------------------
 
@@ -79,7 +85,7 @@ for dataset in datasets:
                     + "-ner-"
                     + granularity
                     + "_"
-                    + "originalsplit-test.tsv"
+                    + "originalsplit.tsv"
                 )
                 true_file = (
                     "../experiments/outputs/results/"
@@ -168,23 +174,25 @@ print(df_ner.to_latex(index=False))
 datasets = ["lwm", "hipe"]
 ner_approaches = ["blb_lwm-ner"]
 ranking_approaches = [
-    # "perfectmatch",
-    "deezymatch+2+10",
-    # "deezymatch+2+20",
+    "perfectmatch",
+    "deezymatch+3+25",
+    "relcs",
 ]
 linking_approaches = [
     "mostpopular",
     "skys",
-    "reldisamb:relcs",
-    "reldisamb:lwmcs:relv",
-    "reldisamb:lwmcs:dist",
-    "reldisamb:lwmcs:relvdist",
-    "reldisamb:lwmcs:relvpubl",
-    "gnn",
+    "bydistance",
+    "reldisamb+lwm+publ",
+    "reldisamb+lwm+publ+dist",
+    "reldisamb+lwm+publ+nil",
+    "reldisamb+lwm+relv",
+    "reldisamb+lwm+relv+dist",
+    "reldisamb+lwm+relv+nil",
 ]
-granularities = ["fine", "coarse"]
+granularities = ["fine"]
 splits = [
     "originalsplit",
+    # "withouttest",
     "Ashton1860",
     "Dorchester1820",
     "Dorchester1830",
@@ -196,7 +204,6 @@ splits = [
     "Manchester1860",
     "Poole1860",
 ]
-devtest_list = ["test"]  # "dev",
 
 df_nel = pd.DataFrame()
 overall_results_nel = dict()
@@ -206,61 +213,54 @@ approach_names = []
 
 # GET RELEVANT OUR-METHOD FILES:
 for dataset in datasets:
-    for ner_approach in ner_approaches:
-        for ranking_approach in ranking_approaches:
-            for linking_approach in linking_approaches:
-                for granularity in granularities:
-                    for split in splits:
-                        for devtest in devtest_list:
-                            pred = (
-                                "../experiments/outputs/results/"
-                                + dataset
-                                + "/linking_"
-                                + ner_approach
-                                + "-"
-                                + granularity
-                                + "_"
-                                + ranking_approach
-                                + "_"
-                                + split
-                                + "-"
-                                + devtest
-                                + "_"
-                                + linking_approach
-                                + ".tsv"
-                            )
-                            true = (
-                                "../experiments/outputs/results/"
-                                + dataset
-                                + "/linking_"
-                                + ner_approach
-                                + "-"
-                                + granularity
-                                + "_"
-                                + ranking_approach
-                                + "_"
-                                + split
-                                + "-"
-                                + devtest
-                                + "_trues.tsv"
-                            )
+    for split in splits:
+        for ner_approach in ner_approaches:
+            for ranking_approach in ranking_approaches:
+                for linking_approach in linking_approaches:
+                    for granularity in granularities:
+                        pred = (
+                            "../experiments/outputs/results/"
+                            + dataset
+                            + "/linking_"
+                            + ner_approach
+                            + "-"
+                            + granularity
+                            + "_"
+                            + ranking_approach
+                            + "_"
+                            + split
+                            + "_"
+                            + linking_approach
+                            + ".tsv"
+                        )
+                        true = (
+                            "../experiments/outputs/results/"
+                            + dataset
+                            + "/linking_"
+                            + ner_approach
+                            + "-"
+                            + granularity
+                            + "_"
+                            + ranking_approach
+                            + "_"
+                            + split
+                            + "_trues.tsv"
+                        )
 
-                            if Path(pred).exists() and Path(true).exists():
-                                pred_files.append(pred)
-                                true_files.append(true)
-                                approach_names.append(
-                                    dataset
-                                    + "+"
-                                    + split
-                                    + "+"
-                                    + devtest
-                                    + ":"
-                                    + granularity
-                                    + "+"
-                                    + ranking_approach.replace("match", "")
-                                    + "+"
-                                    + linking_approach
-                                )
+                        if Path(pred).exists() and Path(true).exists():
+                            pred_files.append(pred)
+                            true_files.append(true)
+                            approach_names.append(
+                                dataset
+                                + "+"
+                                + split
+                                + ":"
+                                + granularity
+                                + "+"
+                                + ranking_approach.replace("match", "")
+                                + "+"
+                                + linking_approach
+                            )
 
 # GET RELEVANT REL FILES:
 for dataset in datasets:
@@ -268,50 +268,42 @@ for dataset in datasets:
         for ner_approach in ner_approaches:
             for rel_approach in dApprNames.keys():
                 for split in splits:
-                    for devtest in devtest_list:
-                        pred_file = (
-                            "../experiments/outputs/results/"
-                            + dataset
-                            + "/"
-                            + rel_approach
-                            + "_"
-                            + ner_approach
-                            + "-"
-                            + granularity
-                            + "_"
+                    pred_file = (
+                        "../experiments/outputs/results/"
+                        + dataset
+                        + "/"
+                        + rel_approach
+                        + "_"
+                        + ner_approach
+                        + "-"
+                        + granularity
+                        + "_"
+                        + split
+                        + ".tsv"
+                    )
+                    true_file = (
+                        "../experiments/outputs/results/"
+                        + dataset
+                        + "/linking_"
+                        + ner_approach
+                        + "-"
+                        + granularity
+                        + "_perfectmatch_"
+                        + split
+                        + "_trues.tsv"
+                    )
+                    if Path(pred_file).exists() and Path(true_file).exists():
+                        pred_files.append(pred_file)
+                        true_files.append(true_file)
+                        approach_names.append(
+                            dataset
+                            + "+"
                             + split
-                            + "-"
-                            + devtest
-                            + ".tsv"
-                        )
-                        true_file = (
-                            "../experiments/outputs/results/"
-                            + dataset
-                            + "/linking_"
-                            + ner_approach
-                            + "-"
+                            + ":"
                             + granularity
-                            + "_perfectmatch_"
-                            + split
-                            + "-"
-                            + devtest
-                            + "_trues.tsv"
+                            + "+"
+                            + dApprNames[rel_approach]
                         )
-
-                        if Path(pred_file).exists() and Path(true_file).exists():
-                            pred_files.append(pred_file)
-                            true_files.append(true_file)
-                            approach_names.append(
-                                dataset
-                                + "+"
-                                + split
-                                + "+"
-                                + devtest
-                                + ":"
-                                + granularity
-                                + "+"
-                                + dApprNames[rel_approach]
-                            )
 
 # RUN SCORER:
 for i in range(len(pred_files)):
@@ -330,8 +322,8 @@ for i in range(len(pred_files)):
         )
 
         ne_tags = ["ALL"]
-        settings = ["strict"]
-        measures = ["P_micro", "R_micro", "F1_micro", "Acc"]
+        settings = ["ent_type"]  # ["strict", "ent_type"]
+        measures = ["P_micro", "R_micro", "F1_micro"]
 
         overall_results_nel["dataset:approach"] = [str(i) + " > " + approach_fullname]
         for ne_tag in ne_tags:

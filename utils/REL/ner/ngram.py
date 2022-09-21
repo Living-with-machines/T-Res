@@ -2,11 +2,10 @@ import re
 from collections import defaultdict, namedtuple
 
 import numpy as np
-
-from REL.db.generic import GenericLookup
-from REL.mention_detection_base import MentionDetectionBase
-from REL.ner import NERBase, Span
-from REL.utils import preprocess_mention
+from utils.REL.db.generic import GenericLookup
+from utils.REL.mention_detection_base import MentionDetectionBase
+from utils.REL.ner import NERBase, Span
+from utils.REL.utils import preprocess_mention
 
 
 class Cmns(NERBase, MentionDetectionBase):
