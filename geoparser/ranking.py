@@ -294,7 +294,6 @@ class Ranker:
                     selection_threshold=self.deezy_parameters["selection_threshold"],
                     num_candidates=self.deezy_parameters["num_candidates"],
                     search_size=self.deezy_parameters["search_size"],
-                    use_predict=self.deezy_parameters["use_predict"],
                     verbose=self.deezy_parameters["verbose"],
                     output_path=os.path.join(dm_path, "ranking", dm_output),
                     pretrained_model_path=os.path.join(
