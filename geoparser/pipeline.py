@@ -40,7 +40,7 @@ class Pipeline:
                 model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
                 model=None,  # We'll store the NER model here
                 pipe=None,  # We'll store the NER pipeline here
-                base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+                base_model="../resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
                 train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
                 test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
                 output_model_path="outputs/models/",  # Path where the NER model is or will be stored
@@ -58,7 +58,7 @@ class Pipeline:
         if not self.myranker:
             self.myranker = ranking.Ranker(
                 method="deezymatch",
-                resources_path="/resources/wikidata/",
+                resources_path="../resources/wikidata/",
                 mentions_to_wikidata=dict(),
                 wikidata_to_mentions=dict(),
                 wiki_filtering={
@@ -95,11 +95,11 @@ class Pipeline:
         if not self.mylinker:
             self.mylinker = linking.Linker(
                 method="mostpopular",
-                resources_path="/resources/wikidata/",
+                resources_path="../resources/wikidata/",
                 linking_resources=dict(),
-                base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+                base_model="../resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
                 rel_params={
-                    "base_path": "/resources/rel_db/",
+                    "base_path": "../resources/rel_db/",
                     "wiki_version": "wiki_2019/",
                 },
                 overwrite_training=False,

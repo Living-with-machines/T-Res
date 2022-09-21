@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 ### Processing pages ####
 
 # Path to wikipedia2wikidata mapper:
-db = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
+db = "../resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
 
 
 def make_wikilinks_consistent(url):

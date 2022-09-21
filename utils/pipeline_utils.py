@@ -10,13 +10,13 @@ def get_experiment_name(linking_pipeline, split):
     link_approach = linking_pipeline.mylinker.method
     if linking_pipeline.mylinker.method == "reldisamb":
         link_approach += "+" + str(linking_pipeline.mylinker.rel_params["ranking"])
-    experiment_name = linking_pipeline.mylinker.rel_params["training_data"]
-    if linking_pipeline.mylinker.rel_params["training_data"] == "lwm":
-        experiment_name += "_" + cand_approach
-        experiment_name += "_" + link_approach
-        experiment_name += "_" + split
-    if linking_pipeline.mylinker.rel_params["training_data"] == "aida":
-        experiment_name += "_" + cand_approach
-        experiment_name += "_" + link_approach
+        experiment_name = linking_pipeline.mylinker.rel_params["training_data"]
+        if linking_pipeline.mylinker.rel_params["training_data"] == "lwm":
+            experiment_name += "_" + cand_approach
+            experiment_name += "_" + link_approach
+            experiment_name += "_" + split
+        if linking_pipeline.mylinker.rel_params["training_data"] == "aida":
+            experiment_name += "_" + cand_approach
+            experiment_name += "_" + link_approach
 
-    return experiment_name
+        return experiment_name

@@ -3,7 +3,7 @@ from ast import literal_eval
 import json
 from collections import Counter
 
-gaz = pd.read_csv("/resources/wikidata/wikidata_gazetteer.csv", low_memory=False)
+gaz = pd.read_csv("../../resources/wikidata/wikidata_gazetteer.csv", low_memory=False)
 gazetteer_ids = set(gaz.wikidata_id)
 
 

@@ -158,9 +158,8 @@ class Ranker:
             The DeezyMatch candidate vectors.
         """
 
-        Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
-
         if self.method == "deezymatch":
+            Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
             deezy_processing.create_training_set(self)
             deezy_processing.train_deezy_model(self)
             deezy_processing.generate_candidates(self)
