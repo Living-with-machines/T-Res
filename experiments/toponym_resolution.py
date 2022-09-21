@@ -108,7 +108,6 @@ for exp_param in experiments:
             "selection_threshold": 25,
             "num_candidates": 3,
             "search_size": 3,
-            "use_predict": False,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
