@@ -28,11 +28,11 @@ def test_initialise_method():
 def test_most_popular():
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         linking_resources=dict(),
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+        base_model="../resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={
-            "base_path": "/resources/rel_db/",
+            "base_path": "../resources/rel_db/",
             "wiki_version": "wiki_2019/",
         },
         overwrite_training=False,
@@ -40,14 +40,16 @@ def test_most_popular():
 
     mylinker.load_resources()
     dict_mention = {"candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}}}}
-    keep_most_popular, final_score = mylinker.most_popular(dict_mention)
+    keep_most_popular, final_score, candidates = mylinker.most_popular(dict_mention)
     assert keep_most_popular == "Q84"
     assert final_score == 0.9895689976719958
+    assert candidates == {"Q84": 0.9895689976719958, "Q92561": 0.01043100232800422}
 
     dict_mention = {"candidates": {}}
-    keep_most_popular, final_score = mylinker.most_popular(dict_mention)
+    keep_most_popular, final_score, candidates = mylinker.most_popular(dict_mention)
     assert keep_most_popular == "NIL"
     assert final_score == 0.0
+    assert candidates == {}
 
 
 def test_by_distance():
