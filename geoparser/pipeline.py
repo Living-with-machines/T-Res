@@ -189,7 +189,9 @@ class Pipeline:
                 selected_cand = self.mylinker.run({"candidates": wk_cands[mention["mention"]]})
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
-                mentions_dataset["linking"][i]["candidates"] = selected_cand[2]
+                mentions_dataset["linking"][i]["candidates"] = {
+                    x: round(y, 3) for x, y in selected_cand[2].items()
+                }
 
         # Process output:
         keys = [
