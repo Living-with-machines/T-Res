@@ -162,6 +162,7 @@ class Pipeline:
             prediction["context"] = context
             prediction["candidates"] = []
             prediction["gold"] = ["NONE"]
+            prediction["ner_score"] = m["ner_score"]
             prediction["pos"] = m["start_char"]
             prediction["sent_idx"] = sent_idx
             prediction["end_pos"] = m["end_char"]
@@ -201,6 +202,7 @@ class Pipeline:
             "end_pos",
             "tag",
             "prediction",
+            "ner_score",
             "ed_score",
             "sentence",
             "candidates",

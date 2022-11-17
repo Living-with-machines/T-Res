@@ -78,7 +78,8 @@ def test_deezy_mostpopular():
         "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
         place_wqid="Q18125",
     )
-    assert resolved[0]['mention'] == "Shefrield"
-    assert resolved[0]['candidates']['Q665346'] == 0.007
-    assert resolved[0]['prediction'] == 'Q42448'
-    assert resolved[0]['ed_score'] == 0.893
+    assert resolved[0]["mention"] == "Shefrield"
+    assert resolved[0]["candidates"]["Q665346"] == 0.007
+    assert resolved[0]["prediction"] == "Q42448"
+    assert resolved[0]["ed_score"] == 0.893
+    assert resolved[0]["ner_score"] == 0.994
