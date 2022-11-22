@@ -22,7 +22,7 @@ def test_training():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -49,7 +49,7 @@ def test_create_pipeline():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -74,7 +74,7 @@ def test_ner_predict():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored

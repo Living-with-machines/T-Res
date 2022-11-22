@@ -7,9 +7,6 @@ from bs4 import BeautifulSoup
 
 ### Processing pages ####
 
-# Path to wikipedia2wikidata mapper:
-db = "../resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
-
 
 def make_wikilinks_consistent(url):
     url = url.lower()
@@ -33,8 +30,7 @@ def clean_page(page):
     entities = [
         x
         for x in page.findAll("a")
-        if (x.has_attr("href"))
-        and ("https://" not in x["href"] or "http://" not in x["href"])
+        if (x.has_attr("href")) and ("https://" not in x["href"] or "http://" not in x["href"])
     ]
     box_mentions = Counter([x.text for x in entities])
     box_entities = Counter(
@@ -122,7 +118,7 @@ def fill_dicts(
     )
 
 
-def title_to_id(page_title, lower=False, path_to_db=db) -> Optional[str]:
+def title_to_id(page_title, path_to_db, lower=False) -> Optional[str]:
     """This function is adapted from https://github.com/jcklie/wikimapper
     Given a Wikipedia page title, returns the corresponding Wikidata ID.
     The page title is the last part of a Wikipedia url **unescaped** and spaces
@@ -156,7 +152,7 @@ def title_to_id(page_title, lower=False, path_to_db=db) -> Optional[str]:
         return None
 
 
-def id_to_title(wikidata_id, path_to_db=db) -> Optional[str]:
+def id_to_title(wikidata_id, path_to_db) -> Optional[str]:
     """This function is adapted from https://github.com/jcklie/wikimapper
     Given a Wikipedia page title, returns the corresponding Wikidata ID.
     The page title is the last part of a Wikipedia url **unescaped** and spaces
