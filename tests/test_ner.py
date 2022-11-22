@@ -5,6 +5,7 @@ import sys
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 import transformers
+
 from geoparser import recogniser
 
 
@@ -89,9 +90,12 @@ def test_ner_predict():
         training_tagset="coarse",  # Options are: "coarse" or "fine"
     )
     myner.model, myner.pipe = myner.create_pipeline()
-    
-    preds = myner.ner_predict("I grew up in Bologna, a city near Florence, but way more interesting.")
+
+    preds = myner.ner_predict(
+        "I grew up in Bologna, a city near Florence, but way more interesting."
+    )
     assert type(preds) == list
     assert (type(preds[0])) == dict
     assert len(preds) == 16
-    assert preds[4]['entity'] == "B-LOC"
+    assert preds[4]["entity"] == "B-LOC"
+    assert preds[4]["score"] == 0.9897381663322449

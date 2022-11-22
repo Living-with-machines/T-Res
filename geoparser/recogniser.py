@@ -1,20 +1,18 @@
 import os
 import sys
+from functools import partial
 from pathlib import Path
-import numpy as np
 
-from datasets import load_metric
-from datasets import load_dataset
+import numpy as np
+from datasets import load_dataset, load_metric
 from transformers import (
+    AutoModelForTokenClassification,
     AutoTokenizer,
     DataCollatorForTokenClassification,
-    AutoModelForTokenClassification,
-    TrainingArguments,
     Trainer,
+    TrainingArguments,
     pipeline,
 )
-
-from functools import partial
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -98,19 +96,11 @@ class Recogniser:
         if self.do_test == True:
             # If test is True, train on a portion of the train and test sets, and add "_test" to the model name.
             self.model_name = self.model_name + "_test"
-            lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:10]"
-            )
-            lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:10]"
-            )
+            lwm_train = load_dataset("json", data_files=self.train_dataset, split="train[:10]")
+            lwm_test = load_dataset("json", data_files=self.train_dataset, split="train[:10]")
         else:
-            lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train"
-            )
-            lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train"
-            )
+            lwm_train = load_dataset("json", data_files=self.train_dataset, split="train")
+            lwm_test = load_dataset("json", data_files=self.train_dataset, split="train")
 
         # If model exists and overwrite is set to False, skip training:
         if (
@@ -169,9 +159,7 @@ class Recogniser:
                 for prediction, label in zip(predictions, labels)
             ]
 
-            results = metric.compute(
-                predictions=true_predictions, references=true_labels
-            )
+            results = metric.compute(predictions=true_predictions, references=true_labels)
             return {
                 "precision": results["overall_precision"],
                 "recall": results["overall_recall"],
@@ -248,6 +236,7 @@ class Recogniser:
         lEntities = []
         for pred_ent in ner_preds:
             prev_tok = pred_ent["word"]
+            pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = mapped_label[pred_ent["entity"]]
             pred_ent = ner.fix_capitalization(pred_ent, sentence)
             if prev_tok.lower() != pred_ent["word"].lower():
