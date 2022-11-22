@@ -241,7 +241,7 @@ class Linker:
         max_on_gb = 1000  # 1000 km, max on GB
         keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
         keep_lowest_relv = 1.0
-        all_candidates = {}
+        resulting_cands = {}
 
         if cands:
             for x in cands:
@@ -252,7 +252,7 @@ class Linker:
                     # if origin_coords and cand_coords:  # If there are coordinates
                     try:
                         geodist = haversine(origin_coords, cand_coords)
-                        all_candidates[candidate] = geodist
+                        resulting_cands[candidate] = geodist
                     except ValueError:  # We have one candidate with coordinates in Venus!
                         pass
                     if geodist < keep_lowest_distance:
@@ -269,12 +269,8 @@ class Linker:
             keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
 
         resulting_score = 0.0
-        resulting_cands = {}
         if not keep_closest_cand == "NIL":
             resulting_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
-            resulting_cands = {
-                x: round((keep_lowest_relv + y) / 2, 3) for x, y in all_candidates.items()
-            }
 
         return keep_closest_cand, resulting_score, resulting_cands
 
