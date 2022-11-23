@@ -234,6 +234,7 @@ class Recogniser:
         mapped_label = ner.map_tag_label(self.training_tagset)
         ner_preds = self.pipe(sentence)
         lEntities = []
+        predictions = []
         for pred_ent in ner_preds:
             prev_tok = pred_ent["word"]
             pred_ent["score"] = float(pred_ent["score"])
@@ -242,7 +243,8 @@ class Recogniser:
             if prev_tok.lower() != pred_ent["word"].lower():
                 print("Token processing error.")
             predictions = ner.aggregate_entities(pred_ent, lEntities)
-        predictions = ner.fix_hyphens(predictions)
-        predictions = ner.fix_nested(predictions)
-        predictions = ner.fix_startEntity(predictions)
+        if len(predictions) > 0:
+            predictions = ner.fix_hyphens(predictions)
+            predictions = ner.fix_nested(predictions)
+            predictions = ner.fix_startEntity(predictions)
         return predictions
