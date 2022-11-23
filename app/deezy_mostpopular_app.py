@@ -8,7 +8,10 @@ import uvicorn
 from pydantic import BaseModel
 import asyncio
 
-root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if "toponym-resolution" in __file__:
+    root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+else:
+    root_path = os.path.dirname(os.path.abspath(__file__))
 experiments_path = Path(root_path, "experiments")
 sys.path.insert(0, str(root_path))
 sys.path.insert(0, str(experiments_path))
