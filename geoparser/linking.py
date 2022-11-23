@@ -296,12 +296,10 @@ class Linker:
                 mentions_dataset[i]["ed_score"] = round(float(prediction["scores"][idx_pred]), 3)
                 mentions_dataset[i]["candidates"] = [
                     [
-                        cand,
-                        round(
-                            float(prediction["scores"][prediction["candidates"].index(cand)]), 3
-                        ),
+                        prediction["candidates"][c],
+                        round(float(prediction["scores"][c]), 3),
                     ]
-                    for cand in prediction["candidates"]
+                    for c in range(len(prediction["candidates"]))
                 ]
 
         # Format the predictions to match the output of the other approaches:
