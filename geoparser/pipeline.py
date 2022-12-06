@@ -1,12 +1,13 @@
+import json
 import os
 import sys
-import json
 from pathlib import Path
+
 from sentence_splitter import split_text_into_sentences
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import recogniser, ranking, linking
+from geoparser import linking, ranking, recogniser
 from utils import ner, pipeline_utils
 
 
@@ -133,24 +134,19 @@ class Pipeline:
                 self.mylinker.rel_params["model"],
             ) = self.mylinker.disambiguation_setup(experiment_name)
 
-    def run_sentence(
-        self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""
-    ):
+    def run_sentence(self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""):
         sentence = sentence.replace("—", ";")
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
         procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-            for x in predictions
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]] for x in predictions
         ]
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            mentions
-        )
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(mentions)
 
         # Linking settings
         if self.mylinker.method == "reldisamb":
@@ -166,6 +162,7 @@ class Pipeline:
             prediction["context"] = context
             prediction["candidates"] = []
             prediction["gold"] = ["NONE"]
+            prediction["ner_score"] = m["ner_score"]
             prediction["pos"] = m["start_char"]
             prediction["sent_idx"] = sent_idx
             prediction["end_pos"] = m["end_char"]
@@ -191,10 +188,13 @@ class Pipeline:
                 mention = mentions_dataset["linking"][i]
                 # Run entity linking per mention:
                 selected_cand = self.mylinker.run(
-                    {"candidates": wk_cands[mention["mention"]]}
+                    {"candidates": wk_cands[mention["mention"]], "place_wqid": place_wqid}
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
+                mentions_dataset["linking"][i]["candidates"] = {
+                    x: round(y, 3) for x, y in selected_cand[2].items()
+                }
 
         # Process output:
         keys = [
@@ -204,15 +204,15 @@ class Pipeline:
             "end_pos",
             "tag",
             "prediction",
+            "ner_score",
             "ed_score",
             "sentence",
+            "candidates",
         ]
         sentence_dataset = []
         for md in mentions_dataset["linking"]:
             md = dict((k, md[k]) for k in md if k in keys)
-            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
-                md["prediction"]
-            )
+            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(md["prediction"])
             md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
                 md["prediction"]
             )

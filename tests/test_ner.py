@@ -5,6 +5,7 @@ import sys
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 import transformers
+
 from geoparser import recogniser
 
 
@@ -22,7 +23,7 @@ def test_training():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -49,7 +50,7 @@ def test_create_pipeline():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -74,7 +75,7 @@ def test_ner_predict():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -89,9 +90,12 @@ def test_ner_predict():
         training_tagset="coarse",  # Options are: "coarse" or "fine"
     )
     myner.model, myner.pipe = myner.create_pipeline()
-    
-    preds = myner.ner_predict("I grew up in Bologna, a city near Florence, but way more interesting.")
+
+    preds = myner.ner_predict(
+        "I grew up in Bologna, a city near Florence, but way more interesting."
+    )
     assert type(preds) == list
     assert (type(preds[0])) == dict
     assert len(preds) == 16
-    assert preds[4]['entity'] == "B-LOC"
+    assert preds[4]["entity"] == "B-LOC"
+    assert preds[4]["score"] == 0.9897381663322449

@@ -13,12 +13,12 @@ Class responsible for mention detection.
 
 
 class MentionDetection(MentionDetectionBase):
-    def __init__(self, base_url, wiki_version, mylinker=None):
+    def __init__(self, base_url, wiki_version, path_to_db, mylinker=None):
         self.cnt_exact = 0
         self.cnt_partial = 0
         self.cnt_total = 0
 
-        super().__init__(base_url, wiki_version, mylinker)
+        super().__init__(base_url, wiki_version, path_to_db, mylinker)
 
     # def format_for_rel(self, prediction, dict_sentences, cand_selection):
     #     """

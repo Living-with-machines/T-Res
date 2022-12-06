@@ -13,11 +13,12 @@ from utils import process_wikipedia
 
 
 class MentionDetectionBase:
-    def __init__(self, base_url, wiki_version, mylinker=None):
+    def __init__(self, base_url, wiki_version, path_to_db, mylinker=None):
         self.wiki_db = GenericLookup(
             "entity_word_embedding", os.path.join(base_url, wiki_version, "generated")
         )
         self.mylinker = mylinker
+        self.db = path_to_db
 
     def get_ctxt(self, start, end, idx_sent, sentence, sentences_doc):
         """
@@ -63,7 +64,7 @@ class MentionDetectionBase:
                 cands = [
                     c
                     for c in cands
-                    if process_wikipedia.title_to_id(c[0], lower=False)
+                    if process_wikipedia.title_to_id(c[0], lower=False, path_to_db=self.db)
                     in self.mylinker.linking_resources["wikidata_locs"]
                 ]
                 return cands
@@ -76,9 +77,7 @@ class MentionDetectionBase:
             for c in lwm_cands:
                 cand_selection_score = lwm_cands[c]["Score"]
                 for qc in lwm_cands[c]["Candidates"]:
-                    qcrlv_score = self.mylinker.linking_resources[
-                        "mentions_to_wikidata"
-                    ][c][qc]
+                    qcrlv_score = self.mylinker.linking_resources["mentions_to_wikidata"][c][qc]
                     if qcrlv_score > max_cand_freq:
                         max_cand_freq = qcrlv_score
                     qcm2w_score = lwm_cands[c]["Candidates"][qc]
@@ -87,7 +86,7 @@ class MentionDetectionBase:
                         qcm2w_score = (qcm2w_score + cand_selection_score) / 2
                     # Wikidata entity to Wikipedia
                     qc_wikipedia = ""
-                    gold_ids = process_wikipedia.id_to_title(qc)
+                    gold_ids = process_wikipedia.id_to_title(qc, path_to_db=self.db)
                     if gold_ids:
                         qc_wikipedia = gold_ids[0]
                     tmp_cands.append((qc_wikipedia, qcrlv_score, qcm2w_score))

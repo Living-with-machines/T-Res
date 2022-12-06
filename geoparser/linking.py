@@ -35,12 +35,12 @@ class Linker:
         self.base_model = base_model
         self.overwrite_training = overwrite_training
         self.rel_params = rel_params
+        # Path to wikipedia2wikidata mapper:
+        self.db = self.resources_path + "wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
 
     def __str__(self):
         s = (
-            ">>> Entity Linking:\n"
-            "    * Method: {0}\n"
-            "    * Overwrite training: {1}\n"
+            ">>> Entity Linking:\n" "    * Method: {0}\n" "    * Overwrite training: {1}\n"
         ).format(
             self.method,
             str(self.overwrite_training),
@@ -60,12 +60,12 @@ class Linker:
 
         # Load Wikidata mentions-to-QID with absolute counts:
         print("  > Loading mentions to wikidata mapping.")
-        with open(self.resources_path + "mentions_to_wikidata.json", "r") as f:
+        with open(self.resources_path + "wikidata/mentions_to_wikidata.json", "r") as f:
             self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
         print("  > Loading gazetteer.")
         gaz = pd.read_csv(
-            self.resources_path + "wikidata_gazetteer.csv",
+            self.resources_path + "wikidata/wikidata_gazetteer.csv",
             usecols=["wikidata_id", "latitude", "longitude"],
         )
         gaz["latitude"] = gaz["latitude"].astype(float)
@@ -80,7 +80,7 @@ class Linker:
         gaz = ""
 
         # The entity2class.txt file is created as the last step in wikipediaprocessing:
-        with open("../resources/entity2class.txt", "r") as fr:
+        with open(self.resources_path + "wikidata/entity2class.txt", "r") as fr:
             self.linking_resources["entity2class"] = json.load(fr)
 
         print("*** Linking resources loaded!\n")
@@ -137,46 +137,37 @@ class Linker:
             wiki_version = self.rel_params["wiki_version"]
             # Instantiate REL mention detection:
             self.rel_params["mention_detection"] = MentionDetection(
-                base_path, wiki_version, mylinker=self
+                base_path, wiki_version, mylinker=self, path_to_db=self.db
             )
 
             # Instantiate REL entity disambiguation:
-            experiment_path = os.path.join(
-                base_path, wiki_version, "generated", experiment_name
-            )
+            experiment_path = os.path.join(base_path, wiki_version, "generated", experiment_name)
             config = {
                 "mode": "eval",
                 "model_path": os.path.join(experiment_path, "model"),
             }
-            self.rel_params["model"] = EntityDisambiguation(
-                base_path, wiki_version, config
-            )
+            self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
 
             return self.rel_params["mention_detection"], self.rel_params["model"]
 
     def format_linking_dataset(self, mentions_dataset):
+
         formatted_dataset = []
         for m in mentions_dataset:
             formatted_cands = m.copy()
             mention = m["mention"]
             formatted_cands["candidates"] = dict()
-            formatted_cands["candidates"][mention] = {"Score": 1.0}
-            formatted_cands["candidates"][mention]["Candidates"] = dict()
             candidates = m["candidates"]
             for c in candidates:
                 cand_wiki = c[0]
-                cand_wiki = process_wikipedia.title_to_id(cand_wiki)
+                cand_wiki = process_wikipedia.title_to_id(cand_wiki, path_to_db=self.db)
                 cand_score = round(c[1], 3)
-                formatted_cands["candidates"][mention]["Candidates"][
-                    cand_wiki
-                ] = cand_score
+                formatted_cands["candidates"][cand_wiki] = cand_score
             if formatted_cands["gold"][0] != "NONE":
-                formatted_cands["gold"] = process_wikipedia.title_to_id(
-                    formatted_cands["gold"][0]
-                )
+                formatted_cands["gold"] = process_wikipedia.title_to_id(formatted_cands["gold"][0])
             if not formatted_cands["prediction"] == "NIL":
                 formatted_cands["prediction"] = process_wikipedia.title_to_id(
-                    formatted_cands["prediction"]
+                    formatted_cands["prediction"], path_to_db=self.db
                 )
             formatted_dataset.append(formatted_cands)
         return formatted_dataset
@@ -196,26 +187,32 @@ class Linker:
         Returns:
             keep_most_popular (str): the Wikidata ID (e.g. "Q84") or "NIL".
             final_score (float): the confidence of the predicted link.
+            all_candidates: dictionary containing all candidates and related score
         """
         cands = dict_mention["candidates"]
         keep_most_popular = "NIL"
         keep_highest_score = 0.0
         total_score = 0.0
         final_score = 0.0
+        all_candidates = {}
         if cands:
             for variation in cands:
                 for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][
-                        candidate
-                    ]
+                    score = self.linking_resources["mentions_to_wikidata"][variation][candidate]
                     total_score += score
+                    all_candidates[candidate] = score
                     if score > keep_highest_score:
                         keep_highest_score = score
                         keep_most_popular = candidate
             # we return the predicted and the score (overall the total):
             final_score = keep_highest_score / total_score
 
-        return keep_most_popular, final_score
+            # we compute scores for all candidates
+            all_candidates = {
+                cand: (score / total_score) for cand, score in all_candidates.items()
+            }
+
+        return keep_most_popular, final_score, all_candidates
 
     # ----------------------------------------------
     # Select candidate to place of publication:
@@ -244,6 +241,7 @@ class Linker:
         max_on_gb = 1000  # 1000 km, max on GB
         keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
         keep_lowest_relv = 1.0
+        resulting_cands = {}
 
         if cands:
             for x in cands:
@@ -254,6 +252,7 @@ class Linker:
                     # if origin_coords and cand_coords:  # If there are coordinates
                     try:
                         geodist = haversine(origin_coords, cand_coords)
+                        resulting_cands[candidate] = geodist
                     except ValueError:  # We have one candidate with coordinates in Venus!
                         pass
                     if geodist < keep_lowest_distance:
@@ -273,7 +272,7 @@ class Linker:
         if not keep_closest_cand == "NIL":
             resulting_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
 
-        return keep_closest_cand, resulting_score
+        return keep_closest_cand, resulting_score, resulting_cands
 
     def perform_linking_rel(self, mentions_dataset, sentence_id, linking_model):
         publication_entry = dict()
@@ -292,10 +291,17 @@ class Linker:
             prediction = predictions[sentence_id][i]
             if mention_dataset["mention"] == prediction["mention"]:
                 mentions_dataset[i]["prediction"] = prediction["prediction"]
+                idx_pred = prediction["candidates"].index(prediction["prediction"])
                 # If entity is NIL, conf_ed is 0.0:
-                mentions_dataset[i]["ed_score"] = round(
-                    prediction.get("conf_ed", 0.0), 3
-                )
+                mentions_dataset[i]["ed_score"] = round(float(prediction["scores"][idx_pred]), 3)
+                mentions_dataset[i]["candidates"] = [
+                    [
+                        prediction["candidates"][c],
+                        round(float(prediction["scores"][c]), 3),
+                    ]
+                    for c in range(len(prediction["candidates"]))
+                ]
+
         # Format the predictions to match the output of the other approaches:
         mentions_dataset = self.format_linking_dataset(mentions_dataset)
         if self.rel_params["micro_locs"] == "dist":
@@ -327,9 +333,7 @@ class Linker:
                         context_place = mentions_dataset[i + 1]["prediction"]
                 else:
                     context_place = mentions_dataset[i]["place_wqid"]
-                resolved_by_distance = self.by_distance(
-                    mentions_dataset[i], context_place
-                )
+                resolved_by_distance = self.by_distance(mentions_dataset[i], context_place)
                 mentions_dataset[i]["prediction"] = resolved_by_distance[0]
                 mentions_dataset[i]["ed_score"] = resolved_by_distance[1]
         return mentions_dataset
@@ -352,7 +356,8 @@ class Linker:
         # Add place of publication as a fake entity in each sentence:
         # Wikipedia title of place of publication QID:
         wiki_gold = "NIL"
-        gold_ids = process_wikipedia.id_to_title(place_wqid)
+
+        gold_ids = process_wikipedia.id_to_title(place_wqid, path_to_db=self.db)
         # Get the first of the wikipedia titles returned (they're sorted
         # by their autoincrement id):
         if gold_ids:
