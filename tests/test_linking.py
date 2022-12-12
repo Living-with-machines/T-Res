@@ -28,11 +28,11 @@ def test_initialise_method():
 def test_most_popular():
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         linking_resources=dict(),
-        base_model="../resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={
-            "base_path": "../resources/rel_db/",
+            "base_path": "resources/rel_db/",
             "wiki_version": "wiki_2019/",
         },
         overwrite_training=False,
@@ -55,11 +55,11 @@ def test_most_popular():
 def test_by_distance():
     mylinker = linking.Linker(
         method="bydistance",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/",
         linking_resources=dict(),
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
+        base_model="resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={
-            "base_path": "/resources/rel_db/",
+            "base_path": "resources/rel_db/",
             "wiki_version": "wiki_2019/",
         },
         overwrite_training=False,
@@ -68,25 +68,28 @@ def test_by_distance():
     mylinker.load_resources()
 
     dict_mention = {
-        "candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}}},
+        "candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}, "Score": 0.397048}},
         "place_wqid": "Q84",
     }
-    pred, final_score = mylinker.by_distance(dict_mention)
+    pred, final_score, resulting_cands = mylinker.by_distance(dict_mention)
     assert pred == "Q84"
-    assert final_score == 1.0
+    assert final_score == 0.824
+    assert "Q84" in resulting_cands
 
     dict_mention = {
-        "candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}}},
+        "candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}, "Score": 0.397048}},
         "place_wqid": "Q172",
     }
-    pred, final_score = mylinker.by_distance(dict_mention)
+    pred, final_score, resulting_cands = mylinker.by_distance(dict_mention)
     assert pred == "Q92561"
-    assert final_score == 0.992
+    assert final_score == 0.54
+    assert "Q84" in resulting_cands
 
     dict_mention = {
-        "candidates": {},
-        "place_wqid": "Q84",
+        "candidates": {"London": {"Candidates": {}, "Score": 0.397048}},
+        "place_wqid": "Q172",
     }
-    pred, final_score = mylinker.by_distance(dict_mention)
+    pred, final_score, resulting_cands = mylinker.by_distance(dict_mention)
     assert pred == "NIL"
     assert final_score == 0.0
+    assert "Q84" not in resulting_cands

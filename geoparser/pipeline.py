@@ -187,7 +187,9 @@ class Pipeline:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
                 # Run entity linking per mention:
-                selected_cand = self.mylinker.run({"candidates": wk_cands[mention["mention"]]})
+                selected_cand = self.mylinker.run(
+                    {"candidates": wk_cands[mention["mention"]], "place_wqid": place_wqid}
+                )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
                 mentions_dataset["linking"][i]["candidates"] = {
