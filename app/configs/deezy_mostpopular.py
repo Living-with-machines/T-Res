@@ -43,7 +43,7 @@ myranker = ranking.Ranker(
 
 mylinker = linking.Linker(
     method="mostpopular",
-    resources_path="../resources/wikidata/",
+    resources_path="../resources/",
     linking_resources=dict(),
     base_model="to-be-removed",  # Base model for vector extraction
     rel_params={},
