@@ -50,7 +50,7 @@ async def test_pipeline():
     
     return resolved
 
-@app.get("/toponym_resolution/")
+@app.get("/toponym_resolution")
 async def run_pipeline(api_query: APIQuery, request_id: Union[str, None] = None):
 
     place = "" if api_query.place is None else api_query.place
