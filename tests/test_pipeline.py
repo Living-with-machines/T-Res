@@ -179,3 +179,12 @@ def test_deezy_rel_withoutpubl():
 
     resolved = geoparser.run_sentence(" ")
     assert resolved == []
+
+    # asserting behaviour with a NIL
+    resolved = geoparser.run_text(
+        "Chrixtchurch, June 10 Yesterday being the day appointed for the election of taro gentlemen to tepcoeot this borough in the new Parliament.",
+    )
+    assert resolved[0]["mention"] == "Chrixtchurch"
+    assert resolved[0]["ed_score"] == 0.0
+    assert resolved[0]["candidates"] == {}
+    assert resolved[0]["prediction"] == "NIL"

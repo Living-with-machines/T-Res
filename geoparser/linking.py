@@ -291,16 +291,23 @@ class Linker:
             prediction = predictions[sentence_id][i]
             if mention_dataset["mention"] == prediction["mention"]:
                 mentions_dataset[i]["prediction"] = prediction["prediction"]
-                idx_pred = prediction["candidates"].index(prediction["prediction"])
-                # If entity is NIL, conf_ed is 0.0:
-                mentions_dataset[i]["ed_score"] = round(float(prediction["scores"][idx_pred]), 3)
-                mentions_dataset[i]["candidates"] = [
-                    [
-                        prediction["candidates"][c],
-                        round(float(prediction["scores"][c]), 3),
+                
+                # If entity is NIL, conf_ed is 0.0 and there are no candidates:
+                if prediction["prediction"] == "NIL":
+                    mentions_dataset[i]["ed_score"] = 0.0
+                    mentions_dataset[i]["candidates"] = []
+                else:
+                    idx_pred = prediction["candidates"].index(prediction["prediction"])
+                    mentions_dataset[i]["ed_score"] = round(
+                        float(prediction["scores"][idx_pred]), 3
+                    )
+                    mentions_dataset[i]["candidates"] = [
+                        [
+                            prediction["candidates"][c],
+                            round(float(prediction["scores"][c]), 3),
+                        ]
+                        for c in range(len(prediction["candidates"]))
                     ]
-                    for c in range(len(prediction["candidates"]))
-                ]
 
         # Format the predictions to match the output of the other approaches:
         mentions_dataset = self.format_linking_dataset(mentions_dataset)
