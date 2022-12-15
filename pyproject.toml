@@ -17,7 +17,6 @@ pydash = "^5.1.0"
 wikimapper = "^0.1.5"
 numpy = "^1.22.1"
 scikit-learn = "^1.0.2"
-sklearn = "^0.0"
 docopt = "^0.6.2"
 seqeval = "^1.2.2"
 requests = "^2.27.1"
@@ -32,6 +31,8 @@ networkx = "^2.8.4"
 thefuzz = "^0.19.0"
 sentence-splitter = "^1.4"
 haversine = "^2.7.0"
+fastapi = "^0.87.0"
+uvicorn = {extras = ["standard"], version = "^0.20.0"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
