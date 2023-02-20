@@ -89,6 +89,13 @@ def test_deezy_mostpopular():
     resolved = geoparser.run_sentence(" ")
     assert resolved == []
 
+    # asserting behaviour with • character
+    resolved = geoparser.run_text(
+        " • - ST G pOllO-P• FERRIS - • - , i ",
+    )
+
+    assert resolved[0]["candidates"] == {}
+
 
 def test_deezy_rel_withoutpubl():
 
