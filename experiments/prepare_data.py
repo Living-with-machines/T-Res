@@ -15,8 +15,7 @@ RANDOM_SEED = 42
 
 random.seed(RANDOM_SEED)
 
-large_resources = "/resources/"  # path to large resources
-small_resources = "../resources/"  # path to small resources
+resources = "../resources/"  # path to resources
 output_path_lwm = "../experiments/outputs/data/lwm/"
 output_path_hipe = "../experiments/outputs/data/hipe/"
 # Create output folders for processed data if they do not exist:
@@ -32,7 +31,7 @@ Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
 gazetteer_ids = set(
     list(
         pd.read_csv(
-            os.path.join(large_resources, "wikidata", "wikidata_gazetteer.csv"),
+            os.path.join(resources, "wikidata", "wikidata_gazetteer.csv"),
             low_memory=False,
         )["wikidata_id"].unique()
     )
@@ -44,7 +43,7 @@ gazetteer_ids = set(
 # ------------------------------------------------------
 
 # Load publication metadata
-with open(os.path.join(f"{small_resources}", "publication_metadata.json")) as jsonfile:
+with open(os.path.join(f"{resources}", "publication_metadata.json")) as jsonfile:
     df_metadata = json.load(jsonfile)
 
 dict_titles = {k: df_metadata[k]["publication_title"] for k in df_metadata}
@@ -57,19 +56,19 @@ dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
 # ------------------------------------------------------
 
 # Path of the manually annotated data:
-news_path = os.path.join(f"{small_resources}", "news_datasets")
+news_path = os.path.join(f"{resources}", "news_datasets")
 
 # Download the annotated data from the BL repository:
 get_data.download_lwm_data(news_path)
 
 # Training data from the manually annotated data:
 topres_path_train = os.path.join(
-    f"{small_resources}", "news_datasets", "topRes19th_v2", "train"
+    f"{resources}", "news_datasets", "topRes19th_v2", "train"
 )
 
 # Test data from the manually annotated data:
 topres_path_test = os.path.join(
-    f"{small_resources}", "news_datasets", "topRes19th_v2", "test"
+    f"{resources}", "news_datasets", "topRes19th_v2", "test"
 )
 
 # Process data for training a named entity recognition model:
