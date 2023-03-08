@@ -13,6 +13,8 @@ from utils import process_wikipedia
 This script reads the original data sources and formats them for our experiments.
 """
 
+# Path to Wikipedia resources (where the wiki2wiki mapper is located):
+path_to_wikipedia = "../resources/wikipedia/"
 
 # ------------------------------
 # From wikipedia to wikidata:
@@ -27,7 +29,9 @@ def turn_wikipedia2wikidata(wikipedia_title):
             wikipedia_title
         )
         linked_wqid = process_wikipedia.title_to_id(
-            processed_wikipedia_title, lower=True
+            processed_wikipedia_title,
+            path_to_db=os.path.join(path_to_wikipedia, "index_enwiki-latest.db"),
+            lower=True,
         )
         if not linked_wqid:
             print(
