@@ -6,8 +6,9 @@ Follow these steps to reproduce the experiments in our paper.
 
 You will need the following resources, which are created using the code in the wiki2gaz repository ([TODO: add link]) or can be downloaded from [TODO: add link]:
 ```
-../resources/wikidata/mentions_to_wikidata.json
 ../resources/wikidata/wikidata_gazetteer.csv
+../resources/wikidata/entity2class.txt
+../resources/wikidata/mentions_to_wikidata.json
 ../resources/wikidata/mentions_to_wikidata_normalized.json
 ../resources/wikidata/wikidata_to_mentions_normalized.json
 ../resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db

@@ -83,10 +83,6 @@ class Recogniser:
         Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
 
-        if self.overwrite_training == False:
-            print("\nThe NER model is already trained!\n")
-            return None
-
         print("*** Training the toponym recognition model...")
 
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
