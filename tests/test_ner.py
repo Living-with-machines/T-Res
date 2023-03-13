@@ -14,7 +14,7 @@ def test_training():
     Test that running train() generates a model folder
     """
 
-    test_folder_path = "experiments/outputs/models/blb_lwm-ner-coarse_test.model"
+    test_folder_path = "resources/models/blb_lwm-ner-coarse_test.model"
 
     if os.path.isdir(test_folder_path):
         shutil.rmtree(test_folder_path)
@@ -23,10 +23,10 @@ def test_training():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        output_model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -50,10 +50,10 @@ def test_create_pipeline():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        output_model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -66,7 +66,10 @@ def test_create_pipeline():
     )
     model, pipe = myner.create_pipeline()
     assert os.path.isdir(model) == True
-    assert type(pipe) == transformers.pipelines.token_classification.TokenClassificationPipeline
+    assert (
+        type(pipe)
+        == transformers.pipelines.token_classification.TokenClassificationPipeline
+    )
 
 
 def test_ner_predict():
@@ -75,10 +78,10 @@ def test_ner_predict():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        output_model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -87,7 +90,7 @@ def test_ner_predict():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="coarse",  # Options are: "coarse" or "fine"
+        training_tagset="fine",  # Options are: "coarse" or "fine"
     )
     myner.model, myner.pipe = myner.create_pipeline()
 
@@ -98,4 +101,4 @@ def test_ner_predict():
     assert (type(preds[0])) == dict
     assert len(preds) == 16
     assert preds[4]["entity"] == "B-LOC"
-    assert preds[4]["score"] == 0.9897381663322449
+    assert preds[4]["score"] == 0.9947943091392517
