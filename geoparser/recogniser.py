@@ -92,11 +92,19 @@ class Recogniser:
         if self.do_test == True:
             # If test is True, train on a portion of the train and test sets, and add "_test" to the model name.
             self.model_name = self.model_name + "_test"
-            lwm_train = load_dataset("json", data_files=self.train_dataset, split="train[:10]")
-            lwm_test = load_dataset("json", data_files=self.train_dataset, split="train[:10]")
+            lwm_train = load_dataset(
+                "json", data_files=self.train_dataset, split="train[:10]"
+            )
+            lwm_test = load_dataset(
+                "json", data_files=self.train_dataset, split="train[:10]"
+            )
         else:
-            lwm_train = load_dataset("json", data_files=self.train_dataset, split="train")
-            lwm_test = load_dataset("json", data_files=self.train_dataset, split="train")
+            lwm_train = load_dataset(
+                "json", data_files=self.train_dataset, split="train"
+            )
+            lwm_test = load_dataset(
+                "json", data_files=self.train_dataset, split="train"
+            )
 
         # If model exists and overwrite is set to False, skip training:
         if (
@@ -155,7 +163,9 @@ class Recogniser:
                 for prediction, label in zip(predictions, labels)
             ]
 
-            results = metric.compute(predictions=true_predictions, references=true_labels)
+            results = metric.compute(
+                predictions=true_predictions, references=true_labels
+            )
             return {
                 "precision": results["overall_precision"],
                 "recall": results["overall_recall"],
@@ -205,6 +215,9 @@ class Recogniser:
         """
         print("*** Creating and loading a NER pipeline.")
         # Path to NER Model:
+        if self.do_test == True:
+            # If test is True, train on a portion of the train and test sets, and add "_test" to the model name.
+            self.model_name = self.model_name + "_test"
         self.model = self.output_path + self.model_name + ".model"
         self.pipe = pipeline("ner", model=self.model)
         return self.model, self.pipe
