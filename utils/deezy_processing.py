@@ -1,22 +1,26 @@
 import glob
 import itertools
 import os
+import sys
 import random
 import time
 from pathlib import Path
 
 import gensim
 import gensim.downloader
+from gensim.models import Word2Vec
 
 # Resources for English words (these will need to change if language is different):
-import nltk
 from DeezyMatch import combine_vecs
 from DeezyMatch import inference as dm_inference
 from DeezyMatch import train as dm_train
-from gensim.models import Word2Vec
-from nltk.corpus import brown, words
+
 from thefuzz import fuzz
 from tqdm import tqdm
+
+# Add "../" to path to import utils
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+from utils import get_data
 
 
 def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
@@ -97,15 +101,15 @@ def create_training_set(myranker):
     string_matching_filename = os.path.join(
         myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs.txt"
     )
+    dm_model_path = os.path.join(
+        myranker.deezy_parameters["dm_path"],
+        "models",
+        myranker.deezy_parameters["dm_model"],
+    )
+
     Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(
         parents=True, exist_ok=True
     )
-
-    # Path to the output string pairs dataset if we're in test mode:
-    if myranker.deezy_parameters["do_test"] == True:
-        string_matching_filename = os.path.join(
-            myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs_test.txt"
-        )
 
     # If the dataset exists, do nothing:
     if (
@@ -117,27 +121,16 @@ def create_training_set(myranker):
 
     if (
         myranker.deezy_parameters["overwrite_training"] == False
-        and Path(
-            os.path.join(
-                myranker.deezy_parameters["dm_path"],
-                "models",
-                myranker.deezy_parameters["dm_model"],
-            )
-        ).exists()
+        and Path(dm_model_path).exists()
     ):
         return None
 
     print("Create a string match dataset!")
     print(">>> Loading words in the English language.")
-    # nltk.download("words") # Uncomment if needed
-    # nltk.download("brown") # Uncomment if needed
     glove_vectors = gensim.downloader.load("glove-wiki-gigaword-50")
 
     # Words in the English language:
-    nltk_words = set(words.words())
-    brown_words = set(brown.words())
-    glove_words = set(glove_vectors.index_to_key)
-    english_words = nltk_words.union(brown_words).union(glove_words)
+    english_words = set(glove_vectors.index_to_key)
 
     print(">>> Creating a dataset of positive and negative matches.")
 
@@ -148,7 +141,6 @@ def create_training_set(myranker):
     negative_matches = []
     for path2model in glob.glob(
         os.path.join(
-            "../experiments",
             myranker.deezy_parameters["w2v_ocr_path"],
             myranker.deezy_parameters["w2v_ocr_model"],
             "w2v.model",
@@ -163,7 +155,7 @@ def create_training_set(myranker):
 
         # filter w2v_words
         if myranker.deezy_parameters["do_test"] == True:
-            seedwords_cutoff = 1
+            seedwords_cutoff = 5
             w2v_words = w2v_words[:seedwords_cutoff]
 
         # For each word in the w2v model, keep likely positive and negative matches:
@@ -205,6 +197,13 @@ def create_training_set(myranker):
                     word + "\t" + x + "\t" + "TRUE\n" for x in positive
                 ]
 
+    if len(positive_matches) == 0:
+        print(
+            "Warning: You've got an empty list of positive matches. "
+            "Check whether the path to the w2v embeddings is correct."
+        )
+        return None
+
     # Get variations from mentions_to_wikidata:
     for wq in myranker.wikidata_to_mentions.keys():
         mentions = list(myranker.wikidata_to_mentions[wq].keys())
@@ -223,7 +222,10 @@ def create_training_set(myranker):
         ]
         positive_matches += [c[0] + "\t" + c[1] + "\t" + "TRUE\n" for c in combs]
 
-    # print(string_matching_filename)
+    if myranker.deezy_parameters["do_test"] == True:
+        positive_matches = positive_matches[:100]
+        negative_matches = negative_matches[:100]
+
     with open(string_matching_filename, "w") as fw:
         for nm in negative_matches:
             fw.write(nm)
@@ -251,11 +253,7 @@ def train_deezy_model(myranker):
         myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt"
     )
     model_name = myranker.deezy_parameters["dm_model"]
-    if myranker.deezy_parameters["do_test"] == True:
-        dataset_path = os.path.join(
-            myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs_test.txt"
-        )
-        model_name += "_test"
+
     # Condition for training:
     # (if overwrite is set to True or the model does not exist, train it)
     if (
@@ -292,13 +290,15 @@ def generate_candidates(myranker):
     deezymatch_outputs_path = myranker.deezy_parameters["dm_path"]
     candidates = myranker.deezy_parameters["dm_cands"]
     dm_model = myranker.deezy_parameters["dm_model"]
-    if myranker.deezy_parameters["do_test"] == True:
-        dm_model = dm_model + "_test"
 
     unique_placenames_array = list(set(list(myranker.mentions_to_wikidata.keys())))
     unique_placenames_array = [
         " ".join(x.strip().split("\t")) for x in unique_placenames_array if x
     ]
+
+    if myranker.deezy_parameters["do_test"] == True:
+        unique_placenames_array = unique_placenames_array[:100]
+
     with open(
         os.path.join(
             deezymatch_outputs_path,

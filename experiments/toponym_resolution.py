@@ -87,9 +87,6 @@ for exp_param in experiments:
         resources_path="/resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "minimum_relv": 0.005,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
