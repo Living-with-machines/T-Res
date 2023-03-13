@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from pathlib import Path
@@ -41,10 +40,10 @@ class Pipeline:
                 model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
                 model=None,  # We'll store the NER model here
                 pipe=None,  # We'll store the NER pipeline here
-                base_model="../resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-                train_dataset="outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-                test_dataset="outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-                output_model_path="outputs/models/",  # Path where the NER model is or will be stored
+                base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+                train_dataset="../experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
+                test_dataset="../experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
+                output_model_path="../resources/models/",  # Path where the NER model is or will be stored
                 training_args={
                     "learning_rate": 5e-5,
                     "batch_size": 16,
@@ -58,7 +57,7 @@ class Pipeline:
 
         if not self.myranker:
             self.myranker = ranking.Ranker(
-                method="deezymatch",
+                method="perfectmatch",
                 resources_path="../resources/wikidata/",
                 mentions_to_wikidata=dict(),
                 wikidata_to_mentions=dict(),
@@ -96,7 +95,7 @@ class Pipeline:
         if not self.mylinker:
             self.mylinker = linking.Linker(
                 method="mostpopular",
-                resources_path="../resources/wikidata/",
+                resources_path="../resources/",
                 linking_resources=dict(),
                 base_model="../resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
                 rel_params={
@@ -134,19 +133,24 @@ class Pipeline:
                 self.mylinker.rel_params["model"],
             ) = self.mylinker.disambiguation_setup(experiment_name)
 
-    def run_sentence(self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""):
+    def run_sentence(
+        self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""
+    ):
         sentence = sentence.replace("—", ";")
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
         procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]] for x in predictions
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+            for x in predictions
         ]
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(mentions)
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
+            mentions
+        )
 
         # Linking settings
         if self.mylinker.method == "reldisamb":
@@ -188,7 +192,10 @@ class Pipeline:
                 mention = mentions_dataset["linking"][i]
                 # Run entity linking per mention:
                 selected_cand = self.mylinker.run(
-                    {"candidates": wk_cands[mention["mention"]], "place_wqid": place_wqid}
+                    {
+                        "candidates": wk_cands[mention["mention"]],
+                        "place_wqid": place_wqid,
+                    }
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
@@ -212,10 +219,12 @@ class Pipeline:
         sentence_dataset = []
         for md in mentions_dataset["linking"]:
             md = dict((k, md[k]) for k in md if k in keys)
-            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(md["prediction"])
-            md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
+            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
                 md["prediction"]
             )
+            # md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
+            #     md["prediction"]
+            # )
             sentence_dataset.append(md)
         return sentence_dataset
 

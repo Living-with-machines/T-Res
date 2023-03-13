@@ -33,6 +33,7 @@ sentence-splitter = "^1.4"
 haversine = "^2.7.0"
 fastapi = "^0.87.0"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
+ipykernel = "^6.21.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
