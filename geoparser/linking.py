@@ -25,14 +25,12 @@ class Linker:
         method,
         resources_path,
         linking_resources,
-        base_model,
         overwrite_training,
         rel_params,
     ):
         self.method = method
         self.resources_path = resources_path
         self.linking_resources = linking_resources
-        self.base_model = base_model
         self.overwrite_training = overwrite_training
         self.rel_params = rel_params
         # Path to wikipedia2wikidata mapper:
@@ -291,7 +289,7 @@ class Linker:
             prediction = predictions[sentence_id][i]
             if mention_dataset["mention"] == prediction["mention"]:
                 mentions_dataset[i]["prediction"] = prediction["prediction"]
-                
+
                 # If entity is NIL, conf_ed is 0.0 and there are no candidates:
                 if prediction["prediction"] == "NIL":
                     mentions_dataset[i]["ed_score"] = 0.0

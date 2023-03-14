@@ -93,7 +93,6 @@ class Pipeline:
                 method="mostpopular",
                 resources_path="../resources/",
                 linking_resources=dict(),
-                base_model="../resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
                 rel_params={
                     "base_path": "../resources/rel_db/",
                     "wiki_version": "wiki_2019/",
@@ -129,24 +128,19 @@ class Pipeline:
                 self.mylinker.rel_params["model"],
             ) = self.mylinker.disambiguation_setup(experiment_name)
 
-    def run_sentence(
-        self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""
-    ):
+    def run_sentence(self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""):
         sentence = sentence.replace("—", ";")
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
         procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-            for x in predictions
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]] for x in predictions
         ]
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            mentions
-        )
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(mentions)
 
         # Linking settings
         if self.mylinker.method == "reldisamb":
@@ -215,9 +209,7 @@ class Pipeline:
         sentence_dataset = []
         for md in mentions_dataset["linking"]:
             md = dict((k, md[k]) for k in md if k in keys)
-            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
-                md["prediction"]
-            )
+            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(md["prediction"])
             # md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
             #     md["prediction"]
             # )

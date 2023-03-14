@@ -12,7 +12,7 @@ def test_deezy_mostpopular():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -32,10 +32,6 @@ def test_deezy_mostpopular():
         resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
@@ -67,7 +63,6 @@ def test_deezy_mostpopular():
         method="mostpopular",
         resources_path="resources/",
         linking_resources=dict(),
-        base_model="to-be-removed",  # Base model for vector extraction
         rel_params={},
         overwrite_training=False,
     )
@@ -103,7 +98,7 @@ def test_deezy_rel_withoutpubl():
         model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
         model=None,  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
         output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
@@ -123,10 +118,6 @@ def test_deezy_rel_withoutpubl():
         resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
