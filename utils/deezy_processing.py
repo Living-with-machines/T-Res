@@ -101,6 +101,11 @@ def create_training_set(myranker):
     string_matching_filename = os.path.join(
         myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs.txt"
     )
+    if myranker.deezy_parameters["do_test"] == True:
+        string_matching_filename = os.path.join(
+            myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs_test.txt"
+        )
+
     dm_model_path = os.path.join(
         myranker.deezy_parameters["dm_path"],
         "models",
@@ -114,15 +119,9 @@ def create_training_set(myranker):
     # If the dataset exists, do nothing:
     if (
         Path(string_matching_filename).exists()
-        and myranker.deezy_parameters["overwrite_training"] == False
+        and myranker.strvar_parameters["overwrite_dataset"] == False
     ):
         print("The string match dataset already exists!")
-        return None
-
-    if (
-        myranker.deezy_parameters["overwrite_training"] == False
-        and Path(dm_model_path).exists()
-    ):
         return None
 
     print("Create a string match dataset!")
@@ -141,8 +140,8 @@ def create_training_set(myranker):
     negative_matches = []
     for path2model in glob.glob(
         os.path.join(
-            myranker.deezy_parameters["w2v_ocr_path"],
-            myranker.deezy_parameters["w2v_ocr_model"],
+            myranker.strvar_parameters["w2v_ocr_path"],
+            myranker.strvar_parameters["w2v_ocr_model"],
             "w2v.model",
         )
     ):
@@ -252,6 +251,10 @@ def train_deezy_model(myranker):
     dataset_path = os.path.join(
         myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt"
     )
+    if myranker.deezy_parameters["do_test"] == True:
+        dataset_path = os.path.join(
+            myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs_test.txt"
+        )
     model_name = myranker.deezy_parameters["dm_model"]
 
     # Condition for training:

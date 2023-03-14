@@ -160,6 +160,9 @@ def test_deezy_on_the_fly():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": "resources/models/",
+            "w2v_ocr_model": "w2v_1800s_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
@@ -175,8 +178,6 @@ def test_deezy_on_the_fly():
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": "resources/models/",
-            "w2v_ocr_model": "w2v_1800s_news",
             "do_test": True,
         },
     )
@@ -208,6 +209,9 @@ def test_find_candidates():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": "resources/models/",
+            "w2v_ocr_model": "w2v_1800s_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
@@ -223,8 +227,6 @@ def test_find_candidates():
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": "resources/models/",
-            "w2v_ocr_model": "w2v_1800s_news",
             "do_test": True,
         },
     )
@@ -328,8 +330,6 @@ def test_deezy_candidate_ranker():
         "verbose": False,
         # DeezyMatch training:
         "overwrite_training": False,
-        "w2v_ocr_path": str(Path("resources/models/").resolve()),
-        "w2v_ocr_model": "w2v_*_news",
         "do_test": False,
     }
 

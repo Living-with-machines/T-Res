@@ -63,6 +63,9 @@ class Ranker:
             s += "    * DeezyMatch overwrite training: {0}\n".format(
                 self.deezy_parameters["overwrite_training"]
             )
+            s += "    * DeezyMatch overwrite dataset: {0}\n".format(
+                self.strvar_parameters["overwrite_dataset"]
+            )
             s += "    * DeezyMatch test mode: {0}\n".format(
                 self.deezy_parameters["do_test"]
             )

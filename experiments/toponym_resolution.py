@@ -93,6 +93,9 @@ for exp_param in experiments:
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": str(Path("outputs/models/").resolve()),
+            "w2v_ocr_model": "w2v_*_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
@@ -108,8 +111,6 @@ for exp_param in experiments:
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": str(Path("outputs/models/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
             "do_test": False,
         },
     )
