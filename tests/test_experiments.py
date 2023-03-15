@@ -75,7 +75,6 @@ def test_load_data():
         method="mostpopular",
         resources_path="/resources/wikidata/",
         linking_resources=dict(),
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={"base_path": "/resources/rel_db/", "wiki_version": "wiki_2019/"},
         overwrite_training=False,
     )

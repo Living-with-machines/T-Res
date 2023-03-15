@@ -14,7 +14,6 @@ def test_initialise_method():
         method="mostpopular",
         resources_path="/resources/wikidata/",
         linking_resources=dict(),
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={
             "base_path": "/resources/rel_db/",
             "wiki_version": "wiki_2019/",
@@ -30,7 +29,6 @@ def test_most_popular():
         method="mostpopular",
         resources_path="resources/",
         linking_resources=dict(),
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={
             "base_path": "resources/rel_db/",
             "wiki_version": "wiki_2019/",
@@ -57,7 +55,6 @@ def test_by_distance():
         method="bydistance",
         resources_path="resources/",
         linking_resources=dict(),
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
         rel_params={
             "base_path": "resources/rel_db/",
             "wiki_version": "wiki_2019/",
