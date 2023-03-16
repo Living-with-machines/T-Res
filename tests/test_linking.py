@@ -14,10 +14,7 @@ def test_initialise_method():
         method="mostpopular",
         resources_path="resources/",
         linking_resources=dict(),
-        rel_params={
-            "base_path": "/resources/rel_db/",
-            "wiki_version": "wiki_2019/",
-        },
+        rel_params=dict(),
         overwrite_training=False,
     )
 
