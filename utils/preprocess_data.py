@@ -84,7 +84,7 @@ def reconstruct_sentences(dTokens):
     # In this for loop, we reconstruct the sentences, tanking into account
     # the different positional informations (and adding white spaces when
     # required):
-    for i in range(start_ids[0], len(start_ids) + 1):
+    for i in range(0, len(start_ids) + 1):
 
         if i < len(start_ids) - 1:
 

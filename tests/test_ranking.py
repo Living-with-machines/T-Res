@@ -18,35 +18,11 @@ def test_initialise_method():
     """
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
     )
     assert type(myranker.__str__()) == str
-
-
-def test_load_resources():
-    """
-    Tests resources are loaded and processed correctly
-    """
-    with open("/resources/wikidata/mentions_to_wikidata_normalized.json", "r") as f:
-        mentions_to_wikidata = json.load(f)
-
-    myranker = ranking.Ranker(
-        method="perfectmatch",
-        resources_path="/resources/wikidata/",
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
-    )
-    filtered_mentions = myranker.load_resources()
-    assert len(filtered_mentions) < len(mentions_to_wikidata)
-    assert len(filtered_mentions["London"]) < len(mentions_to_wikidata["London"])
-    assert len(filtered_mentions["London"]) > 0
-    assert filtered_mentions["London"]["Q84"] == mentions_to_wikidata["London"]["Q84"]
 
 
 def test_perfect_match():
@@ -55,13 +31,9 @@ def test_perfect_match():
     """
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
     )
     myranker.load_resources()
     candidates, already_collected_cands = myranker.perfect_match(["London"])
@@ -80,13 +52,9 @@ def test_damlev():
     """
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
     )
     score = myranker.damlev_dist("Lvndon", {"mentions": "London"})
     assert score == 0.8333333283662796
@@ -106,13 +74,9 @@ def test_check_if_contained():
 
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
     )
     score_a = myranker.check_if_contained("New York", {"mentions": "New York City"})
     score_b = myranker.check_if_contained("New York City", {"mentions": "New York"})
@@ -135,18 +99,16 @@ def test_partial_match():
 
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
     )
 
     # Test that perfect_match acts before partial match
     myranker.load_resources()
-    candidates, already_collected_cands = myranker.partial_match(["London"], damlev=False)
+    candidates, already_collected_cands = myranker.partial_match(
+        ["London"], damlev=False
+    )
     assert candidates["London"]["London"] == 1.0
 
     # Test that damlev works
@@ -154,7 +116,9 @@ def test_partial_match():
     myranker.mentions_to_wikidata = {"London": "Q84"}
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.partial_match(["Lvndvn"], damlev=True)
+    candidates, already_collected_cands = myranker.partial_match(
+        ["Lvndvn"], damlev=True
+    )
     assert candidates["Lvndvn"]["London"] == 0.6666666567325592
 
     # Test that overlap works properly
@@ -162,42 +126,47 @@ def test_partial_match():
     myranker.mentions_to_wikidata = {"New York City": "Q60"}
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.partial_match(["New York"], damlev=False)
+    candidates, already_collected_cands = myranker.partial_match(
+        ["New York"], damlev=False
+    )
     assert candidates["New York"]["New York City"] == 0.6153846153846154
 
     myranker.mentions_to_wikidata = {"New York City": "Q60"}
 
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.partial_match(["Lvndvn"], damlev=False)
+    candidates, already_collected_cands = myranker.partial_match(
+        ["Lvndvn"], damlev=False
+    )
     assert candidates["Lvndvn"] == {}
 
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.partial_match(["asdasd"], damlev=True)
+    candidates, already_collected_cands = myranker.partial_match(
+        ["asdasd"], damlev=True
+    )
     assert candidates["asdasd"] == {"New York City": 0.0}
 
 
 def test_deezy_on_the_fly():
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": "resources/models/",
+            "w2v_ocr_model": "w2v_1800s_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": "experiments/outputs/deezymatch/",
+            "dm_path": "resources/deezymatch/",
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -209,8 +178,6 @@ def test_deezy_on_the_fly():
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": "experiments/outputs/models/",
-            "w2v_ocr_model": "w2v_1800s_news",
             "do_test": True,
         },
     )
@@ -233,23 +200,22 @@ def test_find_candidates():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": "resources/models/",
+            "w2v_ocr_model": "w2v_1800s_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": "experiments/outputs/deezymatch/",
+            "dm_path": "resources/deezymatch/",
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -261,22 +227,24 @@ def test_find_candidates():
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": "experiments/outputs/models/",
-            "w2v_ocr_model": "w2v_1800s_news",
             "do_test": True,
         },
     )
 
     # Test that perfect_match acts before deezy
     myranker.load_resources()
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "London"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "London"}]
+    )
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
 
     # Test that deezy works
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Lvndon"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "Lvndon"}]
+    )
     assert (
         candidates["Lvndon"]["London"]["Score"] > 0.0
         and candidates["Lvndon"]["London"]["Score"] < 1.0
@@ -288,13 +256,17 @@ def test_find_candidates():
 
     # Test that perfect_match acts before deezy
     myranker.load_resources()
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "London"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "London"}]
+    )
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
 
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Lvndon"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "Lvndon"}]
+    )
     assert candidates["Lvndon"] == {}
 
     # Test that check if contained works
@@ -304,13 +276,17 @@ def test_find_candidates():
     myranker.load_resources()
     myranker.mentions_to_wikidata = {"London": "Q84"}
 
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "London"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "London"}]
+    )
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
 
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Lvndvn"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "Lvndvn"}]
+    )
     assert "London" not in candidates["Lvndvn"]
 
     # Test that levenshtein works
@@ -320,13 +296,17 @@ def test_find_candidates():
     myranker.load_resources()
     myranker.mentions_to_wikidata = {"London": "Q84"}
 
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "London"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "London"}]
+    )
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
 
     myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Lvndvn"}])
+    candidates, already_collected_cands = myranker.find_candidates(
+        [{"mention": "Lvndvn"}]
+    )
     assert (
         candidates["Lvndvn"]["London"]["Score"] > 0.0
         and candidates["Lvndvn"]["London"]["Score"] < 1.0
@@ -338,7 +318,7 @@ def test_deezy_candidate_ranker():
 
     deezy_parameters = {
         # Paths and filenames of DeezyMatch models and data:
-        "dm_path": str(Path("experiments/outputs/deezymatch/").resolve()),
+        "dm_path": str(Path("resources/deezymatch/").resolve()),
         "dm_cands": "wkdtalts",
         "dm_model": "w2v_ocr",
         "dm_output": "deezymatch_on_the_fly",
@@ -350,8 +330,6 @@ def test_deezy_candidate_ranker():
         "verbose": False,
         # DeezyMatch training:
         "overwrite_training": False,
-        "w2v_ocr_path": str(Path("outputs/models/").resolve()),
-        "w2v_ocr_model": "w2v_*_news",
         "do_test": False,
     }
 

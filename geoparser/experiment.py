@@ -283,14 +283,14 @@ class Experiment:
             link_approach = self.mylinker.method
             if self.mylinker.method == "reldisamb":
                 link_approach += "+" + str(self.mylinker.rel_params["ranking"])
-            experiment_name = self.mylinker.rel_params["training_data"]
-            if self.mylinker.rel_params["training_data"] == "lwm":
-                experiment_name += "_" + cand_approach
-                experiment_name += "_" + link_approach
-                experiment_name += "_" + split
-            if self.mylinker.rel_params["training_data"] == "aida":
-                experiment_name += "_" + cand_approach
-                experiment_name += "_" + link_approach
+                experiment_name = self.mylinker.rel_params["training_data"]
+                if self.mylinker.rel_params["training_data"] == "lwm":
+                    experiment_name += "_" + cand_approach
+                    experiment_name += "_" + link_approach
+                    experiment_name += "_" + split
+                if self.mylinker.rel_params["training_data"] == "aida":
+                    experiment_name += "_" + cand_approach
+                    experiment_name += "_" + link_approach
 
             experiment_name = pipeline_utils.get_experiment_name(self, split)
 

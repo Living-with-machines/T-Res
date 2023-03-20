@@ -24,7 +24,6 @@ class Ranker:
         resources_path,
         mentions_to_wikidata,
         wikidata_to_mentions,
-        wiki_filtering=dict(),
         strvar_parameters=dict(),
         deezy_parameters=dict(),
         already_collected_cands=dict(),
@@ -36,7 +35,6 @@ class Ranker:
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
-        self.wiki_filtering = wiki_filtering
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
         self.already_collected_cands = already_collected_cands
@@ -64,6 +62,9 @@ class Ranker:
             )
             s += "    * DeezyMatch overwrite training: {0}\n".format(
                 self.deezy_parameters["overwrite_training"]
+            )
+            s += "    * DeezyMatch overwrite dataset: {0}\n".format(
+                self.strvar_parameters["overwrite_dataset"]
             )
             s += "    * DeezyMatch test mode: {0}\n".format(
                 self.deezy_parameters["do_test"]
@@ -110,20 +111,8 @@ class Ranker:
             )
             if wikipedia_mentions_stripped:
                 wikipedia_mentions = wikipedia_mentions_stripped
-            if wikipedia_mentions:
-                # top_keys = sorted(wikipedia_mentions, key=wikipedia_mentions.get, reverse=True)[:3]
-                top_keys = [
-                    wm
-                    for wm in wikipedia_mentions
-                    # if wikipedia_mentions[wm] > self.wiki_filtering["minimum_relv"]
-                ]
-                top_keys = set(top_keys)
             wikidata_to_mentions_filtered[wk] = dict(
-                [
-                    (x, wikipedia_mentions[x])
-                    for x in wikipedia_mentions
-                    if x in top_keys
-                ]
+                [(x, wikipedia_mentions[x]) for x in wikipedia_mentions]
             )
             for m in wikidata_to_mentions_filtered[wk]:
                 if m in mentions_to_wikidata_filtered:
@@ -160,6 +149,9 @@ class Ranker:
 
         if self.method == "deezymatch":
             Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
+            if self.deezy_parameters["do_test"] == True:
+                self.deezy_parameters["dm_model"] += "_test"
+                self.deezy_parameters["dm_cands"] += "_test"
             deezy_processing.create_training_set(self)
             deezy_processing.train_deezy_model(self)
             deezy_processing.generate_candidates(self)

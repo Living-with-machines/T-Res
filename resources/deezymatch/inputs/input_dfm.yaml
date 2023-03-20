@@ -4,7 +4,7 @@ general:
   #   cuda:0, cuda:1 or others. "cuda" is the default CUDA device
   gpu_device: "cuda"
   # Parent dir to save trained models 
-  models_dir: "./outputs/deezymatch/models"
+  models_dir: "../resources/deezymatch/models"
 
 preprocessing:
   # normalizing text to the ASCII encoding standard
@@ -18,7 +18,7 @@ preprocessing:
   # (number of its characters found in the vocabulary)/(total number its characters) >= missing_char_threshold
   missing_char_threshold: 0.5
   # read a list of characters and add to the vocabulary
-  read_list_chars: "./outputs/deezymatch/inputs/characters_v001.vocab"
+  read_list_chars: "../resources/deezymatch/inputs/characters_v001.vocab"
 
 # --- RNN/GRU/LSTM architecture/misc info
 gru_lstm:
@@ -83,7 +83,7 @@ gru_lstm:
   # Number of epochs with no improvement after which training will be stopped and
   #   the model with the least validation loss will be saved
   # If 0 or negative, early stopping will be deactivated
-  early_stopping_patience: 1
+  early_stopping_patience: 3
 
   # if -1 or 1, perform the validation step in every epoch; 
   # if 0, no validation will be done
