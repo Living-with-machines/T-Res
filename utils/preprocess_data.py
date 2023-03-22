@@ -695,3 +695,20 @@ def process_tsv(filepath):
             )
 
     return dMTokens, dTokens
+
+
+# ------------------------------
+def fine_to_coarse(l):
+    """
+    This function takes a list of fine-grained tags and returns the coarse
+    equivalent.
+    """
+    coarse = []
+    for i in l:
+        if i.startswith("B-"):
+            coarse.append("B-LOC")
+        elif i.startswith("I-"):
+            coarse.append("I-LOC")
+        else:
+            coarse.append(i)
+    return coarse

@@ -20,13 +20,12 @@ def test_training():
         shutil.rmtree(test_folder_path)
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="resources/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -35,7 +34,7 @@ def test_training():
         },
         overwrite_training=True,  # Set to True if you want to overwrite model if existing
         do_test=True,  # Set to True if you want to train on test mode
-        training_tagset="coarse",  # Options are: "coarse" or "fine"
+        load_from_hub=False,
     )
     assert os.path.isdir(test_folder_path) == False
     myner.train()
@@ -47,13 +46,12 @@ def test_create_pipeline():
     Test that create_pipeline returns a model folder path that exists and an Pipeline object
     """
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="resources/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -62,10 +60,10 @@ def test_create_pipeline():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=True,  # Set to True if you want to train on test mode
-        training_tagset="coarse",  # Options are: "coarse" or "fine"
+        load_from_hub=False,
     )
     model, pipe = myner.create_pipeline()
-    assert os.path.isdir(model) == True
+    assert type(model) == str
     assert (
         type(pipe)
         == transformers.pipelines.token_classification.TokenClassificationPipeline
@@ -75,13 +73,12 @@ def test_create_pipeline():
 def test_ner_predict():
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="resources/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -90,7 +87,7 @@ def test_ner_predict():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
+        load_from_hub=False,
     )
     myner.model, myner.pipe = myner.create_pipeline()
 
@@ -101,4 +98,4 @@ def test_ner_predict():
     assert (type(preds[0])) == dict
     assert len(preds) == 16
     assert preds[4]["entity"] == "B-LOC"
-    assert preds[4]["score"] == 0.9947943091392517
+    assert preds[4]["score"] == 0.9933644533157349

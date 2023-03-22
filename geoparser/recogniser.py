@@ -22,30 +22,30 @@ from utils import ner
 class Recogniser:
     def __init__(
         self,
-        model_name,
         model,
-        pipe,
-        base_model,
-        train_dataset,
-        test_dataset,
-        output_model_path,
-        training_args,
-        overwrite_training,
-        do_test,
-        training_tagset,
+        train_dataset="",
+        test_dataset="",
+        pipe=None,
+        base_model="",
+        model_path="",
+        training_args=dict(),
+        overwrite_training=False,
+        do_test=False,
+        load_from_hub=False,
     ):
-        self.model_name = model_name  # NER model name prefix
-        self.model = model  # We'll store the NER model here:
-        self.pipe = pipe  # We'll store the NER pipeline here
-        self.base_model = base_model  # Path to base model to fine-tune
+        self.model = model  # We'll store the NER model here.
         self.train_dataset = train_dataset  # Path to training dataset
         self.test_dataset = test_dataset  # Path to test dataset
-        self.output_path = output_model_path  # Path to output folder
+        self.pipe = pipe  # We'll store the NER pipeline here
+        self.base_model = base_model  # Path to base model to fine-tune
+        self.model_path = model_path  # Path to output folder
         self.training_args = training_args  # Dictionary of fine-tuning args
         self.overwrite_training = overwrite_training  # Bool: True to overwrite training
         self.do_test = do_test  # Bool: True to run it on test mode
-        self.training_tagset = training_tagset  # Use fine or coarse tagset
-        self.model_name = self.model_name + "-" + self.training_tagset  # Rename model
+        self.load_from_hub = load_from_hub  # Bool: True if model is in HuggingFace hub
+
+        if self.do_test == True and self.load_from_hub == False:
+            self.model += "_test"
 
     # -------------------------------------------------------------
     def __str__(self):
@@ -54,19 +54,21 @@ class Recogniser:
         """
         s = (
             "\n>>> Toponym recogniser:\n"
-            "    * Model name: {0}\n"
-            "    * Base model: {1}\n"
-            "    * Overwrite model if exists: {2}\n"
-            "    * Train in test mode: {3}\n"
-            "    * Training args: {4}\n"
-            "    * Training tagset: {5}\n"
+            "    * Model path: {0}\n"
+            "    * Model name: {1}\n"
+            "    * Base model: {2}\n"
+            "    * Overwrite model if exists: {3}\n"
+            "    * Train in test mode: {4}\n"
+            "    * Load from hub: {5}\n"
+            "    * Training args: {6}\n"
         ).format(
-            self.model_name,
+            self.model_path,
+            self.model,
             self.base_model,
             str(self.overwrite_training),
             str(self.do_test),
+            str(self.load_from_hub),
             str(self.training_args),
-            self.training_tagset,
         )
         return s
 
@@ -83,15 +85,17 @@ class Recogniser:
         Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
 
+        if self.load_from_hub == True:
+            return None
+
         print("*** Training the toponym recognition model...")
 
-        Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        Path(self.model_path).mkdir(parents=True, exist_ok=True)
         metric = load_metric("seqeval")
 
         # Load train and test sets:
         if self.do_test == True:
-            # If test is True, train on a portion of the train and test sets, and add "_test" to the model name.
-            self.model_name = self.model_name + "_test"
+            # If test is True, train on a portion of the train and test sets:
             lwm_train = load_dataset(
                 "json", data_files=self.train_dataset, split="train[:10]"
             )
@@ -108,24 +112,33 @@ class Recogniser:
 
         # If model exists and overwrite is set to False, skip training:
         if (
-            Path(self.output_path + self.model_name + ".model").exists()
+            Path(self.model_path + self.model + ".model").exists()
             and self.overwrite_training == False
         ):
             print(
                 "\n** Note: Model "
-                + self.output_path
-                + self.model_name
+                + self.model_path
+                + self.model
                 + ".model is already trained. Set overwrite to True if needed.\n"
             )
             return None
 
-        # Map tags to labels to predict:
-        label_encoding_dict = ner.encode_dict(self.training_tagset)
-        label_list = list(label_encoding_dict.keys())
+        # Obtain unique list of labels:
+        df_tmp = lwm_train.to_pandas()
+        label_list = sorted(list(set([x for l in df_tmp["ner_tags"] for x in l])))
+
+        # Create mapping between labels and ids:
+        id2label = dict()
+        for i in range(len(label_list)):
+            id2label[i] = label_list[i]
+        label2id = {v: k for k, v in id2label.items()}
 
         # Load model and tokenizer:
         model = AutoModelForTokenClassification.from_pretrained(
-            self.base_model, num_labels=len(label_list)
+            self.base_model,
+            num_labels=len(label_list),
+            id2label=id2label,
+            label2id=label2id,
         )
         tokenizer = AutoTokenizer.from_pretrained(self.base_model)
         data_collator = DataCollatorForTokenClassification(tokenizer)
@@ -135,7 +148,7 @@ class Recogniser:
             partial(
                 ner.training_tokenize_and_align_labels,
                 tokenizer=tokenizer,
-                label_encoding_dict=label_encoding_dict,
+                label_encoding_dict=label2id,
             ),
             batched=True,
         )
@@ -143,7 +156,7 @@ class Recogniser:
             partial(
                 ner.training_tokenize_and_align_labels,
                 tokenizer=tokenizer,
-                label_encoding_dict=label_encoding_dict,
+                label_encoding_dict=label2id,
             ),
             batched=True,
         )
@@ -174,9 +187,9 @@ class Recogniser:
             }
 
         training_args = TrainingArguments(
-            output_dir=self.output_path,
+            output_dir=self.model_path,
             evaluation_strategy="epoch",
-            logging_dir=self.output_path + "runs/" + self.model_name,
+            logging_dir=self.model_path + "runs/" + self.model,
             learning_rate=self.training_args["learning_rate"],
             per_device_train_batch_size=self.training_args["batch_size"],
             per_device_eval_batch_size=self.training_args["batch_size"],
@@ -201,7 +214,7 @@ class Recogniser:
         trainer.evaluate()
 
         # Save the model:
-        trainer.save_model(self.output_path + self.model_name + ".model")
+        trainer.save_model(self.model_path + self.model + ".model")
 
     # -------------------------------------------------------------
     def create_pipeline(self):
@@ -215,11 +228,10 @@ class Recogniser:
         """
         print("*** Creating and loading a NER pipeline.")
         # Path to NER Model:
-        if self.do_test == True:
-            # If test is True, train on a portion of the train and test sets, and add "_test" to the model name.
-            self.model_name = self.model_name + "_test"
-        self.model = self.output_path + self.model_name + ".model"
-        self.pipe = pipeline("ner", model=self.model)
+        model_name = self.model
+        if self.load_from_hub == False:
+            model_name = self.model_path + self.model + ".model"
+        self.pipe = pipeline("ner", model=model_name, ignore_labels=[])
         return self.model, self.pipe
 
     # -------------------------------------------------------------
@@ -236,18 +248,22 @@ class Recogniser:
             'start': 0, 'end': 4}
         """
 
-        # Use our BERT-based toponym recogniser to detect entities, and
-        # postprocess the output to fix easily fixable misassignments.
-        # The result, 'predictions', is a list of dictionaries, each
-        # corresponding to an entity.
-        mapped_label = ner.map_tag_label(self.training_tagset)
+        # The n-dash is a very frequent character in historical newspapers,
+        # but the NER pipeline does not process it well: Plymouth—Kingston
+        # is parsed as "Plymouth (B-LOC), — (B-LOC), Kingston (B-LOC)", instead
+        # of the n-dash being interpreted as a word separator. Therefore, we
+        # replace it by a comma, except when the n-dash occurs in the opening
+        # position of a sentence.
+        sentence = sentence[0] + sentence[1:].replace("—", ",")
+        # Run the NER pipeline to predict mentions:
         ner_preds = self.pipe(sentence)
+        # Post-process the predictions, fixing potential grouping errors:
         lEntities = []
         predictions = []
         for pred_ent in ner_preds:
             prev_tok = pred_ent["word"]
             pred_ent["score"] = float(pred_ent["score"])
-            pred_ent["entity"] = mapped_label[pred_ent["entity"]]
+            pred_ent["entity"] = pred_ent["entity"]
             pred_ent = ner.fix_capitalization(pred_ent, sentence)
             if prev_tok.lower() != pred_ent["word"].lower():
                 print("Token processing error.")
