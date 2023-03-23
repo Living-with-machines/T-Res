@@ -9,13 +9,12 @@ from geoparser import linking, pipeline, ranking, recogniser
 def test_deezy_mostpopular():
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # We'll store the NER model here
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -24,7 +23,7 @@ def test_deezy_mostpopular():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
+        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     myranker = ranking.Ranker(
@@ -99,13 +98,12 @@ def test_deezy_mostpopular():
 def test_deezy_rel_withoutpubl():
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # We'll store the NER model here
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -114,7 +112,7 @@ def test_deezy_rel_withoutpubl():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
+        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     myranker = ranking.Ranker(

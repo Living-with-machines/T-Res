@@ -433,7 +433,7 @@ def load_processed_data(experiment):
     """
 
     output_path = os.path.join(
-        experiment.data_path, experiment.dataset, experiment.myner.model_name
+        experiment.data_path, experiment.dataset, experiment.myner.model
     )
 
     # Add the candidate experiment info to the path:
@@ -510,7 +510,7 @@ def store_processed_data(
     """
     data_path = experiment.data_path
     dataset = experiment.dataset
-    model_name = experiment.myner.model_name
+    model_name = experiment.myner.model
     output_path = data_path + dataset + "/" + model_name
 
     cand_approach = experiment.myranker.method
@@ -911,7 +911,7 @@ def create_mentions_df(experiment):
         experiment.data_path
         + experiment.dataset
         + "/"
-        + experiment.myner.model_name
+        + experiment.myner.model
         + "_"
         + cand_approach
     )
@@ -1033,9 +1033,9 @@ def store_results(experiment, task, how_split, which_split):
 
     scenario_name = ""
     if task == "ner":
-        scenario_name += task + "_" + experiment.myner.model_name + "_"
+        scenario_name += task + "_" + experiment.myner.model + "_"
     if task == "linking":
-        scenario_name += task + "_" + experiment.myner.model_name + "_"
+        scenario_name += task + "_" + experiment.myner.model + "_"
         cand_approach = experiment.myranker.method
         if experiment.myranker.method == "deezymatch":
             cand_approach += "+" + str(
@@ -1093,7 +1093,7 @@ def store_rel(experiment, dREL, approach, how_split, which_split):
     scenario_name = (
         approach
         + "_"
-        + experiment.myner.model_name  # The model name is needed due to tokenization
+        + experiment.myner.model  # The model name is needed due to tokenization
         + "_"
         + how_split
     )

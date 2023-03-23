@@ -48,7 +48,7 @@ def load_training_lwm_data(myexperiment):
     processed_file = os.path.join(
         myexperiment.data_path,
         "lwm/"
-        + myexperiment.myner.model_name.replace("coarse", "fine")
+        + myexperiment.myner.model.replace("coarse", "fine")
         + "_"
         + cand_approach
         + "_mentions.tsv",

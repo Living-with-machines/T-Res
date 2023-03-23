@@ -79,10 +79,28 @@ lwm_df = preprocess_data.process_lwm_for_ner(topres_path_train)
 lwm_train_ner, lwm_dev_ner = train_test_split(
     lwm_df, test_size=0.2, random_state=RANDOM_SEED
 )
+
+# Store LwM with fine-grained tags:
 lwm_train_ner.to_json(
-    output_path_lwm + "ner_df_train.json", orient="records", lines=True
+    output_path_lwm + "ner_fine_train.json", orient="records", lines=True
 )
-lwm_dev_ner.to_json(output_path_lwm + "ner_df_dev.json", orient="records", lines=True)
+lwm_dev_ner.to_json(output_path_lwm + "ner_fine_dev.json", orient="records", lines=True)
+
+# Convert fine-grained tags to coarse:
+lwm_train_ner["ner_tags"] = lwm_train_ner["ner_tags"].apply(
+    lambda x: preprocess_data.fine_to_coarse(x)
+)
+lwm_dev_ner["ner_tags"] = lwm_dev_ner["ner_tags"].apply(
+    lambda x: preprocess_data.fine_to_coarse(x)
+)
+
+# Store LwM with coarse-grained tags:
+lwm_train_ner.to_json(
+    output_path_lwm + "ner_coarse_train.json", orient="records", lines=True
+)
+lwm_dev_ner.to_json(
+    output_path_lwm + "ner_coarse_dev.json", orient="records", lines=True
+)
 
 # Process data for the resolution experiments:
 lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train, gazetteer_ids)

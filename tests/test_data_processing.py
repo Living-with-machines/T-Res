@@ -80,18 +80,51 @@ def test_original_lwm_data():
     )
 
 
-def test_lwm_ner_conversion():
+def test_lwm_ner_conversion_fine():
     """
     Test process_lwm_for_ner is not missing articles.
     """
     df_ner_train = pd.read_json(
-        os.path.join(f"{processed_path_lwm}", "ner_df_train.json"),
+        os.path.join(f"{processed_path_lwm}", "ner_fine_train.json"),
         orient="records",
         lines=True,
         dtype={"id": str},
     )
     df_ner_dev = pd.read_json(
-        os.path.join(f"{processed_path_lwm}", "ner_df_dev.json"),
+        os.path.join(f"{processed_path_lwm}", "ner_fine_dev.json"),
+        orient="records",
+        lines=True,
+        dtype={"id": str},
+    )
+    # Assert size of the train and dev sets:
+    assert df_ner_train.shape == (5216, 3)
+    assert df_ner_dev.shape == (1304, 3)
+    # Assert number of sentences in train and dev (length of list and set should be the same):
+    assert (
+        len(list(df_ner_train["id"]) + list(df_ner_dev["id"]))
+        == len(set(list(df_ner_train["id"]) + list(df_ner_dev["id"])))
+        == df_ner_train.shape[0] + df_ner_dev.shape[0]
+    )
+    # Assert ID is read as string:
+    assert type(df_ner_train["id"].iloc[0]) == str
+    # Assert number of unique articles:
+    train_articles = [x.split("_")[0] for x in list(df_ner_train["id"])]
+    dev_articles = [x.split("_")[0] for x in list(df_ner_dev["id"])]
+    assert len(set(train_articles + dev_articles)) == 343
+
+
+def test_lwm_ner_conversion_coarse():
+    """
+    Test process_lwm_for_ner is not missing articles.
+    """
+    df_ner_train = pd.read_json(
+        os.path.join(f"{processed_path_lwm}", "ner_coarse_train.json"),
+        orient="records",
+        lines=True,
+        dtype={"id": str},
+    )
+    df_ner_dev = pd.read_json(
+        os.path.join(f"{processed_path_lwm}", "ner_coarse_dev.json"),
         orient="records",
         lines=True,
         dtype={"id": str},
