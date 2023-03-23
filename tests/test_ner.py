@@ -64,10 +64,7 @@ def test_create_pipeline():
     )
     model, pipe = myner.create_pipeline()
     assert type(model) == str
-    assert (
-        type(pipe)
-        == transformers.pipelines.token_classification.TokenClassificationPipeline
-    )
+    assert type(pipe) == transformers.pipelines.token_classification.TokenClassificationPipeline
 
 
 def test_ner_predict():
@@ -99,3 +96,8 @@ def test_ner_predict():
     assert len(preds) == 16
     assert preds[4]["entity"] == "B-LOC"
     assert preds[4]["score"] == 0.9933644533157349
+
+    # Test that ner_predict() can handle hyphens
+    preds = myner.ner_predict("- I grew up in Plymouth—Kingston.")
+    assert preds[0]["word"] == "-"
+    assert preds[6]["word"] == ","
