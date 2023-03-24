@@ -1,6 +1,11 @@
 import json
 import os
 import sys
+import wget
+
+import zipfile
+import io
+import sqlite3
 
 import numpy as np
 import pandas as pd
@@ -45,6 +50,57 @@ class Linker:
         )
         return s
 
+    def download_resources(self):
+
+        # Check if REL resources exist otherwise download them:
+        if not os.path.exists(self.resources_path + "rel_db/generic/"):
+            os.makedirs(self.resources_path + "rel_db/generic/")
+
+        if not os.path.isfile(self.resources_path + "rel_db/generic/common_drawl.db"):
+            if not os.path.isfile(self.resources_path + "rel_db/generic/glove.840B.300d.zip"):
+                print("Downloading Glove Embeddings")
+                wget.download(
+                    "https://nlp.stanford.edu/data/glove.840B.300d.zip",
+                    self.resources_path + "rel_db/generic/",
+                )
+
+            with zipfile.ZipFile(
+                self.resources_path + "rel_db/generic/glove.840B.300d.zip", "r"
+            ) as zip_file:
+                # Get the name of the file inside the zip
+                file_name = zip_file.namelist()[0]
+
+                # Open the file inside the zip as a file object
+                with io.TextIOWrapper(zip_file.open(file_name), encoding="utf8") as f:
+                    # Read the contents of the file into a dictionary
+                    embeddings = {}
+                    for line in f:
+                        values = line.split(" ")
+                        word = values[0]
+                        embedding = np.asarray(values[1:], dtype="float32")
+                        embeddings[word] = embedding
+
+            # Set up a connection to SQLite
+            conn = sqlite3.connect(self.resources_path + "rel_db/generic/common_drawl.db")
+            c = conn.cursor()
+
+            # Create a table to store the embeddings
+            c.execute(
+                """CREATE TABLE embeddings
+                        (word text, emb text)"""
+            )
+
+            # Insert the embeddings into the table
+            for word, embedding in embeddings.items():
+                c.execute("INSERT INTO embeddings VALUES (?, ?)", (word, embedding.tostring()))
+
+            # Add the index to the table
+            c.execute("CREATE INDEX word_index ON embeddings (word)")
+
+            # Commit the changes and close the connection
+            conn.commit()
+            conn.close()
+
     def load_resources(self):
         """
         Load resources required for linking.
@@ -54,6 +110,10 @@ class Linker:
             self.linking_resources (dict): a dictionary storing the resources
                 that will be needed for a specific linking method.
         """
+
+        print("*** Downloading resources for REL if not present.")
+        self.download_resources()
+
         print("*** Load linking resources.")
 
         # Load Wikidata mentions-to-QID with absolute counts:
