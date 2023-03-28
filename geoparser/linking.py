@@ -31,19 +31,21 @@ class Linker:
         resources_path,
         linking_resources,
         overwrite_training,
-        rel_params,
+        wikimapper_path,
+        rel_params=dict(),
     ):
         self.method = method
         self.resources_path = resources_path
         self.linking_resources = linking_resources
         self.overwrite_training = overwrite_training
         self.rel_params = rel_params
-        # Path to wikipedia2wikidata mapper:
-        self.db = self.resources_path + "wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
+        self.wikimapper_path = wikimapper_path
 
     def __str__(self):
         s = (
-            ">>> Entity Linking:\n" "    * Method: {0}\n" "    * Overwrite training: {1}\n"
+            ">>> Entity Linking:\n"
+            "    * Method: {0}\n"
+            "    * Overwrite training: {1}\n"
         ).format(
             self.method,
             str(self.overwrite_training),
@@ -57,7 +59,9 @@ class Linker:
             os.makedirs(self.resources_path + "rel_db/generic/")
 
         if not os.path.isfile(self.resources_path + "rel_db/generic/common_drawl.db"):
-            if not os.path.isfile(self.resources_path + "rel_db/generic/glove.840B.300d.zip"):
+            if not os.path.isfile(
+                self.resources_path + "rel_db/generic/glove.840B.300d.zip"
+            ):
                 print("Downloading Glove Embeddings")
                 wget.download(
                     "https://nlp.stanford.edu/data/glove.840B.300d.zip",
@@ -81,7 +85,9 @@ class Linker:
                         embeddings[word] = embedding
 
             # Set up a connection to SQLite
-            conn = sqlite3.connect(self.resources_path + "rel_db/generic/common_drawl.db")
+            conn = sqlite3.connect(
+                self.resources_path + "rel_db/generic/common_drawl.db"
+            )
             c = conn.cursor()
 
             # Create a table to store the embeddings
@@ -92,7 +98,9 @@ class Linker:
 
             # Insert the embeddings into the table
             for word, embedding in embeddings.items():
-                c.execute("INSERT INTO embeddings VALUES (?, ?)", (word, embedding.tostring()))
+                c.execute(
+                    "INSERT INTO embeddings VALUES (?, ?)", (word, embedding.tostring())
+                )
 
             # Add the index to the table
             c.execute("CREATE INDEX word_index ON embeddings (word)")
@@ -199,12 +207,16 @@ class Linker:
             )
 
             # Instantiate REL entity disambiguation:
-            experiment_path = os.path.join(base_path, wiki_version, "generated", experiment_name)
+            experiment_path = os.path.join(
+                base_path, wiki_version, "generated", experiment_name
+            )
             config = {
                 "mode": "eval",
                 "model_path": os.path.join(experiment_path, "model"),
             }
-            self.rel_params["model"] = EntityDisambiguation(base_path, wiki_version, config)
+            self.rel_params["model"] = EntityDisambiguation(
+                base_path, wiki_version, config
+            )
 
             return self.rel_params["mention_detection"], self.rel_params["model"]
 
@@ -222,7 +234,9 @@ class Linker:
                 cand_score = round(c[1], 3)
                 formatted_cands["candidates"][cand_wiki] = cand_score
             if formatted_cands["gold"][0] != "NONE":
-                formatted_cands["gold"] = process_wikipedia.title_to_id(formatted_cands["gold"][0])
+                formatted_cands["gold"] = process_wikipedia.title_to_id(
+                    formatted_cands["gold"][0]
+                )
             if not formatted_cands["prediction"] == "NIL":
                 formatted_cands["prediction"] = process_wikipedia.title_to_id(
                     formatted_cands["prediction"], path_to_db=self.db
@@ -256,7 +270,9 @@ class Linker:
         if cands:
             for variation in cands:
                 for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][candidate]
+                    score = self.linking_resources["mentions_to_wikidata"][variation][
+                        candidate
+                    ]
                     total_score += score
                     all_candidates[candidate] = score
                     if score > keep_highest_score:
@@ -398,7 +414,9 @@ class Linker:
                         context_place = mentions_dataset[i + 1]["prediction"]
                 else:
                     context_place = mentions_dataset[i]["place_wqid"]
-                resolved_by_distance = self.by_distance(mentions_dataset[i], context_place)
+                resolved_by_distance = self.by_distance(
+                    mentions_dataset[i], context_place
+                )
                 mentions_dataset[i]["prediction"] = resolved_by_distance[0]
                 mentions_dataset[i]["ed_score"] = resolved_by_distance[1]
         return mentions_dataset
