@@ -232,7 +232,7 @@ class Recogniser:
         if self.load_from_hub == False:
             model_name = self.model_path + self.model + ".model"
         self.pipe = pipeline("ner", model=model_name, ignore_labels=[])
-        return self.model, self.pipe
+        return self.pipe
 
     # -------------------------------------------------------------
     def ner_predict(self, sentence):

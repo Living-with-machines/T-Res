@@ -1,14 +1,9 @@
 import json
 import os
 import sys
-import wget
-
-import zipfile
-import io
-import sqlite3
-
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from haversine import haversine
 from tqdm import tqdm
 
@@ -19,9 +14,8 @@ np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_wikipedia, training
-from utils.REL.entity_disambiguation import EntityDisambiguation
-from utils.REL.mention_detection import MentionDetection
+from utils import training, rel_utils
+from utils.REL import entity_disambiguation
 
 
 class Linker:
@@ -31,7 +25,6 @@ class Linker:
         resources_path,
         linking_resources,
         overwrite_training,
-        wikimapper_path,
         rel_params=dict(),
     ):
         self.method = method
@@ -39,7 +32,6 @@ class Linker:
         self.linking_resources = linking_resources
         self.overwrite_training = overwrite_training
         self.rel_params = rel_params
-        self.wikimapper_path = wikimapper_path
 
     def __str__(self):
         s = (
@@ -52,63 +44,6 @@ class Linker:
         )
         return s
 
-    def download_resources(self):
-
-        # Check if REL resources exist otherwise download them:
-        if not os.path.exists(self.resources_path + "rel_db/generic/"):
-            os.makedirs(self.resources_path + "rel_db/generic/")
-
-        if not os.path.isfile(self.resources_path + "rel_db/generic/common_drawl.db"):
-            if not os.path.isfile(
-                self.resources_path + "rel_db/generic/glove.840B.300d.zip"
-            ):
-                print("Downloading Glove Embeddings")
-                wget.download(
-                    "https://nlp.stanford.edu/data/glove.840B.300d.zip",
-                    self.resources_path + "rel_db/generic/",
-                )
-
-            with zipfile.ZipFile(
-                self.resources_path + "rel_db/generic/glove.840B.300d.zip", "r"
-            ) as zip_file:
-                # Get the name of the file inside the zip
-                file_name = zip_file.namelist()[0]
-
-                # Open the file inside the zip as a file object
-                with io.TextIOWrapper(zip_file.open(file_name), encoding="utf8") as f:
-                    # Read the contents of the file into a dictionary
-                    embeddings = {}
-                    for line in f:
-                        values = line.split(" ")
-                        word = values[0]
-                        embedding = np.asarray(values[1:], dtype="float32")
-                        embeddings[word] = embedding
-
-            # Set up a connection to SQLite
-            conn = sqlite3.connect(
-                self.resources_path + "rel_db/generic/common_drawl.db"
-            )
-            c = conn.cursor()
-
-            # Create a table to store the embeddings
-            c.execute(
-                """CREATE TABLE embeddings
-                        (word text, emb text)"""
-            )
-
-            # Insert the embeddings into the table
-            for word, embedding in embeddings.items():
-                c.execute(
-                    "INSERT INTO embeddings VALUES (?, ?)", (word, embedding.tostring())
-                )
-
-            # Add the index to the table
-            c.execute("CREATE INDEX word_index ON embeddings (word)")
-
-            # Commit the changes and close the connection
-            conn.commit()
-            conn.close()
-
     def load_resources(self):
         """
         Load resources required for linking.
@@ -118,9 +53,6 @@ class Linker:
             self.linking_resources (dict): a dictionary storing the resources
                 that will be needed for a specific linking method.
         """
-
-        print("*** Downloading resources for REL if not present.")
-        self.download_resources()
 
         print("*** Load linking resources.")
 
@@ -197,52 +129,52 @@ class Linker:
         if self.method == "bydistance":
             return self.by_distance(dict_mention)
 
-    def disambiguation_setup(self, experiment_name):
-        if self.method == "reldisamb":
-            base_path = self.rel_params["base_path"]
-            wiki_version = self.rel_params["wiki_version"]
-            # Instantiate REL mention detection:
-            self.rel_params["mention_detection"] = MentionDetection(
-                base_path, wiki_version, mylinker=self, path_to_db=self.db
-            )
+    # def disambiguation_setup(self, experiment_name):
+    #     if self.method == "reldisamb":
+    #         base_path = self.rel_params["base_path"]
+    #         wiki_version = self.rel_params["wiki_version"]
+    #         # Instantiate REL mention detection:
+    #         self.rel_params["mention_detection"] = MentionDetection(
+    #             base_path, wiki_version, mylinker=self, path_to_db=self.db
+    #         )
 
-            # Instantiate REL entity disambiguation:
-            experiment_path = os.path.join(
-                base_path, wiki_version, "generated", experiment_name
-            )
-            config = {
-                "mode": "eval",
-                "model_path": os.path.join(experiment_path, "model"),
-            }
-            self.rel_params["model"] = EntityDisambiguation(
-                base_path, wiki_version, config
-            )
+    #         # Instantiate REL entity disambiguation:
+    #         experiment_path = os.path.join(
+    #             base_path, wiki_version, "generated", experiment_name
+    #         )
+    #         config = {
+    #             "mode": "eval",
+    #             "model_path": os.path.join(experiment_path, "model"),
+    #         }
+    #         self.rel_params["model"] = EntityDisambiguation(
+    #             base_path, wiki_version, config
+    #         )
 
-            return self.rel_params["mention_detection"], self.rel_params["model"]
+    #         return self.rel_params["mention_detection"], self.rel_params["model"]
 
-    def format_linking_dataset(self, mentions_dataset):
+    # def format_linking_dataset(self, mentions_dataset):
 
-        formatted_dataset = []
-        for m in mentions_dataset:
-            formatted_cands = m.copy()
-            mention = m["mention"]
-            formatted_cands["candidates"] = dict()
-            candidates = m["candidates"]
-            for c in candidates:
-                cand_wiki = c[0]
-                cand_wiki = process_wikipedia.title_to_id(cand_wiki, path_to_db=self.db)
-                cand_score = round(c[1], 3)
-                formatted_cands["candidates"][cand_wiki] = cand_score
-            if formatted_cands["gold"][0] != "NONE":
-                formatted_cands["gold"] = process_wikipedia.title_to_id(
-                    formatted_cands["gold"][0]
-                )
-            if not formatted_cands["prediction"] == "NIL":
-                formatted_cands["prediction"] = process_wikipedia.title_to_id(
-                    formatted_cands["prediction"], path_to_db=self.db
-                )
-            formatted_dataset.append(formatted_cands)
-        return formatted_dataset
+    #     formatted_dataset = []
+    #     for m in mentions_dataset:
+    #         formatted_cands = m.copy()
+    #         mention = m["mention"]
+    #         formatted_cands["candidates"] = dict()
+    #         candidates = m["candidates"]
+    #         for c in candidates:
+    #             cand_wiki = c[0]
+    #             cand_wiki = process_wikipedia.title_to_id(cand_wiki, path_to_db=self.db)
+    #             cand_score = round(c[1], 3)
+    #             formatted_cands["candidates"][cand_wiki] = cand_score
+    #         if formatted_cands["gold"][0] != "NONE":
+    #             formatted_cands["gold"] = process_wikipedia.title_to_id(
+    #                 formatted_cands["gold"][0]
+    #             )
+    #         if not formatted_cands["prediction"] == "NIL":
+    #             formatted_cands["prediction"] = process_wikipedia.title_to_id(
+    #                 formatted_cands["prediction"], path_to_db=self.db
+    #             )
+    #         formatted_dataset.append(formatted_cands)
+    #     return formatted_dataset
 
     # ----------------------------------------------
     # Most popular candidate:
@@ -348,115 +280,181 @@ class Linker:
 
         return keep_closest_cand, resulting_score, resulting_cands
 
-    def perform_linking_rel(self, mentions_dataset, sentence_id, linking_model):
-        publication_entry = dict()
-        if self.rel_params["ranking"] == "publ" and mentions_dataset:
-            # If "publ", add an artificial publication entry:
-            publication_entry = self.add_publication_mention(mentions_dataset)
-            mentions_dataset.append(publication_entry)
-        # Predict mentions in one sentence:
-        predictions, timing = linking_model.predict({sentence_id: mentions_dataset})
-        if self.rel_params["ranking"] == "publ" and mentions_dataset:
-            # ... and if "publ", now remove the artificial publication entry!
-            mentions_dataset.remove(publication_entry)
-        # Postprocess the predictions:
-        for i in range(len(mentions_dataset)):
-            mention_dataset = mentions_dataset[i]
-            prediction = predictions[sentence_id][i]
-            if mention_dataset["mention"] == prediction["mention"]:
-                mentions_dataset[i]["prediction"] = prediction["prediction"]
+    # def perform_linking_rel(self, mentions_dataset, sentence_id, linking_model):
+    #     publication_entry = dict()
+    #     if self.rel_params["ranking"] == "publ" and mentions_dataset:
+    #         # If "publ", add an artificial publication entry:
+    #         publication_entry = self.add_publication_mention(mentions_dataset)
+    #         mentions_dataset.append(publication_entry)
+    #     # Predict mentions in one sentence:
+    #     predictions, timing = linking_model.predict({sentence_id: mentions_dataset})
+    #     if self.rel_params["ranking"] == "publ" and mentions_dataset:
+    #         # ... and if "publ", now remove the artificial publication entry!
+    #         mentions_dataset.remove(publication_entry)
+    #     # Postprocess the predictions:
+    #     for i in range(len(mentions_dataset)):
+    #         mention_dataset = mentions_dataset[i]
+    #         prediction = predictions[sentence_id][i]
+    #         if mention_dataset["mention"] == prediction["mention"]:
+    #             mentions_dataset[i]["prediction"] = prediction["prediction"]
 
-                # If entity is NIL, conf_ed is 0.0 and there are no candidates:
-                if prediction["prediction"] == "NIL":
-                    mentions_dataset[i]["ed_score"] = 0.0
-                    mentions_dataset[i]["candidates"] = []
-                else:
-                    idx_pred = prediction["candidates"].index(prediction["prediction"])
-                    mentions_dataset[i]["ed_score"] = round(
-                        float(prediction["scores"][idx_pred]), 3
-                    )
-                    mentions_dataset[i]["candidates"] = [
-                        [
-                            prediction["candidates"][c],
-                            round(float(prediction["scores"][c]), 3),
-                        ]
-                        for c in range(len(prediction["candidates"]))
-                    ]
+    #             # If entity is NIL, conf_ed is 0.0 and there are no candidates:
+    #             if prediction["prediction"] == "NIL":
+    #                 mentions_dataset[i]["ed_score"] = 0.0
+    #                 mentions_dataset[i]["candidates"] = []
+    #             else:
+    #                 idx_pred = prediction["candidates"].index(prediction["prediction"])
+    #                 mentions_dataset[i]["ed_score"] = round(
+    #                     float(prediction["scores"][idx_pred]), 3
+    #                 )
+    #                 mentions_dataset[i]["candidates"] = [
+    #                     [
+    #                         prediction["candidates"][c],
+    #                         round(float(prediction["scores"][c]), 3),
+    #                     ]
+    #                     for c in range(len(prediction["candidates"]))
+    #                 ]
 
-        # Format the predictions to match the output of the other approaches:
-        mentions_dataset = self.format_linking_dataset(mentions_dataset)
-        if self.rel_params["micro_locs"] == "dist":
-            # Disambiguate micro locations by distance respect neighbouring
-            # resolved places or place of publication:
-            mentions_dataset = self.two_step_resolution(mentions_dataset)
-        if self.rel_params["micro_locs"] == "nil":
-            # Assign NIL to micro locations:
-            mentions_dataset = self.micro_no_resolution(mentions_dataset)
-        mentions_dataset = {sentence_id: mentions_dataset}
-        return mentions_dataset
+    #     # Format the predictions to match the output of the other approaches:
+    #     mentions_dataset = self.format_linking_dataset(mentions_dataset)
+    #     if self.rel_params["micro_locs"] == "dist":
+    #         # Disambiguate micro locations by distance respect neighbouring
+    #         # resolved places or place of publication:
+    #         mentions_dataset = self.two_step_resolution(mentions_dataset)
+    #     if self.rel_params["micro_locs"] == "nil":
+    #         # Assign NIL to micro locations:
+    #         mentions_dataset = self.micro_no_resolution(mentions_dataset)
+    #     mentions_dataset = {sentence_id: mentions_dataset}
+    #     return mentions_dataset
 
-    def micro_no_resolution(self, mentions_dataset):
-        for i in range(len(mentions_dataset)):
-            if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
-                mentions_dataset[i]["prediction"] = "NIL"
-                mentions_dataset[i]["ed_score"] = 0.0
-        return mentions_dataset
+    # def micro_no_resolution(self, mentions_dataset):
+    #     for i in range(len(mentions_dataset)):
+    #         if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
+    #             mentions_dataset[i]["prediction"] = "NIL"
+    #             mentions_dataset[i]["ed_score"] = 0.0
+    #     return mentions_dataset
 
-    def two_step_resolution(self, mentions_dataset):
-        for i in range(len(mentions_dataset)):
-            if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
-                context_place = ""
-                if (i - 1) < len(mentions_dataset):
-                    if mentions_dataset[i - 1]["tag"] == "LOC":
-                        context_place = mentions_dataset[i - 1]["prediction"]
-                elif (i + 1) < len(mentions_dataset):
-                    if mentions_dataset[i + 1]["tag"] == "LOC":
-                        context_place = mentions_dataset[i + 1]["prediction"]
-                else:
-                    context_place = mentions_dataset[i]["place_wqid"]
-                resolved_by_distance = self.by_distance(
-                    mentions_dataset[i], context_place
+    # def two_step_resolution(self, mentions_dataset):
+    #     for i in range(len(mentions_dataset)):
+    #         if mentions_dataset[i]["tag"] in ["BUILDING", "STREET"]:
+    #             context_place = ""
+    #             if (i - 1) < len(mentions_dataset):
+    #                 if mentions_dataset[i - 1]["tag"] == "LOC":
+    #                     context_place = mentions_dataset[i - 1]["prediction"]
+    #             elif (i + 1) < len(mentions_dataset):
+    #                 if mentions_dataset[i + 1]["tag"] == "LOC":
+    #                     context_place = mentions_dataset[i + 1]["prediction"]
+    #             else:
+    #                 context_place = mentions_dataset[i]["place_wqid"]
+    #             resolved_by_distance = self.by_distance(
+    #                 mentions_dataset[i], context_place
+    #             )
+    #             mentions_dataset[i]["prediction"] = resolved_by_distance[0]
+    #             mentions_dataset[i]["ed_score"] = resolved_by_distance[1]
+    #     return mentions_dataset
+
+    # def perform_linking_mention(self, mention_data):
+    #     # This predicts one mention at a time (does not look at context):
+    #     prediction = self.run(mention_data)
+    #     mention_data["prediction"] = prediction[0]
+    #     mention_data["ed_score"] = prediction[1]
+    #     return mention_data
+
+    # def add_publication_mention(self, mention_data):
+    #     # Add artificial publication entity that is already disambiguated,
+    #     # per sentence:
+    #     sentence = mention_data[0]["sentence"]
+    #     sent_idx = mention_data[0]["sent_idx"]
+    #     context = mention_data[0]["context"]
+    #     place_wqid = mention_data[0]["place_wqid"]
+    #     place = mention_data[0]["place"]
+    #     # Add place of publication as a fake entity in each sentence:
+    #     # Wikipedia title of place of publication QID:
+    #     wiki_gold = [place_wqid]
+    #     sent2 = sentence + " Published in " + place
+    #     pos2 = len(sentence) + len(" Published in ")
+    #     end_pos2 = pos2 + len(place)
+    #     dict_publ = {
+    #         "mention": "publication",
+    #         "sent_idx": sent_idx,
+    #         "sentence": sent2,
+    #         "gold": wiki_gold,
+    #         "ngram": "publication",
+    #         "context": context,
+    #         "pos": pos2,
+    #         "end_pos": end_pos2,
+    #         "candidates": [[wiki_gold[0], 1.0]],
+    #     }
+    #     return dict_publ
+
+    def train_load_model(self, myranker):
+        """
+        Training an entity disambiguation model. The training will be skipped
+        if the model already exists and self.overwrite_training it set to False,
+        or if the disambiguation method is unsupervised. The training will
+        be run on test mode if self.do_test is set to True.
+
+        Returns:
+            A trained DeezyMatch model.
+            The DeezyMatch candidate vectors.
+        """
+        if self.method == "reldisamb":
+            if (
+                self.overwrite_training == True
+                or not Path(os.path.join(self.rel_params["model_path"])).is_dir()
+            ):
+                print(
+                    "The entity disambiguation model does not exist or overwrite_training is set to True."
                 )
-                mentions_dataset[i]["prediction"] = resolved_by_distance[0]
-                mentions_dataset[i]["ed_score"] = resolved_by_distance[1]
-        return mentions_dataset
 
-    def perform_linking_mention(self, mention_data):
-        # This predicts one mention at a time (does not look at context):
-        prediction = self.run(mention_data)
-        mention_data["prediction"] = prediction[0]
-        mention_data["ed_score"] = prediction[1]
-        return mention_data
+                print("Creating the dataset.")
+                # This is the column on which we will split the dataset into train/dev/test:
+                datasplit = self.rel_params["training_split"]
+                # Create the folder where to store the resulting disambiguation models:
+                Path(self.rel_params["model_path"]).mkdir(parents=True, exist_ok=True)
+                # Load the linking dataset, separate training and dev:
+                linking_df_path = os.path.join(
+                    self.rel_params["data_path"], "linking_df_split.tsv"
+                )
+                linking_df = pd.read_csv(linking_df_path, sep="\t")
+                train_df = linking_df[linking_df[datasplit] == "train"]
+                dev_df = linking_df[linking_df[datasplit] == "dev"]
+                # If this is a test, use only the first 20 rows of the train and dev sets:
+                if self.rel_params["do_test"] == True:
+                    train_df = train_df.iloc[:20]
+                    dev_df = dev_df.iloc[:20]
 
-    def add_publication_mention(self, mention_data):
-        # Add artificial publication entity that is already disambiguated,
-        # per sentence:
-        sentence = mention_data[0]["sentence"]
-        sent_idx = mention_data[0]["sent_idx"]
-        context = mention_data[0]["context"]
-        place_wqid = mention_data[0]["place_wqid"]
-        place = mention_data[0]["place"]
-        # Add place of publication as a fake entity in each sentence:
-        # Wikipedia title of place of publication QID:
-        wiki_gold = "NIL"
-
-        gold_ids = process_wikipedia.id_to_title(place_wqid, path_to_db=self.db)
-        # Get the first of the wikipedia titles returned (they're sorted
-        # by their autoincrement id):
-        if gold_ids:
-            wiki_gold = [gold_ids[0]]
-        sent2 = sentence + " Published in " + place
-        pos2 = len(sentence) + len(" Published in ")
-        end_pos2 = pos2 + len(place)
-        dict_publ = {
-            "mention": "publication",
-            "sent_idx": sent_idx,
-            "sentence": sent2,
-            "gold": wiki_gold,
-            "ngram": "publication",
-            "context": context,
-            "pos": pos2,
-            "end_pos": end_pos2,
-            "candidates": [[wiki_gold[0], 1.0]],
-        }
-        return dict_publ
+                print(train_df.shape)
+                print(dev_df.shape)
+                # Prepare the dataset into the format required by REL:
+                train_json = rel_utils.prepare_rel_trainset(
+                    train_df, self, myranker, "train"
+                )
+                dev_json = rel_utils.prepare_rel_trainset(dev_df, self, myranker, "dev")
+                # Set ED configuration to train mode:
+                config_rel = {
+                    "mode": "train",
+                    "model_path": os.path.join(self.rel_params["model_path"], "model"),
+                }
+                # Instantiate the entity disambiguation model:
+                model = entity_disambiguation.EntityDisambiguation(
+                    self.rel_params["db_embeddings"],
+                    config_rel,
+                )
+                print("Training the model.")
+                # Train the model using lwm_train:
+                model.train(train_json, dev_json)
+                # Train and predict using LR (to obtain confidence scores)
+                model.train_LR(train_json, dev_json, self.rel_params["model_path"])
+                return model
+            else:
+                # Setting disambiguation model mode to "eval":
+                config_rel = {
+                    "mode": "eval",
+                    "model_path": os.path.join(self.rel_params["model_path"], "model"),
+                }
+                model = entity_disambiguation.EntityDisambiguation(
+                    self.rel_params["db_embeddings"],
+                    config_rel,
+                )
+                return model

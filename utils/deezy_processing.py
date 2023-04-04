@@ -18,10 +18,6 @@ from DeezyMatch import train as dm_train
 from thefuzz import fuzz
 from tqdm import tqdm
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import get_data
-
 
 def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
     """

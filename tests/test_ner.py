@@ -62,9 +62,11 @@ def test_create_pipeline():
         do_test=True,  # Set to True if you want to train on test mode
         load_from_hub=False,
     )
-    model, pipe = myner.create_pipeline()
-    assert type(model) == str
-    assert type(pipe) == transformers.pipelines.token_classification.TokenClassificationPipeline
+    pipe = myner.create_pipeline()
+    assert (
+        type(pipe)
+        == transformers.pipelines.token_classification.TokenClassificationPipeline
+    )
 
 
 def test_ner_predict():
@@ -86,7 +88,7 @@ def test_ner_predict():
         do_test=False,  # Set to True if you want to train on test mode
         load_from_hub=False,
     )
-    myner.model, myner.pipe = myner.create_pipeline()
+    myner.pipe = myner.create_pipeline()
 
     preds = myner.ner_predict(
         "I grew up in Bologna, a city near Florence, but way more interesting."
@@ -122,7 +124,8 @@ def test_ner_load_from_hub():
         do_test=False,  # Set to True if you want to train on test mode
         load_from_hub=True,
     )
-    model, pipe = myner.create_pipeline()
-
-    assert type(model) == str
-    assert type(pipe) == transformers.pipelines.token_classification.TokenClassificationPipeline
+    pipe = myner.create_pipeline()
+    assert (
+        type(pipe)
+        == transformers.pipelines.token_classification.TokenClassificationPipeline
+    )

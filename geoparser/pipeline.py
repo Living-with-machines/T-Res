@@ -7,7 +7,7 @@ from sentence_splitter import split_text_into_sentences
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from geoparser import linking, ranking, recogniser
-from utils import ner, pipeline_utils
+from utils import ner, rel_utils
 
 
 class Pipeline:
@@ -15,17 +15,9 @@ class Pipeline:
     The Pipeline class geoparses a text.
     """
 
-    def __init__(
-        self,
-        myner=None,
-        myranker=None,
-        mylinker=None,
-    ):
+    def __init__(self, myner=None, myranker=None, mylinker=None):
         """
         Arguments:
-            text (str): the text to geoparse.
-            place_publication (str): place of publication.
-            year (int): year of publication.
             myner (recogniser.Recogniser): a Recogniser object.
             myranker (ranking.Ranker): a Ranker object.
             mylinker (linking.Linker): a Linker object.
@@ -94,10 +86,17 @@ class Pipeline:
                 resources_path="../resources/",
                 linking_resources=dict(),
                 rel_params={
-                    "base_path": "../resources/rel_db/",
-                    "wiki_version": "wiki_2019/",
+                    "model_path": "../resources/models/disambiguation/",
+                    "data_path": "../experiments/outputs/data/lwm/",
+                    "training_split": "originalsplit",
+                    "context_length": 100,
+                    "topn_candidates": 10,
+                    "db_embeddings": "../resources/rel_db/embedding_database.db",
+                    "with_publication": False,
+                    "with_microtoponyms": False,
+                    "do_test": True,
                 },
-                overwrite_training=False,
+                overwrite_training=True,
             )
 
         # -----------------------------------------
@@ -105,7 +104,7 @@ class Pipeline:
         # Train the NER models if needed:
         self.myner.train()
         # Load the NER pipeline:
-        self.myner.model, self.myner.pipe = self.myner.create_pipeline()
+        self.myner.pipe = self.myner.create_pipeline()
 
         # -----------------------------------------
         # Ranker loading resources and training a model:
@@ -118,19 +117,38 @@ class Pipeline:
         # Linker loading resources:
         # Load linking resources:
         self.mylinker.linking_resources = self.mylinker.load_resources()
-        # TODO Add as part of the pipeline:
-        # # Train a linking model if needed:
-        # self.mylinker.train()
-        experiment_name = pipeline_utils.get_experiment_name(self, "originalsplit")
-        if self.mylinker.method == "reldisamb":
-            (
-                self.mylinker.rel_params["mention_detection"],
-                self.mylinker.rel_params["model"],
-            ) = self.mylinker.disambiguation_setup(experiment_name)
+        # Train a linking model if needed (it requires myranker to generate potential
+        # candidates to the training set):
+        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
+            self.myranker
+        )
 
     def run_sentence(
-        self, sentence, sent_idx=0, context=("", ""), place="", place_wqid=""
+        self,
+        sentence,
+        sent_idx=0,
+        context=("", ""),
+        place="",
+        place_wqid="",
+        postprocess_output=True,
     ):
+        """
+        This function takes a sentence as input and performs the whole pipeline:
+        first identifies toponyms, then finds relevant candidates and ranks them,
+        and finally links them to the Wikidata Id.
+
+        Arguments:
+            sentence (str): The target sentence.
+            sent_idx (int): Position of the target sentence in a larger text.
+            context (two-element tuple): A two-elements tuple: the first is the
+                previous context of the target sentence, the second is the following
+                context of the target sentence.
+            place (str): The place of publication, in text (e.g. "London").
+            place_wqid (str): The Wikidata id of the place of publication (e.g. "Q84")
+            postprocess_output (bool): Whether to postprocess the output, adding
+                geographic coordinates. This will be false for running the experiments,
+                and True otherwise.
+        """
         sentence = sentence.replace("—", ";")
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
@@ -147,12 +165,6 @@ class Pipeline:
             mentions
         )
 
-        # Linking settings
-        if self.mylinker.method == "reldisamb":
-            mention_prediction = self.mylinker.rel_params["mention_detection"]
-            cand_selection = "relcs" if self.myranker.method == "relcs" else "lwmcs"
-            linking_model = self.mylinker.rel_params["model"]
-
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
         for m in mentions:
@@ -166,22 +178,29 @@ class Pipeline:
             prediction["sent_idx"] = sent_idx
             prediction["end_pos"] = m["end_char"]
             prediction["ngram"] = m["mention"]
-            prediction["conf_md"] = 0.0
+            prediction["conf_md"] = m["ner_score"]
             prediction["tag"] = m["ner_label"]
             prediction["sentence"] = sentence
             prediction["candidates"] = wk_cands.get(m["mention"], dict())
             prediction["place"] = place
             prediction["place_wqid"] = place_wqid
             mentions_dataset["linking"].append(prediction)
-            if self.mylinker.method == "reldisamb":
-                prediction["candidates"] = mention_prediction.get_candidates(
-                    prediction["mention"], cand_selection, prediction["candidates"]
-                )
 
         if self.mylinker.method == "reldisamb":
-            mentions_dataset = self.mylinker.perform_linking_rel(
-                mentions_dataset["linking"], "linking", linking_model
+            mentions_dataset = rel_utils.rank_candidates(
+                mentions_dataset,
+                wk_cands,
+                self.mylinker.linking_resources["mentions_to_wikidata"],
             )
+            predicted = self.mylinker.rel_params["ed_model"].predict(mentions_dataset)
+            for i in range(len(mentions_dataset["linking"])):
+                mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
+                    "prediction"
+                ]
+                mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i][
+                    "conf_ed"
+                ]
+
         if self.mylinker.method in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
@@ -198,41 +217,50 @@ class Pipeline:
                     x: round(y, 3) for x, y in selected_cand[2].items()
                 }
 
-        # Process output:
-        keys = [
-            "sent_idx",
-            "mention",
-            "pos",
-            "end_pos",
-            "tag",
-            "prediction",
-            "ner_score",
-            "ed_score",
-            "sentence",
-            "candidates",
-        ]
-        sentence_dataset = []
-        for md in mentions_dataset["linking"]:
-            md = dict((k, md[k]) for k in md if k in keys)
-            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
-                md["prediction"]
-            )
-            # md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
-            #     md["prediction"]
-            # )
-            sentence_dataset.append(md)
-        return sentence_dataset
+        if not postprocess_output:
+            return mentions_dataset
 
-    def run_text(self, text, place="", place_wqid="", year=""):
+        if postprocess_output:
+            # Process output:
+            keys = [
+                "sent_idx",
+                "mention",
+                "pos",
+                "end_pos",
+                "tag",
+                "prediction",
+                "ner_score",
+                "ed_score",
+                "sentence",
+                "candidates",
+            ]
+            sentence_dataset = []
+            for md in mentions_dataset["linking"]:
+                md = dict((k, md[k]) for k in md if k in keys)
+                md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
+                    md["prediction"]
+                )
+                md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
+                    md["prediction"]
+                )
+                sentence_dataset.append(md)
+            return sentence_dataset
+
+    def run_text(self, text, place="", place_wqid="", postprocess_output=True):
+        """
+        This function takes a text as input and splits it into sentences,
+        each of which will be parsed with the T-Res pipeline.
+        """
         sentences = split_text_into_sentences(text, language="en")
         document_dataset = []
         for i in range(len(sentences)):
             sentence_dataset = self.run_sentence(
                 sentences[i],
                 sent_idx=i,
-                context=("", ""),
+                context=("", ""),  # TODO CHANGE THIS!!!
                 place=place,
                 place_wqid=place_wqid,
+                postprocess_output=True,
             )
             for sd in sentence_dataset:
                 document_dataset.append(sd)

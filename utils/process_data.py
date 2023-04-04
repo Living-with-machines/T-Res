@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import urllib
 from ast import literal_eval
 from pathlib import Path
 from tqdm import tqdm

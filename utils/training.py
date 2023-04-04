@@ -5,9 +5,10 @@ from pathlib import Path
 from ast import literal_eval
 
 from utils.REL.entity_disambiguation import EntityDisambiguation
-from utils.REL.generate_train_test import GenTrainingTest
-from utils.REL.training_datasets import TrainingEvaluationDatasets
-from utils.REL.wikipedia import Wikipedia
+
+# from utils.REL.generate_train_test import GenTrainingTest
+# from utils.REL.training_datasets import TrainingEvaluationDatasets
+# from utils.REL.wikipedia import Wikipedia
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))

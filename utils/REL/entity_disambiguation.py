@@ -1,85 +1,75 @@
-import json
 import os
-import pickle as pkl
 import re
-import tarfile
+import sys
+import json
 import time
-import urllib
+import torch
+import pickle
+import numpy as np
 from pathlib import Path
 from random import shuffle
-from typing import Any, Dict
-from urllib.parse import urlparse
-
-import numpy as np
-import pandas as pd
-import pkg_resources
-import torch
 import torch.optim as optim
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
 from torch.autograd import Variable
+from sklearn.metrics import f1_score
+from sklearn.linear_model import LogisticRegression
 
-import utils.REL.utils as utils
-from utils.REL.db.generic import GenericLookup
+from typing import Any, Dict
+
+sys.path.insert(0, os.path.abspath(os.path.pardir))
+from utils import rel_utils
 from utils.REL.mulrel_ranker import MulRelRanker, PreRank
-from utils.REL.training_datasets import TrainingEvaluationDatasets
 from utils.REL.vocabulary import Vocabulary
+import utils.REL.utils as utils
 
 """
 Parent Entity Disambiguation class that directs the various subclasses used
 for the ED step.
 """
 
-wiki_prefix = "en.wikipedia.org/wiki/"
-
 
 class EntityDisambiguation:
-    def __init__(
-        self,
-        base_url,
-        wiki_version,
-        user_config,
-        reset_embeddings=False,
-    ):
-        self.base_url = base_url
-        self.wiki_version = wiki_version
+    def __init__(self, db_embs, user_config, reset_embeddings=False):
         self.embeddings = {}
         self.config = self.__get_config(user_config)
 
+        # Use CPU if cuda is not available:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.prerank_model = None
         self.model = None
         self.reset_embeddings = reset_embeddings
-        self.emb = GenericLookup(
-            "entity_word_embedding", os.path.join(base_url, wiki_version, "generated")
-        )
-
-        self.g_emb = GenericLookup("common_drawl", os.path.join(base_url, "generic"))
-        test = self.g_emb.emb(["in"], "embeddings")[0]
+        self.db_embs = db_embs
+        # Test DB embeddings
+        test = rel_utils.get_db_emb(self.db_embs, ["Q84"], "entity")[0]
         assert (
             test is not None
-        ), "Glove embeddings in wrong folder..? Test embedding not found.."
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
 
+        # Initialise embedding dictionary:
         self.__load_embeddings()
-        self.coref = TrainingEvaluationDatasets(base_url, wiki_version)
+        # Initialise pre-ranking:
         self.prerank_model = PreRank(self.config).to(self.device)
-
-        self.__max_conf = None
-
         # Load LR model for confidence.
         if os.path.exists(Path(self.config["model_path"]).parent / "lr_model.pkl"):
             with open(
                 Path(self.config["model_path"]).parent / "lr_model.pkl",
                 "rb",
             ) as f:
-                self.model_lr = pkl.load(f)
+                self.model_lr = pickle.load(f)
         else:
-            print("No LR model found, confidence scores ED will be set to zero.")
+            print("Confidence scores for the ED module will be set to zero.")
             self.model_lr = None
 
         if self.config["mode"] == "eval":
             print("Loading model from given path: {}".format(self.config["model_path"]))
             self.model = self.__load(self.config["model_path"])
+            self.config["mode"] = "eval"
+            # # Load model lr:
+            # with open(
+            #     Path(self.config["model_path"]).parent / "lr_model.pkl",
+            #     "rb",
+            # ) as f:
+            #     self.model_lr = pickle.load(f)
+            print(self.config)
         else:
             if reset_embeddings:
                 raise Exception("You cannot train a model and reset the embeddings.")
@@ -93,8 +83,8 @@ class EntityDisambiguation:
         """
 
         default_config: Dict[str, Any] = {
-            "mode": "train",
-            "model_path": "./",
+            "mode": user_config["mode"],
+            "model_path": user_config["model_path"],
             "prerank_ctx_window": 50,
             "keep_p_e_m": 4,
             "keep_ctx_ent": 3,
@@ -123,34 +113,8 @@ class EntityDisambiguation:
             "oracle": False,
         }
 
-        default_config.update(user_config)
         config = default_config
-
-        model_dict = json.loads(
-            pkg_resources.resource_string("utils.REL.models", "models.json")
-        )
-        model_path: str = config["model_path"]
-        # load aliased url if it exists, else keep original string
-        config["model_path"] = model_dict.get(model_path, model_path)
-        print("Model path:", config["model_path"])
-
-        if urlparse(str(config["model_path"])).scheme in ("http", "https"):
-            model_path = utils.fetch_model(
-                config["model_path"],
-                cache_dir=Path("~/.rel_cache").expanduser(),
-            )
-            assert tarfile.is_tarfile(model_path), "Only tar-files are supported!"
-            # make directory with name of tarfile (minus extension)
-            # extract the files in the archive to that directory
-            # assign config[model_path] accordingly
-            with tarfile.open(model_path) as f:
-                f.extractall(Path("~/.rel_cache").expanduser())
-            # NOTE: use double stem to deal with e.g. *.tar.gz
-            # this also handles *.tar correctly
-            stem = Path(Path(model_path).stem).stem
-            # NOTE: it is required that the model file(s) are named "model.state_dict"
-            # and "model.config" if supplied, other names won't work.
-            config["model_path"] = Path("~/.rel_cache").expanduser() / stem / "model"
+        print("Model path:", config["model_path"], config["mode"])
 
         return config
 
@@ -167,29 +131,16 @@ class EntityDisambiguation:
             self.embeddings["{}_voca".format(name)] = Vocabulary()
             self.embeddings["{}_embeddings".format(name)] = None
 
-            if name in ["word", "entity"]:
-                # Add #UNK# token.
-                self.embeddings["{}_voca".format(name)].add_to_vocab("#UNK#")
-                e = self.emb.emb(["#{}/UNK#".format(name.upper())], "embeddings")[0]
+            # Add #UNK# token.
+            self.embeddings["{}_voca".format(name)].add_to_vocab("#UNK#")
+            e = rel_utils.get_db_emb(
+                self.db_embs, ["#{}/UNK#".format(name.upper())], name
+            )[0]
+            assert e is not None, "#UNK# token not found for {} in db".format(name)
+            self.__batch_embs[name] = []
+            self.__batch_embs[name].append(torch.tensor(e))
 
-                assert e is not None, "#UNK# token not found for {} in db".format(name)
-
-                self.__batch_embs[name] = []
-                self.__batch_embs[name].append(torch.tensor(e))
-            else:
-                # For Glove the #UNK# token was randomly initialised as can be seen. We added this to
-                # our generated database for reproducability. Author also reports no significant difference
-                # in using the mean of the vector or a randomly intialised vector for the glove embeddings.
-                # https://github.com/lephong/mulrel-nel/issues/21
-                self.embeddings["{}_voca".format(name)].add_to_vocab("#UNK#")
-                e = self.g_emb.emb(["#SND/UNK#"], "embeddings")[0]
-
-                assert e is not None, "#UNK# token not found for {} in db".format(name)
-
-                self.__batch_embs[name] = []
-                self.__batch_embs[name].append(torch.tensor(e))
-
-    def train(self, org_train_dataset, org_dev_datasets):
+    def train(self, org_train_dataset, org_dev_dataset):
         """
         Responsible for training the ED model.
 
@@ -197,10 +148,7 @@ class EntityDisambiguation:
         """
 
         train_dataset = self.get_data_items(org_train_dataset, "train", predict=False)
-        dev_datasets = []
-        for dname, data in org_dev_datasets.items():
-            print(dname)
-            dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
+        dev_dataset = self.get_data_items(org_dev_dataset, "dev", predict=True)
 
         print("Creating optimizer")
         optimizer = optim.Adam(
@@ -317,23 +265,13 @@ class EntityDisambiguation:
             print("epoch", e, "total loss", total_loss, total_loss / len(train_dataset))
 
             if (e + 1) % eval_after_n_epochs == 0:
-                dev_f1 = 0
-                for dname, data in dev_datasets:
-                    predictions = self.__predict(data)
-                    f1, recall, precision, _ = self.__eval(
-                        org_dev_datasets[dname], predictions
-                    )
-                    print(
-                        dname,
-                        utils.tokgreen(
-                            "Micro F1: {}, Recall: {}, Precision: {}".format(
-                                f1, recall, precision
-                            )
-                        ),
-                    )
-
-                    if dname == "lwm_dev":
-                        dev_f1 = f1
+                predictions = self.__predict(dev_dataset)
+                dev_f1, recall, precision, _ = self.__eval(org_dev_dataset, predictions)
+                print(
+                    "Micro F1: {}, Recall: {}, Precision: {}".format(
+                        dev_f1, recall, precision
+                    ),
+                )
 
                 if (
                     self.config["learning_rate"] == 1e-4
@@ -360,39 +298,12 @@ class EntityDisambiguation:
                 if not_better_count == self.config["n_not_inc"]:
                     break
 
-    def evaluate(self, datasets):
-        """
-        Parent function r esponsible for evaluating the ED model during the ED step. Note that
-        this is different from predict as this requires ground truth entities to be present.
-
-        :return: -
-        """
-
-        dev_datasets = []
-        for dname, data in list(datasets.items()):
-            start = time.time()
-            dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
-
-        for dname, data in dev_datasets:
-            predictions = self.__predict(data)
-            f1, recall, precision, total_nil = self.__eval(datasets[dname], predictions)
-            print(
-                dname,
-                utils.tokgreen(
-                    "Micro F1: {}, Recall: {}, Precision: {}".format(
-                        f1, recall, precision
-                    )
-                ),
-            )
-            print("Total NIL: {}".format(total_nil))
-            print("----------------------------------")
-
-    def __create_dataset_LR(self, datasets, predictions, dname):
+    def __create_dataset_LR(self, dataset, predictions):
         X = []
         y = []
         meta = []
         for doc, preds in predictions.items():
-            gt_doc = [c["gold"][0] for c in datasets[dname][doc]]
+            gt_doc = [c["gold"][0] for c in dataset[doc]]
             for pred, gt in zip(preds, gt_doc):
                 scores = [float(x) for x in pred["scores"]]
                 cands = pred["candidates"]
@@ -411,7 +322,7 @@ class EntityDisambiguation:
 
         return np.array(X), np.array(y), np.array(meta)
 
-    def train_LR(self, datasets, model_path_lr, store_offline=True, threshold=0.3):
+    def train_LR(self, train_json, dev_json, model_path_lr):
         """
         Function that applies LR in an attempt to get confidence scores. Recall should be high,
         because if it is low than we would have ignored a corrrect entity.
@@ -420,38 +331,23 @@ class EntityDisambiguation:
         """
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
-        train_dataset = self.get_data_items(
-            datasets["lwm_train"], "train", predict=False
-        )
-
-        dev_datasets = []
-        for dname, data in list(datasets.items()):
-            if dname == "lwm_train":
-                continue
-            dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
+        train_dataset = self.get_data_items(train_json, "train", predict=False)
+        dev_dataset = self.get_data_items(dev_json, "dev", predict=True)
 
         model = LogisticRegression()
 
         predictions = self.__predict(train_dataset, eval_raw=True)
-        X, y, meta = self.__create_dataset_LR(datasets, predictions, "lwm_train")
+        X, y, meta = self.__create_dataset_LR(train_json, predictions)
         model.fit(X, y)
 
-        for dname, data in dev_datasets:
-            predictions = self.__predict(data, eval_raw=True)
-            X, y, meta = self.__create_dataset_LR(datasets, predictions, dname)
-            preds = model.predict_proba(X)
-            preds = np.array([x[1] for x in preds])
+        predictions = self.__predict(dev_dataset, eval_raw=True)
+        X, y, meta = self.__create_dataset_LR(dev_json, predictions)
+        preds = model.predict_proba(X)
+        preds = np.array([x[1] for x in preds])
 
-            decisions = (preds >= threshold).astype(int)
-
-            print(
-                utils.tokgreen("{}, F1-score: {}".format(dname, f1_score(y, decisions)))
-            )
-
-        if store_offline:
-            path = os.path.join(model_path_lr, "lr_model.pkl")
-            with open(path, "wb") as handle:
-                pkl.dump(model, handle, protocol=pkl.HIGHEST_PROTOCOL)
+        path = os.path.join(model_path_lr, "lr_model.pkl")
+        with open(path, "wb") as handle:
+            pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def predict(self, data):
         """
@@ -460,37 +356,10 @@ class EntityDisambiguation:
 
         :return: predictions and time taken for the ED step.
         """
-
-        self.coref.with_coref(data)
         data = self.get_data_items(data, "raw", predict=True)
         predictions, timing = self.__predict(data, include_timing=True, eval_raw=True)
 
-        return predictions, timing
-
-    def __compute_confidence_legacy(self, scores, preds):
-        """
-        LEGACY
-
-        :return:
-        """
-        confidence_scores = []
-
-        for score, pred in zip(scores, preds):
-            loss = 0
-            for j in range(len(score)):
-                if j == pred:
-                    continue
-                loss += max(
-                    0, score[j].item() - score[pred].item() + self.config["margin"]
-                )
-            if not self.__max_conf:
-                self.__max_conf = (
-                    self.config["keep_ctx_ent"] + self.config["keep_p_e_m"] - 1
-                ) * self.config["margin"]
-            conf = 1 - (loss / self.__max_conf)
-            confidence_scores.append(conf)
-
-        return confidence_scores
+        return predictions
 
     def __compute_confidence(self, scores, preds):
         """
@@ -673,6 +542,7 @@ class EntityDisambiguation:
                                 "mention": entity[1],
                                 "prediction": entity[0],
                                 "candidates": entity[2],
+                                "conf_ed": 0.0,
                                 "scores": [],
                             }
                         )
@@ -734,10 +604,8 @@ class EntityDisambiguation:
                 )
                 token_ids = Variable(torch.LongTensor(token_ids).to(self.device))
 
-                entity_names = [m["named_cands"] for m in content]  # named_cands
-
                 log_probs = self.prerank_model.forward(
-                    token_ids, token_offsets, entity_ids, self.embeddings, self.emb
+                    token_ids, token_offsets, entity_ids, self.embeddings
                 )
 
                 # Entity mask makes sure that the UNK entities are zero.
@@ -841,23 +709,16 @@ class EntityDisambiguation:
 
         del new_weights
 
-    def __embed_words(self, words_filt, name, table_name="embeddings"):
+    def __embed_words(self, words_filt, name):
         """
         Responsible for retrieving embeddings using the given sqlite3 database.
 
         :return: -
         """
-
-        # Returns None if not in db.
-        if table_name == "glove":
-            embs = self.g_emb.emb(words_filt, "embeddings")
-        else:
-            embs = self.emb.emb(words_filt, table_name)
+        embs = rel_utils.get_db_emb(self.db_embs, words_filt, name)
 
         # Now we go over the embs and see which one is None. Order is preserved.
         for e, c in zip(embs, words_filt):
-            if name == "entity":
-                c = c.replace("ENTITY/", "")
             self.embeddings["{}_seen".format(name)].add(c)
             if e is not None:
                 # Embedding exists, so we add it.
@@ -872,15 +733,10 @@ class EntityDisambiguation:
         """
         data = []
 
-        if self.reset_embeddings:
-            # If user wants to reset, he can do this here, right before loading a new dataset.
-            self.__load_embeddings()
-
         for doc_name, content in dataset.items():
             items = []
             if len(content) == 0:
                 continue
-            conll_doc = content[0].get("conll_doc", None)
             for m in content:
                 named_cands = [c[0] for c in m["candidates"]]
                 p_e_m = [min(1.0, max(1e-3, c[1])) for c in m["candidates"]]
@@ -899,13 +755,13 @@ class EntityDisambiguation:
                 # Candidate list per mention.
                 named_cands_filt = set(
                     [
-                        "ENTITY/" + item
+                        item
                         for item in named_cands
                         if item not in self.embeddings["entity_seen"]
                     ]
                 )
 
-                self.__embed_words(named_cands_filt, "entity", "embeddings")
+                self.__embed_words(named_cands_filt, "entity")
 
                 # Use re.split() to make sure that special characters are considered.
                 lctx = [
@@ -923,14 +779,16 @@ class EntityDisambiguation:
                     ]
                 )
 
-                self.__embed_words(words_filt, "word", "embeddings")
+                self.__embed_words(words_filt, "word")
 
-                snd_lctx = m["sentence"][: m["pos"]].strip().split()
+                snd_lctx = m["sentence"][: m["pos"]]
+                snd_lctx = [x for x in re.split("(\W)", snd_lctx.strip()) if x != " "]
                 snd_lctx = [
                     t for t in snd_lctx[-self.config["snd_local_ctx_window"] // 2 :]
                 ]
 
-                snd_rctx = m["sentence"][m["end_pos"] :].strip().split()
+                snd_rctx = m["sentence"][m["end_pos"] :]
+                snd_rctx = [x for x in re.split("(\W)", snd_rctx.strip()) if x != " "]
                 snd_rctx = [
                     t for t in snd_rctx[: self.config["snd_local_ctx_window"] // 2]
                 ]
@@ -945,7 +803,7 @@ class EntityDisambiguation:
                     ]
                 )
 
-                self.__embed_words(words_filt, "snd", "glove")
+                self.__embed_words(words_filt, "snd")
 
                 p_e_m = p_e_m[: min(self.config["n_cands_before_rank"], len(p_e_m))]
 
@@ -956,13 +814,7 @@ class EntityDisambiguation:
                         named_cands[-1] = m["gold"][0]
                     else:
                         true_pos = -1
-                cands = [
-                    self.embeddings["entity_voca"].get_id(
-                        # ("" if self.generic else wiki_prefix) + c
-                        c
-                    )
-                    for c in named_cands
-                ]
+                cands = [self.embeddings["entity_voca"].get_id(c) for c in named_cands]
 
                 mask = [1.0] * len(cands)
                 if len(cands) == 0 and not predict:
@@ -1053,7 +905,6 @@ class EntityDisambiguation:
                 # note: this shouldn't affect the order of prediction because we use doc_name to add predicted entities,
                 # and we don't shuffle the data for prediction
                 if len(items) > 100:
-                    # print(len(items))
                     for k in range(0, len(items), 100):
                         data.append(items[k : min(len(items), k + 100)])
                 else:
@@ -1126,9 +977,7 @@ class EntityDisambiguation:
                 )
             )
 
-        model = MulRelRanker(self.config, self.device).to(
-            self.device
-        )  # , self.embeddings
+        model = MulRelRanker(self.config, self.device).to(self.device)
 
         if not torch.cuda.is_available():
             model.load_state_dict(

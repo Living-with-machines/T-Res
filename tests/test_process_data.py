@@ -91,7 +91,7 @@ def test_align_gold():
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myner.model, myner.pipe = myner.create_pipeline()
+    myner.pipe = myner.create_pipeline()
 
     dataset_df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv",
@@ -145,7 +145,7 @@ def test_ner_and_process():
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
     )
-    myner.model, myner.pipe = myner.create_pipeline()
+    myner.pipe = myner.create_pipeline()
 
     dataset_df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv",

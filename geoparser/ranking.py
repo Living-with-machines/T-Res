@@ -155,6 +155,8 @@ class Ranker:
             deezy_processing.create_training_set(self)
             deezy_processing.train_deezy_model(self)
             deezy_processing.generate_candidates(self)
+        # This dictionary is not used anymore:
+        self.wikidata_to_mentions = dict()
 
     def perfect_match(self, queries):
         """
