@@ -387,7 +387,7 @@ class Linker:
     #     }
     #     return dict_publ
 
-    def train_load_model(self, myranker):
+    def train_load_model(self, myranker, split="originalsplit"):
         """
         Training an entity disambiguation model. The training will be skipped
         if the model already exists and self.overwrite_training it set to False,
@@ -399,33 +399,44 @@ class Linker:
             The DeezyMatch candidate vectors.
         """
         if self.method == "reldisamb":
-            if (
-                self.overwrite_training == True
-                or not Path(os.path.join(self.rel_params["model_path"])).is_dir()
-            ):
+
+            # Generate ED model name:
+            linker_name = myranker.method
+            if myranker.method == "deezymatch":
+                linker_name += "+" + str(myranker.deezy_parameters["num_candidates"])
+                linker_name += "+" + str(
+                    myranker.deezy_parameters["selection_threshold"]
+                )
+            linker_name += "_" + split
+            if self.rel_params["with_publication"]:
+                linker_name += "+wpubl"
+            if self.rel_params["with_microtoponyms"]:
+                linker_name += "+wmtops"
+            if self.rel_params["do_test"]:
+                linker_name += "_test"
+            linker_name = os.path.join(self.rel_params["model_path"], linker_name)
+
+            if self.overwrite_training == True or not Path(linker_name).is_dir():
                 print(
                     "The entity disambiguation model does not exist or overwrite_training is set to True."
                 )
 
                 print("Creating the dataset.")
-                # This is the column on which we will split the dataset into train/dev/test:
-                datasplit = self.rel_params["training_split"]
                 # Create the folder where to store the resulting disambiguation models:
-                Path(self.rel_params["model_path"]).mkdir(parents=True, exist_ok=True)
+                Path(linker_name).mkdir(parents=True, exist_ok=True)
                 # Load the linking dataset, separate training and dev:
                 linking_df_path = os.path.join(
                     self.rel_params["data_path"], "linking_df_split.tsv"
                 )
                 linking_df = pd.read_csv(linking_df_path, sep="\t")
-                train_df = linking_df[linking_df[datasplit] == "train"]
-                dev_df = linking_df[linking_df[datasplit] == "dev"]
+                train_df = linking_df[linking_df[split] == "train"]
+                dev_df = linking_df[linking_df[split] == "dev"]
+
                 # If this is a test, use only the first 20 rows of the train and dev sets:
                 if self.rel_params["do_test"] == True:
                     train_df = train_df.iloc[:20]
                     dev_df = dev_df.iloc[:20]
 
-                print(train_df.shape)
-                print(dev_df.shape)
                 # Prepare the dataset into the format required by REL:
                 train_json = rel_utils.prepare_rel_trainset(
                     train_df, self, myranker, "train"
@@ -434,7 +445,7 @@ class Linker:
                 # Set ED configuration to train mode:
                 config_rel = {
                     "mode": "train",
-                    "model_path": os.path.join(self.rel_params["model_path"], "model"),
+                    "model_path": os.path.join(linker_name, "model"),
                 }
                 # Instantiate the entity disambiguation model:
                 model = entity_disambiguation.EntityDisambiguation(
@@ -445,13 +456,13 @@ class Linker:
                 # Train the model using lwm_train:
                 model.train(train_json, dev_json)
                 # Train and predict using LR (to obtain confidence scores)
-                model.train_LR(train_json, dev_json, self.rel_params["model_path"])
+                model.train_LR(train_json, dev_json, linker_name)
                 return model
             else:
                 # Setting disambiguation model mode to "eval":
                 config_rel = {
                     "mode": "eval",
-                    "model_path": os.path.join(self.rel_params["model_path"], "model"),
+                    "model_path": os.path.join(linker_name, "model"),
                 }
                 model = entity_disambiguation.EntityDisambiguation(
                     self.rel_params["db_embeddings"],

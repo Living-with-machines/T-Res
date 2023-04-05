@@ -19,27 +19,39 @@ def test_embeddings():
     """
     # Test 1: Check glove embeddings
     mentions = ["in", "apple"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "snd")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "snd"
+    )
     assert len(mentions) == len(embs)
     assert len(embs[0]) == 300
     mentions = ["cotxe"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "snd")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "snd"
+    )
     assert embs == [None]
     # Test 2: Check wiki2vec word embeddings
     mentions = ["in", "apple"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "word")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "word"
+    )
     assert len(mentions) == len(embs)
     assert len(embs[0]) == 300
     mentions = ["cotxe"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "word")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "word"
+    )
     assert embs == [None]
     # Test 2: Check wiki2vec entity embeddings
     mentions = ["Q84", "Q1492"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "entity")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "entity"
+    )
     assert len(mentions) == len(embs)
     assert len(embs[0]) == 300
     mentions = ["Q1"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "entity")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "entity"
+    )
     assert embs == [None]
 
 
@@ -51,10 +63,14 @@ def test_compare_embeddings():
     # Test 1: Check old glove embedding is the same as new glove
     # embedding:
     mentions = ["apple"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "snd")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "snd"
+    )
     with sqlite3.connect("resources/rel_db/generic/common_drawl.db") as conn2:
         c2 = conn2.cursor()
-        result = c2.execute("SELECT emb FROM embeddings WHERE word=?", ("apple",)).fetchone()
+        result = c2.execute(
+            "SELECT emb FROM embeddings WHERE word=?", ("apple",)
+        ).fetchone()
         result = result if result is None else array("f", result[0]).tolist()
 
     assert embs[0] == result
@@ -62,10 +78,14 @@ def test_compare_embeddings():
     # Test 2: Check old glove embedding is different from new wiki2vec
     # word embedding:
     mentions = ["apple"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "snd")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "snd"
+    )
     with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
         c2 = conn2.cursor()
-        result = c2.execute("SELECT emb FROM embeddings WHERE word=?", ("apple",)).fetchone()
+        result = c2.execute(
+            "SELECT emb FROM embeddings WHERE word=?", ("apple",)
+        ).fetchone()
         result = result if result is None else array("f", result[0]).tolist()
 
     assert embs[0] != result
@@ -73,10 +93,14 @@ def test_compare_embeddings():
     # Test 3: Check old wiki2vec word embedding is the same as new wiki2vec
     # word embedding:
     mentions = ["apple"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "word")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "word"
+    )
     with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
         c2 = conn2.cursor()
-        result = c2.execute("SELECT emb FROM embeddings WHERE word=?", ("apple",)).fetchone()
+        result = c2.execute(
+            "SELECT emb FROM embeddings WHERE word=?", ("apple",)
+        ).fetchone()
         result = result if result is None else array("f", result[0]).tolist()
 
     assert embs[0] == result
@@ -85,7 +109,9 @@ def test_compare_embeddings():
     # entity embedding (old requires wikipedia input, new requires wikidata
     # input):
     mentions = ["Q84"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "entity")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "entity"
+    )
     with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
         c2 = conn2.cursor()
         result = c2.execute(
@@ -99,17 +125,23 @@ def test_compare_embeddings():
     # entity embedding (old requires wikipedia input, new requires wikidata
     # input):
     mentions = ["Q84"]
-    embs = rel_utils.get_db_emb("resources/rel_db/embedding_database.db", mentions, "entity")
+    embs = rel_utils.get_db_emb(
+        "resources/rel_db/embedding_database.db", mentions, "entity"
+    )
     with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
         c2 = conn2.cursor()
-        result = c2.execute("SELECT emb FROM embeddings WHERE word=?", ("London",)).fetchone()
+        result = c2.execute(
+            "SELECT emb FROM embeddings WHERE word=?", ("London",)
+        ).fetchone()
         result = result if result is None else array("f", result[0]).tolist()
 
     assert embs[0] != result
 
 
 def test_prepare_initial_data():
-    df = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t").iloc[:1]
+    df = pd.read_csv(
+        "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
+    ).iloc[:1]
     parsed_doc = rel_utils.prepare_initial_data(df, context_len=100)
     assert parsed_doc["4939308"][0]["mention"] == "STALYBRIDGE"
     assert parsed_doc["4939308"][0]["gold"][0] == "Q1398653"
@@ -209,7 +241,10 @@ def test_train():
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
+    assert (
+        type(mylinker.rel_params["ed_model"])
+        == entity_disambiguation.EntityDisambiguation
+    )
 
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6422976501305483
@@ -307,7 +342,10 @@ def test_load_eval_model():
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
+    assert (
+        type(mylinker.rel_params["ed_model"])
+        == entity_disambiguation.EntityDisambiguation
+    )
 
 
 def test_predict():

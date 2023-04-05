@@ -353,9 +353,6 @@ class Ranker:
                 1790-03-31-a-i0004_1, we store the candidates as follows:
                 {'Guadaloupe': {'Score': 1.0, 'Candidates': {'Q17012': 10, 'Q3153836': 2}}}
         """
-        # If method is relcs, candidates are collected in the ED step:
-        if self.method == "relcs":
-            return dict(), dict()
         # Otherwise:
         queries = list(set([mention["mention"] for mention in mentions]))
         cands, self.already_collected_cands = self.run(queries)
@@ -364,6 +361,8 @@ class Ranker:
             wk_cands[original_mention] = dict()
             for variation in cands[original_mention]:
                 match_score = cands[original_mention][variation]
+                # Check we've actually loaded the mentions2wikidata dictionary:
+                assert self.mentions_to_wikidata["London"] is not None
                 # Find Wikidata ID and relv.
                 found_cands = self.mentions_to_wikidata.get(variation, dict())
                 if not variation in wk_cands[original_mention]:
