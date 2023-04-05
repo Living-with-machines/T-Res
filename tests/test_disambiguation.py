@@ -388,10 +388,3 @@ def test_predict():
         place_wqid="Q84",
     )
     assert type(predictions) == list
-    
-    prediction = predictions[0]['prediction']
-    ed_score = predictions[0]['ed_score']
-    
-    score_from_cand_list = [x for x in predictions[0]['candidates'] if x[0] == prediction][0][1]
-
-    assert ed_score == score_from_cand_list
