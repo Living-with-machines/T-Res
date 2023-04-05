@@ -298,7 +298,7 @@ class EntityDisambiguation:
             gt_doc = [c["gold"][0] for c in dataset[doc]]
             for pred, gt in zip(preds, gt_doc):
                 scores = [float(x) for x in pred["scores"]]
-                cands = pred["candidates"]
+                cands = pred["ranking_candidates"]
 
                 # Build classes
                 for i, c in enumerate(cands):
@@ -353,19 +353,56 @@ class EntityDisambiguation:
 
         return predictions
 
-    def __compute_confidence(self, scores, preds):
+    def normalize_scores(self, scores):
         """
-        Uses LR to find confidence scores for given ED outputs.
+        Normalizes a list of scores between 0 and 1 by rescaling them and computing their ratio over their sum.
 
-        :return:
+        Args:
+            scores (list): A list of numerical scores.
+
+        Returns:
+            list: A list of normalized scores where each score is the ratio of the rescaled score over their sum.
         """
-        X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
-        if self.model_lr:
-            preds = self.model_lr.predict_proba(X)
-            confidence_scores = [x[1] for x in preds]
-        else:
-            confidence_scores = [0.0 for _ in scores]
-        return confidence_scores
+
+        min_score = min(scores)
+        max_score = max(scores)
+        rescaled_scores = [(score - min_score) / (max_score - min_score) for score in scores]
+
+        # calculate sum of rescaled scores
+        score_sum = sum(rescaled_scores)
+
+        # normalize each rescaled score
+        normalized_scores = [score / score_sum for score in rescaled_scores]
+
+        return normalized_scores
+
+    def __compute_confidence(self, scores):
+        """
+        This function takes a series of numpy arrays of scores and returns a list of lists of confidence scores.
+
+        Args:
+            scores (numpy.ndarray): A numpy array of scores.
+
+        Returns:
+            list: A list of lists of confidence scores.
+        """
+
+        normalised_scores = [self.normalize_scores(score) for score in scores]
+        return normalised_scores
+
+    # def __compute_confidence(self, scores, preds):
+    #     """
+    #     Uses LR to find confidence scores for given ED outputs.
+
+    #     :return:
+    #     """
+    #     X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
+    #     if self.model_lr:
+    #         preds = self.model_lr.predict_proba(X)
+    #         confidence_scores = [x[1] for x in preds]
+    #     else:
+    #         confidence_scores = [0.0 for _ in scores]
+    #     return confidence_scores
 
     def __predict(self, data, include_timing=False, eval_raw=False):
         """
@@ -443,7 +480,8 @@ class EntityDisambiguation:
             pred_ids = torch.argmax(scores, axis=1)
             scores = scores.cpu().data.numpy()
 
-            confidence_scores = self.__compute_confidence(scores, pred_ids)
+            confidence_scores = self.__compute_confidence(scores)
+            pred_scores = [max(score) for score in confidence_scores]
             pred_ids = np.argmax(scores, axis=1)
 
             if not eval_raw:
@@ -492,7 +530,7 @@ class EntityDisambiguation:
                             m["selected_cands"]["mask"],
                         ]
                     )
-                    for (i, m, s, cs) in zip(pred_ids, batch, scores, confidence_scores)
+                    for (i, m, s, cs) in zip(pred_ids, batch, confidence_scores, pred_scores)
                 ]
                 doc_names = [m["doc_name"] for m in batch]
 
@@ -504,7 +542,7 @@ class EntityDisambiguation:
                                 "prediction": entity[0],
                                 "candidates": entity[2],
                                 "conf_ed": entity[4],
-                                "scores": list([str(x) for x in entity[3]]),
+                                "scores": entity[3],
                             }
                         )
 
@@ -698,8 +736,8 @@ class EntityDisambiguation:
             if len(content) == 0:
                 continue
             for m in content:
-                named_cands = [c[0] for c in m["candidates"]]
-                p_e_m = [min(1.0, max(1e-3, c[1])) for c in m["candidates"]]
+                named_cands = [c[0] for c in m["ranking_candidates"]]
+                p_e_m = [min(1.0, max(1e-3, c[1])) for c in m["ranking_candidates"]]
 
                 try:
                     true_pos = named_cands.index(m["gold"][0])

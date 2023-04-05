@@ -22,7 +22,7 @@ def get_db_emb(path_db, mentions, embtype):
 
     Arguments:
         path_db: The path to the wikipedia2vec db.
-        mentions: The list of words or entitys whose embeddings to extract.
+        mentions: The list of words or entities whose embeddings to extract.
         embtype: A string, either "word", "entity" or "snd". If "word", we
             use wikipedia2vec word embeddings; if "entity, we use wikipedia2vec
             entity embeddings; if "glove", we use glove word embeddings.
@@ -969,9 +969,7 @@ def get_db_emb(path_db, mentions, embtype):
                         "SELECT emb FROM glove_embeddings WHERE word=?", (mention,)
                     ).fetchone()
                 # Get the embeddings from the db:
-                results.append(
-                    result if result is None else array("f", result[0]).tolist()
-                )
+                results.append(result if result is None else array("f", result[0]).tolist())
 
     return results
 
@@ -1055,7 +1053,7 @@ def prepare_initial_data(df, context_len=100):
             dict_mention["end_pos"] = df_mention["mention_end"]
             dict_mention["place"] = row["place"]
             dict_mention["place_wqid"] = row["place_wqid"]
-            dict_mention["candidates"] = []
+            dict_mention["ranking_candidates"] = []
             dict_mention["ner_label"] = df_mention["entity_type"]
 
             # Check this:
@@ -1094,9 +1092,7 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
                     # Average of CS conf score and mention2wiki norm relv:
                     # if cand_selection_score:
                     #     qcm2w_score = (qcm2w_score + cand_selection_score) / 2
-                    tmp_cands.append(
-                        (qc, qcrlv_score, qcm2w_score, cand_selection_score)
-                    )
+                    tmp_cands.append((qc, qcrlv_score, qcm2w_score, cand_selection_score))
             # Append candidate and normalized score weighted by candidate selection conf:
             for cand in tmp_cands:
                 qc_id = cand[0]
@@ -1112,7 +1108,7 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
             # Sort candidates and normalize between 0 and 1, and so they add up to 1.
             cands = sorted(cands, key=lambda x: (x[1], x[0]), reverse=True)
 
-            mention_dict["candidates"] = cands
+            mention_dict["ranking_candidates"] = cands
             new_json[article].append(mention_dict)
     return new_json
 

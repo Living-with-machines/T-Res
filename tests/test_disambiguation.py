@@ -392,6 +392,6 @@ def test_predict():
     prediction = predictions[0]['prediction']
     ed_score = predictions[0]['ed_score']
     
-    score_from_cand_list = [x for x in predictions[0]['candidates'] if x[0] == prediction][0][1]
+    score_from_cand_list = predictions[0]['candidates_ed_scores'][prediction]
 
     assert ed_score == score_from_cand_list

@@ -119,9 +119,7 @@ class Pipeline:
         self.mylinker.linking_resources = self.mylinker.load_resources()
         # Train a linking model if needed (it requires myranker to generate potential
         # candidates to the training set):
-        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
-            self.myranker
-        )
+        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(self.myranker)
 
     def run_sentence(
         self,
@@ -154,16 +152,13 @@ class Pipeline:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
         procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-            for x in predictions
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]] for x in predictions
         ]
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            mentions
-        )
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(mentions)
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -171,7 +166,7 @@ class Pipeline:
             prediction = dict()
             prediction["mention"] = m["mention"]
             prediction["context"] = context
-            prediction["candidates"] = []
+            prediction["ranking_candidates"] = []
             prediction["gold"] = ["NONE"]
             prediction["ner_score"] = m["ner_score"]
             prediction["pos"] = m["start_char"]
@@ -181,7 +176,7 @@ class Pipeline:
             prediction["conf_md"] = m["ner_score"]
             prediction["tag"] = m["ner_label"]
             prediction["sentence"] = sentence
-            prediction["candidates"] = wk_cands.get(m["mention"], dict())
+            prediction["ranking_candidates"] = wk_cands.get(m["mention"], dict())
             prediction["place"] = place
             prediction["place_wqid"] = place_wqid
             mentions_dataset["linking"].append(prediction)
@@ -197,9 +192,14 @@ class Pipeline:
                 mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
                     "prediction"
                 ]
-                mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i][
-                    "conf_ed"
-                ]
+                mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i]["conf_ed"]
+
+                mentions_dataset["linking"][i]["candidates_ed_scores"] = {
+                    cand: score
+                    for cand, score in zip(
+                        predicted["linking"][i]["candidates"], predicted["linking"][i]["scores"]
+                    )
+                }
 
         if self.mylinker.method in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
@@ -232,7 +232,8 @@ class Pipeline:
                 "ner_score",
                 "ed_score",
                 "sentence",
-                "candidates",
+                "ranking_candidates",
+                "candidates_ed_scores",
             ]
             sentence_dataset = []
             for md in mentions_dataset["linking"]:
