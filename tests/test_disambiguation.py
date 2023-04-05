@@ -245,6 +245,9 @@ def test_train():
         type(mylinker.rel_params["ed_model"])
         == entity_disambiguation.EntityDisambiguation
     )
+    
+    # assert expected performance on test set
+    assert mylinker.rel_params["ed_model"].best_performance['f1'] == 0.6422976501305483
 
 
 def test_load_eval_model():
