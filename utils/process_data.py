@@ -1048,10 +1048,12 @@ def store_results(experiment, task, how_split, which_split):
 
     link_approach = experiment.mylinker.method
     if experiment.mylinker.method == "reldisamb":
-        link_approach += "+" + str(experiment.mylinker.rel_params["training_data"])
-        link_approach += "+" + str(experiment.mylinker.rel_params["ranking"])
-        if experiment.mylinker.rel_params.get("micro_locs", "") != "":
-            link_approach += "+" + str(experiment.mylinker.rel_params["micro_locs"])
+        if experiment.mylinker.rel_params["with_publication"]:
+            link_approach += "+wpubl"
+        if experiment.mylinker.rel_params["with_microtoponyms"]:
+            link_approach += "+wmtops"
+        if experiment.mylinker.rel_params["do_test"]:
+            link_approach += "_test"
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):

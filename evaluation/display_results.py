@@ -176,7 +176,6 @@ ner_approaches = ["blb_lwm-ner"]
 ranking_approaches = [
     "perfectmatch",
     "deezymatch+3+25",
-    "relcs",
 ]
 linking_approaches = [
     "mostpopular",

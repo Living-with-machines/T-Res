@@ -12,12 +12,11 @@ test_scenario = "dev"  # "dev" while experimenting, "test" for the final numbers
 
 # List of experiments:
 experiments = [
-    ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
+    # ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
     # ["lwm", "deezymatch", "mostpopular", "fine", "", ""],
     # ["lwm", "perfectmatch", "bydistance", "fine", "", ""],
     # ["lwm", "deezymatch", "bydistance", "fine", "", ""],
-    # ["lwm", "relcs", "reldisamb", "fine", "relv", ""],
-    # ["lwm", "deezymatch", "reldisamb", "fine", "relv", ""],
+    ["lwm", "deezymatch", "reldisamb", "fine", "relv", ""],
     # ["lwm", "deezymatch", "reldisamb", "fine", "relv", "dist"],
     # ["lwm", "deezymatch", "reldisamb", "fine", "relv", "nil"],
     # ["lwm", "deezymatch", "reldisamb", "fine", "publ", ""],
@@ -27,7 +26,6 @@ experiments = [
     # ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
     # ["hipe", "perfectmatch", "bydistance", "coarse", "", ""],
     # ["hipe", "deezymatch", "bydistance", "coarse", "", ""],
-    # ["hipe", "relcs", "reldisamb", "coarse", "relv", ""],
     # ["hipe", "deezymatch", "reldisamb", "coarse", "relv", ""],
     # ["hipe", "deezymatch", "reldisamb", "coarse", "relv", "dist"],
     # ["hipe", "deezymatch", "reldisamb", "coarse", "relv", "nil"],
@@ -38,7 +36,6 @@ experiments = [
     # ["hipe", "deezymatch", "mostpopular", "fine", "", ""],
     # ["hipe", "perfectmatch", "bydistance", "fine", "", ""],
     # ["hipe", "deezymatch", "bydistance", "fine", "", ""],
-    # ["hipe", "relcs", "reldisamb", "fine", "relv", ""],
     # ["hipe", "deezymatch", "reldisamb", "fine", "relv", ""],
     # ["hipe", "deezymatch", "reldisamb", "fine", "relv", "dist"],
     # ["hipe", "deezymatch", "reldisamb", "fine", "relv", "nil"],
@@ -91,12 +88,12 @@ for exp_param in experiments:
     # --------------------------------------
     # Instantiate the ranker:
     myranker = ranking.Ranker(
-        method=cand_select_method,  # Here we're telling the ranker to use DeezyMatch.
-        resources_path="../resources/wikidata/",  # Here, the path to the Wikidata resources.
-        mentions_to_wikidata=dict(),  # We'll load the mentions-to-wikidata model here, leave it empty.
-        wikidata_to_mentions=dict(),  # We'll load the wikidata-to-mentions model here, leave it empty.
-        # Parameters to create the string pair dataset:
+        method=cand_select_method,
+        resources_path="../resources/wikidata/",
+        mentions_to_wikidata=dict(),
+        wikidata_to_mentions=dict(),
         strvar_parameters={
+            # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
             "top_threshold": 85,
             "min_len": 5,
@@ -105,24 +102,21 @@ for exp_param in experiments:
             "w2v_ocr_model": "w2v_*_news",
             "overwrite_dataset": False,
         },
-        # Parameters to train, load and use a DeezyMatch model:
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(
-                Path("../resources/deezymatch/").resolve()
-            ),  # Path to the DeezyMatch directory where the model is saved.
-            "dm_cands": "wkdtalts",  # Name we'll give to the folder that will contain the wikidata candidate vectors.
-            "dm_model": "w2v_ocr",  # Name of the DeezyMatch model.
-            "dm_output": "deezymatch_on_the_fly",  # Name of the file where the output of DeezyMatch will be stored. Feel free to change that.
+            "dm_path": str(Path("../resources/deezymatch/").resolve()),
+            "dm_cands": "wkdtalts",
+            "dm_model": "w2v_ocr",
+            "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
-            "ranking_metric": "faiss",  # Metric used by DeezyMatch to rank the candidates.
-            "selection_threshold": 25,  # Threshold for that metric.
-            "num_candidates": 3,  # Number of name variations for a string (e.g. "London", "Londra", and "Londres" are three different variations in our gazetteer of "Londcn").
-            "search_size": 3,  # That should be the same as `num_candidates`.
-            "verbose": False,  # Whether to see the DeezyMatch progress or not.
+            "ranking_metric": "faiss",
+            "selection_threshold": 25,
+            "num_candidates": 3,
+            "search_size": 3,
+            "verbose": False,
             # DeezyMatch training:
-            "overwrite_training": False,  # You can choose to overwrite the model if it exists: in this case we're training a model, regardless of whether it already exists.
-            "do_test": False,  # Whether the DeezyMatch model we're loading was a test, or not.
+            "overwrite_training": False,
+            "do_test": False,
         },
     )
 
@@ -132,8 +126,18 @@ for exp_param in experiments:
         method=top_res_method,
         resources_path="../resources/",
         linking_resources=dict(),
-        rel_params=dict(),
-        overwrite_training=False,
+        rel_params={
+            "model_path": "../resources/models/disambiguation/",
+            "data_path": "../experiments/outputs/data/lwm/",
+            "training_split": "originalsplit",
+            "context_length": 100,
+            "topn_candidates": 10,
+            "db_embeddings": "../resources/rel_db/embedding_database.db",
+            "with_publication": False,
+            "with_microtoponyms": False,
+            "do_test": False,
+        },
+        overwrite_training=True,
     )
 
     # --------------------------------------
@@ -146,7 +150,7 @@ for exp_param in experiments:
         myner=myner,
         myranker=myranker,
         mylinker=mylinker,
-        overwrite_processing=True,  # If True, do data processing, else load existing processing, if exists.
+        overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
         rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
@@ -158,6 +162,27 @@ for exp_param in experiments:
     print(myranker)
     print(mylinker)
 
+    # -----------------------------------------
+    # NER training and creating pipeline:
+    # Train the NER models if needed:
+    myner.train()
+    # Load the NER pipeline:
+    myner.pipe = myner.create_pipeline()
+
+    # -----------------------------------------
+    # Ranker loading resources and training a model:
+    # Load the resources:
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    # Train a DeezyMatch model if needed:
+    myranker.train()
+
+    # -----------------------------------------
+    # Linker loading resources:
+    # Load linking resources:
+    mylinker.linking_resources = mylinker.load_resources()
+
+    # -----------------------------------------
+    # Prepare experiment:
     # Load processed data if existing:
     myexperiment.processed_data = myexperiment.load_data()
 
