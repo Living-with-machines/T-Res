@@ -33,17 +33,35 @@ class Recogniser:
         do_test=False,
         load_from_hub=False,
     ):
-        self.model = model  # We'll store the NER model here.
-        self.train_dataset = train_dataset  # Path to training dataset
-        self.test_dataset = test_dataset  # Path to test dataset
-        self.pipe = pipe  # We'll store the NER pipeline here
-        self.base_model = base_model  # Path to base model to fine-tune
-        self.model_path = model_path  # Path to output folder
-        self.training_args = training_args  # Dictionary of fine-tuning args
-        self.overwrite_training = overwrite_training  # Bool: True to overwrite training
-        self.do_test = do_test  # Bool: True to run it on test mode
-        self.load_from_hub = load_from_hub  # Bool: True if model is in HuggingFace hub
+        """
+        Initialises a Recogniser object.
 
+        Arguments:
+            model (str): The name of the NER model.
+            train_dataset (str): Path to the dataset used for training.
+            test_dataset (str): Path to the dataset used for testing.
+            pipe (None): We'll store the NER pipeline here.
+            base_model (str): Path to base model to fine-tune
+            model_path (str): Path to output folder where the model will be stored.
+            training_args (dict): Dictionary of fine-tuning args.
+            overwrite_training (bool): True to overwrite training, False otherwise.
+            do_test (bool): True to run it on test mode, False otherwise.
+            load_from_hub (bool): True if the model is in the Huggingface hub.
+        """
+        self.model = model
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+        self.pipe = pipe
+        self.base_model = base_model
+        self.model_path = model_path
+        self.training_args = training_args
+        self.overwrite_training = overwrite_training
+        self.do_test = do_test
+        self.load_from_hub = load_from_hub
+
+        # Add "_test" to the model name if do_test is True, unless
+        # the model is downloaded from Huggingface, in which case
+        # we keep the name inputed by the user.
         if self.do_test == True and self.load_from_hub == False:
             self.model += "_test"
 
@@ -76,39 +94,21 @@ class Recogniser:
     def train(self):
         """
         Train a NER model. The training will be skipped if the model already
-        exists and self.overwrite_training it set to False. The training will
-        be run on test mode if self.do_test is set to True.
+        exists and self.overwrite_training it set to False, or if the NER model
+        is obtained from HuggingFace. The training will be run on test mode if
+        self.do_test is set to True.
 
         Returns:
             A trained NER model.
 
-        Code adapted from HuggingFace tutorial: https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
+        Notes:
+            Credit: This function is adapted from a HuggingFace tutorial:
+            https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
 
+        # Skip training if the model is obtained from the hub:
         if self.load_from_hub == True:
             return None
-
-        print("*** Training the toponym recognition model...")
-
-        Path(self.model_path).mkdir(parents=True, exist_ok=True)
-        metric = load_metric("seqeval")
-
-        # Load train and test sets:
-        if self.do_test == True:
-            # If test is True, train on a portion of the train and test sets:
-            lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:10]"
-            )
-            lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train[:10]"
-            )
-        else:
-            lwm_train = load_dataset(
-                "json", data_files=self.train_dataset, split="train"
-            )
-            lwm_test = load_dataset(
-                "json", data_files=self.train_dataset, split="train"
-            )
 
         # If model exists and overwrite is set to False, skip training:
         if (
@@ -122,6 +122,35 @@ class Recogniser:
                 + ".model is already trained. Set overwrite to True if needed.\n"
             )
             return None
+
+        print("*** Training the toponym recognition model...")
+
+        # Create a path to store the model if it does not exist:
+        Path(self.model_path).mkdir(parents=True, exist_ok=True)
+
+        # Use the "seqeval" metric to evaluate the predictions during training:
+        metric = load_metric("seqeval")
+
+        # Load train and test sets:
+        # Note: From https://huggingface.co/docs/datasets/loading: "A dataset
+        # without a loading script by default loads all the data into the train
+        # split."
+        if self.do_test == True:
+            # If test is True, train on a portion of the train and test sets:
+            lwm_train = load_dataset(
+                "json", data_files=self.train_dataset, split="train[:10]"
+            )
+            lwm_test = load_dataset(
+                "json", data_files=self.test_dataset, split="train[:10]"
+            )
+        else:
+            lwm_train = load_dataset(
+                "json", data_files=self.train_dataset, split="train"
+            )
+            lwm_test = load_dataset("json", data_files=self.test_dataset, split="train")
+
+        print("Train:", len(lwm_train))
+        print("Test:", len(lwm_test))
 
         # Obtain unique list of labels:
         df_tmp = lwm_train.to_pandas()
@@ -229,8 +258,12 @@ class Recogniser:
         print("*** Creating and loading a NER pipeline.")
         # Path to NER Model:
         model_name = self.model
+        # If the model is local (has not been obtained from the hub),
+        # pre-append the model path and the extension of the model
+        # to obtain the model name.
         if self.load_from_hub == False:
             model_name = self.model_path + self.model + ".model"
+        # Load a NER pipeline:
         self.pipe = pipeline("ner", model=model_name, ignore_labels=[])
         return self.pipe
 

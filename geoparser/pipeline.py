@@ -17,6 +17,8 @@ class Pipeline:
 
     def __init__(self, myner=None, myranker=None, mylinker=None):
         """
+        Instantiates a Pipeline object.
+
         Arguments:
             myner (recogniser.Recogniser): a Recogniser object.
             myranker (ranking.Ranker): a Ranker object.
@@ -28,25 +30,27 @@ class Pipeline:
         self.mylinker = mylinker
 
         if not self.myner:
+            # If myner is None, instantiate the default Recogniser.
             self.myner = recogniser.Recogniser(
-                model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-                pipe=None,  # We'll store the NER pipeline here
-                base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-                train_dataset="../experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-                test_dataset="../experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-                model_path="../resources/models/",  # Path where the NER model is or will be stored
+                model="blb_lwm-ner-fine",
+                pipe=None,
+                base_model="khosseini/bert_1760_1900",
+                train_dataset="../experiments/outputs/data/lwm/ner_fine_train.json",
+                test_dataset="../experiments/outputs/data/lwm/ner_fine_dev.json",
+                model_path="../resources/models/",
                 training_args={
                     "learning_rate": 5e-5,
                     "batch_size": 16,
                     "num_train_epochs": 4,
                     "weight_decay": 0.01,
                 },
-                overwrite_training=False,  # Set to True if you want to overwrite model if existing
-                do_test=False,  # Set to True if you want to train on test mode
+                overwrite_training=False,
+                do_test=False,
                 load_from_hub=False,
             )
 
         if not self.myranker:
+            # If myranker is None, instantiate the default Ranker.
             self.myranker = ranking.Ranker(
                 method="perfectmatch",
                 resources_path="../resources/wikidata/",
@@ -81,6 +85,7 @@ class Pipeline:
             )
 
         if not self.mylinker:
+            # If mylinker is None, instantiate the default Linker.
             self.mylinker = linking.Linker(
                 method="mostpopular",
                 resources_path="../resources/",
@@ -90,13 +95,14 @@ class Pipeline:
                     "data_path": "../experiments/outputs/data/lwm/",
                     "training_split": "originalsplit",
                     "context_length": 100,
-                    "topn_candidates": 10,
                     "db_embeddings": "../resources/rel_db/embedding_database.db",
-                    "with_publication": False,
-                    "with_microtoponyms": False,
-                    "do_test": True,
+                    "with_publication": True,
+                    "without_microtoponyms": True,
+                    "do_test": False,
+                    "default_publname": "United Kingdom",
+                    "default_publwqid": "Q145",
                 },
-                overwrite_training=True,
+                overwrite_training=False,
             )
 
         # -----------------------------------------
@@ -131,6 +137,7 @@ class Pipeline:
         place="",
         place_wqid="",
         postprocess_output=True,
+        without_microtoponyms=False,
     ):
         """
         This function takes a sentence as input and performs the whole pipeline:
@@ -148,8 +155,13 @@ class Pipeline:
             postprocess_output (bool): Whether to postprocess the output, adding
                 geographic coordinates. This will be false for running the experiments,
                 and True otherwise.
+
+        Returns either (depending on the value of `postprocess_output`):
+            mentions_dataset (list): a list of dictionaries, where each dictionary
+                is a resolved entity, without the coordinates, or
+            sentence_dataset (list): a list of dictionaries, where each dictionary
+                is a resolved entity, with the coordinates and type of location.
         """
-        sentence = sentence.replace("—", ";")
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
@@ -160,9 +172,18 @@ class Pipeline:
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
 
+        # List of mentions for the ranker:
+        rmentions = []
+        if without_microtoponyms:
+            rmentions = [
+                {"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"
+            ]
+        else:
+            rmentions = [{"mention": y["mention"]} for y in mentions]
+
         # Perform candidate ranking:
         wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            mentions
+            rmentions
         )
 
         mentions_dataset = dict()
@@ -187,12 +208,24 @@ class Pipeline:
             mentions_dataset["linking"].append(prediction)
 
         if self.mylinker.method == "reldisamb":
+            # If the linking method is "reldisamb", rank and format candidates,
+            # and produce a prediction:
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
                 self.mylinker.linking_resources["mentions_to_wikidata"],
             )
+            if self.mylinker.rel_params["with_publication"]:
+                # If "publ", add an artificial publication entry:
+                mentions_dataset = rel_utils.add_publication(
+                    mentions_dataset,
+                    self.mylinker.rel_params["default_publname"],
+                    self.mylinker.rel_params["default_publwqid"],
+                )
             predicted = self.mylinker.rel_params["ed_model"].predict(mentions_dataset)
+            if self.mylinker.rel_params["with_publication"]:
+                # ... and if "publ", now remove the artificial publication entry!
+                mentions_dataset["linking"].pop()
             for i in range(len(mentions_dataset["linking"])):
                 mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
                     "prediction"
@@ -221,7 +254,7 @@ class Pipeline:
             return mentions_dataset
 
         if postprocess_output:
-            # Process output:
+            # Process output, add coordinates and wikidata class from prediction:
             keys = [
                 "sent_idx",
                 "mention",
@@ -250,18 +283,38 @@ class Pipeline:
         """
         This function takes a text as input and splits it into sentences,
         each of which will be parsed with the T-Res pipeline.
+
+        Arguments:
+            text (str): The text to geoparse.
+            place (str): The place of publication (in text).
+            place_wqid (str): The Wikidata ID of the place of publication.
+
+        Returns:
+            document_dataset (list): list of geoparsed sentences.
         """
+        # Split the text into its sentences:
         sentences = split_text_into_sentences(text, language="en")
         document_dataset = []
         for i in range(len(sentences)):
+            # Get context (prev and next sentence)
+            context = ["", ""]
+            if i - 1 >= 0:
+                context[0] = sentences[i - 1]
+            if i + 1 < len(sentences):
+                context[1] = sentences[i + 1]
+            # Run pipeline on sentence:
             sentence_dataset = self.run_sentence(
                 sentences[i],
                 sent_idx=i,
-                context=("", ""),  # TODO CHANGE THIS!!!
+                context=context,
                 place=place,
                 place_wqid=place_wqid,
-                postprocess_output=True,
+                postprocess_output=postprocess_output,
+                without_microtoponyms=self.mylinker.rel_params.get(
+                    "without_microtoponyms", False
+                ),
             )
+            # Collect results from all sentences:
             for sd in sentence_dataset:
                 document_dataset.append(sd)
         return document_dataset

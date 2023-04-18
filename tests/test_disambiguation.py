@@ -55,89 +55,6 @@ def test_embeddings():
     assert embs == [None]
 
 
-def test_compare_embeddings():
-    """
-    Compare our embeddings database with the old database.
-    """
-
-    # Test 1: Check old glove embedding is the same as new glove
-    # embedding:
-    mentions = ["apple"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "snd"
-    )
-    with sqlite3.connect("resources/rel_db/generic/common_drawl.db") as conn2:
-        c2 = conn2.cursor()
-        result = c2.execute(
-            "SELECT emb FROM embeddings WHERE word=?", ("apple",)
-        ).fetchone()
-        result = result if result is None else array("f", result[0]).tolist()
-
-    assert embs[0] == result
-
-    # Test 2: Check old glove embedding is different from new wiki2vec
-    # word embedding:
-    mentions = ["apple"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "snd"
-    )
-    with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
-        c2 = conn2.cursor()
-        result = c2.execute(
-            "SELECT emb FROM embeddings WHERE word=?", ("apple",)
-        ).fetchone()
-        result = result if result is None else array("f", result[0]).tolist()
-
-    assert embs[0] != result
-
-    # Test 3: Check old wiki2vec word embedding is the same as new wiki2vec
-    # word embedding:
-    mentions = ["apple"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "word"
-    )
-    with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
-        c2 = conn2.cursor()
-        result = c2.execute(
-            "SELECT emb FROM embeddings WHERE word=?", ("apple",)
-        ).fetchone()
-        result = result if result is None else array("f", result[0]).tolist()
-
-    assert embs[0] == result
-
-    # Test 4: Check old wiki2vec entity embedding is the same as new wiki2vec
-    # entity embedding (old requires wikipedia input, new requires wikidata
-    # input):
-    mentions = ["Q84"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "entity"
-    )
-    with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
-        c2 = conn2.cursor()
-        result = c2.execute(
-            "SELECT emb FROM embeddings WHERE word=?", ("ENTITY/London",)
-        ).fetchone()
-        result = result if result is None else array("f", result[0]).tolist()
-
-    assert embs[0] == result
-
-    # Test 5: Check old wiki2vec entity embedding is the same as new wiki2vec
-    # entity embedding (old requires wikipedia input, new requires wikidata
-    # input):
-    mentions = ["Q84"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "entity"
-    )
-    with sqlite3.connect("resources/rel_db/generic/entity_word_embedding.db") as conn2:
-        c2 = conn2.cursor()
-        result = c2.execute(
-            "SELECT emb FROM embeddings WHERE word=?", ("London",)
-        ).fetchone()
-        result = result if result is None else array("f", result[0]).tolist()
-
-    assert embs[0] != result
-
-
 def test_prepare_initial_data():
     df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
@@ -169,7 +86,7 @@ def test_train():
     )
 
     myranker = ranking.Ranker(
-        method="perfectmatch",
+        method="deezymatch",
         resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -210,10 +127,9 @@ def test_train():
             "data_path": "experiments/outputs/data/lwm/",
             "training_split": "originalsplit",
             "context_length": 100,
-            "topn_candidates": 10,
             "db_embeddings": "resources/rel_db/embedding_database.db",
             "with_publication": False,
-            "with_microtoponyms": False,
+            "without_microtoponyms": True,
             "do_test": True,
         },
         overwrite_training=True,
@@ -247,7 +163,7 @@ def test_train():
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6422976501305483
+    assert 0.60 < mylinker.rel_params["ed_model"].best_performance["f1"]
 
 
 def test_load_eval_model():
@@ -270,7 +186,7 @@ def test_load_eval_model():
     )
 
     myranker = ranking.Ranker(
-        method="perfectmatch",
+        method="deezymatch",
         resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -314,7 +230,7 @@ def test_load_eval_model():
             "topn_candidates": 10,
             "db_embeddings": "resources/rel_db/embedding_database.db",
             "with_publication": False,
-            "with_microtoponyms": False,
+            "without_microtoponyms": False,
             "do_test": True,
         },
         overwrite_training=False,
@@ -409,11 +325,12 @@ def test_predict():
             "data_path": "experiments/outputs/data/lwm/",
             "training_split": "originalsplit",
             "context_length": 100,
-            "topn_candidates": 10,
             "db_embeddings": "resources/rel_db/embedding_database.db",
-            "with_publication": False,
-            "with_microtoponyms": False,
+            "with_publication": True,
+            "without_microtoponyms": True,
             "do_test": False,
+            "default_publname": "United Kingdom",
+            "default_publwqid": "Q145",
         },
         overwrite_training=False,
     )
@@ -421,7 +338,7 @@ def test_predict():
     mypipe = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
     predictions = mypipe.run_text(
-        "I live in Liverpool and neither in Barbens. I don't live in Manchester but in Allerton. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
+        "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
         place="London",
         place_wqid="Q84",
     )

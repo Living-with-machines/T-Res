@@ -8,40 +8,32 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 from geoparser import experiment, recogniser, ranking, linking
 
 # Choose test scenario:
-test_scenario = "dev"  # "dev" while experimenting, "test" for the final numbers
+test_scenario = "test"  # "dev" while experimenting, "test" for the final numbers
 
 # List of experiments:
 experiments = [
-    # ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
-    # ["lwm", "deezymatch", "mostpopular", "fine", "", ""],
+    ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
     # ["lwm", "perfectmatch", "bydistance", "fine", "", ""],
+    # ["lwm", "deezymatch", "mostpopular", "fine", "", ""],
     # ["lwm", "deezymatch", "bydistance", "fine", "", ""],
-    ["lwm", "deezymatch", "reldisamb", "fine", "relv", ""],
-    # ["lwm", "deezymatch", "reldisamb", "fine", "relv", "dist"],
-    # ["lwm", "deezymatch", "reldisamb", "fine", "relv", "nil"],
-    # ["lwm", "deezymatch", "reldisamb", "fine", "publ", ""],
-    # ["lwm", "deezymatch", "reldisamb", "fine", "publ", "dist"],
-    # ["lwm", "deezymatch", "reldisamb", "fine", "publ", "nil"],
+    # ["lwm", "deezymatch", "reldisamb", "fine", False, False],
+    # ["lwm", "deezymatch", "reldisamb", "fine", True, False],
+    # ["lwm", "deezymatch", "reldisamb", "fine", False, True],
+    # ["lwm", "deezymatch", "reldisamb", "fine", True, True],
     # ["hipe", "perfectmatch", "mostpopular", "coarse", "", ""],
-    # ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
     # ["hipe", "perfectmatch", "bydistance", "coarse", "", ""],
+    # ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
     # ["hipe", "deezymatch", "bydistance", "coarse", "", ""],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", "relv", ""],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", "relv", "dist"],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", "relv", "nil"],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", "publ", ""],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", "publ", "dist"],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", "publ", "nil"],
+    # ["hipe", "deezymatch", "reldisamb", "coarse", False, False],
+    # ["hipe", "deezymatch", "reldisamb", "coarse", True, False],
     # ["hipe", "perfectmatch", "mostpopular", "fine", "", ""],
-    # ["hipe", "deezymatch", "mostpopular", "fine", "", ""],
     # ["hipe", "perfectmatch", "bydistance", "fine", "", ""],
+    # ["hipe", "deezymatch", "mostpopular", "fine", "", ""],
     # ["hipe", "deezymatch", "bydistance", "fine", "", ""],
-    # ["hipe", "deezymatch", "reldisamb", "fine", "relv", ""],
-    # ["hipe", "deezymatch", "reldisamb", "fine", "relv", "dist"],
-    # ["hipe", "deezymatch", "reldisamb", "fine", "relv", "nil"],
-    # ["hipe", "deezymatch", "reldisamb", "fine", "publ", ""],
-    # ["hipe", "deezymatch", "reldisamb", "fine", "publ", "dist"],
-    # ["hipe", "deezymatch", "reldisamb", "fine", "publ", "nil"],
+    # ["hipe", "deezymatch", "reldisamb", "fine", True, True],
+    # ["hipe", "deezymatch", "reldisamb", "fine", True, False],
+    # ["hipe", "deezymatch", "reldisamb", "fine", False, True],
+    # ["hipe", "deezymatch", "reldisamb", "fine", True, True],
 ]
 
 # Mapping experiment parameters:
@@ -52,19 +44,19 @@ for exp_param in experiments:
     dataset = exp_param[0]
     cand_select_method = exp_param[1]
     top_res_method = exp_param[2]
-    training_tagset = exp_param[3]
-    link_rank = exp_param[4]
-    micro_locs = exp_param[5]
+    granularity = exp_param[3]
+    wpubl = exp_param[4]
+    wmtops = exp_param[5]
 
     # --------------------------------------
     # Instantiate the recogniser:
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-" + training_tagset,
+        model="blb_lwm-ner-" + granularity,
         train_dataset="../experiments/outputs/data/lwm/ner_"
-        + training_tagset
+        + granularity
         + "_train.json",  # Path to the json file containing the training set (see note above).
         test_dataset="../experiments/outputs/data/lwm/ner_"
-        + training_tagset
+        + granularity
         + "_dev.json",  # Path to the json file containing the test set (see note above).
         pipe=None,  # We'll store the NER pipeline here, leave this empty.
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune for NER. The value can be: either
@@ -131,13 +123,14 @@ for exp_param in experiments:
             "data_path": "../experiments/outputs/data/lwm/",
             "training_split": "originalsplit",
             "context_length": 100,
-            "topn_candidates": 10,
             "db_embeddings": "../resources/rel_db/embedding_database.db",
-            "with_publication": False,
-            "with_microtoponyms": False,
+            "with_publication": wpubl,
+            "without_microtoponyms": wmtops,
             "do_test": False,
+            "default_publname": "",
+            "default_publwqid": "",
         },
-        overwrite_training=True,
+        overwrite_training=False,
     )
 
     # --------------------------------------

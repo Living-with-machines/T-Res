@@ -78,7 +78,6 @@ def prepare_sents(df):
     dSentences = dict()
     dMetadata = dict()
     for i, row in df.iterrows():
-
         sentences = eval_with_exception(row["sentences"], [])
         annotations = eval_with_exception(row["annotations"], [])
 
@@ -1050,7 +1049,7 @@ def store_results(experiment, task, how_split, which_split):
     if experiment.mylinker.method == "reldisamb":
         if experiment.mylinker.rel_params["with_publication"]:
             link_approach += "+wpubl"
-        if experiment.mylinker.rel_params["with_microtoponyms"]:
+        if experiment.mylinker.rel_params["without_microtoponyms"]:
             link_approach += "+wmtops"
         if experiment.mylinker.rel_params["do_test"]:
             link_approach += "_test"

@@ -1,7 +1,6 @@
 import glob
 import itertools
 import os
-import sys
 import random
 import time
 from pathlib import Path
@@ -10,7 +9,6 @@ import gensim
 import gensim.downloader
 from gensim.models import Word2Vec
 
-# Resources for English words (these will need to change if language is different):
 from DeezyMatch import combine_vecs
 from DeezyMatch import inference as dm_inference
 from DeezyMatch import train as dm_train
@@ -25,6 +23,7 @@ def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
 
     Arguments:
         word (str): a word.
+        english_words (list): list of words in the English language.
         sims (list): the list of 100 nearest neighbours from the OCR word2vec model.
         fuzz_ratio_threshold (float): threshold for fuzz.ratio
             If the nearest neighbour word is a word of the English language
@@ -32,8 +31,8 @@ def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
             negative match (i.e. not an OCR variation)
 
     Returns:
-        positive (list): a list of postive matches.
-        negative (list): a list of negative matches.
+        positive (list): a list of postive matches for the input word.
+        negative (list): a list of negative matches for the input word.
     """
     negative = []
     positive = [word]
@@ -56,6 +55,7 @@ def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
                 nn_word in english_words
                 and fuzz.ratio(nn_word_1, word_1) < (100 - fuzz_ratio_threshold)
                 and fuzz.ratio(nn_word_2, word_2) < (100 - fuzz_ratio_threshold)
+                and -2 <= (len(word) - len(nn_word)) <= 2  # Similar length of words
             ):
                 negative.append(nn_word)
             # If the nearest neighbour word is not a word of the English language
@@ -102,12 +102,6 @@ def create_training_set(myranker):
             myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs_test.txt"
         )
 
-    dm_model_path = os.path.join(
-        myranker.deezy_parameters["dm_path"],
-        "models",
-        myranker.deezy_parameters["dm_model"],
-    )
-
     Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(
         parents=True, exist_ok=True
     )
@@ -141,7 +135,6 @@ def create_training_set(myranker):
             "w2v.model",
         )
     ):
-
         # Read the word2vec model:
         model = Word2Vec.load(path2model)
 
@@ -199,7 +192,7 @@ def create_training_set(myranker):
         )
         return None
 
-    # Get variations from mentions_to_wikidata:
+    # Get variations from wikidata_to_mentions:
     for wq in myranker.wikidata_to_mentions.keys():
         mentions = list(myranker.wikidata_to_mentions[wq].keys())
         mentions = [
@@ -310,13 +303,16 @@ def generate_candidates(myranker):
 
     # Generate vectors for candidates (specified in dataset_path)
     # using a model stored at pretrained_model_path and pretrained_vocab_path
-    if not Path(
-        os.path.join(
-            deezymatch_outputs_path,
-            "combined",
-            candidates + "_" + dm_model,
-        )
-    ).is_dir():
+    if (
+        myranker.deezy_parameters["overwrite_training"] == True
+        or not Path(
+            os.path.join(
+                deezymatch_outputs_path,
+                "combined",
+                candidates + "_" + dm_model,
+            )
+        ).is_dir()
+    ):
         start_time = time.time()
         dm_inference(
             input_file_path=os.path.join(
@@ -342,9 +338,14 @@ def generate_candidates(myranker):
         print("Generate candidate vectors: %s" % elapsed)
 
     # Combine vectors stored in the scenario in candidates/ and save them in combined/
-    if not Path(
-        os.path.join(deezymatch_outputs_path, "combined", candidates + "_" + dm_model)
-    ).is_dir():
+    if (
+        myranker.deezy_parameters["overwrite_training"] == True
+        or not Path(
+            os.path.join(
+                deezymatch_outputs_path, "combined", candidates + "_" + dm_model
+            )
+        ).is_dir()
+    ):
         start_time = time.time()
         combine_vecs(
             rnn_passes=["fwd", "bwd"],

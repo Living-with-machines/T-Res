@@ -28,6 +28,8 @@ class Experiment:
         rel_experiments=False,
     ):
         """
+        Initialises an Experiment object.
+
         Arguments:
             dataset (str): dataset to process ("lwm" or "hipe").
             data_path (str): path to the processed data.
@@ -78,7 +80,7 @@ class Experiment:
 
     def __str__(self):
         """
-        Prints the characteristics of the experiment.
+        Prints information about the experiment.
         """
         msg = "\n>>> Experiment\n"
         msg += "    * Dataset: {0}\n".format(self.dataset.upper())
@@ -187,7 +189,6 @@ class Experiment:
         return self.processed_data
 
     def linking_experiments(self):
-
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
         self.processed_data["processed_df"] = processed_df
@@ -217,7 +218,6 @@ class Experiment:
         # Iterate over each linking experiments, each will have its own
         # results file:
         for split in list_test_splits:
-
             original_df = self.dataset_df
             processed_df = self.processed_data["processed_df"]
 
@@ -237,6 +237,7 @@ class Experiment:
             nested_sentences_dict = dict()
             for key, val in self.processed_data["dSentences"].items():
                 key1, key2 = key.split("_")
+                key2 = int(key2)
                 if key1 in nested_sentences_dict:
                     nested_sentences_dict[key1][key2] = val
                 else:
@@ -245,55 +246,23 @@ class Experiment:
             # Predict:
             print("Process data into sentences.")
             to_append = []
+            mentions_dataset = dict()
+            all_cands = dict()
             for i, row in tqdm(test_processed.iterrows()):
-                mentions_dataset = dict()
                 prediction = dict()
                 mention_data = row.to_dict()
                 sentence_id = mention_data["sentence_id"]
-                mentions_dataset[sentence_id] = []
+                article_id = mention_data["article_id"]
                 prediction["mention"] = mention_data["pred_mention"]
                 # Generate left-hand context:
                 left_context = ""
                 sent_idx = int(mention_data["sentence_pos"])
-                if sent_idx - 1 in nested_sentences_dict[mention_data["article_id"]]:
-                    left_context = nested_sentences_dict[mention_data["article_id"]][
-                        sent_idx - 1
-                    ]
-                for i in range(sent_idx - 2, 0, -1):
-                    tmp_context = (
-                        nested_sentences_dict[mention_data["article_id"]][str(i)]
-                        + " "
-                        + left_context
-                    )
-                    if (
-                        len(tmp_context.split(" "))
-                        < self.mylinker.rel_params["context_length"]
-                    ):
-                        left_context = tmp_context
-                    else:
-                        break
+                if sent_idx - 1 in nested_sentences_dict[article_id]:
+                    left_context = nested_sentences_dict[article_id][sent_idx - 1]
                 # Generate right-hand context:
                 right_context = ""
-                if sent_idx + 1 in nested_sentences_dict[mention_data["article_id"]]:
-                    right_context = nested_sentences_dict[mention_data["article_id"]][
-                        sent_idx + 1
-                    ]
-                for i in range(
-                    sent_idx + 2,
-                    len(nested_sentences_dict[mention_data["article_id"]]) + 1,
-                ):
-                    tmp_context = (
-                        right_context
-                        + " "
-                        + nested_sentences_dict[mention_data["article_id"]][str(i)]
-                    )
-                    if (
-                        len(tmp_context.split(" "))
-                        < self.mylinker.rel_params["context_length"]
-                    ):
-                        right_context = tmp_context
-                    else:
-                        break
+                if sent_idx + 1 in nested_sentences_dict[article_id]:
+                    right_context = nested_sentences_dict[article_id][sent_idx + 1]
                 prediction["context"] = [left_context, right_context]
                 prediction["candidates"] = mention_data["candidates"]
                 prediction["gold"] = ["NONE"]
@@ -307,30 +276,68 @@ class Experiment:
                 prediction["sentence"] = mention_data["sentence"]
                 prediction["place"] = mention_data["place"]
                 prediction["place_wqid"] = mention_data["place_wqid"]
-                mentions_dataset[sentence_id].append(prediction)
-
                 if self.mylinker.method == "reldisamb":
-                    mentions_dataset = rel_utils.rank_candidates(
-                        mentions_dataset,
-                        {prediction["mention"]: prediction["candidates"]},
+                    if (
+                        self.mylinker.rel_params["without_microtoponyms"]
+                        and mention_data["pred_ner_label"] != "LOC"
+                    ):
+                        prediction["candidates"] = dict()
+                if sentence_id in mentions_dataset:
+                    mentions_dataset[sentence_id].append(prediction)
+                else:
+                    mentions_dataset[sentence_id] = [prediction]
+                all_cands.update({prediction["mention"]: prediction["candidates"]})
+
+            if self.mylinker.method == "reldisamb":
+                rel_resolved = dict()
+                for sentence_id in mentions_dataset:
+                    article_dataset = {sentence_id: mentions_dataset[sentence_id]}
+                    article_dataset = rel_utils.rank_candidates(
+                        article_dataset,
+                        all_cands,
                         self.mylinker.linking_resources["mentions_to_wikidata"],
                     )
-                    predicted = linking_model.predict(mentions_dataset)
-                    prediction["prediction"] = predicted[sentence_id][0]["prediction"]
-                    prediction["ed_score"] = predicted[sentence_id][0]["conf_ed"]
+                    if self.mylinker.rel_params["with_publication"]:
+                        # If "publ", add an artificial publication entry:
+                        article_dataset = rel_utils.add_publication(article_dataset)
+                    predicted = linking_model.predict(article_dataset)
+                    if self.mylinker.rel_params["with_publication"]:
+                        # ... and if "publ", now remove the artificial publication entry!
+                        predicted[sentence_id].pop()
+                    for i in range(len(predicted[sentence_id])):
+                        combined_mention = article_dataset[sentence_id][i]
+                        combined_mention["prediction"] = predicted[sentence_id][i][
+                            "prediction"
+                        ]
+                        combined_mention["ed_score"] = predicted[sentence_id][i][
+                            "conf_ed"
+                        ]
+                        if sentence_id in rel_resolved:
+                            rel_resolved[sentence_id].append(combined_mention)
+                        else:
+                            rel_resolved[sentence_id] = [combined_mention]
+                    mentions_dataset[sentence_id] = rel_resolved[sentence_id]
 
-                # print(mentions_dataset)
+            for i, row in tqdm(test_processed.iterrows()):
+                prediction = dict()
+                for mention in mentions_dataset[row["sentence_id"]]:
+                    if (
+                        int(mention["pos"]) == int(row["char_start"])
+                        and int(mention["sent_idx"]) == int(row["sentence_pos"])
+                        and mention["mention"] == row["pred_mention"]
+                    ):
+                        prediction = mention
 
-                if self.mylinker.method in ["mostpopular", "bydistance"]:
-                    # Run entity linking per mention:
-                    selected_cand = self.mylinker.run(
-                        {
-                            "candidates": prediction["candidates"],
-                            "place_wqid": prediction["place_wqid"],
-                        }
-                    )
-                    prediction["prediction"] = selected_cand[0]
-                    prediction["ed_score"] = round(selected_cand[1], 3)
+                        if self.mylinker.method in ["mostpopular", "bydistance"]:
+                            # Run entity linking per mention:
+                            selected_cand = self.mylinker.run(
+                                {
+                                    "candidates": prediction["candidates"],
+                                    "place_wqid": prediction["place_wqid"],
+                                }
+                            )
+                            prediction["prediction"] = selected_cand[0]
+                            prediction["ed_score"] = round(selected_cand[1], 3)
 
                 to_append.append(
                     [

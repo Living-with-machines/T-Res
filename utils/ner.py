@@ -1,11 +1,21 @@
 from collections import namedtuple
 
 
-# ----------------------------------------------
-# Align tokens and labels when training:
 def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict):
     """
     During training, aligns tokens with labels.
+
+    Arguments:
+        examples (dict): One training instance (a dictioary with three keys: id, tokens, and ner_tags)
+        tokenizer (Tokenizer object): A transformers tokenizer object (the tokeniser of the base model).
+        label_encoding_dict (dict): The label2id mapping dictionary.
+
+    Returns:
+        tokenized_inputs (Dataset object): The tokenized input.
+
+    Notes:
+        Credit: This function is adapted from
+        https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py.
     """
     label_all_tokens = True
     tokenized_inputs = tokenizer(
@@ -38,8 +48,6 @@ def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict)
     return tokenized_inputs
 
 
-# -------------------------------------------------------------
-# Collects named entities from tokens:
 def collect_named_entities(tokens):
     """
     Creates a list of Entity named-tuples, storing the entity
@@ -49,7 +57,7 @@ def collect_named_entities(tokens):
         tokens (list): a list of tags.
 
     Returns:
-        # named_entities (list): a list of Entity named-tuples
+        named_entities (list): a list of Entity named-tuples
     """
 
     named_entities = []
@@ -62,7 +70,6 @@ def collect_named_entities(tokens):
         "Entity", "e_type link start_offset end_offset start_char end_char"
     )
     dict_tokens = dict(enumerate(tokens))
-    dict_links = dict(enumerate(tokens))
 
     for offset, annotation in enumerate(tokens):
         token_tag = annotation[1]
@@ -94,7 +101,6 @@ def collect_named_entities(tokens):
         elif ent_type != token_tag[2:] or (
             ent_type == token_tag[2:] and token_tag[:1] == "B"
         ):
-
             end_offset = offset - 1
             named_entities.append(
                 Entity(
@@ -113,8 +119,7 @@ def collect_named_entities(tokens):
             start_offset = offset
             end_offset = None
 
-    # catches an entity that goes up until the last token
-
+    # Catches an entity that goes up until the last token
     if ent_type is not None and start_offset is not None and end_offset is None:
         named_entities.append(
             Entity(
@@ -130,8 +135,6 @@ def collect_named_entities(tokens):
     return named_entities
 
 
-# -------------------------------------------------------------
-# Aggregate separate tokens into mentions:
 def aggregate_mentions(predictions, setting):
     """
     Aggregates mentions (NER outputs separate tokens) and finds
@@ -160,12 +163,17 @@ def aggregate_mentions(predictions, setting):
 
     sent_mentions = []
     for mention in mentions:
-        text_mention = " ".join(
-            [
-                predictions[r][0]
-                for r in range(mention.start_offset, mention.end_offset + 1)
-            ]
-        )
+        # Reconstruct the text of the mention:
+        text_mention = ""
+        mention_token_range = range(mention.start_offset, mention.end_offset + 1)
+        for r in mention_token_range:
+            add_whitespaces = ""
+            # Add white spaces between tokens according to token's char starts and ends:
+            if r - 1 in mention_token_range:
+                prev_end_char = predictions[r - 1][4]
+                curr_start_char = predictions[r][3]
+                add_whitespaces = (curr_start_char - prev_end_char) * " "
+            text_mention += add_whitespaces + predictions[r][0]
 
         ner_score = 0.0
         entity_link = ""
@@ -181,7 +189,6 @@ def aggregate_mentions(predictions, setting):
         )[0]
 
         if setting == "pred":
-
             # Consolidate the NER score
             ner_score = [
                 predictions[r][-1]
@@ -235,13 +242,20 @@ def aggregate_mentions(predictions, setting):
 # * fix_startEntity
 # * aggregate_entities
 
-# Fix label grouping: case 1 (fix capitalization)
+
 def fix_capitalization(entity, sentence):
     """
     These entities are the output of the NER prediction, which returns
     the processed word (uncapitalized, for example). We replace this
     processed word by the true surface form in our original dataset
     (using the character position information).
+
+    Arguments:
+        entity (dict): A dictionary containing the prediction of one token.
+        sentence (str): The original sentence.
+
+    Returns
+        newEntity (dict): The input dictionary, corrected re capitalisation.
     """
 
     newEntity = entity
@@ -266,7 +280,6 @@ def fix_capitalization(entity, sentence):
     return newEntity
 
 
-# Fix label grouping: case 2 (fix hyphens)
 def fix_hyphens(lEntities):
     """
     Fix B- and I- prefix assignment errors in hyphenated entities.
@@ -277,6 +290,13 @@ def fix_hyphens(lEntities):
     * Solution: if the current token or the previous token is a hyphen,
     and the entity type of both previous and current token is the same
     and not "O", then change the current's entity preffix to "I-".
+
+    Arguments:
+        lEntities (list): List of dictionaries (corresponding to predicted tokens).
+
+    Returns:
+        hyphEntities (list): List of dictionaries with the corrected predictions
+            regarding hyphenation.
     """
 
     numbers = [str(x) for x in range(0, 10)]
@@ -325,7 +345,6 @@ def fix_hyphens(lEntities):
     return hyphEntities
 
 
-# Fix label grouping: case 3 (fix nested items)
 def fix_nested(lEntities):
     """
     Fix B- and I- prefix assignment errors in nested entities.
@@ -337,6 +356,13 @@ def fix_nested(lEntities):
     * Solution: if the current token or the previous token is a hyphen,
     and the entity type of both previous and current token is  not "O",
     then change the current's entity preffix to "I-".
+
+    Arguments:
+        lEntities (list): List of dictionaries (corresponding to predicted tokens).
+
+    Returns:
+        nestEntities (list): List of dictionaries with the corrected predictions
+            regarding nested entities.
     """
 
     nestEntities = []
@@ -363,7 +389,6 @@ def fix_nested(lEntities):
     return nestEntities
 
 
-# Fix label grouping: case 4 (fix entity prefix)
 def fix_startEntity(lEntities):
     """
     Fix B- and I- prefix assignment errors:
@@ -375,6 +400,13 @@ def fix_startEntity(lEntities):
             the prefix I-, change to B-. We know it's the first
             token in a grouped entity if the entity type of the
             previous token is different.
+
+    Arguments:
+        lEntities (list): List of dictionaries (corresponding to predicted tokens).
+
+    Returns:
+        fixEntities (list): List of dictionaries with the corrected predictions
+            regarding grouping of labels.
     """
 
     fixEntities = []
@@ -417,11 +449,18 @@ def fix_startEntity(lEntities):
     return fixEntities
 
 
-# Fix label grouping: aggregate split tokens:
 def aggregate_entities(entity, lEntities):
     """
     If a word starts with ##, then this is a suffix, and word
     should therefore be joined with previous detected entity.
+
+    Arguments:
+        entity (dict): A dictionary containing the current entity (predicted token).
+        lEntities (list): List of dictionaries (corresponding to all predicted tokens).
+
+    Returns:
+        lEntities (list): List of dictionaries with the corrected predictions
+            regarding split tokens.
     """
     newEntity = entity
     # We remove the word index because we're altering it (by joining suffixes)

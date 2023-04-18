@@ -35,7 +35,7 @@ def get_db_emb(path_db, mentions, embtype):
     with sqlite3.connect(path_db) as conn:
         c = conn.cursor()
         for mention in mentions:
-            if mention == "#SND/UNK#":
+            if mention.upper() == "#SND/UNK#":
                 results.append(
                     [
                         0.22418612241744995,
@@ -340,7 +340,7 @@ def get_db_emb(path_db, mentions, embtype):
                         -0.14481587707996368,
                     ]
                 )
-            if mention == "#ENTITY/UNK#":
+            elif mention.upper() == "#ENTITY/UNK#":
                 results.append(
                     [
                         -0.04076816886663437,
@@ -645,7 +645,7 @@ def get_db_emb(path_db, mentions, embtype):
                         -0.06715741008520126,
                     ]
                 )
-            if mention == "#WORD/UNK#":
+            elif mention.upper() == "#WORD/UNK#":
                 results.append(
                     [
                         -0.08770988881587982,
@@ -958,17 +958,11 @@ def get_db_emb(path_db, mentions, embtype):
                     result = c.execute(
                         "SELECT emb FROM entity_embeddings WHERE word=?", (mention,)
                     ).fetchone()
-                if embtype == "word":
+                if embtype == "word" or embtype == "snd":
                     mention = mention.lower()
                     result = c.execute(
                         "SELECT emb FROM entity_embeddings WHERE word=?", (mention,)
                     ).fetchone()
-                if embtype == "snd":
-                    mention = mention
-                    result = c.execute(
-                        "SELECT emb FROM glove_embeddings WHERE word=?", (mention,)
-                    ).fetchone()
-                # Get the embeddings from the db:
                 results.append(
                     result if result is None else array("f", result[0]).tolist()
                 )
@@ -1028,23 +1022,11 @@ def prepare_initial_data(df, context_len=100):
             left_context = ""
             if sent_idx - 1 in dict_sentences:
                 left_context = dict_sentences[sent_idx - 1]
-            for i in range(sent_idx - 2, 0, -1):
-                tmp_context = dict_sentences[i] + " " + left_context
-                if len(tmp_context.split(" ")) < context_len:
-                    left_context = tmp_context
-                else:
-                    break
 
             # Generate right-hand context:
             right_context = ""
             if sent_idx + 1 in dict_sentences:
                 right_context = dict_sentences[sent_idx + 1]
-            for i in range(sent_idx + 2, len(dict_sentences) + 1):
-                tmp_context = right_context + " " + dict_sentences[i]
-                if len(tmp_context.split(" ")) < context_len:
-                    right_context = tmp_context
-                else:
-                    break
 
             dict_mention["mention"] = df_mention["mention"]
             dict_mention["sent_idx"] = sent_idx
@@ -1079,7 +1061,7 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
             cands = []
             tmp_cands = []
             max_cand_freq = 0
-            ranker_cands = wk_cands[mention_dict["mention"]]
+            ranker_cands = wk_cands.get(mention_dict["mention"], dict())
             for c in ranker_cands:
                 # DeezyMatch confidence score (cosine similarity):
                 cand_selection_score = ranker_cands[c]["Score"]
@@ -1089,25 +1071,16 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
                     qcrlv_score = mentions_to_wikidata[c][qc]
                     if qcrlv_score > max_cand_freq:
                         max_cand_freq = qcrlv_score
-                    # Normalized mention-to-wikidata relevance score:
-                    qcm2w_score = ranker_cands[c]["Candidates"][qc]
-                    # Average of CS conf score and mention2wiki norm relv:
-                    # if cand_selection_score:
-                    #     qcm2w_score = (qcm2w_score + cand_selection_score) / 2
-                    tmp_cands.append(
-                        (qc, qcrlv_score, qcm2w_score, cand_selection_score)
-                    )
+                    tmp_cands.append((qc, qcrlv_score, cand_selection_score))
             # Append candidate and normalized score weighted by candidate selection conf:
             for cand in tmp_cands:
                 qc_id = cand[0]
                 # Normalize absolute mention-to-wikidata relevance by entity:
                 qc_score_1 = round(cand[1] / max_cand_freq, 3)
-                # Same as qcm2w_score: normalized mention-to-wikidata relevance by mention:
+                # Candidate selection confidence:
                 qc_score_2 = round(cand[2], 3)
-                # DeezyMatch cosine similarity:
-                qc_score_3 = cand_selection_score
                 # Averaged relevances:
-                qc_score = (qc_score_1 + qc_score_2 + qc_score_3) / 3
+                qc_score = (qc_score_1 + qc_score_2) / 2
                 cands.append([qc_id, qc_score])
             # Sort candidates and normalize between 0 and 1, and so they add up to 1.
             cands = sorted(cands, key=lambda x: (x[1], x[0]), reverse=True)
@@ -1117,11 +1090,35 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
     return new_json
 
 
-def add_publication(rel_json):
+def add_publication(rel_json, publname="", publwqid=""):
     """
     TO DO.
     """
-    return rel_json
+    new_json = rel_json.copy()
+    for article in rel_json:
+        place = publname
+        place_wqid = publwqid
+        if article != "linking":
+            place = rel_json[article][0].get("place", publname)
+            place_wqid = rel_json[article][0].get("place_wqid", publwqid)
+        preffix_sentence = "This article is published in "
+        sentence = preffix_sentence + place + "."
+        dict_publ = {
+            "mention": place,
+            "sent_idx": 0,
+            "sentence": sentence,
+            "gold": [place_wqid],
+            "ngram": place,
+            "context": ["", ""],
+            "pos": len(preffix_sentence),
+            "end_pos": len(preffix_sentence + sentence),
+            "candidates": [[place_wqid, 1.0]],
+            "place": place,
+            "place_wqid": place_wqid,
+            "ner_label": "LOC",
+        }
+        new_json[article].append(dict_publ)
+    return new_json
 
 
 def prepare_rel_trainset(df, mylinker, myranker, dsplit):
@@ -1144,7 +1141,12 @@ def prepare_rel_trainset(df, mylinker, myranker, dsplit):
     # Get unique mentions, to run them through the ranker:
     all_mentions = []
     for article in rel_json:
-        all_mentions += [y["mention"] for y in rel_json[article]]
+        if mylinker.rel_params["without_microtoponyms"]:
+            all_mentions += [
+                y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"
+            ]
+        else:
+            all_mentions += [y["mention"] for y in rel_json[article]]
     all_mentions = list(set(all_mentions))
     # Format the mentions are required by the ranker:
     all_mentions = [{"mention": mention} for mention in all_mentions]
@@ -1156,10 +1158,14 @@ def prepare_rel_trainset(df, mylinker, myranker, dsplit):
         wk_cands,
         mylinker.linking_resources["mentions_to_wikidata"],
     )
-    # # If "publ" is taken into account for the disambiguation, add the place
-    # # of publication as an additional already disambiguated entity per row:
-    # if mylinker.rel_params["with_publication"] == True:
-    #     rel_json = add_publication(rel_json)
+    # If "publ" is taken into account for the disambiguation, add the place
+    # of publication as an additional already disambiguated entity per row:
+    if mylinker.rel_params["with_publication"] == True:
+        rel_json = add_publication(
+            rel_json,
+            mylinker.rel_params["default_publname"],
+            mylinker.rel_params["default_publwqid"],
+        )
 
     ## TO DO
     with open(

@@ -29,7 +29,18 @@ class Ranker:
         already_collected_cands=dict(),
     ):
         """
-        Initialize the ranker.
+        Initialize a Ranker object.
+
+        Arguments:
+            method (str): The candidate selection and ranking method.
+            resources_path (str): Relative path to the wiki resources.
+            mentions_to_wikidata (dict): Where the mentions_to_wikidata dictionary will be stored.
+            wikidata_to_mentions (dict): Where the wikidata_to_mentions dictionary will be stored.
+            strvar_parameters (dict): Dictionary of parameters required to create a DeezyMatch
+                training dataset.
+            deezy_parameters (dict): Dictionary of parameters for training a DeezyMatch model.
+            already_collected_cands (dict): Dictionary where we store candidates for mentions that
+                have already been seen.
         """
         self.method = method
         self.resources_path = resources_path
@@ -73,8 +84,9 @@ class Ranker:
 
     def load_resources(self):
         """
-        Load resources required for linking, and initializes pandarallel
-        if needed by the candidate ranking method.
+        Load resources required for performing candidate selection and ranking.
+        This also and initializes pandarallel if needed by the candidate ranking
+        method.
 
         Returns:
             self.mentions_to_wikidata (dict): loads the mentions_to_wikidata.json
@@ -136,15 +148,10 @@ class Ranker:
         return self.mentions_to_wikidata
 
     def train(self):
-
         """
         Training a DeezyMatch model. The training will be skipped if the model already
         exists and self.overwrite_training it set to False. The training will
         be run on test mode if self.do_test is set to True.
-
-        Returns:
-            A trained DeezyMatch model.
-            The DeezyMatch candidate vectors.
         """
 
         if self.method == "deezymatch":
@@ -161,6 +168,14 @@ class Ranker:
     def perfect_match(self, queries):
         """
         Perform perfect match between the string and the KB altnames.
+
+        Arguments:
+            queries (list): List of mentions to find candidates for.
+
+        Returns:
+            tuple:
+                two dictionaries: a (perfect) match between queries->mentions
+                and an updated version of already_collected_cands.
         """
         candidates = {}
         for query in queries:
@@ -221,8 +236,9 @@ class Ranker:
             damlev (bool): either damerau_levenshtein or simple overlap
 
         Returns:
-            tuple: two dictionaries: a (partial) match between queries->mentions
-                                    an enriched version of already_collected_cands
+            tuple:
+                two dictionaries: a (partial) match between queries->mentions
+                and an updated version of already_collected_cands.
         """
 
         candidates, self.already_collected_cands = self.perfect_match(queries)
@@ -261,8 +277,9 @@ class Ranker:
             queries (list): list of mentions identified in a given sentence
 
         Returns:
-            cands_dict: a (fuzzy) match between mentions and mentions in the KB
-            self.already_collected_cands (dict): an enriched version of already_collected_cands
+            tuple:
+                two dictionaries: a (fuzzy) match between queries->mentions
+                and an updated version of already_collected_cands.
         """
 
         dm_path = self.deezy_parameters["dm_path"]
@@ -326,7 +343,7 @@ class Ranker:
                 for a given sentence.
 
         Returns:
-            A dictionary, resulting from running a certain rainking method.
+            A dictionary, resulting from running a certain ranking method.
         """
         if self.method == "perfectmatch":
             return self.perfect_match(queries)
@@ -352,6 +369,7 @@ class Ranker:
                 in Wikidata. E.g. for mention "Guadaloupe" in sentence "sn83030483-
                 1790-03-31-a-i0004_1, we store the candidates as follows:
                 {'Guadaloupe': {'Score': 1.0, 'Candidates': {'Q17012': 10, 'Q3153836': 2}}}
+            already_collected_cands (dict): an updated version of already_collected_cands.
         """
         # Otherwise:
         queries = list(set([mention["mention"] for mention in mentions]))
@@ -365,7 +383,7 @@ class Ranker:
                 assert self.mentions_to_wikidata["London"] is not None
                 # Find Wikidata ID and relv.
                 found_cands = self.mentions_to_wikidata.get(variation, dict())
-                if not variation in wk_cands[original_mention]:
+                if found_cands and not variation in wk_cands[original_mention]:
                     wk_cands[original_mention][variation] = {"Score": match_score}
                     wk_cands[original_mention][variation]["Candidates"] = found_cands
         return wk_cands, self.already_collected_cands
