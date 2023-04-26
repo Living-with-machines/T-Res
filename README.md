@@ -140,65 +140,35 @@ See this with an example in [this notebook](https://github.com/Living-with-machi
 
 ## Installation
 
-The setup relies on the integration of `pyenv` and `poetry`. The following are the commands you should run if you are setting this up on Ubuntu (to know more, see [these guidelines](https://www.adaltas.com/en/2021/06/09/pyrepo-project-initialization/)). To install them on a different OS, you can follow [these guidelines](https://github.com/pyenv/pyenv#installation) for `pyenv` (but remember to first of all install the prerequisites listed in the link!) and then [these guidelines](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions) for `poetry`.
-
-If you haven't already `pyenv` and `poetry` installed, first you need to ensure the following packages are installed:
+### First updated the system
 
 ```
-sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
-libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
-libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev python-openssl
+sudo apt update
+sudo apt install     build-essential     curl     libbz2-dev     libffi-dev     liblzma-dev     libncursesw5-dev     libreadline-dev     libsqlite3-dev     libssl-dev     libxml2-dev     libxmlsec1-dev     llvm     make     tk-dev     wget     xz-utils     zlib1g-dev
 ```
 
-Then you can install `pyenv` with the `pyenv-installer`:
+### Install pyenv
 
 ```
 curl https://pyenv.run | bash
-```
-Then to properly configure pyenv for use on the system, you need:
 
-```
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init --path)"\nfi' >> ~/.bashrc
-```
 
-Restart the terminal:
-```
 source ~/.bashrc
-```
 
-Check that `pyenv` is correctly installed by typing:
-```
-pyenv
-```
+pyenv update
 
-Install Python 3.9.7 and set it as the global Python version:
-
-```
 pyenv install 3.9.7
 pyenv global 3.9.7
 ```
 
-Now you can install `poetry` the following way:
+### Install poetry
 
 ```
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-```
-
-To configure poetry for use in the system:
-```
+curl -sSL https://install.python-poetry.org | python3 -
 echo 'export PATH=$PATH:$HOME/.poetry/bin' >> ~/.bashrc
-```
-
-Restart the terminal:
-```
-source ~/.bashrc
-```
-
-And check whether `poetry` works:
-```
-poetry
 ```
 
 ## Project Installation
