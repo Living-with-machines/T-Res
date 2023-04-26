@@ -33,7 +33,7 @@ experiments = [
     # ["hipe", "deezymatch", "reldisamb", "fine", True, True],
     # ["hipe", "deezymatch", "reldisamb", "fine", True, False],
     # ["hipe", "deezymatch", "reldisamb", "fine", False, True],
-    # ["hipe", "deezymatch", "reldisamb", "fine", True, True],
+    # ["hipe", "deezymatch", "reldisamb", "fine", False, False],
 ]
 
 # Mapping experiment parameters:

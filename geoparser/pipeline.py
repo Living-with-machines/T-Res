@@ -216,11 +216,14 @@ class Pipeline:
                 self.mylinker.linking_resources["mentions_to_wikidata"],
             )
             if self.mylinker.rel_params["with_publication"]:
+                if place_wqid == "" or place == "":
+                    place_wqid = self.mylinker.rel_params["default_publwqid"]
+                    place = self.mylinker.rel_params["default_publname"]
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(
                     mentions_dataset,
-                    self.mylinker.rel_params["default_publname"],
-                    self.mylinker.rel_params["default_publwqid"],
+                    place,
+                    place_wqid,
                 )
             predicted = self.mylinker.rel_params["ed_model"].predict(mentions_dataset)
             if self.mylinker.rel_params["with_publication"]:
