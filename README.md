@@ -140,7 +140,7 @@ See this with an example in [this notebook](https://github.com/Living-with-machi
 
 ## Installation
 
-### First updated the system
+### First update the system
 
 ```
 sudo apt update
@@ -190,17 +190,6 @@ Install all dependencies using `poetry`:
 
 ```
 poetry install
-```
-
-You then need to add a couple of NLTK resources, needed by DeezyMatch:
-
-```
-poetry run python -m nltk.downloader brown words
-```
-
-To use Jupyter notebooks, you will need to add the Jupyter package:
-```
-poetry add -D jupyter
 ```
 
 Create a kernel:
