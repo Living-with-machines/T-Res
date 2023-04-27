@@ -75,7 +75,7 @@ class Experiment:
             )
         else:
             sys.exit(
-                "\nError: The dataset has not been created, you should first run the data_processing.py script.\n"
+                "\nError: The dataset has not been created, you should first run the prepare_data.py script.\n"
             )
 
     def __str__(self):
@@ -189,6 +189,11 @@ class Experiment:
         return self.processed_data
 
     def linking_experiments(self):
+        """
+        Prepares the data for the linking experiments, creating a mention-based
+        dataframe. It produces tsv files in the format required by the HIPE
+        scorer, ready to be evaluated.
+        """
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
         self.processed_data["processed_df"] = processed_df

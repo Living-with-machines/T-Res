@@ -60,10 +60,10 @@ def test_prepare_initial_data():
         "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
     ).iloc[:1]
     parsed_doc = rel_utils.prepare_initial_data(df, context_len=100)
-    assert parsed_doc["4939308"][0]["mention"] == "STALYBRIDGE"
-    assert parsed_doc["4939308"][0]["gold"][0] == "Q1398653"
-    assert parsed_doc["4939308"][3]["mention"] == "Market-street"
-    assert parsed_doc["4939308"][3]["gold"] == "NIL"
+    assert parsed_doc["4939308_1"][0]["mention"] == "STALYBRIDGE"
+    assert parsed_doc["4939308_1"][0]["gold"][0] == "Q1398653"
+    assert parsed_doc["4939308_6"][1]["mention"] == "Market-street"
+    assert parsed_doc["4939308_6"][1]["gold"] == "NIL"
 
 
 def test_train():
@@ -163,7 +163,7 @@ def test_train():
     )
 
     # assert expected performance on test set
-    assert 0.60 < mylinker.rel_params["ed_model"].best_performance["f1"]
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
 
 
 def test_load_eval_model():
