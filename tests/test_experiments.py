@@ -1,7 +1,6 @@
 import os
 import sys
 from ast import literal_eval
-from re import L
 
 import pandas as pd
 import pytest
@@ -12,7 +11,6 @@ from geoparser import experiment, linking, ranking, recogniser
 
 
 def test_wrong_dataset_path():
-
     with pytest.raises(SystemExit) as cm:
         experiment.Experiment(
             dataset="lwm",
@@ -32,7 +30,6 @@ def test_wrong_dataset_path():
 
 
 def test_load_data():
-
     data = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t")
     ids = set()
 
@@ -78,6 +75,14 @@ def test_load_data():
         overwrite_training=False,
     )
 
+    myner.train()
+    myner.pipe = myner.create_pipeline()
+
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.train()
+
+    mylinker.linking_resources = mylinker.load_resources()
+
     # --------------------------------------
     # Instantiate the experiment:
     exp = experiment.Experiment(
@@ -110,7 +115,7 @@ def test_load_data():
         assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
     else:
-        # If the data is not processed, process it, and to the same tests:
+        # If the data is not processed, process it, and do the same tests:
         exp.processed_data = exp.prepare_data()
         for k, v in exp.processed_data.items():
             assert len(ids) == len(v)
@@ -126,7 +131,6 @@ def test_load_data():
 
 
 def test_wrong_ranker_method():
-
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
         method="perfect_match",
