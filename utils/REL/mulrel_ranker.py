@@ -14,7 +14,7 @@ class PreRank(torch.nn.Module):
         super(PreRank, self).__init__()
         self.config = config
 
-    def forward(self, token_ids, token_offsets, entity_ids, embeddings, emb):
+    def forward(self, token_ids, token_offsets, entity_ids, embeddings):
         """
         Multiplies local context words with entity vectors for a given mention.
 
@@ -24,9 +24,6 @@ class PreRank(torch.nn.Module):
         sent_vecs = embeddings["word_embeddings_bag"](
             token_ids, token_offsets
         )  # (batch_size, emb_size=300)
-
-        # entity_vecs = emb.emb(entity_names)
-
         entity_vecs = embeddings["entity_embeddings"](
             entity_ids
         )  # (batch_size, n_cands, emb_size)
@@ -56,11 +53,10 @@ class MulRelRanker(torch.nn.Module):
     def __init__(self, config, device):
         super(MulRelRanker, self).__init__()
         self.config = config
-        # self.embeddings = embeddings
         self.device = device
         self.max_dist = 1000
         self.ent_top_n = 1000
-        self.ent_ent_comp = "bilinear"  # config.get('ent_ent_comp', 'bilinear')  # bilinear, trans_e, fbilinear
+        self.ent_ent_comp = "bilinear"
 
         self.att_mat_diag = torch.nn.Parameter(torch.ones(self.config["emb_dims"]))
         self.tok_score_mat_diag = torch.nn.Parameter(

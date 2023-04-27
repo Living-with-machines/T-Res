@@ -4,7 +4,7 @@ general:
   #   cuda:0, cuda:1 or others. "cuda" is the default CUDA device
   gpu_device: "cuda"
   # Parent dir to save trained models 
-  models_dir: "../../experiments/outputs/deezymatch/models"
+  models_dir: "../resources/deezymatch/models"
 
 preprocessing:
   # normalizing text to the ASCII encoding standard
@@ -18,7 +18,7 @@ preprocessing:
   # (number of its characters found in the vocabulary)/(total number its characters) >= missing_char_threshold
   missing_char_threshold: 0.5
   # read a list of characters and add to the vocabulary
-  read_list_chars: "./characters_v001.vocab"
+  read_list_chars: "../resources/deezymatch/inputs/characters_v001.vocab"
 
 # --- RNN/GRU/LSTM architecture/misc info
 gru_lstm:
@@ -32,7 +32,7 @@ gru_lstm:
     # NOTE: please use only STRINGS in prefix_suffix list, 
     #       if you want only prefix or suffix, enter the other as an empty string ""
     #       e.g., ["|", ""] would add | as prefix and no suffix
-    prefix_suffix: ["<", ">"]
+    prefix_suffix: ["", ""]
     # ONLY if "ngram" is selected in tokenize, the following args will be used:
     min_gram: 4
     max_gram: 5
@@ -74,7 +74,7 @@ gru_lstm:
 
   learning_rate: 0.005
   optimizer: adam
-  epochs: 20
+  epochs: 10
   batch_size: 64
   # shuffle when creating DataLoader
   dl_shuffle: True 

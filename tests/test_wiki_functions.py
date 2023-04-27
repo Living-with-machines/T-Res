@@ -17,7 +17,7 @@ def test_make_links_consistent():
 
 
 def test_wikidata2wikipedia():
-    db = "/resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db"
+    db = "resources/wikipedia/index_enwiki-latest.db"
     assert process_wikipedia.title_to_id("BOLOGNA", lower=True, path_to_db=db) == None
     assert process_wikipedia.title_to_id("Bologna", lower=True, path_to_db=db) == None
     assert (

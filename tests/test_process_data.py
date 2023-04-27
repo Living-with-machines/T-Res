@@ -1,6 +1,5 @@
 import os
 import sys
-from re import L
 
 import pandas as pd
 import pytest
@@ -8,7 +7,7 @@ import pytest
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
-from geoparser import linking, recogniser
+from geoparser import recogniser
 from utils import process_data
 
 
@@ -42,24 +41,6 @@ def test_eval_with_exception():
     assert check == True
 
 
-# def test_get_wikidata_instance_ids():
-#     mylinker = linking.Linker(
-#         method="mostpopular",
-#         resources_path="/resources/wikidata/",
-#         linking_resources=dict(),
-#         base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
-#         rel_params={
-#             "base_path": "/resources/rel_db/",
-#             "wiki_version": "wiki_2019/",
-#         },
-#         overwrite_training=False,
-#     )
-#     mylinker.load_resources()
-#     extended_mylinker = process_data.get_wikidata_instance_ids(mylinker)
-
-#     assert mylinker == extended_mylinker
-
-
 def test_prepare_sents():
 
     dataset_df = pd.read_csv(
@@ -74,7 +55,7 @@ def test_prepare_sents():
 
     dAnnotated, dSentences, dMetadata = process_data.prepare_sents(dataset_df)
 
-    assert dAnnotated["4428937_4"][(26, 41)] == ("LOC", "Bt. Jamess Park", "NIL")
+    assert dAnnotated["4428937_4"][(26, 41)] == ("LOC", "Bt. Jamess Park", "Q216914")
 
     test_data = process_data.eval_with_exception(dataset_df["annotations"][0])
     test_data[0]["wkdt_qid"] = "*"
@@ -83,7 +64,7 @@ def test_prepare_sents():
 
     dAnnotated, dSentences, dMetadata = process_data.prepare_sents(dataset_df)
 
-    assert dAnnotated["4428937_4"][(26, 41)] == ("LOC", "Bt. Jamess Park", "NIL")
+    assert dAnnotated["4428937_4"][(26, 41)] == ("LOC", "Bt. Jamess Park", "Q216914")
 
     assert len(dAnnotated) == len(dSentences) == len(dMetadata)
 
@@ -94,13 +75,12 @@ def test_prepare_sents():
 def test_align_gold():
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -109,9 +89,9 @@ def test_align_gold():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
     )
-    myner.model, myner.pipe = myner.create_pipeline()
+
+    myner.pipe = myner.create_pipeline()
 
     dataset_df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv",
@@ -128,32 +108,34 @@ def test_align_gold():
             gold_positions = process_data.align_gold(predictions, annotations)
 
             I_elements = [
-                x for x in range(len(gold_positions)) if "I-LOC" == gold_positions[x]["entity"]
+                x
+                for x in range(len(gold_positions))
+                if "I-LOC" == gold_positions[x]["entity"]
             ]
             B_elements = [
-                x for x in range(len(gold_positions)) if "B-LOC" == gold_positions[x]["entity"]
+                x
+                for x in range(len(gold_positions))
+                if "B-LOC" == gold_positions[x]["entity"]
             ]
 
             # assert that the previous element of a I-element is either a B- or a I-
-
             for i in I_elements:
                 if (i - 1 in I_elements) or (i - 1 in B_elements):
                     continue
                 else:
                     empty_list.append(sent_id)
-                    
+
     assert len(empty_list) == 0
 
 
 def test_ner_and_process():
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -162,9 +144,8 @@ def test_ner_and_process():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
     )
-    myner.model, myner.pipe = myner.create_pipeline()
+    myner.pipe = myner.create_pipeline()
 
     dataset_df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv",
@@ -183,10 +164,12 @@ def test_ner_and_process():
     ) = process_data.ner_and_process(dSentences, dAnnotated, myner)
 
     B_els = [
-        [z for z in range(len(y)) if "B-" in y[z]["entity"]] for x, y in gold_tokenization.items()
+        [z for z in range(len(y)) if "B-" in y[z]["entity"]]
+        for x, y in gold_tokenization.items()
     ]
     I_els = [
-        [z for z in range(len(y)) if "I-" in y[z]["entity"]] for x, y in gold_tokenization.items()
+        [z for z in range(len(y)) if "I-" in y[z]["entity"]]
+        for x, y in gold_tokenization.items()
     ]
     misaligned_labels = []
     for l in range(len(I_els)):
@@ -197,6 +180,6 @@ def test_ner_and_process():
                 continue
             else:
                 misaligned_labels.append(l)
-                
-    # we are aware that one sentence currently is misaligned
+
+    # No sentences should be misaligned:
     assert len(set(misaligned_labels)) == 0

@@ -10,8 +10,7 @@ warnings.filterwarnings(
 )  # To fix properly in the future
 
 # Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath("CLEF-HIPE-2020-scorer/"))
-
+sys.path.insert(0, os.path.abspath("HIPE-scorer/"))
 import clef_evaluation
 
 dApprNames = dict()
@@ -43,7 +42,6 @@ for dataset in datasets:
         if dataset == "hipe" and granularity == "fine":
             continue
         for ner_model in ner_models:
-
             # String in common in pred and true filenames:
             filename_common_str = (
                 "../experiments/outputs/results/"
@@ -126,6 +124,7 @@ for i in range(len(pred_files)):
             task="nerc_coarse",
             outdir="results/",
             skip_check=True,
+            edition="HIPE-2020",
         )
 
         # Produce results table:
@@ -176,18 +175,15 @@ ner_approaches = ["blb_lwm-ner"]
 ranking_approaches = [
     "perfectmatch",
     "deezymatch+3+25",
-    "relcs",
 ]
 linking_approaches = [
-    "mostpopular",
     "skys",
+    "mostpopular",
     "bydistance",
-    "reldisamb+lwm+publ",
-    "reldisamb+lwm+publ+dist",
-    "reldisamb+lwm+publ+nil",
-    "reldisamb+lwm+relv",
-    "reldisamb+lwm+relv+dist",
-    "reldisamb+lwm+relv+nil",
+    "reldisamb",
+    "reldisamb+wmtops",
+    "reldisamb+wpubl",
+    "reldisamb+wpubl+wmtops",
 ]
 granularities = ["fine"]
 splits = [
@@ -319,6 +315,7 @@ for i in range(len(pred_files)):
             task="nel",
             outdir="results/",
             skip_check=True,
+            edition="HIPE-2020",
         )
 
         ne_tags = ["ALL"]

@@ -24,19 +24,28 @@ class Ranker:
         resources_path,
         mentions_to_wikidata,
         wikidata_to_mentions,
-        wiki_filtering=dict(),
         strvar_parameters=dict(),
         deezy_parameters=dict(),
         already_collected_cands=dict(),
     ):
         """
-        Initialize the ranker.
+        Initialize a Ranker object.
+
+        Arguments:
+            method (str): The candidate selection and ranking method.
+            resources_path (str): Relative path to the wiki resources.
+            mentions_to_wikidata (dict): Where the mentions_to_wikidata dictionary will be stored.
+            wikidata_to_mentions (dict): Where the wikidata_to_mentions dictionary will be stored.
+            strvar_parameters (dict): Dictionary of parameters required to create a DeezyMatch
+                training dataset.
+            deezy_parameters (dict): Dictionary of parameters for training a DeezyMatch model.
+            already_collected_cands (dict): Dictionary where we store candidates for mentions that
+                have already been seen.
         """
         self.method = method
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
-        self.wiki_filtering = wiki_filtering
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
         self.already_collected_cands = already_collected_cands
@@ -65,6 +74,9 @@ class Ranker:
             s += "    * DeezyMatch overwrite training: {0}\n".format(
                 self.deezy_parameters["overwrite_training"]
             )
+            s += "    * DeezyMatch overwrite dataset: {0}\n".format(
+                self.strvar_parameters["overwrite_dataset"]
+            )
             s += "    * DeezyMatch test mode: {0}\n".format(
                 self.deezy_parameters["do_test"]
             )
@@ -72,8 +84,9 @@ class Ranker:
 
     def load_resources(self):
         """
-        Load resources required for linking, and initializes pandarallel
-        if needed by the candidate ranking method.
+        Load resources required for performing candidate selection and ranking.
+        This also and initializes pandarallel if needed by the candidate ranking
+        method.
 
         Returns:
             self.mentions_to_wikidata (dict): loads the mentions_to_wikidata.json
@@ -110,20 +123,8 @@ class Ranker:
             )
             if wikipedia_mentions_stripped:
                 wikipedia_mentions = wikipedia_mentions_stripped
-            if wikipedia_mentions:
-                # top_keys = sorted(wikipedia_mentions, key=wikipedia_mentions.get, reverse=True)[:3]
-                top_keys = [
-                    wm
-                    for wm in wikipedia_mentions
-                    # if wikipedia_mentions[wm] > self.wiki_filtering["minimum_relv"]
-                ]
-                top_keys = set(top_keys)
             wikidata_to_mentions_filtered[wk] = dict(
-                [
-                    (x, wikipedia_mentions[x])
-                    for x in wikipedia_mentions
-                    if x in top_keys
-                ]
+                [(x, wikipedia_mentions[x]) for x in wikipedia_mentions]
             )
             for m in wikidata_to_mentions_filtered[wk]:
                 if m in mentions_to_wikidata_filtered:
@@ -147,26 +148,34 @@ class Ranker:
         return self.mentions_to_wikidata
 
     def train(self):
-
         """
         Training a DeezyMatch model. The training will be skipped if the model already
         exists and self.overwrite_training it set to False. The training will
         be run on test mode if self.do_test is set to True.
-
-        Returns:
-            A trained DeezyMatch model.
-            The DeezyMatch candidate vectors.
         """
 
         if self.method == "deezymatch":
             Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
+            if self.deezy_parameters["do_test"] == True:
+                self.deezy_parameters["dm_model"] += "_test"
+                self.deezy_parameters["dm_cands"] += "_test"
             deezy_processing.create_training_set(self)
             deezy_processing.train_deezy_model(self)
             deezy_processing.generate_candidates(self)
+        # This dictionary is not used anymore:
+        self.wikidata_to_mentions = dict()
 
     def perfect_match(self, queries):
         """
         Perform perfect match between the string and the KB altnames.
+
+        Arguments:
+            queries (list): List of mentions to find candidates for.
+
+        Returns:
+            tuple:
+                two dictionaries: a (perfect) match between queries->mentions
+                and an updated version of already_collected_cands.
         """
         candidates = {}
         for query in queries:
@@ -227,8 +236,9 @@ class Ranker:
             damlev (bool): either damerau_levenshtein or simple overlap
 
         Returns:
-            tuple: two dictionaries: a (partial) match between queries->mentions
-                                    an enriched version of already_collected_cands
+            tuple:
+                two dictionaries: a (partial) match between queries->mentions
+                and an updated version of already_collected_cands.
         """
 
         candidates, self.already_collected_cands = self.perfect_match(queries)
@@ -267,8 +277,9 @@ class Ranker:
             queries (list): list of mentions identified in a given sentence
 
         Returns:
-            cands_dict: a (fuzzy) match between mentions and mentions in the KB
-            self.already_collected_cands (dict): an enriched version of already_collected_cands
+            tuple:
+                two dictionaries: a (fuzzy) match between queries->mentions
+                and an updated version of already_collected_cands.
         """
 
         dm_path = self.deezy_parameters["dm_path"]
@@ -283,48 +294,43 @@ class Ranker:
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]
 
         if remainers:
-            try:
-                candidates = candidate_ranker(
-                    candidate_scenario=os.path.join(
-                        dm_path, "combined", dm_cands + "_" + dm_model
-                    ),
-                    query=remainers,
-                    ranking_metric=self.deezy_parameters["ranking_metric"],
-                    selection_threshold=self.deezy_parameters["selection_threshold"],
-                    num_candidates=self.deezy_parameters["num_candidates"],
-                    search_size=self.deezy_parameters["search_size"],
-                    verbose=self.deezy_parameters["verbose"],
-                    output_path=os.path.join(dm_path, "ranking", dm_output),
-                    pretrained_model_path=os.path.join(
-                        f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".model"
-                    ),
-                    pretrained_vocab_path=os.path.join(
-                        f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
-                    ),
-                )
+            candidates = candidate_ranker(
+                candidate_scenario=os.path.join(
+                    dm_path, "combined", dm_cands + "_" + dm_model
+                ),
+                query=remainers,
+                ranking_metric=self.deezy_parameters["ranking_metric"],
+                selection_threshold=self.deezy_parameters["selection_threshold"],
+                num_candidates=self.deezy_parameters["num_candidates"],
+                search_size=self.deezy_parameters["search_size"],
+                verbose=self.deezy_parameters["verbose"],
+                output_path=os.path.join(dm_path, "ranking", dm_output),
+                pretrained_model_path=os.path.join(
+                    f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".model"
+                ),
+                pretrained_vocab_path=os.path.join(
+                    f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
+                ),
+            )
 
-                for idx, row in candidates.iterrows():
-                    # Reverse cosine distance to cosine similarity:
-                    returned_cands = dict()
-                    if self.deezy_parameters["ranking_metric"] == "faiss":
-                        returned_cands = row["faiss_distance"]
-                        returned_cands = {
-                            k: (
-                                self.deezy_parameters["selection_threshold"]
-                                - returned_cands[k]
-                            )
-                            / self.deezy_parameters["selection_threshold"]
-                            for k in returned_cands
-                        }
-                    else:
-                        returned_cands = row["cosine_dist"]
-                        returned_cands = {
-                            k: 1 - returned_cands[k] for k in returned_cands
-                        }
-                    cands_dict[row["query"]] = returned_cands
-                    self.already_collected_cands[row["query"]] = returned_cands
-            except TypeError:
-                pass
+            for idx, row in candidates.iterrows():
+                # Reverse cosine distance to cosine similarity:
+                returned_cands = dict()
+                if self.deezy_parameters["ranking_metric"] == "faiss":
+                    returned_cands = row["faiss_distance"]
+                    returned_cands = {
+                        k: (
+                            self.deezy_parameters["selection_threshold"]
+                            - returned_cands[k]
+                        )
+                        / self.deezy_parameters["selection_threshold"]
+                        for k in returned_cands
+                    }
+                else:
+                    returned_cands = row["cosine_dist"]
+                    returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
+                cands_dict[row["query"]] = returned_cands
+                self.already_collected_cands[row["query"]] = returned_cands
 
         return cands_dict, self.already_collected_cands
 
@@ -337,7 +343,7 @@ class Ranker:
                 for a given sentence.
 
         Returns:
-            A dictionary, resulting from running a certain rainking method.
+            A dictionary, resulting from running a certain ranking method.
         """
         if self.method == "perfectmatch":
             return self.perfect_match(queries)
@@ -363,10 +369,8 @@ class Ranker:
                 in Wikidata. E.g. for mention "Guadaloupe" in sentence "sn83030483-
                 1790-03-31-a-i0004_1, we store the candidates as follows:
                 {'Guadaloupe': {'Score': 1.0, 'Candidates': {'Q17012': 10, 'Q3153836': 2}}}
+            already_collected_cands (dict): an updated version of already_collected_cands.
         """
-        # If method is relcs, candidates are collected in the ED step:
-        if self.method == "relcs":
-            return dict(), dict()
         # Otherwise:
         queries = list(set([mention["mention"] for mention in mentions]))
         cands, self.already_collected_cands = self.run(queries)
@@ -375,9 +379,11 @@ class Ranker:
             wk_cands[original_mention] = dict()
             for variation in cands[original_mention]:
                 match_score = cands[original_mention][variation]
+                # Check we've actually loaded the mentions2wikidata dictionary:
+                assert self.mentions_to_wikidata["London"] is not None
                 # Find Wikidata ID and relv.
                 found_cands = self.mentions_to_wikidata.get(variation, dict())
-                if not variation in wk_cands[original_mention]:
+                if found_cands and not variation in wk_cands[original_mention]:
                     wk_cands[original_mention][variation] = {"Score": match_score}
                     wk_cands[original_mention][variation]["Candidates"] = found_cands
         return wk_cands, self.already_collected_cands

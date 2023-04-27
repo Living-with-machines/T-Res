@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, training, pipeline_utils
+from utils import process_data, rel_utils
 
 
 class Experiment:
@@ -28,6 +28,8 @@ class Experiment:
         rel_experiments=False,
     ):
         """
+        Initialises an Experiment object.
+
         Arguments:
             dataset (str): dataset to process ("lwm" or "hipe").
             data_path (str): path to the processed data.
@@ -78,7 +80,7 @@ class Experiment:
 
     def __str__(self):
         """
-        Prints the characteristics of the experiment.
+        Prints information about the experiment.
         """
         msg = "\n>>> Experiment\n"
         msg += "    * Dataset: {0}\n".format(self.dataset.upper())
@@ -113,24 +115,10 @@ class Experiment:
             "partialmatch",
             "levenshtein",
             "deezymatch",
-            "relcs",
         ]:
             print(
                 "\n!!! Coherence check failed. "
                 "This is because the candidate ranking method does not exist.\n"
-            )
-            sys.exit(0)
-        # if self.dataset == "hipe" and self.myner.training_tagset != "coarse":
-        #     print(
-        #         "\n!!! Coherence check failed. "
-        #         "HIPE should be run with the coarse tagset.\n"
-        #     )
-        #     sys.exit(0)
-        if self.myranker.method == "relcs" and not self.mylinker.method == "reldisamb":
-            print(
-                "\n!!! Coherence check failed. "
-                "The REL candidate selection method only works with the reldisamb.\n"
-                "linking method.\n"
             )
             sys.exit(0)
 
@@ -149,20 +137,6 @@ class Experiment:
 
         # Prepare data per sentence:
         dAnnotated, dSentences, dMetadata = process_data.prepare_sents(self.dataset_df)
-
-        # -----------------------------------------
-        # NER training and creating pipeline:
-        # Train the NER models if needed:
-        self.myner.train()
-        # Load the NER pipeline:
-        self.myner.model, self.myner.pipe = self.myner.create_pipeline()
-
-        # -----------------------------------------
-        # Ranker loading resources and training a model:
-        # Load the resources:
-        self.myranker.mentions_to_wikidata = self.myranker.load_resources()
-        # Train a DeezyMatch model if needed:
-        self.myranker.train()
 
         # -------------------------------------------
         # Parse with NER in the LwM way
@@ -215,16 +189,9 @@ class Experiment:
         return self.processed_data
 
     def linking_experiments(self):
-
-        # Candidates:
-        cand_selection = "relcs" if self.myranker.method == "relcs" else "lwmcs"
-
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
         self.processed_data["processed_df"] = processed_df
-
-        # Load linking resources:
-        self.mylinker.linking_resources = self.mylinker.load_resources()
 
         # Experiments data splits:
         if self.test_split == "dev":
@@ -247,68 +214,22 @@ class Experiment:
                     # "Poole1860",
                 ]
 
-        train_original = pd.DataFrame()
-        train_processed = pd.DataFrame()
-        if (
-            self.mylinker.rel_params.get("training_data") == "lwm"
-            and self.mylinker.method == "reldisamb"
-        ):
-            train_original, train_processed = training.load_training_lwm_data(self)
-
         # ------------------------------------------
         # Iterate over each linking experiments, each will have its own
         # results file:
         for split in list_test_splits:
-
-            processed_df = self.processed_data["processed_df"]
             original_df = self.dataset_df
+            processed_df = self.processed_data["processed_df"]
 
-            dev_processed = processed_df[processed_df[split] == "dev"]
-            test_processed = processed_df[processed_df[split] == "test"]
-            dev_original = original_df[original_df[split] == "dev"]
             test_original = original_df[original_df[split] == "test"]
+            test_processed = processed_df[processed_df[split] == "test"]
 
             # Get ids of articles in each split:
             test_article_ids = list(test_original.article_id.astype(str))
 
-            # Get the experiment name:
-            cand_approach = self.myranker.method
-            if self.myranker.method == "deezymatch":
-                cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["num_candidates"]
-                )
-                cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["selection_threshold"]
-                )
-            link_approach = self.mylinker.method
-            if self.mylinker.method == "reldisamb":
-                link_approach += "+" + str(self.mylinker.rel_params["ranking"])
-            experiment_name = self.mylinker.rel_params["training_data"]
-            if self.mylinker.rel_params["training_data"] == "lwm":
-                experiment_name += "_" + cand_approach
-                experiment_name += "_" + link_approach
-                experiment_name += "_" + split
-            if self.mylinker.rel_params["training_data"] == "aida":
-                experiment_name += "_" + cand_approach
-                experiment_name += "_" + link_approach
-
-            experiment_name = pipeline_utils.get_experiment_name(self, split)
-
-            # If method is supervised, train and store model:
-            if self.mylinker.method == "reldisamb":
-                self.mylinker.rel_params = self.mylinker.perform_training(
-                    train_original,
-                    train_processed,
-                    dev_original,
-                    dev_processed,
-                    experiment_name,
-                    cand_selection,
-                )
-
-            if self.mylinker.method == "reldisamb":
-                self.mylinker.disambiguation_setup(experiment_name)
-                mention_prediction = self.mylinker.rel_params["mention_detection"]
-                linking_model = self.mylinker.rel_params["model"]
+            # Train a linking model if needed (it requires myranker to generate potential
+            # candidates to the training set):
+            linking_model = self.mylinker.train_load_model(self.myranker, split=split)
 
             # Dictionary of sentences:
             # {k1 : {k2 : v}}, where k1 is article id, k2 is
@@ -316,97 +237,117 @@ class Experiment:
             nested_sentences_dict = dict()
             for key, val in self.processed_data["dSentences"].items():
                 key1, key2 = key.split("_")
+                key2 = int(key2)
                 if key1 in nested_sentences_dict:
                     nested_sentences_dict[key1][key2] = val
                 else:
                     nested_sentences_dict[key1] = {key2: val}
 
-            dict_mentions_sentence = dict()
-
             # Predict:
             print("Process data into sentences.")
-            for i, row in tqdm(test_processed.iterrows()):
-
-                mention_data = row.to_dict()
-                mention_data["mention"] = mention_data["pred_mention"]
-                mention_data["context"] = ("", "")
-                mention_data["gold"] = ["NONE"]
-                mention_data["pos"] = mention_data["char_start"]
-                mention_data["sent_idx"] = mention_data["sentence_id"]
-                mention_data["end_pos"] = mention_data["char_end"]
-                mention_data["ngram"] = mention_data["pred_mention"]
-                mention_data["conf_md"] = 0.0
-                mention_data["tag"] = mention_data["pred_ner_label"]
-
-                if self.mylinker.method == "reldisamb":
-                    mention_data["candidates"] = mention_prediction.get_candidates(
-                        mention_data["mention"],
-                        cand_selection,
-                        mention_data["candidates"],
-                    )
-
-                if row["sentence_id"] in dict_mentions_sentence:
-                    dict_mentions_sentence[row["sentence_id"]].append(mention_data)
-                else:
-                    dict_mentions_sentence[row["sentence_id"]] = [mention_data]
-
-            sentence_dataset = dict()
-            for sentence_id in dict_mentions_sentence:
-                mentions_dataset = dict_mentions_sentence[sentence_id]
-                for i in range(len(mentions_dataset)):
-                    article_id = mentions_dataset[i]["article_id"]
-                    sentence_pos = mentions_dataset[i]["sentence_pos"]
-                    prev_sent = nested_sentences_dict[article_id].get(
-                        str(int(sentence_pos) - 1), ""
-                    )
-                    next_sent = nested_sentences_dict[article_id].get(
-                        str(int(sentence_pos) + 1), ""
-                    )
-                    mentions_dataset[i]["context"] = (prev_sent, next_sent)
-
-                sentence_dataset[sentence_id] = mentions_dataset
-
-            print("Predict.")
-            disambiguated_mentions = []
-            if self.mylinker.method == "reldisamb":
-                for sentence_id in tqdm(sentence_dataset):
-                    mentions_dataset = sentence_dataset[sentence_id]
-                    mentions_dataset = self.mylinker.perform_linking_rel(
-                        sentence_dataset[sentence_id], sentence_id, linking_model
-                    )
-                    for sentence_id in mentions_dataset:
-                        for mention_data in mentions_dataset[sentence_id]:
-                            disambiguated_mentions.append(mention_data)
-
-            else:
-                for sentence_id in tqdm(sentence_dataset):
-                    mentions_dataset = sentence_dataset[sentence_id]
-                    for mention_data in mentions_dataset:
-                        disambiguated_mentions.append(
-                            self.mylinker.perform_linking_mention(mention_data)
-                        )
-
-            # Add predictions to dataframe:
             to_append = []
-            for i, row in test_processed.iterrows():
-                for mention_data in disambiguated_mentions:
-                    # Check that it's the same mention:
+            mentions_dataset = dict()
+            all_cands = dict()
+            for i, row in tqdm(test_processed.iterrows()):
+                prediction = dict()
+                mention_data = row.to_dict()
+                sentence_id = mention_data["sentence_id"]
+                article_id = mention_data["article_id"]
+                prediction["mention"] = mention_data["pred_mention"]
+                # Generate left-hand context:
+                left_context = ""
+                sent_idx = int(mention_data["sentence_pos"])
+                if sent_idx - 1 in nested_sentences_dict[article_id]:
+                    left_context = nested_sentences_dict[article_id][sent_idx - 1]
+                # Generate right-hand context:
+                right_context = ""
+                if sent_idx + 1 in nested_sentences_dict[article_id]:
+                    right_context = nested_sentences_dict[article_id][sent_idx + 1]
+                prediction["context"] = [left_context, right_context]
+                prediction["candidates"] = mention_data["candidates"]
+                prediction["gold"] = ["NONE"]
+                prediction["ner_score"] = mention_data["ner_score"]
+                prediction["pos"] = mention_data["char_start"]
+                prediction["sent_idx"] = sent_idx
+                prediction["end_pos"] = mention_data["char_end"]
+                prediction["ngram"] = mention_data["pred_mention"]
+                prediction["conf_md"] = mention_data["ner_score"]
+                prediction["tag"] = mention_data["pred_ner_label"]
+                prediction["sentence"] = mention_data["sentence"]
+                prediction["place"] = mention_data["place"]
+                prediction["place_wqid"] = mention_data["place_wqid"]
+                if self.mylinker.method == "reldisamb":
                     if (
-                        mention_data["sentence_id"] == row["sentence_id"]
-                        and mention_data["char_start"] == row["char_start"]
-                        and mention_data["char_end"] == row["char_end"]
+                        self.mylinker.rel_params["without_microtoponyms"]
+                        and mention_data["pred_ner_label"] != "LOC"
                     ):
-                        # Keep scores to append to the test dataframe:
-                        to_append.append(
-                            [
-                                mention_data["prediction"],
-                                round(mention_data["ed_score"], 3),
-                                mention_data["candidates"],
-                            ]
-                        )
+                        prediction["candidates"] = dict()
+                if sentence_id in mentions_dataset:
+                    mentions_dataset[sentence_id].append(prediction)
+                else:
+                    mentions_dataset[sentence_id] = [prediction]
+                all_cands.update({prediction["mention"]: prediction["candidates"]})
+
+            if self.mylinker.method == "reldisamb":
+                rel_resolved = dict()
+                for sentence_id in mentions_dataset:
+                    article_dataset = {sentence_id: mentions_dataset[sentence_id]}
+                    article_dataset = rel_utils.rank_candidates(
+                        article_dataset,
+                        all_cands,
+                        self.mylinker.linking_resources["mentions_to_wikidata"],
+                    )
+                    if self.mylinker.rel_params["with_publication"]:
+                        # If "publ", add an artificial publication entry:
+                        article_dataset = rel_utils.add_publication(article_dataset)
+                    predicted = linking_model.predict(article_dataset)
+                    if self.mylinker.rel_params["with_publication"]:
+                        # ... and if "publ", now remove the artificial publication entry!
+                        predicted[sentence_id].pop()
+                    for i in range(len(predicted[sentence_id])):
+                        combined_mention = article_dataset[sentence_id][i]
+                        combined_mention["prediction"] = predicted[sentence_id][i][
+                            "prediction"
+                        ]
+                        combined_mention["ed_score"] = predicted[sentence_id][i][
+                            "conf_ed"
+                        ]
+                        if sentence_id in rel_resolved:
+                            rel_resolved[sentence_id].append(combined_mention)
+                        else:
+                            rel_resolved[sentence_id] = [combined_mention]
+                    mentions_dataset[sentence_id] = rel_resolved[sentence_id]
+
+            for i, row in tqdm(test_processed.iterrows()):
+                prediction = dict()
+                for mention in mentions_dataset[row["sentence_id"]]:
+                    if (
+                        int(mention["pos"]) == int(row["char_start"])
+                        and int(mention["sent_idx"]) == int(row["sentence_pos"])
+                        and mention["mention"] == row["pred_mention"]
+                    ):
+                        prediction = mention
+
+                        if self.mylinker.method in ["mostpopular", "bydistance"]:
+                            # Run entity linking per mention:
+                            selected_cand = self.mylinker.run(
+                                {
+                                    "candidates": prediction["candidates"],
+                                    "place_wqid": prediction["place_wqid"],
+                                }
+                            )
+                            prediction["prediction"] = selected_cand[0]
+                            prediction["ed_score"] = round(selected_cand[1], 3)
+
+                to_append.append(
+                    [
+                        prediction["prediction"],
+                        round(prediction["ed_score"], 3),
+                    ]
+                )
 
             test_df = test_processed.copy()
-            test_df[["pred_wqid", "ed_score", "candidates"]] = to_append
+            test_df[["pred_wqid", "ed_score"]] = to_append
 
             # Prepare data for scorer:
             self.processed_data = process_data.prepare_storing_links(

@@ -1,7 +1,6 @@
 import os
 import sys
 from ast import literal_eval
-from re import L
 
 import pandas as pd
 import pytest
@@ -12,13 +11,12 @@ from geoparser import experiment, linking, ranking, recogniser
 
 
 def test_wrong_dataset_path():
-
     with pytest.raises(SystemExit) as cm:
         experiment.Experiment(
             dataset="lwm",
             data_path="wrong_path/",
             dataset_df=pd.DataFrame(),
-            results_path="outputs/results/",
+            results_path="experiments/outputs/results/",
             myner="test",
             myranker="test",
             mylinker="test",
@@ -32,7 +30,6 @@ def test_wrong_dataset_path():
 
 
 def test_load_data():
-
     data = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t")
     ids = set()
 
@@ -43,13 +40,12 @@ def test_load_data():
             ids.add(str(article_id) + "_" + str(sent["sentence_pos"]))
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -58,13 +54,13 @@ def test_load_data():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="coarse",  # Options are: "coarse" or "fine"
+        load_from_hub=False,
     )
 
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
     )
@@ -73,12 +69,19 @@ def test_load_data():
     # Instantiate the linker:
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/",
         linking_resources=dict(),
-        base_model="/resources/models/bert/bert_1760_1900/",  # Base model for vector extraction
-        rel_params={"base_path": "/resources/rel_db/", "wiki_version": "wiki_2019/"},
+        rel_params=dict(),
         overwrite_training=False,
     )
+
+    myner.train()
+    myner.pipe = myner.create_pipeline()
+
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.train()
+
+    mylinker.linking_resources = mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -96,24 +99,42 @@ def test_load_data():
         rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
     )
 
-    data = exp.load_data()
-    for k, v in data.items():
-        assert len(ids) == len(v)
+    # Load processed data if existing:
+    exp.processed_data = exp.load_data()
+    if not exp.processed_data == dict():
+        for k, v in exp.processed_data.items():
+            assert len(ids) == len(v)
 
-    not_empty_dMentionsPred = [v for k, v in data["dMentionsPred"].items() if len(v) > 0]
-    not_empty_dCandidates = [v for k, v in data["dCandidates"].items() if len(v) > 0]
+        not_empty_dMentionsPred = [
+            v for k, v in exp.processed_data["dMentionsPred"].items() if len(v) > 0
+        ]
+        not_empty_dCandidates = [
+            v for k, v in exp.processed_data["dCandidates"].items() if len(v) > 0
+        ]
 
-    assert (
-        len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
-    )
+        assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
+
+    else:
+        # If the data is not processed, process it, and do the same tests:
+        exp.processed_data = exp.prepare_data()
+        for k, v in exp.processed_data.items():
+            assert len(ids) == len(v)
+
+        not_empty_dMentionsPred = [
+            v for k, v in exp.processed_data["dMentionsPred"].items() if len(v) > 0
+        ]
+        not_empty_dCandidates = [
+            v for k, v in exp.processed_data["dCandidates"].items() if len(v) > 0
+        ]
+
+        assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
 
 def test_wrong_ranker_method():
-
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
         method="perfect_match",
-        resources_path="/resources/wikidata/",
+        resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
     )

@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import urllib
 from ast import literal_eval
 from pathlib import Path
 from tqdm import tqdm
@@ -79,7 +78,6 @@ def prepare_sents(df):
     dSentences = dict()
     dMetadata = dict()
     for i, row in df.iterrows():
-
         sentences = eval_with_exception(row["sentences"], [])
         annotations = eval_with_exception(row["annotations"], [])
 
@@ -433,7 +431,7 @@ def load_processed_data(experiment):
     """
 
     output_path = os.path.join(
-        experiment.data_path, experiment.dataset, experiment.myner.model_name
+        experiment.data_path, experiment.dataset, experiment.myner.model
     )
 
     # Add the candidate experiment info to the path:
@@ -510,7 +508,7 @@ def store_processed_data(
     """
     data_path = experiment.data_path
     dataset = experiment.dataset
-    model_name = experiment.myner.model_name
+    model_name = experiment.myner.model
     output_path = data_path + dataset + "/" + model_name
 
     cand_approach = experiment.myranker.method
@@ -911,7 +909,7 @@ def create_mentions_df(experiment):
         experiment.data_path
         + experiment.dataset
         + "/"
-        + experiment.myner.model_name
+        + experiment.myner.model
         + "_"
         + cand_approach
     )
@@ -1033,9 +1031,9 @@ def store_results(experiment, task, how_split, which_split):
 
     scenario_name = ""
     if task == "ner":
-        scenario_name += task + "_" + experiment.myner.model_name + "_"
+        scenario_name += task + "_" + experiment.myner.model + "_"
     if task == "linking":
-        scenario_name += task + "_" + experiment.myner.model_name + "_"
+        scenario_name += task + "_" + experiment.myner.model + "_"
         cand_approach = experiment.myranker.method
         if experiment.myranker.method == "deezymatch":
             cand_approach += "+" + str(
@@ -1049,10 +1047,12 @@ def store_results(experiment, task, how_split, which_split):
 
     link_approach = experiment.mylinker.method
     if experiment.mylinker.method == "reldisamb":
-        link_approach += "+" + str(experiment.mylinker.rel_params["training_data"])
-        link_approach += "+" + str(experiment.mylinker.rel_params["ranking"])
-        if experiment.mylinker.rel_params.get("micro_locs", "") != "":
-            link_approach += "+" + str(experiment.mylinker.rel_params["micro_locs"])
+        if experiment.mylinker.rel_params["with_publication"]:
+            link_approach += "+wpubl"
+        if experiment.mylinker.rel_params["without_microtoponyms"]:
+            link_approach += "+wmtops"
+        if experiment.mylinker.rel_params["do_test"]:
+            link_approach += "_test"
 
     # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
     # 'test' of the Ashton1860 split, etc):
@@ -1093,7 +1093,7 @@ def store_rel(experiment, dREL, approach, how_split, which_split):
     scenario_name = (
         approach
         + "_"
-        + experiment.myner.model_name  # The model name is needed due to tokenization
+        + experiment.myner.model  # The model name is needed due to tokenization
         + "_"
         + how_split
     )

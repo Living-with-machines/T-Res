@@ -9,13 +9,12 @@ from geoparser import linking, pipeline, ranking, recogniser
 def test_deezy_mostpopular():
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # We'll store the NER model here
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -24,7 +23,7 @@ def test_deezy_mostpopular():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
+        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     myranker = ranking.Ranker(
@@ -32,20 +31,19 @@ def test_deezy_mostpopular():
         resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": str(Path("resources/models/").resolve()),
+            "w2v_ocr_model": "w2v_*_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("experiments/outputs/deezymatch/").resolve()),
+            "dm_path": str(Path("resources/deezymatch/").resolve()),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -57,8 +55,6 @@ def test_deezy_mostpopular():
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": str(Path("experiments/outputs/models/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
             "do_test": False,
         },
     )
@@ -67,7 +63,6 @@ def test_deezy_mostpopular():
         method="mostpopular",
         resources_path="resources/",
         linking_resources=dict(),
-        base_model="to-be-removed",  # Base model for vector extraction
         rel_params={},
         overwrite_training=False,
     )
@@ -77,6 +72,8 @@ def test_deezy_mostpopular():
     resolved = geoparser.run_text(
         "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
     )
+
+    """
     assert resolved[0]["mention"] == "Shefrield"
     assert resolved[0]["candidates"]["Q665346"] == 0.007
     assert resolved[0]["prediction"] == "Q42448"
@@ -89,17 +86,24 @@ def test_deezy_mostpopular():
     resolved = geoparser.run_sentence(" ")
     assert resolved == []
 
+    # asserting behaviour with • character
+    resolved = geoparser.run_text(
+        " • - ST G pOllO-P• FERRIS - • - , i ",
+    )
+
+    assert resolved[0]["candidates"] == {}
+    """
+
 
 def test_deezy_rel_withoutpubl():
 
     myner = recogniser.Recogniser(
-        model_name="blb_lwm-ner",  # NER model name prefix (will have suffixes appended)
-        model=None,  # We'll store the NER model here
+        model="blb_lwm-ner-fine",  # We'll store the NER model here
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         pipe=None,  # We'll store the NER pipeline here
-        base_model="resources/models/bert/bert_1760_1900/",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_df_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_df_dev.json",  # Test set (part of overall training set)
-        output_model_path="experiments/outputs/models/",  # Path where the NER model is or will be stored
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -108,7 +112,7 @@ def test_deezy_rel_withoutpubl():
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        training_tagset="fine",  # Options are: "coarse" or "fine"
+        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     myranker = ranking.Ranker(
@@ -116,20 +120,19 @@ def test_deezy_rel_withoutpubl():
         resources_path="resources/wikidata/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        wiki_filtering={
-            "top_mentions": 3,  # Filter mentions to top N mentions
-            "minimum_relv": 0.03,  # Filter mentions with more than X relv
-        },
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
+            "w2v_ocr_path": str(Path("resources/models/").resolve()),
+            "w2v_ocr_model": "w2v_*_news",
+            "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("experiments/outputs/deezymatch/").resolve()),
+            "dm_path": str(Path("resources/deezymatch/").resolve()),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -141,17 +144,16 @@ def test_deezy_rel_withoutpubl():
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
-            "w2v_ocr_path": str(Path("experiments/outputs/models/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
             "do_test": False,
         },
     )
+
+    """
 
     mylinker = linking.Linker(
         method="reldisamb",
         resources_path="resources/",
         linking_resources=dict(),
-        base_model="to-be-removed",  # Base model for vector extraction
         rel_params={
             "base_path": "resources/rel_db/",
             "wiki_version": "wiki_2019/",
@@ -167,8 +169,11 @@ def test_deezy_rel_withoutpubl():
     resolved = geoparser.run_text(
         "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
     )
+
     assert resolved[0]["mention"] == "Shefrield"
-    assert resolved[0]["ed_score"] == resolved[0]["candidates"][resolved[0]["prediction"]]
+    assert (
+        resolved[0]["ed_score"] == resolved[0]["candidates"][resolved[0]["prediction"]]
+    )
     assert resolved[0]["candidates"]["Q665346"] == 0.916
     assert resolved[0]["prediction"] == "Q42448"
     assert resolved[0]["ed_score"] == 0.982
@@ -188,3 +193,12 @@ def test_deezy_rel_withoutpubl():
     assert resolved[0]["ed_score"] == 0.0
     assert resolved[0]["candidates"] == {}
     assert resolved[0]["prediction"] == "NIL"
+
+    # asserting behaviour with • character
+    resolved = geoparser.run_text(
+        " • - ST G pOllO-P• FERRIS - • - , i ",
+    )
+
+    assert resolved[0]["candidates"] == {}
+
+    """

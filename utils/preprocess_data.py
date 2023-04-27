@@ -13,6 +13,8 @@ from utils import process_wikipedia
 This script reads the original data sources and formats them for our experiments.
 """
 
+# Path to Wikipedia resources (where the wiki2wiki mapper is located):
+path_to_wikipedia = "../resources/wikipedia/"
 
 # ------------------------------
 # From wikipedia to wikidata:
@@ -27,7 +29,9 @@ def turn_wikipedia2wikidata(wikipedia_title):
             wikipedia_title
         )
         linked_wqid = process_wikipedia.title_to_id(
-            processed_wikipedia_title, lower=True
+            processed_wikipedia_title,
+            path_to_db=os.path.join(path_to_wikipedia, "index_enwiki-latest.db"),
+            lower=True,
         )
         if not linked_wqid:
             print(
@@ -80,7 +84,7 @@ def reconstruct_sentences(dTokens):
     # In this for loop, we reconstruct the sentences, tanking into account
     # the different positional informations (and adding white spaces when
     # required):
-    for i in range(start_ids[0], len(start_ids) + 1):
+    for i in range(0, len(start_ids) + 1):
 
         if i < len(start_ids) - 1:
 
@@ -691,3 +695,20 @@ def process_tsv(filepath):
             )
 
     return dMTokens, dTokens
+
+
+# ------------------------------
+def fine_to_coarse(l):
+    """
+    This function takes a list of fine-grained tags and returns the coarse
+    equivalent.
+    """
+    coarse = []
+    for i in l:
+        if i.startswith("B-"):
+            coarse.append("B-LOC")
+        elif i.startswith("I-"):
+            coarse.append("I-LOC")
+        else:
+            coarse.append(i)
+    return coarse
