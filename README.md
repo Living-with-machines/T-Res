@@ -1,6 +1,13 @@
-# Toponym resolution for digitised historical newspapers
+# T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers
 
-A toponym resolution pipeline for digitised historical newspapers.
+<div align="center">
+    <figure>
+    <img src="https://user-images.githubusercontent.com/8415204/234827786-ff796b7d-5773-427c-98d5-006a108506a8.png"
+        alt="A cartoon of a funny T-Rex reading a map with a lense"
+        width="70%">
+    </figure>
+</div>
+
 
 ## Table of contents
 
