@@ -126,29 +126,29 @@ def test_train():
             overwrite_training=True,
         )
 
-        # -----------------------------------------
-        # NER training and creating pipeline:
-        # Train the NER models if needed:
-        myner.train()
-        # Load the NER pipeline:
-        myner.pipe = myner.create_pipeline()
+    # -----------------------------------------
+    # NER training and creating pipeline:
+    # Train the NER models if needed:
+    myner.train()
+    # Load the NER pipeline:
+    myner.pipe = myner.create_pipeline()
 
-        # -----------------------------------------
-        # Ranker loading resources and training a model:
-        # Load the resources:
-        myranker.mentions_to_wikidata = myranker.load_resources()
-        # Train a DeezyMatch model if needed:
-        myranker.train()
+    # -----------------------------------------
+    # Ranker loading resources and training a model:
+    # Load the resources:
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    # Train a DeezyMatch model if needed:
+    myranker.train()
 
-        # -----------------------------------------
-        # Linker loading resources:
-        # Load linking resources:
-        mylinker.linking_resources = mylinker.load_resources()
-        # Train a linking model if needed (it requires myranker to generate potential
-        # candidates to the training set):
-        mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
+    # -----------------------------------------
+    # Linker loading resources:
+    # Load linking resources:
+    mylinker.linking_resources = mylinker.load_resources()
+    # Train a linking model if needed (it requires myranker to generate potential
+    # candidates to the training set):
+    mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-        assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
+    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
 
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
@@ -227,29 +227,29 @@ def test_load_eval_model():
             overwrite_training=False,
         )
 
-        # -----------------------------------------
-        # NER training and creating pipeline:
-        # Train the NER models if needed:
-        myner.train()
-        # Load the NER pipeline:
-        myner.pipe = myner.create_pipeline()
+    # -----------------------------------------
+    # NER training and creating pipeline:
+    # Train the NER models if needed:
+    myner.train()
+    # Load the NER pipeline:
+    myner.pipe = myner.create_pipeline()
 
-        # -----------------------------------------
-        # Ranker loading resources and training a model:
-        # Load the resources:
-        myranker.mentions_to_wikidata = myranker.load_resources()
-        # Train a DeezyMatch model if needed:
-        myranker.train()
+    # -----------------------------------------
+    # Ranker loading resources and training a model:
+    # Load the resources:
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    # Train a DeezyMatch model if needed:
+    myranker.train()
 
-        # -----------------------------------------
-        # Linker loading resources:
-        # Load linking resources:
-        mylinker.linking_resources = mylinker.load_resources()
-        # Train a linking model if needed (it requires myranker to generate potential
-        # candidates to the training set):
-        mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
+    # -----------------------------------------
+    # Linker loading resources:
+    # Load linking resources:
+    mylinker.linking_resources = mylinker.load_resources()
+    # Train a linking model if needed (it requires myranker to generate potential
+    # candidates to the training set):
+    mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-        assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
+    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
 
 
 def test_predict():
@@ -325,11 +325,11 @@ def test_predict():
             overwrite_training=False,
         )
 
-        mypipe = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    mypipe = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
-        predictions = mypipe.run_text(
-            "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
-            place="London",
-            place_wqid="Q84",
-        )
-        assert type(predictions) == list
+    predictions = mypipe.run_text(
+        "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
+        place="London",
+        place_wqid="Q84",
+    )
+    assert type(predictions) == list
