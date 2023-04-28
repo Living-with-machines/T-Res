@@ -7,7 +7,8 @@ import pytest
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import experiment, linking, ranking, recogniser
+from geoparser import linking, ranking, recogniser
+from experiments import experiment
 
 
 def test_wrong_dataset_path():
@@ -25,7 +26,7 @@ def test_wrong_dataset_path():
 
     assert (
         cm.value.code
-        == "\nError: The dataset has not been created, you should first run the data_processing.py script.\n"
+        == "\nError: The dataset has not been created, you should first run the prepare_data.py script.\n"
     )
 
 

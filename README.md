@@ -1,6 +1,13 @@
-# Toponym resolution for digitised historical newspapers
+# T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers
 
-A toponym resolution pipeline for digitised historical newspapers.
+<div align="center">
+    <figure>
+    <img src="https://user-images.githubusercontent.com/8415204/234827786-ff796b7d-5773-427c-98d5-006a108506a8.png"
+        alt="A cartoon of a funny T-Rex reading a map with a lense"
+        width="70%">
+    </figure>
+</div>
+
 
 ## Table of contents
 
@@ -140,7 +147,11 @@ See this with an example in [this notebook](https://github.com/Living-with-machi
 
 ## Installation
 
-### First update the system
+If you want to work directly on the code base, we suggest to install T-Res following these instructions (which have been tested Linux (ubuntu 20.04)). 
+
+### First, update the system
+
+First, you need to make sure the system is up to date and all essential libraries are installed.
 
 ```
 sudo apt update
@@ -149,15 +160,26 @@ sudo apt install     build-essential     curl     libbz2-dev     libffi-dev     
 
 ### Install pyenv
 
+Then you need to install pyenv, which we use to manage virtual environments:
+
 ```
 curl https://pyenv.run | bash
+```
+And also to make sure paths are properly exported:
 
+```
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init --path)"\nfi' >> ~/.bashrc
+```
+Then you can restart your bash session, to make sure all changes are updated:
 
+```
 source ~/.bashrc
+```
+And then you run the following commands to update `pyenv` and create the needed environemnt.
 
+```
 pyenv update
 
 pyenv install 3.9.7
@@ -166,12 +188,14 @@ pyenv global 3.9.7
 
 ### Install poetry
 
+To manage dipendencies across libraries, we use Poetry. To install it, do the following:
+
 ```
 curl -sSL https://install.python-poetry.org | python3 -
 echo 'export PATH=$PATH:$HOME/.poetry/bin' >> ~/.bashrc
 ```
 
-## Project Installation
+### Project Installation
 
 You can now clone the repo and `cd` into it:
 
@@ -205,19 +229,19 @@ To activate the environment:
 poetry shell
 ```
 
-Now you can run a script as usual:
+Now you can run a script as usual, for instance :
 
 ```
-python processing.py
+python experiments/toponym_resolution.py
 ```
 
-Add a package:
+To add a package:
 
 ```
 poetry add [package name]
 ```
 
-Run the Python tests:
+To run the Python tests:
 
 ```
 poetry run pytest

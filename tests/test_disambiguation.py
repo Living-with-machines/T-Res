@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import rel_utils
 from utils.REL import entity_disambiguation
 from geoparser import recogniser, ranking, linking, pipeline
+import sqlite3
 
 
 def test_embeddings():
@@ -19,51 +20,39 @@ def test_embeddings():
     """
     # Test 1: Check glove embeddings
     mentions = ["in", "apple"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "snd"
-    )
-    assert len(mentions) == len(embs)
-    assert len(embs[0]) == 300
-    mentions = ["cotxe"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "snd"
-    )
-    assert embs == [None]
-    # Test 2: Check wiki2vec word embeddings
-    mentions = ["in", "apple"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "word"
-    )
-    assert len(mentions) == len(embs)
-    assert len(embs[0]) == 300
-    mentions = ["cotxe"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "word"
-    )
-    assert embs == [None]
-    # Test 2: Check wiki2vec entity embeddings
-    mentions = ["Q84", "Q1492"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "entity"
-    )
-    assert len(mentions) == len(embs)
-    assert len(embs[0]) == 300
-    mentions = ["Q1"]
-    embs = rel_utils.get_db_emb(
-        "resources/rel_db/embedding_database.db", mentions, "entity"
-    )
-    assert embs == [None]
+    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+        cursor = conn.cursor()
+        embs = rel_utils.get_db_emb(cursor, mentions, "snd")
+        assert len(mentions) == len(embs)
+        assert len(embs[0]) == 300
+        mentions = ["cotxe"]
+        embs = rel_utils.get_db_emb(cursor, mentions, "snd")
+        assert embs == [None]
+        # Test 2: Check wiki2vec word embeddings
+        mentions = ["in", "apple"]
+        embs = rel_utils.get_db_emb(cursor, mentions, "word")
+        assert len(mentions) == len(embs)
+        assert len(embs[0]) == 300
+        mentions = ["cotxe"]
+        embs = rel_utils.get_db_emb(cursor, mentions, "word")
+        assert embs == [None]
+        # Test 2: Check wiki2vec entity embeddings
+        mentions = ["Q84", "Q1492"]
+        embs = rel_utils.get_db_emb(cursor, mentions, "entity")
+        assert len(mentions) == len(embs)
+        assert len(embs[0]) == 300
+        mentions = ["Q1"]
+        embs = rel_utils.get_db_emb(cursor, mentions, "entity")
+        assert embs == [None]
 
 
 def test_prepare_initial_data():
-    df = pd.read_csv(
-        "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
-    ).iloc[:1]
+    df = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t").iloc[:1]
     parsed_doc = rel_utils.prepare_initial_data(df, context_len=100)
-    assert parsed_doc["4939308"][0]["mention"] == "STALYBRIDGE"
-    assert parsed_doc["4939308"][0]["gold"][0] == "Q1398653"
-    assert parsed_doc["4939308"][3]["mention"] == "Market-street"
-    assert parsed_doc["4939308"][3]["gold"] == "NIL"
+    assert parsed_doc["4939308_1"][0]["mention"] == "STALYBRIDGE"
+    assert parsed_doc["4939308_1"][0]["gold"][0] == "Q1398653"
+    assert parsed_doc["4939308_6"][1]["mention"] == "Market-street"
+    assert parsed_doc["4939308_6"][1]["gold"] == "NIL"
 
 
 def test_train():
@@ -117,23 +106,25 @@ def test_train():
             "do_test": False,
         },
     )
+    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+        cursor = conn.cursor()
 
-    mylinker = linking.Linker(
-        method="reldisamb",
-        resources_path="resources/",
-        linking_resources=dict(),
-        rel_params={
-            "model_path": "resources/models/disambiguation/",
-            "data_path": "experiments/outputs/data/lwm/",
-            "training_split": "originalsplit",
-            "context_length": 100,
-            "db_embeddings": "resources/rel_db/embedding_database.db",
-            "with_publication": False,
-            "without_microtoponyms": True,
-            "do_test": True,
-        },
-        overwrite_training=True,
-    )
+        mylinker = linking.Linker(
+            method="reldisamb",
+            resources_path="resources/",
+            linking_resources=dict(),
+            rel_params={
+                "model_path": "resources/models/disambiguation/",
+                "data_path": "experiments/outputs/data/lwm/",
+                "training_split": "originalsplit",
+                "context_length": 100,
+                "db_embeddings": cursor,
+                "with_publication": False,
+                "without_microtoponyms": True,
+                "do_test": True,
+            },
+            overwrite_training=True,
+        )
 
     # -----------------------------------------
     # NER training and creating pipeline:
@@ -157,13 +148,10 @@ def test_train():
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert (
-        type(mylinker.rel_params["ed_model"])
-        == entity_disambiguation.EntityDisambiguation
-    )
+    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
 
     # assert expected performance on test set
-    assert 0.60 < mylinker.rel_params["ed_model"].best_performance["f1"]
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
 
 
 def test_load_eval_model():
@@ -218,23 +206,26 @@ def test_load_eval_model():
         },
     )
 
-    mylinker = linking.Linker(
-        method="reldisamb",
-        resources_path="resources/",
-        linking_resources=dict(),
-        rel_params={
-            "model_path": "resources/models/disambiguation/",
-            "data_path": "experiments/outputs/data/lwm/",
-            "training_split": "originalsplit",
-            "context_length": 100,
-            "topn_candidates": 10,
-            "db_embeddings": "resources/rel_db/embedding_database.db",
-            "with_publication": False,
-            "without_microtoponyms": False,
-            "do_test": True,
-        },
-        overwrite_training=False,
-    )
+    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+        cursor = conn.cursor()
+
+        mylinker = linking.Linker(
+            method="reldisamb",
+            resources_path="resources/",
+            linking_resources=dict(),
+            rel_params={
+                "model_path": "resources/models/disambiguation/",
+                "data_path": "experiments/outputs/data/lwm/",
+                "training_split": "originalsplit",
+                "context_length": 100,
+                "topn_candidates": 10,
+                "db_embeddings": cursor,
+                "with_publication": False,
+                "without_microtoponyms": False,
+                "do_test": True,
+            },
+            overwrite_training=False,
+        )
 
     # -----------------------------------------
     # NER training and creating pipeline:
@@ -258,10 +249,7 @@ def test_load_eval_model():
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert (
-        type(mylinker.rel_params["ed_model"])
-        == entity_disambiguation.EntityDisambiguation
-    )
+    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
 
 
 def test_predict():
@@ -315,25 +303,27 @@ def test_predict():
             "do_test": False,
         },
     )
+    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+        cursor = conn.cursor()
 
-    mylinker = linking.Linker(
-        method="reldisamb",
-        resources_path="resources/",
-        linking_resources=dict(),
-        rel_params={
-            "model_path": "resources/models/disambiguation/",
-            "data_path": "experiments/outputs/data/lwm/",
-            "training_split": "originalsplit",
-            "context_length": 100,
-            "db_embeddings": "resources/rel_db/embedding_database.db",
-            "with_publication": True,
-            "without_microtoponyms": True,
-            "do_test": False,
-            "default_publname": "United Kingdom",
-            "default_publwqid": "Q145",
-        },
-        overwrite_training=False,
-    )
+        mylinker = linking.Linker(
+            method="reldisamb",
+            resources_path="resources/",
+            linking_resources=dict(),
+            rel_params={
+                "model_path": "resources/models/disambiguation/",
+                "data_path": "experiments/outputs/data/lwm/",
+                "training_split": "originalsplit",
+                "context_length": 100,
+                "db_embeddings": cursor,
+                "with_publication": True,
+                "without_microtoponyms": True,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+            },
+            overwrite_training=False,
+        )
 
     mypipe = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
