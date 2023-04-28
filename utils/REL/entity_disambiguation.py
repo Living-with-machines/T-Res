@@ -7,7 +7,7 @@ import torch
 import pickle
 import numpy as np
 from pathlib import Path
-from random import shuffle
+import random
 import torch.optim as optim
 from string import punctuation
 from torch.autograd import Variable
@@ -26,6 +26,9 @@ import utils.REL.utils as utils
 Parent Entity Disambiguation class that directs the various subclasses used
 for the ED step.
 """
+
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
 
 
 class EntityDisambiguation:
@@ -163,7 +166,7 @@ class EntityDisambiguation:
         eval_after_n_epochs = self.config["eval_after_n_epochs"]
 
         for e in range(self.config["n_epochs"]):
-            shuffle(train_dataset)
+            random.shuffle(train_dataset)
 
             total_loss = 0
             for dc, batch in enumerate(train_dataset):  # each document is a minibatch
@@ -397,7 +400,6 @@ class EntityDisambiguation:
         timing = []
 
         for batch in data:  # each document is a minibatch
-
             start = time.time()
 
             token_ids = [
