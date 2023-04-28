@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import sqlite3
 
 from sentence_splitter import split_text_into_sentences
 
@@ -86,24 +87,26 @@ class Pipeline:
 
         if not self.mylinker:
             # If mylinker is None, instantiate the default Linker.
-            self.mylinker = linking.Linker(
-                method="mostpopular",
-                resources_path="../resources/",
-                linking_resources=dict(),
-                rel_params={
-                    "model_path": "../resources/models/disambiguation/",
-                    "data_path": "../experiments/outputs/data/lwm/",
-                    "training_split": "originalsplit",
-                    "context_length": 100,
-                    "db_embeddings": "../resources/rel_db/embedding_database.db",
-                    "with_publication": True,
-                    "without_microtoponyms": True,
-                    "do_test": False,
-                    "default_publname": "United Kingdom",
-                    "default_publwqid": "Q145",
-                },
-                overwrite_training=False,
-            )
+            with sqlite3.connect("../resources/rel_db/embedding_database.db") as conn:
+                cursor = conn.cursor()
+                self.mylinker = linking.Linker(
+                    method="mostpopular",
+                    resources_path="../resources/",
+                    linking_resources=dict(),
+                    rel_params={
+                        "model_path": "../resources/models/disambiguation/",
+                        "data_path": "../experiments/outputs/data/lwm/",
+                        "training_split": "originalsplit",
+                        "context_length": 100,
+                        "db_embeddings": cursor,
+                        "with_publication": True,
+                        "without_microtoponyms": True,
+                        "do_test": False,
+                        "default_publname": "United Kingdom",
+                        "default_publwqid": "Q145",
+                    },
+                    overwrite_training=False,
+                )
 
         # -----------------------------------------
         # NER training and creating pipeline:
@@ -125,9 +128,7 @@ class Pipeline:
         self.mylinker.linking_resources = self.mylinker.load_resources()
         # Train a linking model if needed (it requires myranker to generate potential
         # candidates to the training set):
-        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
-            self.myranker
-        )
+        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(self.myranker)
 
     def run_sentence(
         self,
@@ -166,8 +167,7 @@ class Pipeline:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
         procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-            for x in predictions
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]] for x in predictions
         ]
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
@@ -175,16 +175,12 @@ class Pipeline:
         # List of mentions for the ranker:
         rmentions = []
         if without_microtoponyms:
-            rmentions = [
-                {"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"
-            ]
+            rmentions = [{"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"]
         else:
             rmentions = [{"mention": y["mention"]} for y in mentions]
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            rmentions
-        )
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(rmentions)
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -233,9 +229,7 @@ class Pipeline:
                 mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
                     "prediction"
                 ]
-                mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i][
-                    "conf_ed"
-                ]
+                mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i]["conf_ed"]
 
         if self.mylinker.method in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
@@ -313,9 +307,7 @@ class Pipeline:
                 place=place,
                 place_wqid=place_wqid,
                 postprocess_output=postprocess_output,
-                without_microtoponyms=self.mylinker.rel_params.get(
-                    "without_microtoponyms", False
-                ),
+                without_microtoponyms=self.mylinker.rel_params.get("without_microtoponyms", False),
             )
             # Collect results from all sentences:
             for sd in sentence_dataset:
