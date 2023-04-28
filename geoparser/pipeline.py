@@ -184,7 +184,6 @@ class Pipeline:
             prediction["conf_md"] = m["ner_score"]
             prediction["tag"] = m["ner_label"]
             prediction["sentence"] = sentence
-            prediction["candidates"] = wk_cands.get(m["mention"], dict())
             prediction["place"] = place
             prediction["place_wqid"] = place_wqid
             mentions_dataset["linking"].append(prediction)
@@ -216,6 +215,12 @@ class Pipeline:
                     "prediction"
                 ]
                 mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i]["conf_ed"]
+                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                    cand: score
+                    for cand, score in zip(
+                        predicted["linking"][i]["candidates"], predicted["linking"][i]["scores"]
+                    )
+                }
 
         if self.mylinker.method in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
@@ -229,9 +234,6 @@ class Pipeline:
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
-                mentions_dataset["linking"][i]["candidates"] = {
-                    x: round(y, 3) for x, y in selected_cand[2].items()
-                }
 
         if not postprocess_output:
             return mentions_dataset
@@ -249,6 +251,7 @@ class Pipeline:
                 "ed_score",
                 "sentence",
                 "candidates",
+                "cross_cand_score",
             ]
             sentence_dataset = []
             for md in mentions_dataset["linking"]:
