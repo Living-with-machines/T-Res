@@ -670,6 +670,7 @@ def create_mentions_df(experiment):
     # will merge the data:
     keep_columns = [
         "article_id",
+        "apply",
         "originalsplit",
         "withouttest",
         "Ashton1860",

@@ -18,7 +18,16 @@
 
 ## Overview
 
-T-Res is an end-to-end pipeline for toponym resolution in digitised historical newspapers. Given an input text (a sentence or a text), it identifies the places that are mentioned in it, links them to their corresponding Wikidata IDs, and provides their geographic coordinates. T-Res has been designed to tackle common problems of working with digitised historical newspapers.
+T-Res is an end-to-end pipeline for toponym resolution for digitised historical newspapers. Given an input text (a sentence or a text), T-Res identifies the places that are mentioned in it, links them to their corresponding Wikidata IDs, and provides their geographic coordinates. T-Res has been designed to tackle common problems of working with digitised historical newspapers.
+
+The pipeline has three main components:
+* The Recogniser: performs named entity recognition.
+* The Ranker: performs candidate selection and ranking.
+* The Linker: performs entity linking and resolution.
+
+The three components are used in combination in the Pipeline class.
+
+We also provide the code to deploy T-Res as an API, and show how to use it. We will describe each of these elements below.
 
 ## Directory structure
 
@@ -39,6 +48,19 @@ toponym-resolution/
    ├── tests/
    └── utils/
 ```
+
+### The Recogniser
+
+### The Ranker
+
+### The Linker
+
+### The Pipeline
+
+### The T-Res API
+
+
+
 
 ## Resources
 

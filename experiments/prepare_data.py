@@ -124,6 +124,12 @@ lwm_all_df["originalsplit"] = lwm_all_df["article_id"].apply(
     else "dev"
 )
 
+# Add a column for the ner_split in the "apply" case (i.e. no test required,
+# as this is not used for the experiments).
+lwm_all_df["apply"] = lwm_all_df["article_id"].apply(
+    lambda x: "dev" if x in list(lwm_test_df["article_id"].unique()) else "train"
+)
+
 # Split the train set into train and dev for development
 # (i.e. when test is not used):
 lwm_train_dev_df, lwm_dev_dev_df = train_test_split(
@@ -176,6 +182,7 @@ for group in groups:
     print(lwm_all_df[group_name].value_counts())
 print(lwm_all_df["originalsplit"].value_counts())
 print(lwm_all_df["withouttest"].value_counts())
+print(lwm_all_df["apply"].value_counts())
 print()
 
 # ------------------------------------------------------
