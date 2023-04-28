@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-import sqlite3
 
 from sentence_splitter import split_text_into_sentences
 
@@ -87,26 +86,24 @@ class Pipeline:
 
         if not self.mylinker:
             # If mylinker is None, instantiate the default Linker.
-            with sqlite3.connect("../resources/rel_db/embedding_database.db") as conn:
-                cursor = conn.cursor()
-                self.mylinker = linking.Linker(
-                    method="mostpopular",
-                    resources_path="../resources/",
-                    linking_resources=dict(),
-                    rel_params={
-                        "model_path": "../resources/models/disambiguation/",
-                        "data_path": "../experiments/outputs/data/lwm/",
-                        "training_split": "originalsplit",
-                        "context_length": 100,
-                        "db_embeddings": cursor,
-                        "with_publication": True,
-                        "without_microtoponyms": True,
-                        "do_test": False,
-                        "default_publname": "United Kingdom",
-                        "default_publwqid": "Q145",
-                    },
-                    overwrite_training=False,
-                )
+            self.mylinker = linking.Linker(
+                method="mostpopular",
+                resources_path="../resources/",
+                linking_resources=dict(),
+                rel_params={
+                    "model_path": "../resources/models/disambiguation/",
+                    "data_path": "../experiments/outputs/data/lwm/",
+                    "training_split": "originalsplit",
+                    "context_length": 100,
+                    "db_embeddings": "not needed",
+                    "with_publication": True,
+                    "without_microtoponyms": True,
+                    "do_test": False,
+                    "default_publname": "United Kingdom",
+                    "default_publwqid": "Q145",
+                },
+                overwrite_training=False,
+            )
 
         # -----------------------------------------
         # NER training and creating pipeline:
