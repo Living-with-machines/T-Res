@@ -90,18 +90,7 @@ class Pipeline:
                 method="mostpopular",
                 resources_path="../resources/",
                 linking_resources=dict(),
-                rel_params={
-                    "model_path": "../resources/models/disambiguation/",
-                    "data_path": "../experiments/outputs/data/lwm/",
-                    "training_split": "originalsplit",
-                    "context_length": 100,
-                    "db_embeddings": "not needed",
-                    "with_publication": True,
-                    "without_microtoponyms": True,
-                    "do_test": False,
-                    "default_publname": "United Kingdom",
-                    "default_publwqid": "Q145",
-                },
+                rel_params={},
                 overwrite_training=False,
             )
 
