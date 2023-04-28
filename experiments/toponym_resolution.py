@@ -137,54 +137,54 @@ for exp_param in experiments:
             overwrite_training=False,
         )
 
-        # --------------------------------------
-        # Instantiate the experiment:
-        myexperiment = experiment.Experiment(
-            dataset=dataset,
-            data_path="outputs/data/",
-            dataset_df=pd.DataFrame(),
-            results_path="outputs/results/",
-            myner=myner,
-            myranker=myranker,
-            mylinker=mylinker,
-            overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
-            processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
-            test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
-            rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
-        )
+    # --------------------------------------
+    # Instantiate the experiment:
+    myexperiment = experiment.Experiment(
+        dataset=dataset,
+        data_path="outputs/data/",
+        dataset_df=pd.DataFrame(),
+        results_path="outputs/results/",
+        myner=myner,
+        myranker=myranker,
+        mylinker=mylinker,
+        overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
+        processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
+        test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
+        rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
+    )
 
-        # Print experiment information:
-        print(myexperiment)
-        print(myner)
-        print(myranker)
-        print(mylinker)
+    # Print experiment information:
+    print(myexperiment)
+    print(myner)
+    print(myranker)
+    print(mylinker)
 
-        # -----------------------------------------
-        # NER training and creating pipeline:
-        # Train the NER models if needed:
-        myner.train()
-        # Load the NER pipeline:
-        myner.pipe = myner.create_pipeline()
+    # -----------------------------------------
+    # NER training and creating pipeline:
+    # Train the NER models if needed:
+    myner.train()
+    # Load the NER pipeline:
+    myner.pipe = myner.create_pipeline()
 
-        # -----------------------------------------
-        # Ranker loading resources and training a model:
-        # Load the resources:
-        myranker.mentions_to_wikidata = myranker.load_resources()
-        # Train a DeezyMatch model if needed:
-        myranker.train()
+    # -----------------------------------------
+    # Ranker loading resources and training a model:
+    # Load the resources:
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    # Train a DeezyMatch model if needed:
+    myranker.train()
 
-        # -----------------------------------------
-        # Linker loading resources:
-        # Load linking resources:
-        mylinker.linking_resources = mylinker.load_resources()
+    # -----------------------------------------
+    # Linker loading resources:
+    # Load linking resources:
+    mylinker.linking_resources = mylinker.load_resources()
 
-        # -----------------------------------------
-        # Prepare experiment:
-        # Load processed data if existing:
-        myexperiment.processed_data = myexperiment.load_data()
+    # -----------------------------------------
+    # Prepare experiment:
+    # Load processed data if existing:
+    myexperiment.processed_data = myexperiment.load_data()
 
-        # Perform data postprocessing:
-        myexperiment.processed_data = myexperiment.prepare_data()
+    # Perform data postprocessing:
+    myexperiment.processed_data = myexperiment.prepare_data()
 
-        # Do the linking experiments:
-        myexperiment.linking_experiments()
+    # Do the linking experiments:
+    myexperiment.linking_experiments()
