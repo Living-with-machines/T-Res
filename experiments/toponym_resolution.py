@@ -2,6 +2,7 @@ import os
 import sys
 import pandas as pd
 from pathlib import Path
+import sqlite3
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -115,24 +116,26 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.Linker(
-        method=top_res_method,
-        resources_path="../resources/",
-        linking_resources=dict(),
-        rel_params={
-            "model_path": "../resources/models/disambiguation/",
-            "data_path": "../experiments/outputs/data/lwm/",
-            "training_split": "originalsplit",
-            "context_length": 100,
-            "db_embeddings": "../resources/rel_db/embedding_database.db",
-            "with_publication": wpubl,
-            "without_microtoponyms": wmtops,
-            "do_test": False,
-            "default_publname": "",
-            "default_publwqid": "",
-        },
-        overwrite_training=False,
-    )
+    with sqlite3.connect("../resources/rel_db/embedding_database.db") as conn:
+        cursor = conn.cursor()
+        mylinker = linking.Linker(
+            method=top_res_method,
+            resources_path="../resources/",
+            linking_resources=dict(),
+            rel_params={
+                "model_path": "../resources/models/disambiguation/",
+                "data_path": "../experiments/outputs/data/lwm/",
+                "training_split": "originalsplit",
+                "context_length": 100,
+                "db_embeddings": cursor,
+                "with_publication": wpubl,
+                "without_microtoponyms": wmtops,
+                "do_test": False,
+                "default_publname": "",
+                "default_publwqid": "",
+            },
+            overwrite_training=False,
+        )
 
     # --------------------------------------
     # Instantiate the experiment:

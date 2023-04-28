@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import sqlite3
 from array import array
 import numpy as np
 from ast import literal_eval
@@ -12,16 +11,14 @@ RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 
 
-def get_db_emb(path_db, mentions, embtype):
+def get_db_emb(cursor, mentions, embtype):
     """
     This function returns the wikipedi2vec embedding for a given
     entity or word. If it is an entity, the prefix "ENTITY/" is
-    preappended. If it is a word, the string is lowercased. This
-    function opens a connection to the DB, performs the query,
-    and closes the connection.
+    preappended. If it is a word, the string is lowercased.
 
     Arguments:
-        path_db: The path to the wikipedia2vec db.
+        cursor: The cursor with the open connection to the wikipedia2vec db.
         mentions: The list of words or entitys whose embeddings to extract.
         embtype: A string, either "word", "entity" or "snd". If "word", we
             use wikipedia2vec word embeddings; if "entity, we use wikipedia2vec
@@ -32,26 +29,24 @@ def get_db_emb(path_db, mentions, embtype):
     """
 
     results = []
-    with sqlite3.connect(path_db) as conn:
-        c = conn.cursor()
-        for mention in mentions:
-            result = None
-            # Preprocess the mention depending on which embedding to obtain:
-            if embtype == "entity":
-                if not mention == "#ENTITY/UNK#":
-                    mention = "ENTITY/" + mention
-                result = c.execute(
-                    "SELECT emb FROM entity_embeddings WHERE word=?", (mention,)
-                ).fetchone()
-            if embtype == "word" or embtype == "snd":
-                if mention in ["#WORD/UNK#", "#SND/UNK#"]:
-                    mention = "#WORD/UNK#"
-                else:
-                    mention = mention.lower()
-                result = c.execute(
-                    "SELECT emb FROM entity_embeddings WHERE word=?", (mention,)
-                ).fetchone()
-            results.append(result if result is None else array("f", result[0]).tolist())
+    for mention in mentions:
+        result = None
+        # Preprocess the mention depending on which embedding to obtain:
+        if embtype == "entity":
+            if not mention == "#ENTITY/UNK#":
+                mention = "ENTITY/" + mention
+            result = cursor.execute(
+                "SELECT emb FROM entity_embeddings WHERE word=?", (mention,)
+            ).fetchone()
+        if embtype == "word" or embtype == "snd":
+            if mention in ["#WORD/UNK#", "#SND/UNK#"]:
+                mention = "#WORD/UNK#"
+            else:
+                mention = mention.lower()
+            result = cursor.execute(
+                "SELECT emb FROM entity_embeddings WHERE word=?", (mention,)
+            ).fetchone()
+        results.append(result if result is None else array("f", result[0]).tolist())
 
     return results
 
@@ -233,9 +228,7 @@ def prepare_rel_trainset(df, mylinker, myranker, dsplit):
     all_mentions = []
     for article in rel_json:
         if mylinker.rel_params["without_microtoponyms"]:
-            all_mentions += [
-                y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"
-            ]
+            all_mentions += [y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"]
         else:
             all_mentions += [y["mention"] for y in rel_json[article]]
     all_mentions = list(set(all_mentions))
