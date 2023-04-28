@@ -184,6 +184,7 @@ class Pipeline:
             prediction["conf_md"] = m["ner_score"]
             prediction["tag"] = m["ner_label"]
             prediction["sentence"] = sentence
+            prediction["candidates"] = wk_cands.get(m["mention"], dict())
             prediction["place"] = place
             prediction["place_wqid"] = place_wqid
             mentions_dataset["linking"].append(prediction)
