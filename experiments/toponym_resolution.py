@@ -5,7 +5,8 @@ from pathlib import Path
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import experiment, recogniser, ranking, linking
+from geoparser import recogniser, ranking, linking
+from experiments import experiment
 
 # Choose test scenario:
 test_scenario = "test"  # "dev" while experimenting, "test" for the final numbers
