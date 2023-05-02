@@ -114,7 +114,9 @@ class Pipeline:
         self.mylinker.linking_resources = self.mylinker.load_resources()
         # Train a linking model if needed (it requires myranker to generate potential
         # candidates to the training set):
-        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(self.myranker)
+        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
+            self.myranker
+        )
 
     def run_sentence(
         self,
@@ -153,7 +155,8 @@ class Pipeline:
         predictions = self.myner.ner_predict(sentence)
         # Process predictions:
         procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]] for x in predictions
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+            for x in predictions
         ]
         # Aggretate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
@@ -161,12 +164,16 @@ class Pipeline:
         # List of mentions for the ranker:
         rmentions = []
         if without_microtoponyms:
-            rmentions = [{"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"]
+            rmentions = [
+                {"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"
+            ]
         else:
             rmentions = [{"mention": y["mention"]} for y in mentions]
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(rmentions)
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
+            rmentions
+        )
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -219,13 +226,16 @@ class Pipeline:
                     predicted["linking"][i]["conf_ed"], 3
                 )
 
+                # Get cross-candidate confidence scores per candidate:
                 mentions_dataset["linking"][i]["cross_cand_score"] = {
                     cand: score
                     for cand, score in zip(
-                        predicted["linking"][i]["candidates"], predicted["linking"][i]["scores"]
+                        predicted["linking"][i]["candidates"],
+                        predicted["linking"][i]["scores"],
                     )
                     if cand != "#UNK#"
                 }
+                # Sort candidates and round scores:
                 mentions_dataset["linking"][i]["cross_cand_score"] = {
                     k: round(v, 3)
                     for k, v in sorted(
@@ -235,12 +245,13 @@ class Pipeline:
                     )
                 }
 
+                # Get string matching confidence scores per candidate:
                 mentions_dataset["linking"][i]["string_match_conf"] = {
                     cand: score
                     for cand, score in mentions_dataset["linking"][i]["candidates"]
                     if cand in mentions_dataset["linking"][i]["cross_cand_score"]
                 }
-
+                # Sort candidates and round scores:
                 mentions_dataset["linking"][i]["string_match_conf"] = {
                     k: round(v, 3)
                     for k, v in sorted(
@@ -262,6 +273,25 @@ class Pipeline:
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
+                top_n = sorted(
+                    selected_cand[2].items(), key=lambda pair: pair[1], reverse=True
+                )[:5]
+                cand_scores = dict()
+                for m in wk_cands[mention["mention"]]:
+                    mention_cand_data = wk_cands[mention["mention"]][m]
+                    for c in mention_cand_data["Candidates"]:
+                        if c in cand_scores:
+                            if mention_cand_data["Score"] > cand_scores[c]:
+                                cand_scores[c] = round(mention_cand_data["Score"], 3)
+                        else:
+                            cand_scores[c] = round(mention_cand_data["Score"], 3)
+
+                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                    k: round(v, 3) for k, v in top_n
+                }
+                mentions_dataset["linking"][i]["string_match_conf"] = {
+                    k: round(cand_scores[k], 3) for k, v in top_n
+                }
 
         if not postprocess_output:
             return mentions_dataset
@@ -324,7 +354,9 @@ class Pipeline:
                 place=place,
                 place_wqid=place_wqid,
                 postprocess_output=postprocess_output,
-                without_microtoponyms=self.mylinker.rel_params.get("without_microtoponyms", False),
+                without_microtoponyms=self.mylinker.rel_params.get(
+                    "without_microtoponyms", False
+                ),
             )
             # Collect results from all sentences:
             for sd in sentence_dataset:
