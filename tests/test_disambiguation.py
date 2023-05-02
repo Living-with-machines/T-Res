@@ -333,3 +333,10 @@ def test_predict():
         place_wqid="Q84",
     )
     assert type(predictions) == list
+
+    assert predictions[1]["prediction"] in predictions[1]["cross_cand_score"]
+
+    highest_cross_cand_score = max(
+        predictions[1]["cross_cand_score"], key=predictions[1]["cross_cand_score"].get
+    )
+    assert predictions[1]["prediction"] == highest_cross_cand_score

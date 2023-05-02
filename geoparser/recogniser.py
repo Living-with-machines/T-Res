@@ -287,6 +287,8 @@ class Recogniser:
         # of the n-dash being interpreted as a word separator. Therefore, we
         # replace it by a comma, except when the n-dash occurs in the opening
         # position of a sentence.
+        if len(sentence) <= 1:  # Error if the sentence is too short.
+            return []
         sentence = sentence[0] + sentence[1:].replace("—", ",")
         # Run the NER pipeline to predict mentions:
         ner_preds = self.pipe(sentence)
@@ -298,8 +300,6 @@ class Recogniser:
             pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = pred_ent["entity"]
             pred_ent = ner.fix_capitalization(pred_ent, sentence)
-            if prev_tok.lower() != pred_ent["word"].lower():
-                print("Token processing error.")
             predictions = ner.aggregate_entities(pred_ent, lEntities)
         if len(predictions) > 0:
             predictions = ner.fix_hyphens(predictions)
