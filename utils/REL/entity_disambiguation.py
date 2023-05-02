@@ -481,9 +481,14 @@ class EntityDisambiguation:
                 gold=true_pos.view(-1, 1),
             )
             pred_ids = torch.argmax(scores, axis=1)
+            
+            # scores from the pipeline
             scores = scores.cpu().data.numpy()
 
+            # LR derived scores
             confidence_scores = self.__compute_confidence(scores, pred_ids)
+            
+            # normalised scores across candidates
             cross_cands_scores = self.__compute_cross_cand_confidence(scores)
             pred_ids = np.argmax(scores, axis=1)
 
@@ -504,6 +509,7 @@ class EntityDisambiguation:
                     predictions[dname].append({"pred": (entity, 0.0)})
 
             else:
+                # list of mentions
                 pred_entities = [
                     [
                         m["selected_cands"]["named_cands"][i],

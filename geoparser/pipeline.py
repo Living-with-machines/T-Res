@@ -215,11 +215,38 @@ class Pipeline:
                 mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
                     "prediction"
                 ]
-                mentions_dataset["linking"][i]["ed_score"] = predicted["linking"][i]["conf_ed"]
+                mentions_dataset["linking"][i]["ed_score"] = round(
+                    predicted["linking"][i]["conf_ed"], 3
+                )
+
                 mentions_dataset["linking"][i]["cross_cand_score"] = {
                     cand: score
                     for cand, score in zip(
                         predicted["linking"][i]["candidates"], predicted["linking"][i]["scores"]
+                    )
+                    if cand != "#UNK#"
+                }
+                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                    k: round(v, 3)
+                    for k, v in sorted(
+                        mentions_dataset["linking"][i]["cross_cand_score"].items(),
+                        key=lambda item: item[1],
+                        reverse=True,
+                    )
+                }
+
+                mentions_dataset["linking"][i]["string_match_conf"] = {
+                    cand: score
+                    for cand, score in mentions_dataset["linking"][i]["candidates"]
+                    if cand in mentions_dataset["linking"][i]["cross_cand_score"]
+                }
+
+                mentions_dataset["linking"][i]["string_match_conf"] = {
+                    k: round(v, 3)
+                    for k, v in sorted(
+                        mentions_dataset["linking"][i]["string_match_conf"].items(),
+                        key=lambda item: item[1],
+                        reverse=True,
                     )
                 }
 
@@ -251,7 +278,7 @@ class Pipeline:
                 "ner_score",
                 "ed_score",
                 "sentence",
-                "candidates",
+                "string_match_conf",
                 "cross_cand_score",
             ]
             sentence_dataset = []
