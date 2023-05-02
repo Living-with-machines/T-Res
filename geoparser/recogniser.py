@@ -300,8 +300,6 @@ class Recogniser:
             pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = pred_ent["entity"]
             pred_ent = ner.fix_capitalization(pred_ent, sentence)
-            if prev_tok.lower() != pred_ent["word"].lower():
-                print("Token processing error.")
             predictions = ner.aggregate_entities(pred_ent, lEntities)
         if len(predictions) > 0:
             predictions = ner.fix_hyphens(predictions)
