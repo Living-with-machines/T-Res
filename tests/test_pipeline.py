@@ -73,7 +73,7 @@ def test_deezy_mostpopular():
         "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
     )
     assert resolved[0]["mention"] == "Shefrield"
-    assert resolved[0]["string_match_conf"]["Q42448"] == 0.034
+    assert resolved[0]["prior_cand_score"] == dict()
     assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
     assert resolved[0]["prediction"] == "Q42448"
     assert resolved[0]["ed_score"] == 0.903
@@ -177,7 +177,7 @@ def test_deezy_rel_wpubl_wmtops():
     )
 
     assert resolved[0]["mention"] == "Shefrield"
-    assert resolved[0]["string_match_conf"]["Q42448"] == 0.674
+    assert resolved[0]["prior_cand_score"]["Q42448"] == 0.674
     assert resolved[0]["cross_cand_score"]["Q42448"] == 0.266
     assert resolved[0]["prediction"] == "Q42448"
     assert resolved[0]["ed_score"] == 0.116
@@ -274,7 +274,7 @@ def test_perfect_rel_wpubl_wmtops():
     )
 
     assert resolved[0]["mention"] == "Shefrield"
-    assert resolved[0]["string_match_conf"] == dict()
+    assert resolved[0]["prior_cand_score"] == dict()
     assert resolved[0]["cross_cand_score"] == dict()
     assert resolved[0]["prediction"] == "NIL"
     assert resolved[0]["ed_score"] == 0.0

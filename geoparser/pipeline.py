@@ -246,16 +246,16 @@ class Pipeline:
                 }
 
                 # Get string matching confidence scores per candidate:
-                mentions_dataset["linking"][i]["string_match_conf"] = {
+                mentions_dataset["linking"][i]["prior_cand_score"] = {
                     cand: score
                     for cand, score in mentions_dataset["linking"][i]["candidates"]
                     if cand in mentions_dataset["linking"][i]["cross_cand_score"]
                 }
                 # Sort candidates and round scores:
-                mentions_dataset["linking"][i]["string_match_conf"] = {
+                mentions_dataset["linking"][i]["prior_cand_score"] = {
                     k: round(v, 3)
                     for k, v in sorted(
-                        mentions_dataset["linking"][i]["string_match_conf"].items(),
+                        mentions_dataset["linking"][i]["prior_cand_score"].items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
@@ -273,25 +273,12 @@ class Pipeline:
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
-                top_n = sorted(
-                    selected_cand[2].items(), key=lambda pair: pair[1], reverse=True
-                )[:5]
-                cand_scores = dict()
-                for m in wk_cands[mention["mention"]]:
-                    mention_cand_data = wk_cands[mention["mention"]][m]
-                    for c in mention_cand_data["Candidates"]:
-                        if c in cand_scores:
-                            if mention_cand_data["Score"] > cand_scores[c]:
-                                cand_scores[c] = round(mention_cand_data["Score"], 3)
-                        else:
-                            cand_scores[c] = round(mention_cand_data["Score"], 3)
-
-                mentions_dataset["linking"][i]["cross_cand_score"] = {
-                    k: round(v, 3) for k, v in top_n
-                }
-                mentions_dataset["linking"][i]["string_match_conf"] = {
-                    k: round(cand_scores[k], 3) for k, v in top_n
-                }
+                mentions_dataset["linking"][i]["prior_cand_score"] = dict()
+                # Return candidates scores for top n=7 candidates (same returned by REL):
+                tmp_cands = {k: round(selected_cand[2][k], 3) for k in selected_cand[2]}
+                mentions_dataset["linking"][i]["cross_cand_score"] = dict(
+                    sorted(tmp_cands.items(), key=lambda x: x[1], reverse=True)[:7]
+                )
 
         if not postprocess_output:
             return mentions_dataset
@@ -308,7 +295,7 @@ class Pipeline:
                 "ner_score",
                 "ed_score",
                 "sentence",
-                "string_match_conf",
+                "prior_cand_score",
                 "cross_cand_score",
             ]
             sentence_dataset = []
