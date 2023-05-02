@@ -162,12 +162,12 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
             for cand in tmp_cands:
                 qc_id = cand[0]
                 # Normalize absolute mention-to-wikidata relevance by entity:
-                qc_score_1 = round(cand[1] / max_cand_freq, 3)
+                qc_score_1 = cand[1] / max_cand_freq
                 # Candidate selection confidence:
-                qc_score_2 = round(cand[2], 3)
+                qc_score_2 = cand[2]
                 # Averaged relevances and normalize between 0 and 0.9:
                 qc_score = ((qc_score_1 + qc_score_2) / 2) * 0.9
-                cands.append([qc_id, round(qc_score, 3)])
+                cands.append([qc_id, qc_score, 3])
             # Sort candidates and normalize between 0 and 1, and so they add up to 1.
             cands = sorted(cands, key=lambda x: (x[1], x[0]), reverse=True)
 

@@ -287,8 +287,6 @@ class Recogniser:
         # of the n-dash being interpreted as a word separator. Therefore, we
         # replace it by a comma, except when the n-dash occurs in the opening
         # position of a sentence.
-        if len(sentence) <= 1:  # Error if the sentence is too short.
-            return []
         sentence = sentence[0] + sentence[1:].replace("—", ",")
         # Run the NER pipeline to predict mentions:
         ner_preds = self.pipe(sentence)
