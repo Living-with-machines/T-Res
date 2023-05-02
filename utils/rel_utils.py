@@ -167,7 +167,7 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
                 qc_score_2 = round(cand[2], 3)
                 # Averaged relevances and normalize between 0 and 0.9:
                 qc_score = ((qc_score_1 + qc_score_2) / 2) * 0.9
-                cands.append([qc_id, qc_score])
+                cands.append([qc_id, round(qc_score, 3)])
             # Sort candidates and normalize between 0 and 1, and so they add up to 1.
             cands = sorted(cands, key=lambda x: (x[1], x[0]), reverse=True)
 
@@ -228,7 +228,9 @@ def prepare_rel_trainset(df, mylinker, myranker, dsplit):
     all_mentions = []
     for article in rel_json:
         if mylinker.rel_params["without_microtoponyms"]:
-            all_mentions += [y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"]
+            all_mentions += [
+                y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"
+            ]
         else:
             all_mentions += [y["mention"] for y in rel_json[article]]
     all_mentions = list(set(all_mentions))

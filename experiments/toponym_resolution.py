@@ -10,7 +10,10 @@ from geoparser import recogniser, ranking, linking
 from experiments import experiment
 
 # Choose test scenario:
-test_scenario = "test"  # "dev" while experimenting, "test" for the final numbers
+# * "dev" while developing and experimenting,
+# * "test" for the final numbers,
+# * "apply" to train a model using all the data.
+test_scenario = "apply"
 
 # List of experiments:
 experiments = [
