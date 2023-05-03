@@ -10,7 +10,10 @@ from geoparser import recogniser, ranking, linking
 from experiments import experiment
 
 # Choose test scenario:
-test_scenario = "test"  # "dev" while experimenting, "test" for the final numbers
+# * "dev" while developing and experimenting,
+# * "test" for the final numbers,
+# * "apply" to train a model using all the data.
+test_scenario = "apply"
 
 # List of experiments:
 experiments = [
@@ -125,7 +128,7 @@ for exp_param in experiments:
             rel_params={
                 "model_path": "../resources/models/disambiguation/",
                 "data_path": "../experiments/outputs/data/lwm/",
-                "training_split": "originalsplit",
+                "training_split": "",
                 "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": wpubl,
