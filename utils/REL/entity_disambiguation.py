@@ -47,6 +47,18 @@ class EntityDisambiguation:
         assert (
             test is not None
         ), "DB embeddings in wrong folder..? Test embedding not found.."
+        test = rel_utils.get_db_emb(self.db_embs, ["#ENTITY/UNK#"], "entity")[0]
+        assert (
+            test is not None
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
+        test = rel_utils.get_db_emb(self.db_embs, ["#WORD/UNK#"], "word")[0]
+        assert (
+            test is not None
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
+        test = rel_utils.get_db_emb(self.db_embs, ["#SND/UNK#"], "snd")[0]
+        assert (
+            test is not None
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
 
         # Initialise embedding dictionary:
         self.__load_embeddings()

@@ -20,7 +20,7 @@ def test_embeddings():
     """
     # Test 1: Check glove embeddings
     mentions = ["in", "apple"]
-    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
         cursor = conn.cursor()
         embs = rel_utils.get_db_emb(cursor, mentions, "snd")
         assert len(mentions) == len(embs)
@@ -47,7 +47,9 @@ def test_embeddings():
 
 
 def test_prepare_initial_data():
-    df = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t").iloc[:1]
+    df = pd.read_csv(
+        "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
+    ).iloc[:1]
     parsed_doc = rel_utils.prepare_initial_data(df, context_len=100)
     assert parsed_doc["4939308_1"][0]["mention"] == "STALYBRIDGE"
     assert parsed_doc["4939308_1"][0]["gold"][0] == "Q1398653"
@@ -106,7 +108,7 @@ def test_train():
             "do_test": False,
         },
     )
-    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
         cursor = conn.cursor()
 
         mylinker = linking.Linker(
@@ -148,7 +150,10 @@ def test_train():
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
+    assert (
+        type(mylinker.rel_params["ed_model"])
+        == entity_disambiguation.EntityDisambiguation
+    )
 
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
@@ -206,7 +211,7 @@ def test_load_eval_model():
         },
     )
 
-    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
         cursor = conn.cursor()
 
         mylinker = linking.Linker(
@@ -249,7 +254,10 @@ def test_load_eval_model():
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert type(mylinker.rel_params["ed_model"]) == entity_disambiguation.EntityDisambiguation
+    assert (
+        type(mylinker.rel_params["ed_model"])
+        == entity_disambiguation.EntityDisambiguation
+    )
 
 
 def test_predict():
@@ -303,7 +311,7 @@ def test_predict():
             "do_test": False,
         },
     )
-    with sqlite3.connect("resources/rel_db/embedding_database.db") as conn:
+    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
         cursor = conn.cursor()
 
         mylinker = linking.Linker(

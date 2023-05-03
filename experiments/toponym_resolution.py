@@ -116,7 +116,7 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the linker:
-    with sqlite3.connect("../resources/rel_db/embedding_database.db") as conn:
+    with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method=top_res_method,
