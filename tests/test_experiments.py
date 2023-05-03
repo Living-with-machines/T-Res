@@ -219,6 +219,9 @@ def test_apply():
     # Load processed data if existing:
     exp.processed_data = exp.load_data()
 
+    # Perform data postprocessing:
+    exp.processed_data = exp.prepare_data()
+
     exp.linking_experiments()
 
-    assert test == 2
+    assert "apply" in exp.dataset_df.columns
