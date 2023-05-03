@@ -1,26 +1,26 @@
+import json
 import os
+import pickle
+import random
 import re
 import sys
-import json
 import time
-import torch
-import pickle
-import numpy as np
 from pathlib import Path
-import random
-import torch.optim as optim
 from string import punctuation
-from torch.autograd import Variable
-from sklearn.metrics import f1_score
-from sklearn.linear_model import LogisticRegression
-
 from typing import Any, Dict
 
+import numpy as np
+import torch
+import torch.optim as optim
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score
+from torch.autograd import Variable
+
 sys.path.insert(0, os.path.abspath(os.path.pardir))
+import utils.REL.utils as utils
 from utils import rel_utils
 from utils.REL.mulrel_ranker import MulRelRanker, PreRank
 from utils.REL.vocabulary import Vocabulary
-import utils.REL.utils as utils
 
 """
 Parent Entity Disambiguation class that directs the various subclasses used

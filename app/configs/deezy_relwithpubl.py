@@ -1,7 +1,8 @@
 import os
 import sys
 from pathlib import Path
-from geoparser import ranking, linking
+
+from geoparser import linking, ranking
 
 myranker = ranking.Ranker(
     method="deezymatch",
@@ -40,18 +41,18 @@ myranker = ranking.Ranker(
 )
 
 mylinker = linking.Linker(
-        method='reldisamb',
-        resources_path="../resources/",
-        linking_resources=dict(),
-        base_model="to-be-removed",  # Base model for vector extraction
-        rel_params={
-            "base_path": "../resources/rel_db/",
-            "wiki_version": "wiki_2019/",
-            "training_data": "lwm",  # lwm, aida
-            "ranking": 'publ',  # relv, publ
-            "micro_locs": 'nil',  # "dist", "nil", ""
-        },
-        overwrite_training=False,
+    method="reldisamb",
+    resources_path="../resources/",
+    linking_resources=dict(),
+    base_model="to-be-removed",  # Base model for vector extraction
+    rel_params={
+        "base_path": "../resources/rel_db/",
+        "wiki_version": "wiki_2019/",
+        "training_data": "lwm",  # lwm, aida
+        "ranking": "publ",  # relv, publ
+        "micro_locs": "nil",  # "dist", "nil", ""
+    },
+    overwrite_training=False,
 )
 
 CONFIG = {"myranker": myranker, "mylinker": mylinker}

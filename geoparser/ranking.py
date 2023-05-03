@@ -1,9 +1,9 @@
+import json
 import os
 import sys
-import json
+from pathlib import Path
 
 import pandas as pd
-from pathlib import Path
 from DeezyMatch import candidate_ranker
 from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance

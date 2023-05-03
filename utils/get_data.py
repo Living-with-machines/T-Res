@@ -1,12 +1,13 @@
 import os
-import wget
 import zipfile
 from pathlib import Path
 
+import wget
 
 # ------------------------------
 # LwM data
 # ------------------------------
+
 
 # ------------------------------
 # Download data from BL repository and unzip it.
@@ -31,6 +32,7 @@ def download_lwm_data(news_path):
 # ------------------------------
 # HIPE data
 # ------------------------------
+
 
 # ------------------------------
 # Download data from HIPE repository and unzip it.

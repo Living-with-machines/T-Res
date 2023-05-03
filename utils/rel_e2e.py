@@ -1,8 +1,9 @@
 import json
 import os
 import sys
-import requests
 from pathlib import Path
+
+import requests
 from tqdm import tqdm
 
 # Import utils

@@ -1,9 +1,10 @@
 import json
 import os
 import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from haversine import haversine
 from tqdm import tqdm
 
@@ -173,7 +174,9 @@ class Linker:
                     try:
                         geodist = haversine(origin_coords, cand_coords)
                         resulting_cands[candidate] = geodist
-                    except ValueError:  # We have one candidate with coordinates in Venus!
+                    except (
+                        ValueError
+                    ):  # We have one candidate with coordinates in Venus!
                         pass
                     if geodist < keep_lowest_distance:
                         keep_lowest_distance = geodist
@@ -206,7 +209,6 @@ class Linker:
             The DeezyMatch candidate vectors.
         """
         if self.method == "reldisamb":
-
             # Generate ED model name:
             linker_name = myranker.method
             if myranker.method == "deezymatch":

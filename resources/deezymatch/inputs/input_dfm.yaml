@@ -1,9 +1,9 @@
 general:
   use_gpu: True    # only if available
-  # specify CUDA device, these are 0-indexed, e.g., 
+  # specify CUDA device, these are 0-indexed, e.g.,
   #   cuda:0, cuda:1 or others. "cuda" is the default CUDA device
   gpu_device: "cuda"
-  # Parent dir to save trained models 
+  # Parent dir to save trained models
   models_dir: "../resources/deezymatch/models"
 
 preprocessing:
@@ -25,11 +25,11 @@ gru_lstm:
   main_architecture: "gru"    # rnn, gru, lstm
   mode:    # Tokenization mode
     # choices: "char", "ngram", "word"
-    # for example: tokenize: ["char", "ngram", "word"] or ["char", "word"] 
+    # for example: tokenize: ["char", "ngram", "word"] or ["char", "word"]
     tokenize: ["char"]
     # ONLY if "char" or "ngram" are slected in tokenize, the following arg will be used:
     # Strings in the inputs will be prefix + string + suffix:
-    # NOTE: please use only STRINGS in prefix_suffix list, 
+    # NOTE: please use only STRINGS in prefix_suffix list,
     #       if you want only prefix or suffix, enter the other as an empty string ""
     #       e.g., ["|", ""] would add | as prefix and no suffix
     prefix_suffix: ["", ""]
@@ -44,26 +44,26 @@ gru_lstm:
     token_sep: "default"
   bidirectional: True    # if True, becomes a bidirectional RNN/GRU/LSTM
   # num_layers
-  # number of recurrent layers. e.g., setting num_layers=2 means stacking two 
+  # number of recurrent layers. e.g., setting num_layers=2 means stacking two
   #   RNN/GRU/LSTMs together to form a stacked RNN/GRU/LSTM,
   #   with the second RNN/GRU/LSTM taking in outputs of the first RNN/GRU/LSTM and computing the final results.
   num_layers: 2
   # number of dimensions of the first fully connected network
-  fc1_out_dim: 120    
+  fc1_out_dim: 120
   # pooling_mode:
   # hstates_layers_simple, hstates_layers, hstates
   # hstates_subtract, hstates_l2_distance, hstates_cosine
   # average, max
   # attention
-  pooling_mode: 'average'    
+  pooling_mode: 'average'
   # rnn_dropout:
   # if non-zero, introduces a Dropout layer on the outputs of each RNN/LSTM/GRU layer except the last layer,
   #   with dropout probability equal to rnn_dropout.
   rnn_dropout: 0.1
   # fully-connected layers dropout depends on the number of fc layers (currently there are two)
-  fc_dropout: [0.1, 0.1]  
+  fc_dropout: [0.1, 0.1]
   # attention layer dropout depends on the number of attention layers (currently there are two)
-  att_dropout: [0.1, 0.1] 
+  att_dropout: [0.1, 0.1]
   # Add bias to all learnable parameters
   bias: True
 
@@ -77,7 +77,7 @@ gru_lstm:
   epochs: 10
   batch_size: 64
   # shuffle when creating DataLoader
-  dl_shuffle: True 
+  dl_shuffle: True
   random_seed: 123
   # Early stopping:
   # Number of epochs with no improvement after which training will be stopped and
@@ -85,7 +85,7 @@ gru_lstm:
   # If 0 or negative, early stopping will be deactivated
   early_stopping_patience: 1
 
-  # if -1 or 1, perform the validation step in every epoch; 
+  # if -1 or 1, perform the validation step in every epoch;
   # if 0, no validation will be done
   # otherwise, specify the interval (integer)
   validation: 1
@@ -95,7 +95,7 @@ gru_lstm:
   test_proportion: 0
 
   # False or path to a directory to create tensor-board
-  #create_tensor_board: "./tb_gru_test" 
+  #create_tensor_board: "./tb_gru_test"
   create_tensor_board: False
 
   # Layers to freeze during fine-tuning

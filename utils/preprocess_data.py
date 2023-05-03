@@ -1,13 +1,13 @@
+import glob
 import os
 import re
 import sys
-import glob
+
 import pandas as pd
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_wikipedia
-
 
 """
 This script reads the original data sources and formats them for our experiments.
@@ -15,6 +15,7 @@ This script reads the original data sources and formats them for our experiments
 
 # Path to Wikipedia resources (where the wiki2wiki mapper is located):
 path_to_wikipedia = "../resources/wikipedia/"
+
 
 # ------------------------------
 # From wikipedia to wikidata:
@@ -85,9 +86,7 @@ def reconstruct_sentences(dTokens):
     # the different positional informations (and adding white spaces when
     # required):
     for i in range(0, len(start_ids) + 1):
-
         if i < len(start_ids) - 1:
-
             mention = dIndices[start_ids[i]][0]
             sentence_id = dIndices[start_ids[i]][1]
             mention_endchar = dIndices[start_ids[i]][2]
@@ -133,7 +132,6 @@ def process_lwm_for_ner(tsv_topres_path):
     lwm_data = []
 
     for fid in glob.glob(os.path.join(f"{tsv_topres_path}", "annotated_tsv", "*")):
-
         filename = fid.split("/")[-1]  # Full document name
         file_id = filename.split("_")[0]  # Document id
 
@@ -593,10 +591,8 @@ def process_tsv(filepath):
 
     # Loop over all lines in the file:
     for line in lines:
-
         # If the line is a token-line:
         if re.match(regex_annline, line):
-
             bio_label = "O"
 
             # If the token-line has no annotations, automatically provide
@@ -618,7 +614,6 @@ def process_tsv(filepath):
             # ends with a number enclosed in square brackets, as in "San[1]" and "Francisco[1]"):
 
             if re.match(regex_multmention, wkpd):
-
                 # This code basically collates multi-token mentions in annotations
                 # together. "complete_token" is the resulting multi-token mention,
                 # "sent_pos" is the sentence position in the file, "tok_pos" is the

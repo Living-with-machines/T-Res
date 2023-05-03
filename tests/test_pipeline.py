@@ -1,7 +1,7 @@
 import os
+import sqlite3
 import sys
 from pathlib import Path
-import sqlite3
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from geoparser import linking, pipeline, ranking, recogniser

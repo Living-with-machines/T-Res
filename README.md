@@ -169,7 +169,7 @@ See this with an example in [this notebook](https://github.com/Living-with-machi
 
 ## Installation
 
-If you want to work directly on the code base, we suggest to install T-Res following these instructions (which have been tested Linux (ubuntu 20.04)). 
+If you want to work directly on the code base, we suggest to install T-Res following these instructions (which have been tested Linux (ubuntu 20.04)).
 
 ### First, update the system
 

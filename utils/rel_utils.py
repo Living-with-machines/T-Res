@@ -1,9 +1,10 @@
+import json
 import os
 import sys
-import json
 from array import array
-import numpy as np
 from ast import literal_eval
+
+import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
@@ -167,7 +168,7 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
                 qc_score_2 = cand[2]
                 # Averaged relevances and normalize between 0 and 0.9:
                 qc_score = ((qc_score_1 + qc_score_2) / 2) * 0.9
-                cands.append([qc_id, qc_score, 3])
+                cands.append([qc_id, round(qc_score, 3)])
             # Sort candidates and normalize between 0 and 1, and so they add up to 1.
             cands = sorted(cands, key=lambda x: (x[1], x[0]), reverse=True)
 
