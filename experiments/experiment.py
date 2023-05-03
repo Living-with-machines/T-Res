@@ -1,8 +1,9 @@
 import os
 import sys
+from pathlib import Path
+
 import pandas as pd
 from tqdm import tqdm
-from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_data, rel_utils
