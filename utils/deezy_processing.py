@@ -7,12 +7,10 @@ from pathlib import Path
 
 import gensim
 import gensim.downloader
-from gensim.models import Word2Vec
-
 from DeezyMatch import combine_vecs
 from DeezyMatch import inference as dm_inference
 from DeezyMatch import train as dm_train
-
+from gensim.models import Word2Vec
 from thefuzz import fuzz
 from tqdm import tqdm
 

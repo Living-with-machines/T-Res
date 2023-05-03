@@ -1,9 +1,10 @@
+import json
 import os
 import sys
-import json
 from array import array
-import numpy as np
 from ast import literal_eval
+
+import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 

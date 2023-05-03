@@ -7,8 +7,8 @@ import pytest
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, ranking, recogniser
 from experiments import experiment
+from geoparser import linking, ranking, recogniser
 
 
 def test_wrong_dataset_path():
@@ -155,7 +155,6 @@ def test_wrong_ranker_method():
 
 
 def test_apply():
-
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here

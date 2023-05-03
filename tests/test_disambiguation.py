@@ -1,17 +1,19 @@
 import os
-import sys
 import sqlite3
-import numpy as np
-import pandas as pd
+import sys
 from array import array
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
+import sqlite3
+
+from geoparser import linking, pipeline, ranking, recogniser
 from utils import rel_utils
 from utils.REL import entity_disambiguation
-from geoparser import recogniser, ranking, linking, pipeline
-import sqlite3
 
 
 def test_embeddings():
