@@ -1,10 +1,11 @@
+import json
 import os
 import sys
-import json
 from ast import literal_eval
 from pathlib import Path
-from tqdm import tqdm
+
 import pandas as pd
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import ner
@@ -670,6 +671,7 @@ def create_mentions_df(experiment):
     # will merge the data:
     keep_columns = [
         "article_id",
+        "apply",
         "originalsplit",
         "withouttest",
         "Ashton1860",

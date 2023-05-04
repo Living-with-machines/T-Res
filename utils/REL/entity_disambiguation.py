@@ -1,26 +1,26 @@
+import json
 import os
+import pickle
+import random
 import re
 import sys
-import json
 import time
-import torch
-import pickle
-import numpy as np
 from pathlib import Path
-import random
-import torch.optim as optim
 from string import punctuation
-from torch.autograd import Variable
-from sklearn.metrics import f1_score
-from sklearn.linear_model import LogisticRegression
-
 from typing import Any, Dict
 
+import numpy as np
+import torch
+import torch.optim as optim
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score
+from torch.autograd import Variable
+
 sys.path.insert(0, os.path.abspath(os.path.pardir))
+import utils.REL.utils as utils
 from utils import rel_utils
 from utils.REL.mulrel_ranker import MulRelRanker, PreRank
 from utils.REL.vocabulary import Vocabulary
-import utils.REL.utils as utils
 
 """
 Parent Entity Disambiguation class that directs the various subclasses used
@@ -44,6 +44,18 @@ class EntityDisambiguation:
         self.db_embs = db_embs
         # Test DB embeddings
         test = rel_utils.get_db_emb(self.db_embs, ["Q84"], "entity")[0]
+        assert (
+            test is not None
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
+        test = rel_utils.get_db_emb(self.db_embs, ["#ENTITY/UNK#"], "entity")[0]
+        assert (
+            test is not None
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
+        test = rel_utils.get_db_emb(self.db_embs, ["#WORD/UNK#"], "word")[0]
+        assert (
+            test is not None
+        ), "DB embeddings in wrong folder..? Test embedding not found.."
+        test = rel_utils.get_db_emb(self.db_embs, ["#SND/UNK#"], "snd")[0]
         assert (
             test is not None
         ), "DB embeddings in wrong folder..? Test embedding not found.."
@@ -373,6 +385,48 @@ class EntityDisambiguation:
 
         return predictions
 
+    def normalize_scores(self, scores):
+        """
+        Normalizes a list of scores between 0 and 1 by rescaling them and computing their ratio over their sum.
+
+        Args:
+            scores (list): A list of numerical scores.
+
+        Returns:
+            list: A list of normalized scores where each score is the ratio of the rescaled score over their sum.
+        """
+
+        min_score = min(scores)
+        max_score = max(scores)
+        if min_score == max_score:
+            return [0.0] * len(scores)
+
+        rescaled_scores = [
+            (score - min_score) / (max_score - min_score) for score in scores
+        ]
+
+        # calculate sum of rescaled scores
+        score_sum = sum(rescaled_scores)
+
+        # normalize each rescaled score
+        normalized_scores = [score / score_sum for score in rescaled_scores]
+
+        return normalized_scores
+
+    def __compute_cross_cand_confidence(self, scores):
+        """
+        This function takes a series of numpy arrays of scores and returns a list of lists of confidence scores.
+
+        Args:
+            scores (numpy.ndarray): A numpy array of scores.
+
+        Returns:
+            list: A list of lists of confidence scores.
+        """
+
+        normalised_scores = [self.normalize_scores(score) for score in scores]
+        return normalised_scores
+
     def __compute_confidence(self, scores, preds):
         """
         Uses LR to find confidence scores for given ED outputs.
@@ -480,9 +534,15 @@ class EntityDisambiguation:
                 gold=true_pos.view(-1, 1),
             )
             pred_ids = torch.argmax(scores, axis=1)
+
+            # scores from the pipeline
             scores = scores.cpu().data.numpy()
 
+            # LR derived scores
             confidence_scores = self.__compute_confidence(scores, pred_ids)
+
+            # normalised scores across candidates
+            cross_cands_scores = self.__compute_cross_cand_confidence(scores)
             pred_ids = np.argmax(scores, axis=1)
 
             if not eval_raw:
@@ -502,6 +562,7 @@ class EntityDisambiguation:
                     predictions[dname].append({"pred": (entity, 0.0)})
 
             else:
+                # list of mentions
                 pred_entities = [
                     [
                         m["selected_cands"]["named_cands"][i],
@@ -531,7 +592,9 @@ class EntityDisambiguation:
                             m["selected_cands"]["mask"],
                         ]
                     )
-                    for (i, m, s, cs) in zip(pred_ids, batch, scores, confidence_scores)
+                    for (i, m, s, cs) in zip(
+                        pred_ids, batch, cross_cands_scores, confidence_scores
+                    )
                 ]
                 doc_names = [m["doc_name"] for m in batch]
 
@@ -543,7 +606,7 @@ class EntityDisambiguation:
                                 "prediction": entity[0],
                                 "candidates": entity[2],
                                 "conf_ed": entity[4],
-                                "scores": list([str(x) for x in entity[3]]),
+                                "scores": entity[3],
                             }
                         )
 

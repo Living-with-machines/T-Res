@@ -1,7 +1,8 @@
 import os
 import sys
 from pathlib import Path
-from geoparser import ranking, linking
+
+from geoparser import linking, ranking
 
 myranker = ranking.Ranker(
     method="perfectmatch",

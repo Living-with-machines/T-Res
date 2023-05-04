@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from ast import literal_eval
-import os
 import json
-import pandas as pd
+import os
+from ast import literal_eval
 from pathlib import Path
+
+import pandas as pd
 
 large_resources = "/resources/"  # path to large resources
 small_resources = "resources/"  # path to small resources

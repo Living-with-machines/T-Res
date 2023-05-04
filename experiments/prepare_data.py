@@ -1,15 +1,17 @@
-import sys, os
+import os
+import sys
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-import pandas as pd
-from pathlib import Path
-from utils import get_data
-from utils import preprocess_data
-from sklearn.model_selection import train_test_split
-import random
 import json
 import os
+import random
+from pathlib import Path
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+from utils import get_data, preprocess_data
 
 RANDOM_SEED = 42
 
@@ -124,6 +126,12 @@ lwm_all_df["originalsplit"] = lwm_all_df["article_id"].apply(
     else "dev"
 )
 
+# Add a column for the ner_split in the "apply" case (i.e. no test required,
+# as this is not used for the experiments).
+lwm_all_df["apply"] = lwm_all_df["article_id"].apply(
+    lambda x: "dev" if x in list(lwm_test_df["article_id"].unique()) else "train"
+)
+
 # Split the train set into train and dev for development
 # (i.e. when test is not used):
 lwm_train_dev_df, lwm_dev_dev_df = train_test_split(
@@ -176,6 +184,7 @@ for group in groups:
     print(lwm_all_df[group_name].value_counts())
 print(lwm_all_df["originalsplit"].value_counts())
 print(lwm_all_df["withouttest"].value_counts())
+print(lwm_all_df["apply"].value_counts())
 print()
 
 # ------------------------------------------------------

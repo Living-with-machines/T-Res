@@ -1,6 +1,6 @@
 # Evaluation
 
-First, clone the [CLEF-HIPE-2020-scorer](https://github.com/impresso/CLEF-HIPE-2020-scorer) to this folder and checkout [this commit](https://github.com/impresso/CLEF-HIPE-2020-scorer/tree/ac5c876eba58065195024cff550c2b5056986f7b) to have the exact same evaluation setting as in our experiments. 
+First, clone the [CLEF-HIPE-2020-scorer](https://github.com/impresso/CLEF-HIPE-2020-scorer) to this folder and checkout [this commit](https://github.com/impresso/CLEF-HIPE-2020-scorer/tree/ac5c876eba58065195024cff550c2b5056986f7b) to have the exact same evaluation setting as in our experiments.
 
 ```
 git clone https://github.com/impresso/CLEF-HIPE-2020-scorer.git

@@ -1,16 +1,20 @@
 import os
-import sys
-import pandas as pd
-from pathlib import Path
 import sqlite3
+import sys
+from pathlib import Path
+
+import pandas as pd
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import recogniser, ranking, linking
 from experiments import experiment
+from geoparser import linking, ranking, recogniser
 
 # Choose test scenario:
-test_scenario = "test"  # "dev" while experimenting, "test" for the final numbers
+# * "dev" while developing and experimenting,
+# * "test" for the final numbers,
+# * "apply" to train a model using all the data.
+test_scenario = "apply"
 
 # List of experiments:
 experiments = [
@@ -116,7 +120,7 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the linker:
-    with sqlite3.connect("../resources/rel_db/embedding_database.db") as conn:
+    with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method=top_res_method,
@@ -125,7 +129,7 @@ for exp_param in experiments:
             rel_params={
                 "model_path": "../resources/models/disambiguation/",
                 "data_path": "../experiments/outputs/data/lwm/",
-                "training_split": "originalsplit",
+                "training_split": "",
                 "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": wpubl,
