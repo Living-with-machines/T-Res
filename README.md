@@ -24,9 +24,9 @@
             <li><a href="#installation">Installation</a></li>
     </div>
     <div style="flex-basis: 55%; text-align: right">
-        <img src="https://user-images.githubusercontent.com/8415204/234827786-ff796b7d-5773-427c-98d5-006a108506a8.png"
+        <img align="right" src="https://user-images.githubusercontent.com/8415204/234827786-ff796b7d-5773-427c-98d5-006a108506a8.png"
         alt="A cartoon of a funny T-Rex reading a map with a lense"
-        width="70%">
+        width="30%">
     </div>
     
 </div>
