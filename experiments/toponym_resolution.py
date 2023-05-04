@@ -14,18 +14,18 @@ from geoparser import linking, ranking, recogniser
 # * "dev" while developing and experimenting,
 # * "test" for the final numbers,
 # * "apply" to train a model using all the data.
-test_scenario = "apply"
+test_scenario = "dev"
 
 # List of experiments:
 experiments = [
-    ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
+    # ["lwm", "perfectmatch", "mostpopular", "fine", "", ""],
     # ["lwm", "perfectmatch", "bydistance", "fine", "", ""],
     # ["lwm", "deezymatch", "mostpopular", "fine", "", ""],
     # ["lwm", "deezymatch", "bydistance", "fine", "", ""],
     # ["lwm", "deezymatch", "reldisamb", "fine", False, False],
     # ["lwm", "deezymatch", "reldisamb", "fine", True, False],
     # ["lwm", "deezymatch", "reldisamb", "fine", False, True],
-    # ["lwm", "deezymatch", "reldisamb", "fine", True, True],
+    ["lwm", "deezymatch", "reldisamb", "fine", True, True],
     # ["hipe", "perfectmatch", "mostpopular", "coarse", "", ""],
     # ["hipe", "perfectmatch", "bydistance", "coarse", "", ""],
     # ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
@@ -134,11 +134,11 @@ for exp_param in experiments:
                 "db_embeddings": cursor,
                 "with_publication": wpubl,
                 "without_microtoponyms": wmtops,
-                "do_test": False,
+                "do_test": True,
                 "default_publname": "",
                 "default_publwqid": "",
             },
-            overwrite_training=False,
+            overwrite_training=True,
         )
 
     # --------------------------------------

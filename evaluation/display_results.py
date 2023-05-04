@@ -183,12 +183,12 @@ linking_approaches = [
     "reldisamb",
     "reldisamb+wmtops",
     "reldisamb+wpubl",
-    "reldisamb+wpubl+wmtops",
+    "reldisamb+wpubl+wmtops_test",
 ]
 granularities = ["fine"]
 splits = [
     "originalsplit",
-    # "withouttest",
+    "withouttest",
     "Ashton1860",
     "Dorchester1820",
     "Dorchester1830",
