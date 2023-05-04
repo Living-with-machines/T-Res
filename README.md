@@ -8,8 +8,10 @@
     </div>
 
 ## Table of contents
-<div style="display: flex; flex-wrap: wrap;">
-    <div style="flex-basis: 40%; margin-right: 20px; text-align: left">
+<div style="text-align: left">
+<img align="right" src="https://user-images.githubusercontent.com/8415204/234827786-ff796b7d-5773-427c-98d5-006a108506a8.png"
+        alt="A cartoon of a funny T-Rex reading a map with a lense"
+        width="30%">
         <ul>
             <li><a href="#overview">Overview</a></li>
             <li><a href="#directory-structure">Directory structure</a></li>
@@ -23,17 +25,14 @@
             </ul>
             <li><a href="#installation">Installation</a></li>
     </div>
-    <div style="flex-basis: 55%; text-align: right">
-        <img align="right" src="https://user-images.githubusercontent.com/8415204/234827786-ff796b7d-5773-427c-98d5-006a108506a8.png"
-        alt="A cartoon of a funny T-Rex reading a map with a lense"
-        width="30%">
-    </div>
-    
-</div>
+
+
 
 
 ## Overview
 
+
+        
 T-Res is an end-to-end pipeline for toponym resolution for digitised historical newspapers. Given an input text (a sentence or a text), T-Res identifies the places that are mentioned in it, links them to their corresponding Wikidata IDs, and provides their geographic coordinates. T-Res has been designed to tackle common problems of working with digitised historical newspapers.
 
 The pipeline has three main components:
