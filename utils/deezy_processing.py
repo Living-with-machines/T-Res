@@ -256,6 +256,9 @@ def train_deezy_model(myranker):
             )
         ).exists()
     ):
+        # Create the training set (if it already exists, it will be skipped):
+        create_training_set(myranker)
+
         # Training a DeezyMatch model
         dm_train(
             input_file_path=input_file_path,

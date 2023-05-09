@@ -159,7 +159,6 @@ class Ranker:
             if self.deezy_parameters["do_test"] == True:
                 self.deezy_parameters["dm_model"] += "_test"
                 self.deezy_parameters["dm_cands"] += "_test"
-            deezy_processing.create_training_set(self)
             deezy_processing.train_deezy_model(self)
             deezy_processing.generate_candidates(self)
         # This dictionary is not used anymore:
