@@ -29,6 +29,7 @@ Each of these elements are described in this documentation.
    getting-started/index
    t-res-api/index
    api/index
+   other-files/index
 
 Indices and tables
 ==================

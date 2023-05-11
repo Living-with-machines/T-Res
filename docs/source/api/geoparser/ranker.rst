@@ -1,5 +1,5 @@
-Ranker
-======
+``geoparser.ranking. Ranker``
+=============================
 
 .. autoclass:: geoparser.ranking.Ranker
     :members:

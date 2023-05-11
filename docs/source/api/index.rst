@@ -5,7 +5,5 @@ API Documentation
    :maxdepth: 2
    :caption: Table of contents:
 
-   linker
-   ranker
-   recogniser
-   pipeline
+   geoparser/index
+   utils/index
