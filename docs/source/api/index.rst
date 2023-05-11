@@ -1,11 +1,11 @@
-====================
-Running T-Res as API
-====================
-
-TODO
+API Documentation
+=================
 
 .. toctree::
    :maxdepth: 2
    :caption: Table of contents:
 
-   installation
+   linker
+   ranker
+   recogniser
+   pipeline
