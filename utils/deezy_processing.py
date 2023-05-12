@@ -14,10 +14,18 @@ from gensim.models import Word2Vec
 from thefuzz import fuzz
 from tqdm import tqdm
 
+from typing import List, Optional, Union
 
-def obtain_matches(word, english_words, sims, fuzz_ratio_threshold=70):
+
+def obtain_matches(
+    word: str,
+    english_words: List[str],
+    sims,
+    fuzz_ratio_threshold: Optional[Union[float, int]] = 70,
+) -> List:
     """
-    Given a word and the top 100 nearest neighbours, separate into positive and negative matches.
+    Given a word and the top 100 nearest neighbours, separate into positive
+    and negative matches.
 
     Arguments:
         word (str): a word.

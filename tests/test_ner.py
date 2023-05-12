@@ -157,7 +157,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[0]["mention"] == "Bologna"
     assert mentions[1]["mention"] == "Florence"
@@ -177,7 +177,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[0]["mention"] == "New York City"
     assert mentions[1]["mention"] == "United States"
@@ -197,7 +197,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[-1]["mention"] == "Ashton-cnder-Ltne"
     for i in range(len(mentions)):

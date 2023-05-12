@@ -26,12 +26,12 @@ def title_to_id(page_title, path_to_db, lower=False) -> Optional[str]:
     The page title is the last part of a Wikipedia url **unescaped** and spaces
     replaced by underscores , e.g. for `https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem`,
     the title would be `Fermat's_Last_Theorem`.
-    Args:
+    Arguments:
         path_to_db: The path to the wikidata2wikipedia db
         page_title: The page title of the Wikipedia entry, e.g. `Manatee`.
     Returns:
-        Optional[str]: If a mapping could be found for `wiki_page_title`, then return
-                        it, else return `None`.
+        str, optional: If a mapping could be found for `wiki_page_title`, then return
+            it, else return `None`.
     """
 
     with sqlite3.connect(path_to_db) as conn:

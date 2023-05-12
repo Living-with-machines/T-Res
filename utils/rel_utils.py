@@ -73,7 +73,7 @@ def prepare_initial_data(df, context_len=100):
     experiments/prepare_data.py script) and generates the
     equivalent json needed to train a REL model.
 
-    Args:
+    Arguments:
         df: The dataframe containing the linking training data.
         context_len: The maximum number of words in the left
             and right contexts of the sentence where the target

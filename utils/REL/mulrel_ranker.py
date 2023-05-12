@@ -3,14 +3,19 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-"""
-PreRank class is used for preranking entities for a given mention by multiplying entity vectors with
-word vectors
-"""
-
 
 class PreRank(torch.nn.Module):
+    """
+    TODO fix docstring
+
+    PreRank class is used for preranking entities for a given mention by
+    multiplying entity vectors with word vectors.
+    """
+
     def __init__(self, config, embeddings=None):
+        """
+        Initialises an PreRank object.
+        """
         super(PreRank, self).__init__()
         self.config = config
 
@@ -18,7 +23,8 @@ class PreRank(torch.nn.Module):
         """
         Multiplies local context words with entity vectors for a given mention.
 
-        :return: entity scores.
+        Returns:
+            TODO entity scores.
         """
 
         sent_vecs = embeddings["word_embeddings_bag"](
@@ -38,19 +44,21 @@ class PreRank(torch.nn.Module):
         return log_probs
 
 
-"""
-Multi-relational global model with context token attention, using loopy belief propagation.
-With local model context token attention (from G&H's EMNLP paper).
-
-Function descriptions will refer to paper.
-
-Author: Phong Le
-Paper: Improving Entity Linking by Modeling Latent Relations between Mentions
-"""
-
-
 class MulRelRanker(torch.nn.Module):
+    """
+    Multi-relational global model with context token attention, using loopy belief propagation.
+    With local model context token attention (from G&H's EMNLP paper).
+
+    Function descriptions will refer to paper.
+
+    Author: Phong Le
+    Paper: Improving Entity Linking by Modeling Latent Relations between Mentions
+    """
+
     def __init__(self, config, device):
+        """
+        Initialises a MulRelRanker object.
+        """
         super(MulRelRanker, self).__init__()
         self.config = config
         self.device = device
@@ -109,7 +117,8 @@ class MulRelRanker(torch.nn.Module):
         """
         Local entity scores
 
-        :return: Entity scores.
+        Returns:
+            TODO Entity scores.
         """
 
         batchsize, n_words = token_ids.size()
@@ -178,7 +187,8 @@ class MulRelRanker(torch.nn.Module):
         - ent_scores refers to function q.
         - score_combine refers to function g.
 
-        :return: Ranking of entities per mention.
+        Returns:
+            TODO Ranking of entities per mention.
         """
 
         n_ments, n_cands = entity_ids.size()
@@ -364,7 +374,8 @@ class MulRelRanker(torch.nn.Module):
         """
         Regularises model parameters.
 
-        :return: -
+        Returns:
+            TODO
         """
 
         l1_w_norm = self.score_combine_linear_1.weight.norm()
@@ -393,7 +404,8 @@ class MulRelRanker(torch.nn.Module):
         """
         Computes given ranking loss (Equation 7) and adds a regularization term.
 
-        :return: loss of given batch
+        Returns:
+            TODO loss of given batch
         """
         loss = F.multi_margin_loss(scores, true_pos, margin=self.config["margin"])
         if self.config["use_local_only"]:

@@ -22,17 +22,28 @@ from utils import rel_utils
 from utils.REL.mulrel_ranker import MulRelRanker, PreRank
 from utils.REL.vocabulary import Vocabulary
 
-"""
-Parent Entity Disambiguation class that directs the various subclasses used
-for the ED step.
-"""
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 
 class EntityDisambiguation:
-    def __init__(self, db_embs, user_config, reset_embeddings=False):
+    """
+    TODO docstring
+
+    Parent Entity Disambiguation class that directs the various subclasses used
+    for the ED step.
+
+    Arguments:
+        db_embs (): TODO.
+        user_config (dict): TODO.
+        reset_embeddings (bool): TODO.
+    """
+
+    def __init__(self, db_embs, user_config: dict, reset_embeddings: bool = False):
+        """
+        Initialises an EntityDisambiguation object.
+        """
         self.embeddings = {}
         self.config = self.__get_config(user_config)
 
@@ -91,11 +102,12 @@ class EntityDisambiguation:
                 raise Exception("You cannot train a model and reset the embeddings.")
             self.model = MulRelRanker(self.config, self.device).to(self.device)
 
-    def __get_config(self, user_config):
+    def __get_config(self, user_config: dict) -> dict:
         """
         User configuration that may overwrite default settings.
 
-        :return: configuration used for ED.
+        Returns:
+            configuration used for ED.
         """
 
         default_config: Dict[str, Any] = {
@@ -137,7 +149,9 @@ class EntityDisambiguation:
     def __load_embeddings(self):
         """
         Initialised embedding dictionary and creates #UNK# token for respective embeddings.
-        :return: -
+
+        Returns:
+            TODO
         """
         self.__batch_embs = {}
 
@@ -160,7 +174,8 @@ class EntityDisambiguation:
         """
         Responsible for training the ED model.
 
-        :return: -
+        Returns:
+            TODO
         """
 
         train_dataset = self.get_data_items(org_train_dataset, "train", predict=False)
@@ -351,7 +366,8 @@ class EntityDisambiguation:
         Function that applies LR in an attempt to get confidence scores. Recall should be high,
         because if it is low than we would have ignored a corrrect entity.
 
-        :return: -
+        Returns:
+            TODO
         """
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
@@ -378,7 +394,8 @@ class EntityDisambiguation:
         Parent function responsible for predicting on any raw text as input. This does not require ground
         truth entities to be present.
 
-        :return: predictions and time taken for the ED step.
+        Returns:
+            TODO predictions and time taken for the ED step.
         """
         data = self.get_data_items(data, "raw", predict=True)
         predictions, timing = self.__predict(data, include_timing=True, eval_raw=True)
@@ -389,7 +406,7 @@ class EntityDisambiguation:
         """
         Normalizes a list of scores between 0 and 1 by rescaling them and computing their ratio over their sum.
 
-        Args:
+        Arguments:
             scores (list): A list of numerical scores.
 
         Returns:
@@ -417,7 +434,7 @@ class EntityDisambiguation:
         """
         This function takes a series of numpy arrays of scores and returns a list of lists of confidence scores.
 
-        Args:
+        Arguments:
             scores (numpy.ndarray): A numpy array of scores.
 
         Returns:
@@ -431,7 +448,8 @@ class EntityDisambiguation:
         """
         Uses LR to find confidence scores for given ED outputs.
 
-        :return:
+        Returns:
+            TODO
         """
         X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
         if self.model_lr:
@@ -445,7 +463,8 @@ class EntityDisambiguation:
         """
         Uses the trained model to make predictions of individual batches (i.e. documents).
 
-        :return: predictions and time taken for the ED step.
+        Returns:
+            TODO predictions and time taken for the ED step.
         """
 
         predictions = {items[0]["doc_name"]: [] for items in data}
@@ -630,7 +649,9 @@ class EntityDisambiguation:
     def prerank(self, dataset, dname, predict=False):
         """
         Responsible for preranking the set of possible candidates using both context and p(e|m) scores.
-        :return: dataset with, by default, max 3 + 4 candidates per mention.
+
+        Returns:
+            TODO // dataset with, by default, max 3 + 4 candidates per mention.
         """
         new_dataset = []
         has_gold = 0
@@ -752,7 +773,8 @@ class EntityDisambiguation:
         """
         Responsible for updating the dictionaries with their respective word, entity and snd (GloVe) embeddings.
 
-        :return: -
+        Returns:
+            TODO
         """
 
         embs = embs.to(self.device)
@@ -787,7 +809,8 @@ class EntityDisambiguation:
         """
         Responsible for retrieving embeddings using the given sqlite3 database.
 
-        :return: -
+        Returns:
+            TODO
         """
         embs = rel_utils.get_db_emb(self.db_embs, words_filt, name)
 
@@ -803,7 +826,8 @@ class EntityDisambiguation:
         """
         Responsible for formatting dataset. Triggers the preranking function.
 
-        :return: preranking function.
+        Returns:
+            TODO preranking function.
         """
 
         data = []
@@ -1018,7 +1042,8 @@ class EntityDisambiguation:
         """
         Responsible for evaluating data points, which is solely used for the local ED step.
 
-        :return: F1, Recall, Precision and number of mentions for which we have no valid candidate.
+        Returns:
+            TODO F1, Recall, Precision and number of mentions for which we have no valid candidate.
         """
         gold = []
         pred = []
@@ -1046,7 +1071,8 @@ class EntityDisambiguation:
         """
         Responsible for storing the trained model during optimisation.
 
-        :return: -.
+        Returns:
+            TODO
         """
         torch.save(self.model.state_dict(), "{}.state_dict".format(path))
         with open("{}.config".format(path), "w") as f:
@@ -1057,7 +1083,8 @@ class EntityDisambiguation:
         Responsible for loading a trained model and its respective config. Note that this config cannot be
         overwritten. If required, this behavior may be modified in future releases.
 
-        :return: model
+        Returns:
+            TODO model
         """
 
         if os.path.exists("{}.config".format(path)):

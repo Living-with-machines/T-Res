@@ -13,12 +13,14 @@ BRACKETS = {
     "-RSB-": "]",
 }
 
-"""
-Class that creates a Vocabulary object that is used to store references to Embeddings.
-"""
-
 
 class Vocabulary:
+    """
+    TODO fix docstring
+
+    Class that creates a Vocabulary object that is used to store references to Embeddings.
+    """
+
     unk_token = UNK_TOKEN
 
     def __init__(self):
@@ -35,7 +37,8 @@ class Vocabulary:
         """
         Normalises token.
 
-        :return: Normalised token
+        Returns:
+            TODO Normalised token
         """
 
         if token in [Vocabulary.unk_token, "<s>", "</s>"]:
@@ -55,7 +58,8 @@ class Vocabulary:
         """
         Adds token to vocabulary.
 
-        :return:
+        Returns:
+            TODO
         """
         new_id = len(self.id2word)
         self.id2word.append(token)
@@ -66,7 +70,8 @@ class Vocabulary:
         """
         Checks size vocabulary.
 
-        :return: size vocabulary
+        Returns:
+            TODO size vocabulary
         """
         return len(self.id2word)
 
@@ -74,7 +79,8 @@ class Vocabulary:
         """
         Normalises token and checks if token in vocab.
 
-        :return: Either reference ID to given token or reference ID to #UNK# token.
+        Returns:
+            TODO Either reference ID to given token or reference ID to #UNK# token.
         """
         tok = Vocabulary.normalize(token)
         return self.word2id.get(tok, self.unk_id)

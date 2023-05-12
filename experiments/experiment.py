@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from typing import Literal, Optional
 
 import pandas as pd
 from tqdm import tqdm
@@ -11,47 +12,49 @@ from utils import process_data, rel_utils
 
 class Experiment:
     """
-    The Experiment class processes, prepares, and formats the data for the experiments.
+    A class to represent an experiment with entity linking using NER,
+    candidate ranking, and linking methods.
+
+    Arguments:
+        dataset ("lwm", "hipe"): The dataset to use for the
+            experiment, must be set to either ``"lwm"`` or ``"hipe"``.
+        data_path (str): The path to the dataset directory (with processed
+            data).
+        results_path (str): The path to the directory where the results will
+            be stored. If it does not exist, it will be created.
+        dataset_df (pd.DataFrame): The dataframe representing the resulting,
+            preprocessed, dataset.
+        myner (recogniser.Recogniser): An instance of the NER model to use.
+        myranker (ranking.Ranker): An instance of the candidate ranking model
+            to use.
+        mylinker (linking.Linker): An instance of the linking model to use.
+        overwrite_processing (bool): Whether to overwrite the processed data
+            if it already exists (default is True).
+        processed_data (dict): A dictionary to store the processed data
+            (default is an empty dictionary).
+        test split (str): The data split to use for testing (train/dev/test,
+            default is an empty string).
+        rel_experiments (bool): Whether to run end-to-end REL experiments
+            (default is False).
     """
 
     def __init__(
         self,
-        dataset: str,
+        dataset: Literal["lwm", "hipe"],
         data_path: str,
         results_path: str,
-        dataset_df,
+        dataset_df: pd.DataFrame,
         myner,
         myranker,
         mylinker,
-        overwrite_processing=True,
-        processed_data=dict(),
-        test_split="",
-        rel_experiments=False,
+        overwrite_processing: Optional[bool] = True,
+        processed_data: Optional[dict] = dict(),
+        test_split: Optional[str] = "",
+        rel_experiments: Optional[bool] = False,
     ):
         """
         Initialises an Experiment object.
-
-        Arguments:
-            dataset (str): dataset to process ("lwm" or "hipe").
-            data_path (str): path to the processed data.
-            results_path (str): path to the results of the experiments,
-                initially empty (it is created if it does not exist).
-            dataset_df (pd.DataFrame): initially empty dataframe
-                where the resulting preprocessed dataset will be
-                stored.
-            myner (recogniser.Recogniser): a Recogniser object.
-            myranker (ranking.Ranker): a Ranker object.
-            mylinker (linking.Linker): a Linker object.
-            overwrite_processing (bool): If True, do data processing,
-                else load existing processing, if it exists.
-            processed_data (dict): Dictionary where we'll keep the
-                processed data for the experiments.
-            test split (str): the split (train/dev/test) for the
-                linking experiment.
-            rel_experiments (bool): If True, run the REL experiments,
-                else skip them.
         """
-
         self.dataset = dataset
         self.data_path = data_path
         self.results_path = results_path
@@ -79,20 +82,30 @@ class Experiment:
                 "\nError: The dataset has not been created, you should first run the prepare_data.py script.\n"
             )
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Prints information about the experiment.
-        """
-        msg = "\n>>> Experiment\n"
-        msg += "    * Dataset: {0}\n".format(self.dataset.upper())
-        msg += "    * Overwrite processing: {0}\n".format(self.overwrite_processing)
-        msg += "    * Experiments on: {0}\n".format(self.test_split)
-        msg += "    * Run end-to-end REL experiments: {0}".format(self.rel_experiments)
-        return msg
+        Returns a string representation of the Experiment object.
 
-    def load_data(self):
+        Returns
+        -------
+        str
+            A string representation of the Experiment object.
         """
-        Loads the already processed data if exists.
+        s = "\n>>> Experiment\n"
+        s += f"    * Dataset: {self.dataset.upper()}\n"
+        s += f"    * Overwrite processing: {self.overwrite_processing}\n"
+        s += f"    * Experiments on: {self.test_split}\n"
+        s += f"    * Run end-to-end REL experiments: {self.rel_experiments}"
+        return s
+
+    def load_data(self) -> dict:
+        """
+        Load the processed data, if it exists.
+
+        Returns
+        -------
+        dict
+            The processed data dictionary.
         """
         return process_data.load_processed_data(self)
 
@@ -100,12 +113,12 @@ class Experiment:
         """
         Function that prepares the data for the experiments.
 
-        Returns:
-            self.processed_data (dict): a dictionary which stores the different
-                processed data (predicted mentions, gold standard, REL end-to-end
-                processing, candidates), which will be used later for linking.
-            A JSON file in which we store the end-to-end resolution produced by REL
-                using their API.
+        Returns
+        -------
+        dict
+            The processed data dictionary, containing predicted mentions, gold
+                standard, REL end-to-end processing, candidates, which can be
+                used later for linking.
         """
 
         # ----------------------------------
@@ -191,9 +204,18 @@ class Experiment:
 
     def linking_experiments(self):
         """
-        Prepares the data for the linking experiments, creating a mention-based
-        dataframe. It produces tsv files in the format required by the HIPE
-        scorer, ready to be evaluated.
+        Run entity linking experiments on the processed data.
+
+        This function performs the entity linking experiments using the
+        prepared data and different linking methods, such as "mostpopular",
+        "bydistance", and "reldisamb". The experiments are performed on
+        different data splits and store the results in the specified format
+        required by the HIPE scorer. Additionally, it provides an option to
+        run end-to-end REL experiments.
+
+        Notes:
+            The results of the experiments are stored in the
+            ``self.processed_data`` attribute of the Experiment instance.
         """
         # Create a mention-based dataframe for the linking experiments:
         processed_df = process_data.create_mentions_df(self)
