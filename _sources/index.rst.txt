@@ -27,8 +27,8 @@ Each of these elements are described in this documentation.
    :caption: Table of contents:
 
    getting-started/index
+   reference/index
    t-res-api/index
-   api/index
    other-files/index
 
 Indices and tables

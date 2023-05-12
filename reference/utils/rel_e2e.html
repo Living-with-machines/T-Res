@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utils.rel_e2e module &mdash; T-Res 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="utils.rel_utils module" href="rel_utils.html" />
+    <link rel="prev" title="utils.process_wikipedia module" href="process_wikipedia.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> T-Res
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/index.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-files/index.html">Other files in repository</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">T-Res</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Reference</a> &raquo;</li>
+          <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
+      <li><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/utils/rel_e2e.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="utils-rel-e2e-module">
+<h1><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module<a class="headerlink" href="#utils-rel-e2e-module" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.rel_end_to_end">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">rel_end_to_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.rel_end_to_end" title="Permalink to this definition"></a></dt>
+<dd><p>REL end-to-end entity linking using the API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sent</strong> (<em>str</em>) – a sentence in plain text.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>the output from REL end-to-end API</dt><dd><p>for the input sentence.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>el_result (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.get_rel_from_api">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">get_rel_from_api</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dSentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_end2end_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.get_rel_from_api" title="Permalink to this definition"></a></dt>
+<dd><p>Uses the REL API to do end-to-end entity linking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dSentences</strong> (<em>dict</em>) – dictionary of sentences, where the
+key is the article-sent identifier and the value
+is the full text of the sentence.</p></li>
+<li><p><strong>rel_end2end_path</strong> (<em>str</em>) – the path of the file where the
+REL results will be stored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A JSON file with the REL results.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.match_wikipedia_to_wikidata">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">match_wikipedia_to_wikidata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wiki_title</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.match_wikipedia_to_wikidata" title="Permalink to this definition"></a></dt>
+<dd><p>Get the Wikidata ID from a Wikipedia title.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>wiki_title</strong> (<em>str</em>) – a Wikipedia title, underscore-separated.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a string, either the Wikidata QID corresponding entity, or NIL.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.match_ent">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">match_ent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred_ents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_ann</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.match_ent" title="Permalink to this definition"></a></dt>
+<dd><p>Function that, given the position in a sentence of a
+specific gold standard token, finds the corresponding
+string and prediction information returned by REL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred_ents</strong> (<em>list</em>) – a list of lists, each inner list
+corresponds to a token.</p></li>
+<li><p><strong>start</strong> (<em>int</em>) – start character of a token in the gold standard.</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – end character of a token in the gold standard.</p></li>
+<li><p><strong>prev_ann</strong> (<em>str</em>) – entity type of the previous token.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(1) the entity type, (2) the
+entity link and (3) the entity type of the previous token.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A tuple with three elements</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.postprocess_rel">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">postprocess_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dSentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_tokenization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikigaz_ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.postprocess_rel" title="Permalink to this definition"></a></dt>
+<dd><p>For each sentence, retokenizes the REL output to match the gold
+standard tokenization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rel_preds</strong> (<em>dict</em>) – dictionary containing the predictions using REL.</p></li>
+<li><p><strong>dSentences</strong> (<em>dict</em>) – dictionary that maps a sentence id to the text.</p></li>
+<li><p><strong>gold_tokenization</strong> (<em>dict</em>) – dictionary that contains the tokenized
+sentence with gold standard annotations of entity type and
+link, per sentence.</p></li>
+<li><p><strong>wikigaz_ids</strong> (<em>set</em>) – set of Wikidata IDs of entities in the gazetteer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>dictionary that maps a sentence id with the REL predictions,</dt><dd><p>retokenized as in the gold standard.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dREL (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.store_rel">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">store_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dREL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approach</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.store_rel" title="Permalink to this definition"></a></dt>
+<dd><p>Prepare the data to be stored in the format required by the HIPE scorer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment</strong> (<em>Experiment object</em>) – object for the current experiment.</p></li>
+<li><p><strong>dREL</strong> (<em>dict</em>) – dictionary with the results using the REL approach.</p></li>
+<li><p><strong>approach</strong> (<em>str</em>) – name of the REL approach (only rel_end_to_end_api available).</p></li>
+<li><p><strong>how_split</strong> (<em>str</em>) – data split to store the results for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tsv with the results in the Conll format required by the scorer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.rel_e2e.run_rel_experiments">
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">run_rel_experiments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.run_rel_experiments" title="Permalink to this definition"></a></dt>
+<dd><p>Function that runs the end-to-end experiments using REL.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="process_wikipedia.html" class="btn btn-neutral float-left" title="utils.process_wikipedia module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rel_utils.html" class="btn btn-neutral float-right" title="utils.rel_utils module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Federico Nanni.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

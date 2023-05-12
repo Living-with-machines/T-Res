@@ -40,8 +40,8 @@
               <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../getting-started/index.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Documentation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Other files in repository</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../evaluation/index.html">Evaluation</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Reproducing the Experiments: <code class="docutils literal notranslate"><span class="pre">experiments</span></code> module</a><ul class="current">
@@ -90,21 +90,63 @@
 <h1><code class="docutils literal notranslate"><span class="pre">experiments.experiment</span></code><a class="headerlink" href="#experiments-experiment" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">experiments.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myranker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mylinker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_experiments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">experiments.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'lwm'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'hipe'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myranker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mylinker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_processing</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_experiments</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>The Experiment class processes, prepares, and formats the data for the experiments.</p>
+<p>A class to represent an experiment with entity linking using NER,
+candidate ranking, and linking methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>&quot;lwm&quot;</em><em>, </em><em>&quot;hipe&quot;</em>) – The dataset to use for the
+experiment, must be set to either <code class="docutils literal notranslate"><span class="pre">&quot;lwm&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;hipe&quot;</span></code>.</p></li>
+<li><p><strong>data_path</strong> (<em>str</em>) – The path to the dataset directory (with processed
+data).</p></li>
+<li><p><strong>results_path</strong> (<em>str</em>) – The path to the directory where the results will
+be stored. If it does not exist, it will be created.</p></li>
+<li><p><strong>dataset_df</strong> (<em>pd.DataFrame</em>) – The dataframe representing the resulting,
+preprocessed, dataset.</p></li>
+<li><p><strong>myner</strong> (<em>recogniser.Recogniser</em>) – An instance of the NER model to use.</p></li>
+<li><p><strong>myranker</strong> (<em>ranking.Ranker</em>) – An instance of the candidate ranking model
+to use.</p></li>
+<li><p><strong>mylinker</strong> (<em>linking.Linker</em>) – An instance of the linking model to use.</p></li>
+<li><p><strong>overwrite_processing</strong> (<em>bool</em>) – Whether to overwrite the processed data
+if it already exists (default is True).</p></li>
+<li><p><strong>processed_data</strong> (<em>dict</em>) – A dictionary to store the processed data
+(default is an empty dictionary).</p></li>
+<li><p><strong>split</strong> (<em>test</em>) – The data split to use for testing (train/dev/test,
+default is an empty string).</p></li>
+<li><p><strong>rel_experiments</strong> (<em>bool</em>) – Whether to run end-to-end REL experiments
+(default is False).</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment.linking_experiments">
 <span class="sig-name descname"><span class="pre">linking_experiments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment.linking_experiments" title="Permalink to this definition"></a></dt>
-<dd><p>Prepares the data for the linking experiments, creating a mention-based
-dataframe. It produces tsv files in the format required by the HIPE
-scorer, ready to be evaluated.</p>
+<dd><p>Run entity linking experiments on the processed data.</p>
+<p>This function performs the entity linking experiments using the
+prepared data and different linking methods, such as “mostpopular”,
+“bydistance”, and “reldisamb”. The experiments are performed on
+different data splits and store the results in the specified format
+required by the HIPE scorer. Additionally, it provides an option to
+run end-to-end REL experiments.</p>
+<p class="rubric">Notes</p>
+<p>The results of the experiments are stored in the
+<code class="docutils literal notranslate"><span class="pre">self.processed_data</span></code> attribute of the Experiment instance.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment.load_data">
-<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment.load_data" title="Permalink to this definition"></a></dt>
-<dd><p>Loads the already processed data if exists.</p>
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#experiments.experiment.Experiment.load_data" title="Permalink to this definition"></a></dt>
+<dd><p>Load the processed data, if it exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The processed data dictionary.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -114,16 +156,14 @@ scorer, ready to be evaluated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><dl class="simple">
-<dt>a dictionary which stores the different</dt><dd><p>processed data (predicted mentions, gold standard, REL end-to-end
-processing, candidates), which will be used later for linking.</p>
-</dd>
-<dt>A JSON file in which we store the end-to-end resolution produced by REL</dt><dd><p>using their API.</p>
+<dt>The processed data dictionary, containing predicted mentions, gold</dt><dd><p>standard, REL end-to-end processing, candidates, which can be
+used later for linking.</p>
 </dd>
 </dl>
 </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>self.processed_data (dict)</p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>

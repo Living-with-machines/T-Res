@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utils.process_wikipedia module &mdash; T-Res 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="utils.rel_e2e module" href="rel_e2e.html" />
+    <link rel="prev" title="utils.process_data module" href="process_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> T-Res
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/index.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-files/index.html">Other files in repository</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">T-Res</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Reference</a> &raquo;</li>
+          <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
+      <li><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/utils/process_wikipedia.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="utils-process-wikipedia-module">
+<h1><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module<a class="headerlink" href="#utils-process-wikipedia-module" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.process_wikipedia.make_wikilinks_consistent">
+<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikilinks_consistent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.process_wikipedia.make_wikilinks_consistent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.process_wikipedia.make_wikipedia2wikidata_consisent">
+<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikipedia2wikidata_consisent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.process_wikipedia.make_wikipedia2wikidata_consisent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.process_wikipedia.title_to_id">
+<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">title_to_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.process_wikipedia.title_to_id" title="Permalink to this definition"></a></dt>
+<dd><p>This function is adapted from <a class="reference external" href="https://github.com/jcklie/wikimapper">https://github.com/jcklie/wikimapper</a>
+Given a Wikipedia page title, returns the corresponding Wikidata ID.
+The page title is the last part of a Wikipedia url <strong>unescaped</strong> and spaces
+replaced by underscores , e.g. for <cite>https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem</cite>,
+the title would be <cite>Fermat’s_Last_Theorem</cite>.
+:param path_to_db: The path to the wikidata2wikipedia db
+:param page_title: The page title of the Wikipedia entry, e.g. <cite>Manatee</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>If a mapping could be found for <cite>wiki_page_title</cite>, then return</dt><dd><p>it, else return <cite>None</cite>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="process_data.html" class="btn btn-neutral float-left" title="utils.process_data module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rel_e2e.html" class="btn btn-neutral float-right" title="utils.rel_e2e module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Federico Nanni.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
