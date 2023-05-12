@@ -1,19 +1,17 @@
 name: Docs2Pages
-on:
-  push:
-    tags: '*'
-  pull_request:
-    branches:
-      - kallewesterling/issue210
+
+on: [pull_request]
 
 jobs:
-  build-docs:
+  run:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         os: [ubuntu-latest]
         python-version: [3.9]
       fail-fast: false
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -47,6 +45,11 @@ jobs:
         if: steps.cache.outputs.cache-hit == 'true'
         shell: bash
         run: timeout 10s python -m poetry run pip --version || rm -rf .venv
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m poetry install --extras docs
 
       - name: Build documentation
         run: |
