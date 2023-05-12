@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installing T-Res &mdash; T-Res 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The complete tour" href="complete-tour.html" />
+    <link rel="prev" title="Getting started" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> T-Res
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting started</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installing T-Res</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-system">Update the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-pyenv">Install pyenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-poetry">Install poetry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#project-installation">Project Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-use-poetry">How to use poetry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pre-commit-hoooks">Pre-commit hoooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="complete-tour.html">The complete tour</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-files/index.html">Other files in repository</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">T-Res</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Getting started</a> &raquo;</li>
+      <li>Installing T-Res</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/getting-started/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installing-t-res">
+<h1>Installing T-Res<a class="headerlink" href="#installing-t-res" title="Permalink to this headline"></a></h1>
+<p>If you want to work directly on the codebase, we suggest to install T-Res
+following these instructions (which have been tested Linux (ubuntu 20.04)).</p>
+<section id="update-the-system">
+<h2>Update the system<a class="headerlink" href="#update-the-system" title="Permalink to this headline"></a></h2>
+<p>First, you need to make sure the system is up to date and all essential
+libraries are installed.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>update
+$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>build-essential<span class="w"> </span>curl<span class="w"> </span>libbz2-dev<span class="w"> </span>libffi-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>liblzma-dev<span class="w"> </span>libncursesw5-dev<span class="w"> </span>libreadline-dev<span class="w"> </span>libsqlite3-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libssl-dev<span class="w"> </span>libxml2-dev<span class="w"> </span>libxmlsec1-dev<span class="w"> </span>llvm<span class="w"> </span>make<span class="w"> </span>tk-dev<span class="w"> </span>wget<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>xz-utils<span class="w"> </span>zlib1g-dev
+</pre></div>
+</div>
+</section>
+<section id="install-pyenv">
+<h2>Install pyenv<a class="headerlink" href="#install-pyenv" title="Permalink to this headline"></a></h2>
+<p>Then you need to install pyenv, which we use to manage virtual environments:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>curl<span class="w"> </span>https://pyenv.run<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</pre></div>
+</div>
+<p>And also to make sure paths are properly exported:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export PYENV_ROOT=&quot;$HOME/.pyenv&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export PATH=&quot;$PYENV_ROOT/bin:$PATH&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;if command -v pyenv 1&gt;/dev/null 2&gt;&amp;1; \</span>
+<span class="s1">  then\n eval &quot;$(pyenv init --path)&quot;\nfi&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</pre></div>
+</div>
+<p>Then you can restart your bash session, to make sure all changes are updated:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>~/.bashrc
+</pre></div>
+</div>
+<p>And then you run the following commands to update <cite>pyenv</cite> and create the
+needed environemnt.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pyenv<span class="w"> </span>update
+$<span class="w"> </span>pyenv<span class="w"> </span>install<span class="w"> </span><span class="m">3</span>.9.7
+$<span class="w"> </span>pyenv<span class="w"> </span>global<span class="w"> </span><span class="m">3</span>.9.7
+</pre></div>
+</div>
+</section>
+<section id="install-poetry">
+<h2>Install poetry<a class="headerlink" href="#install-poetry" title="Permalink to this headline"></a></h2>
+<p>To manage dipendencies across libraries, we use Poetry. To install it, do the
+following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://install.python-poetry.org<span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export PATH=$PATH:$HOME/.poetry/bin&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</pre></div>
+</div>
+</section>
+<section id="project-installation">
+<h2>Project Installation<a class="headerlink" href="#project-installation" title="Permalink to this headline"></a></h2>
+<p>You can now clone the repo and <cite>cd</cite> into it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:Living-with-machines/T-Res.git
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>T-Res
+</pre></div>
+</div>
+<p>Explicitly tell poetry to use the python version defined above:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>env<span class="w"> </span>use<span class="w"> </span>python
+</pre></div>
+</div>
+<p>Install all dependencies using <cite>poetry</cite>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>update
+$<span class="w"> </span>poetry<span class="w"> </span>install
+</pre></div>
+</div>
+<p>Create a kernel:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>ipython<span class="w"> </span>kernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="o">=</span>&lt;KERNEL_NAME&gt;
+</pre></div>
+</div>
+</section>
+<section id="how-to-use-poetry">
+<h2>How to use poetry<a class="headerlink" href="#how-to-use-poetry" title="Permalink to this headline"></a></h2>
+<p>To activate the environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>shell
+</pre></div>
+</div>
+<p>Now you can run a script as usual, for instance :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>experiments/toponym_resolution.py
+</pre></div>
+</div>
+<p>To add a package:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>add<span class="w"> </span><span class="o">[</span>package<span class="w"> </span>name<span class="o">]</span>
+</pre></div>
+</div>
+<p>To run the Python tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>pytest
+</pre></div>
+</div>
+<p>If you want to use Jupyter notebook, run it as usual, and then select the
+created kernel in “Kernel” &gt; “Change kernel”.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>jupyter<span class="w"> </span>notebook
+</pre></div>
+</div>
+</section>
+<section id="pre-commit-hoooks">
+<h2>Pre-commit hoooks<a class="headerlink" href="#pre-commit-hoooks" title="Permalink to this headline"></a></h2>
+<p>In order to guarantee style consistency across our codebase we use a few basic
+pre-commit hooks.</p>
+<p>To use them, first run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks
+</pre></div>
+</div>
+<p>To run the hooks on all files, you can do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="complete-tour.html" class="btn btn-neutral float-right" title="The complete tour" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Federico Nanni.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

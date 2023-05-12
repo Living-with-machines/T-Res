@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers &mdash; T-Res 0.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting started" href="getting-started/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> T-Res
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/index.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="other-files/index.html">Other files in repository</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">T-Res</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="t-res-a-toponym-resolution-pipeline-for-digitised-historical-newspapers">
+<h1>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers<a class="headerlink" href="#t-res-a-toponym-resolution-pipeline-for-digitised-historical-newspapers" title="Permalink to this headline"></a></h1>
+<a class="reference external image-reference" href="https://github.com/Living-with-machines/T-Res/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg" /></a>
+<p>T-Res is an end-to-end pipeline for toponym resolution for digitised historical
+newspapers. Given an input text (a sentence or a text), T-Res identifies the
+places that are mentioned in it, links them to their corresponding Wikidata
+IDs, and provides their geographic coordinates. T-Res has been designed to
+tackle common problems of working with digitised historical newspapers.</p>
+<p>The pipeline has three main components:
+* <strong>The Recogniser</strong> performs named entity recognition.
+* <strong>The Ranker</strong> performs candidate selection and ranking.
+* <strong>The Linker</strong> performs entity linking and resolution.</p>
+<p>The three components are used in combination in the <strong>Pipeline</strong> class.</p>
+<p>We also provide the code to deploy T-Res as an API, and show how to use it.
+Each of these elements are described in this documentation.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/index.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html">Installing T-Res</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/complete-tour.html">The complete tour</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Running T-Res as API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="t-res-api/installation.html">Installing T-Res as API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/utils/index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="other-files/index.html">Other files in repository</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="other-files/evaluation/index.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="other-files/experiments/index.html">Reproducing the Experiments: <code class="docutils literal notranslate"><span class="pre">experiments</span></code> module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started/index.html" class="btn btn-neutral float-right" title="Getting started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Federico Nanni.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
