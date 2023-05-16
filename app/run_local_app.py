@@ -17,11 +17,9 @@ sys.path.insert(0, str(root_path))
 sys.path.insert(0, str(experiments_path))
 os.chdir(experiments_path)
 
-os.environ['APP_CONFIG_NAME'] = "t-res_deezy_mostpopular"   #"t-res_exact_mostpopular"    "t-res_deezy_rel-publ-nil"     "t-res_deezy_rel-nil"
-# from config import CONFIG as pipeline_config
+os.environ['APP_CONFIG_NAME'] = "t-res_deezy_reldisamb-wpubl-wmtops"
 import importlib
-config_mod = importlib.import_module('.t-res_deezy_mostpopular', 'app.configs')
-# config_mod = importlib.import_module('app.configs.t-res_deezy_mostpopular')
+config_mod = importlib.import_module('.t-res_deezy_reldisamb-wpubl-wmtops', 'app.configs')
 pipeline_config = config_mod.CONFIG
 
 
