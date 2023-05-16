@@ -12,7 +12,6 @@ from utils import process_data
 
 
 def test_eval_with_exception():
-
     # test normal behaviour
 
     str_list_of_dict = "[{'key_1': 1, 'key_2': 2}]"
@@ -42,7 +41,6 @@ def test_eval_with_exception():
 
 
 def test_prepare_sents():
-
     dataset_df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv",
         sep="\t",
@@ -73,7 +71,6 @@ def test_prepare_sents():
 
 
 def test_align_gold():
-
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here
         pipe=None,  # We'll store the NER pipeline here

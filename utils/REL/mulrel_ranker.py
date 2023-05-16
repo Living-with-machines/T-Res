@@ -39,12 +39,12 @@ class PreRank(torch.nn.Module):
 
 
 """
-Multi-relational global model with context token attention, using loopy belief propagation. 
+Multi-relational global model with context token attention, using loopy belief propagation.
 With local model context token attention (from G&H's EMNLP paper).
 
 Function descriptions will refer to paper.
 
-Author: Phong Le 
+Author: Phong Le
 Paper: Improving Entity Linking by Modeling Latent Relations between Mentions
 """
 

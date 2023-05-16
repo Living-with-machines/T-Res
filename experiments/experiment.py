@@ -1,8 +1,9 @@
 import os
 import sys
+from pathlib import Path
+
 import pandas as pd
 from tqdm import tqdm
-from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_data, rel_utils
@@ -218,6 +219,8 @@ class Experiment:
                     # "Manchester1860",
                     # "Poole1860",
                 ]
+        if self.test_split == "apply":
+            list_test_splits = ["apply"]
 
         # ------------------------------------------
         # Iterate over each linking experiments, each will have its own
@@ -229,11 +232,21 @@ class Experiment:
             test_original = original_df[original_df[split] == "test"]
             test_processed = processed_df[processed_df[split] == "test"]
 
+            if split == "apply":
+                # This is not used in the experiments: in the "apply" mode, we are
+                # training on what would be train+dev in the originalsplit, and
+                # leave test for development. We're just testing on dev itself
+                # to avoid the code failing. The model trained with this scenario
+                # should just be used with new data not in the experiments.
+                test_original = original_df[original_df[split] == "dev"]
+                test_processed = processed_df[processed_df[split] == "dev"]
+
             # Get ids of articles in each split:
             test_article_ids = list(test_original.article_id.astype(str))
 
             # Train a linking model if needed (it requires myranker to generate potential
             # candidates to the training set):
+            print("Train EL model using:", split)
             linking_model = self.mylinker.train_load_model(self.myranker, split=split)
 
             # Dictionary of sentences:

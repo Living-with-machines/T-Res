@@ -1,6 +1,7 @@
 import os
-import sys
 import sqlite3
+import sys
+
 import numpy as np
 
 # Add "../" to path to import utils
