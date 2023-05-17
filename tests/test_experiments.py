@@ -96,7 +96,7 @@ def test_load_data():
         mylinker=mylinker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
-        test_split="dev",  # "dev" while experimenting, "test" when running final experiments.
+        test_split="test",  # "dev" while experimenting, "test" when running final experiments.
         rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
     )
 

@@ -191,6 +191,7 @@ class Pipeline:
             prediction["conf_md"] = m["ner_score"]
             prediction["tag"] = m["ner_label"]
             prediction["sentence"] = sentence
+            prediction["string_match_candidates"] = wk_cands.get(m["mention"], dict())
             prediction["candidates"] = wk_cands.get(m["mention"], dict())
             prediction["place"] = place
             prediction["place_wqid"] = place_wqid
@@ -246,6 +247,15 @@ class Pipeline:
                 }
 
                 # Get string matching confidence scores per candidate:
+                dCs = mentions_dataset["linking"][i]["string_match_candidates"]
+                mentions_dataset["linking"][i]["string_match_score"] = {
+                    x: (
+                        round(dCs[x]["Score"], 3),
+                        [wqc for wqc in dCs[x]["Candidates"]],
+                    )
+                    for x in dCs
+                }
+                # Get linking prior confidence scores per candidate:
                 mentions_dataset["linking"][i]["prior_cand_score"] = {
                     cand: score
                     for cand, score in mentions_dataset["linking"][i]["candidates"]
@@ -273,6 +283,14 @@ class Pipeline:
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
                 mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
+                dCs = mentions_dataset["linking"][i]["string_match_candidates"]
+                mentions_dataset["linking"][i]["string_match_score"] = {
+                    x: (
+                        round(dCs[x]["Score"], 3),
+                        [wqc for wqc in dCs[x]["Candidates"]],
+                    )
+                    for x in dCs
+                }
                 mentions_dataset["linking"][i]["prior_cand_score"] = dict()
                 # Return candidates scores for top n=7 candidates (same returned by REL):
                 tmp_cands = {k: round(selected_cand[2][k], 3) for k in selected_cand[2]}
@@ -295,6 +313,7 @@ class Pipeline:
                 "ner_score",
                 "ed_score",
                 "sentence",
+                "string_match_score",
                 "prior_cand_score",
                 "cross_cand_score",
             ]

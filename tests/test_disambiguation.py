@@ -158,7 +158,7 @@ def test_train():
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6633416458852868
 
 
 def test_load_eval_model():

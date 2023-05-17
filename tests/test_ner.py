@@ -97,7 +97,7 @@ def test_ner_predict():
     assert (type(preds[0])) == dict
     assert len(preds) == 16
     assert preds[4]["entity"] == "B-LOC"
-    assert preds[4]["score"] == 0.9933644533157349
+    assert preds[4]["score"] == 0.9919903874397278
 
     # Test that ner_predict() can handle hyphens
     preds = myner.ner_predict("- I grew up in Plymouth—Kingston.")

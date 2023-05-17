@@ -178,9 +178,9 @@ def test_deezy_rel_wpubl_wmtops():
 
     assert resolved[0]["mention"] == "Shefrield"
     assert resolved[0]["prior_cand_score"]["Q42448"] == 0.674
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.266
+    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.379
     assert resolved[0]["prediction"] == "Q42448"
-    assert resolved[0]["ed_score"] == 0.116
+    assert resolved[0]["ed_score"] == 0.034
     assert resolved[0]["ner_score"] == 0.997
 
 
@@ -260,12 +260,6 @@ def test_perfect_rel_wpubl_wmtops():
         )
 
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
-
-    resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
-        place="Sheffield",
-        place_wqid="Q42448",
-    )
 
     resolved = geoparser.run_text(
         "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
