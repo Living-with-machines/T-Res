@@ -46,6 +46,8 @@ class PreRank(torch.nn.Module):
 
 class MulRelRanker(torch.nn.Module):
     """
+    TODO: fix docstring
+
     Multi-relational global model with context token attention, using loopy belief propagation.
     With local model context token attention (from G&H's EMNLP paper).
 

@@ -131,6 +131,7 @@ class EntityDisambiguation:
             dict
                 Configuration used for ED.
         """
+        """TODO: fix docstring"""
 
         default_config: Dict[str, Any] = {
             "mode": user_config["mode"],
@@ -360,6 +361,7 @@ class EntityDisambiguation:
         self.best_performance = {"f1": best_f1, "p": best_p, "r": best_r}
 
     def __create_dataset_LR(self, dataset, predictions):
+        """TODO: fix docstring"""
         X = []
         y = []
         meta = []
@@ -436,7 +438,7 @@ class EntityDisambiguation:
                 A list of normalized scores where each score is the ratio of
                 the rescaled score over their sum.
         """
-
+        """TODO: fix docstring"""
         min_score = min(scores)
         max_score = max(scores)
         if min_score == max_score:
@@ -464,7 +466,7 @@ class EntityDisambiguation:
         Returns:
             list: A list of lists of confidence scores.
         """
-
+        """TODO: fix docstring"""
         normalised_scores = [self.normalize_scores(score) for score in scores]
         return normalised_scores
 

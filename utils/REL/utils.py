@@ -5,6 +5,9 @@ def flatten_list_of_lists(list_of_lists):
     """
     making inputs to torch.nn.EmbeddingBag
     """
+    """
+    TODO docstring
+    """
     list_of_lists = [[]] + list_of_lists
     offsets = np.cumsum([len(x) for x in list_of_lists])[:-1]
     flatten = sum(list_of_lists[1:], [])
@@ -12,6 +15,9 @@ def flatten_list_of_lists(list_of_lists):
 
 
 def make_equal_len(lists, fill_in=0, to_right=True):
+    """
+    TODO docstring
+    """
     lens = [len(l) for l in lists]
     max_len = max(1, max(lens))
     if to_right:
@@ -25,6 +31,8 @@ def make_equal_len(lists, fill_in=0, to_right=True):
 
 def is_important_word(s):
     """
+    TODO docstring
+
     an important word is not a stopword, a number, or len == 1
     """
     try:

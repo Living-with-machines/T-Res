@@ -7,7 +7,7 @@ from ast import literal_eval
 import numpy as np
 import pandas as pd
 
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Literal
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
@@ -15,14 +15,19 @@ RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 
 
-def get_db_emb(cursor, mentions: list, embtype: str) -> List:
+def get_db_emb(
+    cursor, mentions: list, embtype: Literal["word", "entity", "snd"]
+) -> List:
     """
     Retrieve Wikipedia2Vec embeddings for a given list of words or entities.
 
     Args:
-        cursor: The cursor with the open connection to the Wikipedia2Vec database.
-        mentions (list): The list of words or entities whose embeddings to extract.
-        embtype (str): The type of embedding to retrieve. Possible values are "word", "entity", or "snd".
+        cursor: The cursor with the open connection to the Wikipedia2Vec
+            database.
+        mentions (list): The list of words or entities whose embeddings to
+            extract.
+        embtype (str): The type of embedding to retrieve. Possible values are
+            "word", "entity", or "snd".
 
     Returns:
         list: A list of arrays representing the embeddings for the given mentions.
@@ -170,6 +175,9 @@ def prepare_initial_data(df: pd.DataFrame, context_len: Optional[int] = 100) -> 
 
 
 def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
+    """
+    TODO: docstring
+    """
     new_json = dict()
     for article in rel_json:
         new_json[article] = []
@@ -212,7 +220,7 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
 
 def add_publication(rel_json, publname="", publwqid=""):
     """
-    TO DO.
+    TODO: docstring
     """
     new_json = rel_json.copy()
     for article in rel_json:
@@ -255,6 +263,9 @@ def prepare_rel_trainset(df, mylinker, myranker, dsplit):
         myranker: a Ranking object.
 
     This function stores the dataset formatted as a json.
+    """
+    """
+    TODO: fix docstring
     """
     rel_json = prepare_initial_data(df, mylinker.rel_params["context_length"])
 
