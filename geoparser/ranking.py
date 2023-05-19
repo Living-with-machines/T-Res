@@ -39,6 +39,40 @@ class Ranker:
             training. Defaults to an empty dictionary.
         already_collected_cands (dict): Dictionary of already collected
             candidates. Defaults to an empty dictionary.
+
+    Example:
+        >>> # Create a Ranker object
+        >>> ranker = Ranker(
+                method="partialmatch",
+                resources_path="/path/to/resources/",
+                mentions_to_wikidata={},
+                wikidata_to_mentions={},
+                strvar_parameters={},
+                deezy_parameters={},
+                already_collected_cands={}
+            )
+
+        >>> # Load resources
+        >>> ranker.load_resources()
+
+        >>> # Train the ranker (if applicable)
+        >>> ranker.train()
+
+        >>> # Perform candidate selection
+        >>> queries = ['apple', 'banana', 'orange']
+        >>> candidates, already_collected = ranker.run(queries)
+
+        >>> # Find candidates for mentions
+        >>> mentions = [{'mention': 'apple'}, {'mention': 'banana'}, {'mention': 'orange'}]
+        >>> mention_candidates, mention_already_collected = ranker.find_candidates(mentions)
+
+        >>> # Print the results
+        >>> print("Candidate Selection Results:")
+        >>> print(candidates)
+        >>> print(already_collected)
+        >>> print("Find Candidates Results:")
+        >>> print(mention_candidates)
+        >>> print(mention_already_collected)
     """
 
     def __init__(
@@ -68,7 +102,7 @@ class Ranker:
         """
         Returns a string representation of the Ranker object.
 
-        Notes:
+        Note:
             The string will, at minimum, include the method name, and if the
             ``method`` was set to "deezymatch" in the Ranker initialiser, the
             string will also include the training parameters provided.
@@ -93,7 +127,15 @@ class Ranker:
         """
         Load the ranker resources.
 
-        Notes:
+        Returns:
+            dict:
+                The loaded mentions-to-wikidata dictionary, which maps a
+                mention (e.g. ``"London"``) to the Wikidata entities that are
+                referred to by this mention on Wikipedia (e.g. ``Q84``,
+                ``Q2477346``). The data also includes, for each entity, their
+                "relevance", i.e. number of in-links across Wikipedia.
+
+        Note:
             This method loads the mentions-to-wikidata and
             wikidata-to-mentions dictionaries from the resources directory,
             specified when initialising the ``Ranker``. They are required for
@@ -105,13 +147,6 @@ class Ranker:
             The method also initialises ``pandarallel`` if needed by the
             candidate ranking method (if the ``method`` set in the initialiser
             of the ``Ranker`` was set to "partialmatch" or "levenshtein").
-
-        Returns:
-            dict: The loaded mentions-to-wikidata dictionary, which maps a
-                mention (e.g. "London") to the Wikidata entities that are
-                referred to by this mention on Wikipedia (e.g. Q84, Q2477346).
-                The data also includes, for each entity, their "relevance",
-                i.e. number of in-links across Wikipedia.
         """
         print("*** Loading the ranker resources.")
 
@@ -170,11 +205,11 @@ class Ranker:
 
         return self.mentions_to_wikidata
 
-    def train(self):
+    def train(self) -> None:
         """
-        Training a DeezyMatch model. The training will be skipped if the model already
-        exists and self.overwrite_training it set to False. The training will
-        be run on test mode if self.do_test is set to True.
+        Training a DeezyMatch model. The training will be skipped if the model
+        already exists and ``self.overwrite_training`` is set to False. The
+        training will be run on test mode if ``self.do_test`` is set to True.
         """
 
         if self.method == "deezymatch":
@@ -190,16 +225,8 @@ class Ranker:
 
     def perfect_match(self, queries: List[str]) -> Tuple[dict, dict]:
         """
-        Perform perfect matching for the provided list of mentions
-        (``queries``).
-
-        Notes:
-            This method checks if each mention has an exact match in the
-            mentions_to_wikidata dictionary. If a match is found, it assigns a
-            perfect match score of 1.0 to the mention. Otherwise, an empty
-            dictionary is assigned as the candidate list for the mention.
-
-        Perform perfect match between the string and the KB altnames.
+        Perform perfect matching between a provided list of mentions
+        (``queries``) and the altnames in the knowledge base.
 
         Arguments:
             queries (list): A list of mentions identified in a text to match.
@@ -214,6 +241,12 @@ class Ranker:
                 #. The second dictionary stores the already collected
                    candidates for each mention. It is an updated version of the
                    Ranker's ``already_collected_cands`` attribute.
+
+        Note:
+            This method checks if each mention has an exact match in the
+            mentions_to_wikidata dictionary. If a match is found, it assigns a
+            perfect match score of 1.0 to the mention. Otherwise, an empty
+            dictionary is assigned as the candidate list for the mention.
         """
         candidates = {}
         for query in queries:
@@ -234,22 +267,23 @@ class Ranker:
         Calculate the Damerau-Levenshtein distance between a mention and a row
         in the dataset.
 
-        Notes:
-            This method computes the Damerau-Levenshtein distance between the
-            lowercase versions of a mention and the "mentions" column value in
-            the given row.
-
-            The distance is then normalized to a similarity score by
-            subtracting it from 1.0.
-
         Arguments:
             query (str): A mention identified in a text.
             row (Series): A pandas Series representing a row in the dataset
                 with a "mentions" column, corresponding to a mention in the KB.
 
         Returns:
-            float: The similarity score between the query and the row, ranging
-                from 0.0 to 1.0.
+            float:
+                The similarity score between the query and the row, ranging
+                from ``0.0`` to ``1.0``.
+
+        Note:
+            This method computes the Damerau-Levenshtein distance between the
+            lowercase versions of a mention and the "mentions" column value in
+            the given row.
+
+            The distance is then normalized to a similarity score by
+            subtracting it from ``1.0``.
 
         Example:
             >>> ranker = Ranker(...)
@@ -274,8 +308,9 @@ class Ranker:
                 with a "mentions" column, corresponding to a mention in the KB.
 
         Returns:
-            float: The match score indicating the degree of containment,
-                ranging from 0.0 to 1.0 (perfect match).
+            float:
+                The match score indicating the degree of containment,
+                ranging from ``0.0`` to ``1.0`` (perfect match).
 
         Example:
             >>> ranker = Ranker(...)
@@ -303,13 +338,6 @@ class Ranker:
         """
         Perform partial matching for a list of given mentions (``queries``).
 
-        Notes:
-            This method performs partial matching for each mention in the given
-            list. If a mention has already been matched perfectly, it skips the
-            partial matching process for that mention. For the remaining
-            mentions, it calculates the match score based on the specified
-            partial matching method: Levenshtein distance or containment.
-
         Arguments:
             queries (list): A list of mentions identified in a text to match.
             damlev (bool): A flag indicating whether to use the
@@ -326,6 +354,13 @@ class Ranker:
                 #. The second dictionary stores the already collected
                    candidates for each mention. It is an updated version of the
                    Ranker's ``already_collected_cands`` attribute.
+
+        Note:
+            This method performs partial matching for each mention in the given
+            list. If a mention has already been matched perfectly, it skips the
+            partial matching process for that mention. For the remaining
+            mentions, it calculates the match score based on the specified
+            partial matching method: Levenshtein distance or containment.
 
         Example:
             >>> ranker = Ranker(...)
@@ -374,15 +409,6 @@ class Ranker:
         Perform DeezyMatch (fuzzy matching) on-the-fly for a list of given
         mentions (``queries``).
 
-        Notes:
-            This method performs DeezyMatch on-the-fly for each mention in a
-            given list of mentions identified in a text. If a query has
-            already been matched perfectly, it skips the partial matching
-            process for that query. For the remaining queries,
-            it uses the DeezyMatch model to generate candidates and ranks them
-            based on the specified ranking metric and selection threshold,
-            provided when initialising the Ranker object.
-
         Arguments:
             queries (list): A list of mentions identified in a text to match.
 
@@ -396,6 +422,15 @@ class Ranker:
                 #. The second dictionary stores the already collected
                    candidates for each mention. It is an updated version of the
                    Ranker's ``already_collected_cands`` attribute.
+
+        Note:
+            This method performs DeezyMatch on-the-fly for each mention in a
+            given list of mentions identified in a text. If a query has
+            already been matched perfectly, it skips the partial matching
+            process for that query. For the remaining queries,
+            it uses the DeezyMatch model to generate candidates and ranks them
+            based on the specified ranking metric and selection threshold,
+            provided when initialising the Ranker object.
 
         Example:
             >>> ranker = Ranker(...)
@@ -469,20 +504,6 @@ class Ranker:
         """
         Run the appropriate ranking method based on the specified method.
 
-        Notes:
-            This method executes the appropriate ranking method based on the
-            ``method`` parameter, selected when initialising the Ranker object.
-
-            It delegates the execution to the corresponding method:
-
-            * :py:meth:`~geoparser.ranking.Ranker.perfect_match`
-            * :py:meth:`~geoparser.ranking.Ranker.partial_match`
-            * :py:meth:`~geoparser.ranking.Ranker.levenshtein`
-            * :py:meth:`~geoparser.ranking.Ranker.deezy_on_the_fly`
-
-            See the documentation of those methods for more details about
-            their processing if the provided mentions (``queries``).
-
         Arguments:
             queries (list): A list of mentions identified in a text to match.
 
@@ -499,6 +520,20 @@ class Ranker:
             {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
             >>> print(already_collected)
             {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+
+        Note:
+            This method executes the appropriate ranking method based on the
+            ``method`` parameter, selected when initialising the Ranker object.
+
+            It delegates the execution to the corresponding method:
+
+            * :py:meth:`~geoparser.ranking.Ranker.perfect_match`
+            * :py:meth:`~geoparser.ranking.Ranker.partial_match`
+            * :py:meth:`~geoparser.ranking.Ranker.levenshtein`
+            * :py:meth:`~geoparser.ranking.Ranker.deezy_on_the_fly`
+
+            See the documentation of those methods for more details about
+            their processing if the provided mentions (``queries``).
         """
         if self.method == "perfectmatch":
             return self.perfect_match(queries)
@@ -514,21 +549,6 @@ class Ranker:
         """
         Find candidates for the given mentions using the selected ranking
         method.
-
-        Notes:
-            This method takes a list of mentions and finds candidates for each
-            mention using the selected ranking method. It first extracts the
-            queries from the mentions and then calls the appropriate method
-            based on the ranking method chosen when initialising the Ranker
-            object.
-
-            The method returns a dictionary that maps each original mention to
-            a sub-dictionary containing the mention variations as keys and
-            their corresponding match scores as values.
-
-            Additionally, it updates the already collected candidates
-            dictionary (the Ranker object's ``already_collected_cands``
-            attribute).
 
         Arguments:
             mentions (list): A list of predicted mentions as dictionaries.
@@ -559,6 +579,21 @@ class Ranker:
                         }
                     }
                 }
+
+        Note:
+            This method takes a list of mentions and finds candidates for each
+            mention using the selected ranking method. It first extracts the
+            queries from the mentions and then calls the appropriate method
+            based on the ranking method chosen when initialising the Ranker
+            object.
+
+            The method returns a dictionary that maps each original mention to
+            a sub-dictionary containing the mention variations as keys and
+            their corresponding match scores as values.
+
+            Additionally, it updates the already collected candidates
+            dictionary (the Ranker object's ``already_collected_cands``
+            attribute).
         """
         # Extract the mention
         queries = list(set([mention["mention"] for mention in mentions]))

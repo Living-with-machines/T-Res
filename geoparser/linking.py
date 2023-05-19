@@ -23,6 +23,32 @@ from geoparser import ranking
 
 
 class Linker:
+    """
+    The Linker class provides methods for entity linking, which is the task of
+    associating mentions in text with their corresponding entities in a
+    knowledge base.
+
+    Arguments:
+        method (Literal["mostpopular", "reldisamb", "bydistance"]): The
+            linking method to use.
+        resources_path (str): The path to the linking resources.
+        linking_resources (dict): Dictionary containing the necessary linking
+            resources.
+        overwrite_training (bool): Flag indicating whether to overwrite the
+            training.
+        rel_params (Optional[dict], optional): Dictionary containing the
+            relative disambiguation parameters. Defaults to ``dict()``.
+
+    Example:
+        >>> linker = Linker(
+                method="mostpopular",
+                resources_path="/path/to/linking/resources/",
+                linking_resources={},
+                overwrite_training=True,
+                rel_params={"param1": value1, "param2": value2}
+            )
+    """
+
     def __init__(
         self,
         method: Literal["mostpopular", "reldisamb", "bydistance"],
@@ -59,7 +85,7 @@ class Linker:
         Returns:
             dict: Dictionary containing loaded necessary linking resources.
 
-        Notes:
+        Note:
             Different methods will require different resources.
         """
         print("*** Load linking resources.")
@@ -93,7 +119,7 @@ class Linker:
         print("*** Linking resources loaded!\n")
         return self.linking_resources
 
-    def run(self, dict_mention: dict):
+    def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
         """
         Executes the linking process based on the specified method.
 
@@ -101,16 +127,15 @@ class Linker:
             dict_mention: Dictionary containing the mention information.
 
         Returns:
-            Tuple[str, float, dict]: The result of the linking process. For
-                details, see below:
+            Tuple[str, float, dict]:
+                The result of the linking process. For details, see below:
 
-                If the ``method`` provided when initialising the Linker object
-                was ``"mostpopular"``, see
-                :py:meth:`~geoparser.linking.Linker.most_popular`.
-
-                If the ``method`` provided when initialising the Linker object
-                was ``"bydistance"``, see
-                :py:meth:`~geoparser.linking.Linker.by_distance`.
+                - If the ``method`` provided when initialising the Linker
+                  object was ``"mostpopular"``, see
+                  :py:meth:`~geoparser.linking.Linker.most_popular`.
+                - If the ``method`` provided when initialising the Linker
+                  object was ``"bydistance"``, see
+                  :py:meth:`~geoparser.linking.Linker.by_distance`.
 
         """
         if self.method == "mostpopular":
@@ -125,22 +150,23 @@ class Linker:
         """
         Select most popular candidate, given Wikipedia's in-link structure.
 
-        Notes:
-            Applying the "most popular" disambiguation method for linking
-            entities, with a painfully strong baseline. Given a set of
-            candidates for a given mention, the function returns as a
-            prediction of the more relevant candidate, determined from the
-            in-link structure of Wikipedia.
-
         Arguments:
             dict_mention (dict): dictionary with all the relevant information
                 needed to disambiguate a certain mention.
 
         Returns:
-            Tuple[str, float, dict]: A tuple containing the most popular
-                candidate's Wikidata ID (e.g. "Q84") or "NIL", the confidence
-                score of the predicted link as a float, and a dictionary of
-                all candidates and their confidence scores.
+            Tuple[str, float, dict]:
+                A tuple containing the most popular candidate's Wikidata ID
+                (e.g. ``"Q84"``) or ``"NIL"``, the confidence score of the
+                predicted link as a float, and a dictionary of all candidates
+                and their confidence scores.
+
+        Note:
+            Applying the "most popular" disambiguation method for linking
+            entities, with a painfully strong baseline. Given a set of
+            candidates for a given mention, the function returns as a
+            prediction of the more relevant candidate, determined from the
+            in-link structure of Wikipedia.
         """
         cands = dict_mention["candidates"]
         most_popular_candidate_id = "NIL"
@@ -174,14 +200,7 @@ class Linker:
         self, dict_mention: dict, origin_wqid: str = ""
     ) -> Tuple[str, float, dict]:
         """
-        Select candidate to place of publication
-
-        Notes:
-            Applying the "by distance" disambiguation method for linking
-            entities, based on geographical distance. It undertakes an
-            unsupervised disambiguation, which returns a prediction of a
-            location closest to the place of publication, for a provided set
-            of candidates and the place of publication of the original text.
+        Select candidate to place of publication.
 
         Arguments:
             dict_mention (dict): dictionary with all the relevant information
@@ -190,11 +209,18 @@ class Linker:
                 Defaults to "".
 
         Returns:
-            Tuple[str, float, dict]: A tuple containing the most popular
-                    candidate's Wikidata ID (e.g. "Q84") or "NIL", the
-                    confidence score of the predicted link as a float (rounded
-                    to 3 decimals), and a dictionary of all candidates and
-                    their confidence scores.
+            Tuple[str, float, dict]:
+                A tuple containing the most popular candidate's Wikidata ID
+                (e.g. ``"Q84"``) or ``"NIL"``, the confidence score of the
+                predicted link as a float (rounded to 3 decimals), and a
+                dictionary of all candidates and their confidence scores.
+
+        Note:
+            Applying the "by distance" disambiguation method for linking
+            entities, based on geographical distance. It undertakes an
+            unsupervised disambiguation, which returns a prediction of a
+            location closest to the place of publication, for a provided set
+            of candidates and the place of publication of the original text.
         """
         cands = dict_mention["candidates"]
         origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
@@ -246,21 +272,22 @@ class Linker:
         """
         Trains or loads the entity disambiguation model.
 
-        Notes:
+        Arguments:
+            myranker (geoparser.ranking.Ranker): The ranker object used for
+            training. split (str, optional): The split type for training.
+            Defaults to "originalsplit".
+
+        Returns:
+            entity_disambiguation.EntityDisambiguation:
+                A trained DeezyMatch model.
+
+        Note:
             The training will be skipped if the model already exists and
             ``overwrite_training`` was set to False when initiating the Linker
             object, or if the disambiguation method is unsupervised. The
             training will be run on test mode if ``rel_params`` had a
             ``do_test`` key's value set to True when initiating the Linker
             object.
-
-        Arguments:
-            myranker (geoparser.ranking.Ranker): The ranker object used for training.
-            split (str, optional): The split type for training. Defaults to
-                "originalsplit".
-
-        Returns:
-            entity_disambiguation.EntityDisambiguation: A trained DeezyMatch model.
         """
         if self.method == "reldisamb":
             # Generate ED model name:

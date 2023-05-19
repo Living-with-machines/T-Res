@@ -1,3 +1,8 @@
+"""
+This script reads the original data sources and formats them for our
+experiments.
+"""
+
 import glob
 import os
 import re
@@ -5,23 +10,35 @@ import sys
 
 import pandas as pd
 
+from typing import Optional, List, Tuple
+
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_wikipedia
 
-"""
-This script reads the original data sources and formats them for our experiments.
-"""
 
 # Path to Wikipedia resources (where the wiki2wiki mapper is located):
 path_to_wikipedia = "../resources/wikipedia/"
 
 
-# ------------------------------
-# From wikipedia to wikidata:
-def turn_wikipedia2wikidata(wikipedia_title):
+def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
     """
-    Get wikidata ID from wikipedia URL
+    Convert a Wikipedia title to its corresponding Wikidata ID.
+
+    Arguments:
+        wikipedia_title (str): The title of the Wikipedia page.
+
+    Returns:
+        Optional[str]:
+            The corresponding Wikidata ID if available, or None if not.
+
+    Example:
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum")
+        'Q23002'
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt")
+        'Q11765'
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location")
+        None
     """
     if not wikipedia_title == "NIL" and not wikipedia_title == "*":
         wikipedia_title = wikipedia_title.split("/wiki/")[-1]
@@ -44,33 +61,47 @@ def turn_wikipedia2wikidata(wikipedia_title):
     return None
 
 
-# ------------------------------
-def reconstruct_sentences(dTokens):
+def reconstruct_sentences(dTokens: dict) -> dict:
     """
-    Given the dictionary of tokens (with their positional information
-    in the document and associated annotations), reconstruct all sentences
-    in the document (taking into account white spaces to make sure character
-    positions match).
-    """
+    Reconstructs all sentences in the document based on the given dictionary
+    of tokens (with their positional information in the document and
+    associated annotations).
 
-    complete_sentence = ""  # In this variable we keep each complete sentence
-    sentence_id = 0  # In this variable we keep the sentence id
-    start_ids = [
-        k[1] for k in dTokens
-    ]  # Ordered list of token character start positions.
-    dSentences = (
-        dict()
-    )  # In this variable we'll map the sentence id with the complete sentence
-    prev_sentid = 0  # Keeping track of previous sentence id (to know when a new sentence is starting)
-    dSentenceCharstart = (
-        dict()
-    )  # In this variable we will map the sentence id with the start character
+    Arguments:
+        dTokens (dict): A dictionary of tokens with their positional
+            information and annotations.
+
+    Returns:
+        dict:
+            A dictionary mapping sentence IDs to their corresponding
+            reconstructed sentences and character start positions.
+
+    Note:
+        This function takes into account white spaces to ensure character
+        positions match.
+    """
+    # In this variable we keep each complete sentence
+    complete_sentence = ""
+
+    # In this variable we keep the sentence id
+    sentence_id = 0
+
+    # Ordered list of token character start positions.
+    start_ids = [k[1] for k in dTokens]
+
+    # In this variable we'll map the sentence id with the complete sentence
+    dSentences = dict()
+    # Keeping track of previous sentence id (to know when a new sentence is
+    # starting)
+    prev_sentid = 0
+
+    # In this variable we will map the sentence id with the start character
     # position of the sentence in question
+    dSentenceCharstart = dict()
 
-    dIndices = (
-        dict()
-    )  # In this dictionary we map the token start character in the document with
+    # In this dictionary we map the token start character in the document with
     # the full mention, the sentence id, and the end character of the mention.
+    dIndices = dict()
 
     # In this for-loop, we populate dSentenceCharstart and dIndices:
     for k in dTokens:
@@ -109,10 +140,11 @@ def reconstruct_sentences(dTokens):
             else:
                 complete_sentence += dIndices[start_ids[-1]][0]
 
-        # dSentences is a dictionary where the key is the sentence id (i.e. position)
-        # in the document, and the value is a two-element list: the first element is
-        # the complete reconstructed sentence, and the second element is the character
-        # start position of the sentence in the document:
+        # dSentences is a dictionary where the key is the sentence id (i.e.
+        # position) in the document, and the value is a two-element list: the
+        # first element is the complete reconstructed sentence, and the second
+        # element is the character start position of the sentence in the
+        # document:
         dSentences[sentence_id] = [complete_sentence, dSentenceCharstart[sentence_id]]
 
         prev_sentid = sentence_id
@@ -121,13 +153,38 @@ def reconstruct_sentences(dTokens):
 
 
 # -------------------------------
-def process_lwm_for_ner(tsv_topres_path):
+def process_lwm_for_ner(tsv_topres_path: str):
     """
-    Process LwM data for training a NER model, where each sentence has an id,
-    and a list of tokens and assigned ner_tags using the BIO scheme, e.g.:
-        > id: 10813493_1 # document_id + "_" + sentence_id
-        > ner_tags: ['B-LOC', 'O']
-        > tokens: ['INDIA', '.']
+    Process LwM data for training a Named Entity Recognition (NER) model.
+
+    Each sentence in the LwM data is assigned a unique identifier, and
+    consists of a list of tokens along with their associated NER tags using
+    the BIO scheme, e.g.:
+    * ``id``: ``10813493_1 # document_id + "_" + sentence_id``
+    * ``ner_tags``: ``['B-LOC', 'O']``
+    * ``tokens``: ``['INDIA', '.']``
+
+    Arguments:
+        tsv_topres_path (str): The path to the top-level directory containing the annotated TSV files.
+
+    Returns:
+        pandas.DataFrame:
+            A DataFrame containing the processed LwM data for NER training,
+            with the following columns:
+
+            - ``id``: The unique identifier of each sentence
+               (``document_id + "_" + sentence_id``).
+            - ``ner_tags``: A list of NER tags assigned to each token in the
+               sentence.
+            - ``tokens``: A list of tokens in the sentence.
+
+    Note:
+        The function expects the annotated TSV files to be located in the
+        ``annotated_tsv`` directory inside the passed ``tsv_topres_path``
+        directory.
+
+        The tokens in each sentence are assumed to be ordered by their
+        occurrence.
     """
     lwm_data = []
 
@@ -176,11 +233,41 @@ def process_lwm_for_ner(tsv_topres_path):
     return lwm_df
 
 
-# ------------------------------
-def process_lwm_for_linking(tsv_topres_path, gazetteer_ids):
+def process_lwm_for_linking(
+    tsv_topres_path: str, gazetteer_ids: List[str]
+) -> pd.DataFrame:
     """
-    Process LwM data for performing entity linking, resulting in a dataframe with
-    one toponym per row and its annotation and resolution in columns.
+    Process LwM data for performing entity linking.
+
+    The function reads annotated TSV files and generates a DataFrame with one toponym per row.
+    Each row includes the annotation and resolution information of the toponym.
+
+    Arguments:
+        tsv_topres_path (str): The path to the top-level directory containing the annotated TSV files.
+        gazetteer_ids (list): A set of Wikidata IDs in the gazetteer.
+
+    Returns:
+        pandas.DataFrame: A DataFrame with the following columns:
+            - ``article_id``: The identifier of the article.
+            - ``sentences``: A list of dictionaries containing the sentence
+              position and text.
+            - ``annotations``: A list of dictionaries containing the annotation
+              information for each toponym.
+            - ``place``: The place of publication.
+            - ``decade``: The decade of the publication.
+            - ``year``: The year of the publication.
+            - ``ocr_quality_mean``: The mean OCR quality score.
+            - ``ocr_quality_sd``: The OCR quality standard deviation.
+            - ``publication_title``: The title of the publication.
+            - ``publication_code``: The code of the publication.
+
+    Note:
+        The function expects the annotated TSV files to be located in the
+        ``annotated_tsv`` directory inside the passed ``tsv_topres_path``
+        directory.
+
+        The ``metadata.tsv``` file containing metadata information needs to
+        exist in the passed ``tsv_topres_path`` directory.
     """
 
     # Create the dataframe where we will store our annotated
@@ -297,17 +384,64 @@ def process_lwm_for_linking(tsv_topres_path, gazetteer_ids):
     return df
 
 
-# ------------------------------------
-def aggregate_hipe_entities(entity, lEntities):
+def aggregate_hipe_entities(entity: dict, lEntities: List[dict]) -> List[dict]:
     """
-    Agggregate split entities in HIPE.
+    Aggregate HIPE entities by joining consecutive tokens belonging to the
+    same entity.
+
+    The function takes an entity and a list of entities and aggregates them by
+    joining consecutive tokens that belong to the same entity. If the current
+    entity is part of a multi-token entity (indicated by the ``"I-"`` prefix),
+    it is joined with the previous detected entity. This helps to create
+    complete and contiguous entities.
+
+    Arguments:
+        entity (dict): The current entity to be aggregated.
+        lEntities (list): The list of entities to be updated.
+
+    Returns:
+        List[dict]
+            The updated list of entities after aggregating the current entity.
+
+    Example:
+        >>> entity = {
+                "ne_type": "I-LOC",
+                "word": "York",
+                "wkdt_qid": "Q60",
+                "start": 12,
+                "end": 15,
+                "meto_type": "city",
+            }
+        >>> lEntities = [
+                {
+                    "ne_type": "B-LOC",
+                    "word": "New",
+                    "wkdt_qid": "Q60",
+                    "start": 8,
+                    "end": 10,
+                    "meto_type": "city",
+                }
+            ]
+        >>> updated_entities = aggregate_hipe_entities(entity, lEntities)
+        >>> print(updated_entities)
+        [
+            {
+                "ne_type": "B-LOC",
+                "word": "New York",
+                "wkdt_qid": "Q60",
+                "start": 8,
+                "end": 15,
+                "meto_type": "city",
+            }
+        ]
     """
     newEntity = entity
     # We remove the word index because we're altering it (by joining suffixes)
     newEntity.pop("index", None)
-    # If token is part of a multitoken that has already started in the previous token (i.e. I-),
-    # then join with previous detected entity, unless a sentence starts with an I- entity (due
-    # to incorrect sentence splitting in the original data).
+    # If token is part of a multitoken that has already started in the
+    # previous token (i.e. I-), then join with previous detected entity,
+    # unless a sentence starts with an I- entity (due to incorrect sentence
+    # splitting in the original data).
     if lEntities and entity["ne_type"].startswith("I-"):
         prevEntity = lEntities.pop()
         newEntity = {
@@ -325,13 +459,39 @@ def aggregate_hipe_entities(entity, lEntities):
     return lEntities
 
 
-# ------------------------------
-def process_hipe_for_linking(hipe_path, gazetteer_ids):
+def process_hipe_for_linking(hipe_path: str, gazetteer_ids: List[str]) -> pd.DataFrame:
     """
-    Process LwM data for performing entity linking, resulting in a dataframe with
-    one toponym per row and its annotation and resolution in columns.
-    """
+    Process LwM HIPE data for performing entity linking.
 
+    The function reads HIPE data from a file and generates a DataFrame with
+    one toponym per row. Each row includes the annotation and resolution
+    information of the toponym.
+
+    Arguments:
+        hipe_path (str): The path to the HIPE data file.
+        gazetteer_ids (List[str]): A set of Wikidata IDs in the gazetteer.
+
+    Returns:
+        pandas.DataFrame: A DataFrame with the following columns:
+
+            - ``article_id``: The identifier of the article.
+            - ``sentences``: A list of dictionaries containing the sentence
+              position and text.
+            - ``annotations``: A list of dictionaries containing the
+              annotation information for each toponym.
+            - ``place``: The place of publication.
+            - ``decade``: The decade of the publication.
+            - ``year``: The year of the publication.
+            - ``ocr_quality_mean``: The mean OCR quality score (None).
+            - ``ocr_quality_sd``: The OCR quality standard deviation (None).
+            - ``publication_title``: The title of the publication (empty
+              string).
+            - ``publication_code``: The code of the publication.
+
+    Note:
+        The function assumes a specific format and structure of the HIPE data
+        file.
+    """
     # Create the dataframe where we will store the annotated data:
     df = pd.DataFrame(
         columns=[
@@ -546,19 +706,34 @@ def process_hipe_for_linking(hipe_path, gazetteer_ids):
     return df
 
 
-# ------------------------------
-def process_tsv(filepath):
+def process_tsv(filepath: str) -> Tuple[dict, dict]:
     """
-    This function takes a .tsv (webanno 3.0) file and parses it.
-    It returns a dictionary (dTokens) that maps each token with
-    its position in the sentence and the associated annotations.
-    In particular, the keys in dTokens are tuples of two elements
-    (the sentence number in the document, and the character position
-    of a token in the document). The values of dTokens are tuples
-    of six elements (the actual token, the wikipedia url, the
-    toponym class, the sentence number in the document, the character
-    position of a token in the document, and the character end
-    position of a token in the document).
+    Process a TSV file in WebAnno 3.0 format containing token-level
+    annotations.
+
+    Arguments:
+        filepath (str): The path to the TSV file.
+
+    Returns:
+        tuple: A tuple containing two dictionaries:
+            #. **dMTokens**: A dictionary of tokens with positional
+               information and multi-token annotations. The keys in dTokens
+               are tuples of two elements (the sentence number in the document,
+               and the character position).
+
+            #. **dTokens**: A dictionary of tokens with positional information,
+               Wikipedia ID, label, and BIO annotations. The values of dTokens
+               are tuples of six elements:
+
+               #. the actual token,
+               #. the wikipedia url,
+               #. the toponym class,
+               #. the sentence number in the document,
+               #. the character position of a token in the document, and
+               #. the character end position of a token in the document.
+
+    Note:
+        This function assumes a specific format and structure of the TSV file.
     """
 
     with open(filepath) as fr:
@@ -692,11 +867,16 @@ def process_tsv(filepath):
     return dMTokens, dTokens
 
 
-# ------------------------------
-def fine_to_coarse(l):
+def fine_to_coarse(l: List[str]) -> List[str]:
     """
-    This function takes a list of fine-grained tags and returns the coarse
-    equivalent.
+    Convert a list of fine-grained tags to their corresponding coarse-grained
+    equivalents.
+
+    Arguments:
+        l (list): The list of fine-grained tags to be converted.
+
+    Returns:
+        list: A new list with the converted coarse-grained tags.
     """
     coarse = []
     for i in l:

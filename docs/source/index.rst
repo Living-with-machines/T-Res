@@ -13,9 +13,10 @@ IDs, and provides their geographic coordinates. T-Res has been designed to
 tackle common problems of working with digitised historical newspapers.
 
 The pipeline has three main components:
-* **The Recogniser** performs named entity recognition.
-* **The Ranker** performs candidate selection and ranking.
-* **The Linker** performs entity linking and resolution.
+
+#. **The Recogniser** performs named entity recognition.
+#. **The Ranker** performs candidate selection and ranking.
+#. **The Linker** performs entity linking and resolution.
 
 The three components are used in combination in the **Pipeline** class.
 

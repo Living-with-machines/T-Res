@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from sentence_splitter import split_text_into_sentences
 
@@ -29,7 +29,7 @@ class Pipeline:
             pipeline. If None, the default ``Linker`` will be instantiated.
             For the default settings, see Notes below.
 
-    Notes:
+    Note:
         * The default settings for the ``Recogniser``:
 
           .. code-block:: python
@@ -96,6 +96,18 @@ class Pipeline:
                 rel_params={},
                 overwrite_training=False,
             )
+
+    Example:
+        >>> # Instantiate the Pipeline object
+        >>> pipeline = Pipeline()
+
+        >>> # Now you can use the pipeline for processing text or sentences
+        >>> text = "I visited Paris and New York City last summer."
+        >>> processed_data = pipeline.run_text(text)
+
+        >>> # Access the processed mentions in the document
+        >>> for mention in processed_data:
+        >>>     print(mention)
     """
 
     def __init__(
@@ -219,21 +231,9 @@ class Pipeline:
         place_wqid: Optional[str] = "",
         postprocess_output: Optional[bool] = True,
         without_microtoponyms: Optional[bool] = False,
-    ):
+    ) -> List[dict]:
         """
         Runs the pipeline on a single sentence.
-
-        Notes:
-            The run_sentence method processes a single sentence through the
-            pipeline, performing tasks such as Named Entity Recognition (NER),
-            ranking, and linking. It takes the input sentence along with
-            optional parameters like the sentence index, context, the place of
-            publication and its related Wikidata ID. By default, the method
-            performs post-processing on the output.
-
-            It first identifies toponyms in the sentence, then finds relevant
-            candidates and ranks them, and finally links them to the Wikidata
-            ID.
 
         Arguments:
             sentence (str): The input sentence to process.
@@ -252,7 +252,8 @@ class Pipeline:
                 exclude microtoponyms during processing. Defaults to False.
 
         Returns:
-            list: A list of dictionaries representing the processed identified
+            List[dict]:
+                A list of dictionaries representing the processed identified
                 and linked toponyms in the sentence. Each dictionary contains
                 the following keys:
 
@@ -279,6 +280,18 @@ class Pipeline:
                   the predicted entity.
                 * "wkdt_class" (str): The Wikidata class of the predicted
                   entity.
+
+        Note:
+            The ``run_sentence`` method processes a single sentence through the
+            pipeline, performing tasks such as Named Entity Recognition (NER),
+            ranking, and linking. It takes the input sentence along with
+            optional parameters like the sentence index, context, the place of
+            publication and its related Wikidata ID. By default, the method
+            performs post-processing on the output.
+
+            It first identifies toponyms in the sentence, then finds relevant
+            candidates and ranks them, and finally links them to the Wikidata
+            ID.
         """
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
@@ -458,29 +471,9 @@ class Pipeline:
         place: Optional[str] = "",
         place_wqid: Optional[str] = "",
         postprocess_output: Optional[bool] = True,
-    ):
+    ) -> List[dict]:
         """
         Runs the pipeline on a text document.
-
-        Notes:
-            The run_text method processes an entire text through the pipeline,
-            after splitting it into sentences, performing tasks such as Named
-            Entity Recognition (NER), ranking, and linking. It takes the input
-            text document along with optional parameters like the place of
-            publication and its related Wikidata ID. By default, the method
-            performs post-processing on the output.
-
-            It first identifies toponyms in each of the text document's
-            sentences, then finds relevant candidates and ranks them, and
-            finally links them to the Wikidata ID.
-
-            This method runs the
-            :py:meth:`~geoparser.pipeline.Pipeline.run_sentence` method for
-            each of the document's sentences. The ``without_microtoponyms``
-            keyword, passed to ``run_sentence`` comes from the ``Linker``'s
-            (passed when initialising the ``Pipeline``) ``rel_params``
-            parameter. See :py:class:`geoparser.linking.Linker` for
-            instructions on how to set that up.
 
         Arguments:
             text (str): The input text document to process.
@@ -493,7 +486,8 @@ class Pipeline:
                 output, adding geographic coordinates. Defaults to True.
 
         Returns:
-            list: A list of dictionaries representing the processed identified
+            List[dict]:
+                A list of dictionaries representing the processed identified
                 and linked toponyms in the sentence. Each dictionary contains
                 the following keys:
 
@@ -520,6 +514,27 @@ class Pipeline:
                   the predicted entity.
                 * "wkdt_class" (str): The Wikidata class of the predicted
                   entity.
+
+        Note:
+            The ``run_text`` method processes an entire text through the
+            pipeline, after splitting it into sentences, performing tasks such
+            as Named Entity Recognition (NER), ranking, and linking. It takes
+            the input text document along with optional parameters like the
+            place of publication and its related Wikidata ID. By default, the
+            method performs post-processing on the output.
+
+            It first identifies toponyms in each of the text document's
+            sentences, then finds relevant candidates and ranks them, and
+            finally links them to the Wikidata ID.
+
+            This method runs the
+            :py:meth:`~geoparser.pipeline.Pipeline.run_sentence` method for
+            each of the document's sentences. The ``without_microtoponyms``
+            keyword, passed to ``run_sentence`` comes from the ``Linker``'s
+            (passed when initialising the ``Pipeline``) ``rel_params``
+            parameter. See :py:class:`geoparser.linking.Linker` for
+            instructions on how to set that up.
+
         """
         # Split the text into its sentences:
         sentences = split_text_into_sentences(text, language="en")

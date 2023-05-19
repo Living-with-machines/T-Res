@@ -29,15 +29,36 @@ random.seed(RANDOM_SEED)
 
 class EntityDisambiguation:
     """
-    TODO docstring
+    EntityDisambiguation is a class that performs entity disambiguation, which
+    is the task of resolving entity mentions in text to their corresponding
+    entities in a knowledge base. It uses a trained model to predict the most
+    likely entity for each mention based on contextual information and
+    pre-computed scores.
 
-    Parent Entity Disambiguation class that directs the various subclasses used
-    for the ED step.
+    The ``EntityDisambiguation`` class provides methods for training the
+    disambiguation model, predicting entity mentions in raw text, evaluating
+    the performance of the model, and saving/loading the trained model.
+
+    This class uses a deep learning architecture, specifically the
+    ``MulRelRanker`` model, for entity disambiguation. The model takes into
+    account the context of the mention, the pre-computed scores, and the
+    candidate entities, and makes predictions based on these features.
+
+    The entity disambiguation process involves preranking the candidate
+    entities, computing scores, predicting the most likely entity, and
+    evaluating the performance of the predictions. The class encapsulates
+    these steps and provides a convenient interface for performing entity
+    disambiguation tasks.
 
     Arguments:
-        db_embs (): TODO.
-        user_config (dict): TODO.
-        reset_embeddings (bool): TODO.
+        db_embs (str): The connection to a SQLite database containing the
+            word and entity embeddings.
+        user_config (dict): A dictionary containing custom configuration
+            settings for the model. If not provided, default settings will be
+            used.
+        reset_embeddings (bool, optional): Specifies whether to reset the
+            embeddings even if a pre-trained model is loaded. Defaults to
+            False.
     """
 
     def __init__(self, db_embs, user_config: dict, reset_embeddings: bool = False):
@@ -107,7 +128,8 @@ class EntityDisambiguation:
         User configuration that may overwrite default settings.
 
         Returns:
-            configuration used for ED.
+            dict
+                Configuration used for ED.
         """
 
         default_config: Dict[str, Any] = {
@@ -410,7 +432,9 @@ class EntityDisambiguation:
             scores (list): A list of numerical scores.
 
         Returns:
-            list: A list of normalized scores where each score is the ratio of the rescaled score over their sum.
+            list:
+                A list of normalized scores where each score is the ratio of
+                the rescaled score over their sum.
         """
 
         min_score = min(scores)

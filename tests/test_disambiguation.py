@@ -9,8 +9,6 @@ import pandas as pd
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-import sqlite3
-
 from geoparser import linking, pipeline, ranking, recogniser
 from utils import rel_utils
 from utils.REL import entity_disambiguation

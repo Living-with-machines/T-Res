@@ -109,7 +109,7 @@ class Experiment:
         """
         return process_data.load_processed_data(self)
 
-    def prepare_data(self):
+    def prepare_data(self) -> dict:
         """
         Function that prepares the data for the experiments.
 
@@ -202,7 +202,7 @@ class Experiment:
 
         return self.processed_data
 
-    def linking_experiments(self):
+    def linking_experiments(self) -> None:
         """
         Run entity linking experiments on the processed data.
 
@@ -213,7 +213,7 @@ class Experiment:
         required by the HIPE scorer. Additionally, it provides an option to
         run end-to-end REL experiments.
 
-        Notes:
+        Note:
             The results of the experiments are stored in the
             ``self.processed_data`` attribute of the Experiment instance.
         """

@@ -2,7 +2,7 @@ import os
 import sys
 from functools import partial
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import numpy as np
 from datasets import load_dataset, load_metric
@@ -46,6 +46,30 @@ class Recogniser:
             (default: False).
         load_from_hub (bool, optional): Whether to load the model from
             HuggingFace model hub (default: False).
+
+    Example:
+        >>> # Create an instance of the Recogniser class
+        >>> recogniser = Recogniser(
+                model="bert-base-uncased",
+                train_dataset="train.json",
+                test_dataset="test.json",
+                model_path="/path/to/model/",
+                training_args={"learning_rate": 0.001, "batch_size": 16, "num_train_epochs": 5},
+                overwrite_training=False,
+                do_test=False,
+                load_from_hub=False
+            )
+
+        >>> # Create and load the NER pipeline
+        >>> pipeline = recogniser.create_pipeline()
+
+        >>> # Train the model
+        >>> recogniser.train()
+
+        >>> # Predict named entities in a sentence
+        >>> sentence = "I live in London."
+        >>> predictions = recogniser.ner_predict(sentence)
+        >>> print(predictions)
     """
 
     def __init__(
@@ -100,11 +124,14 @@ class Recogniser:
         return s
 
     # -------------------------------------------------------------
-    def train(self) -> Trainer:
+    def train(self) -> None:
         """
         Trains a NER model.
 
-        Notes:
+        Returns:
+            None.
+
+        Note:
             If the model is obtained from the HuggingFace model hub
             (``load_from_hub=True``) or if the model already exists at the
             specified model path and ``overwrite_training`` is False,
@@ -119,10 +146,6 @@ class Recogniser:
             The training will be run on test mode if ``do_test`` was set to
             True when the Recogniser object was initiated.
 
-        Returns:
-            A trained NER model.
-
-        Notes:
             Credit: This function is adapted from a HuggingFace tutorial:
             https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
         """
@@ -210,7 +233,7 @@ class Recogniser:
         )
 
         # Compute metrics when training:
-        def compute_metrics(p):
+        def compute_metrics(p: Tuple[list, list]) -> dict:
             predictions, labels = p
             predictions = np.argmax(predictions, axis=2)
 
@@ -269,16 +292,16 @@ class Recogniser:
         """
         Creates and loads a Named Entity Recognition (NER) pipeline.
 
-        Notes:
+        Returns:
+            geoparser.pipeline.Pipeline: The created NER pipeline.
+
+        Note:
             This method creates and loads a NER pipeline for performing named
             entity recognition tasks. It uses the specified model name and
             model path (if the model is not obtained from the HuggingFace
             model hub) to initialise the pipeline. The created pipeline is
             stored in the ``pipe`` attribute of the ``Recogniser`` object. It
             is also returned by the method.
-
-        Returns:
-            Pipeline: The created NER pipeline.
         """
 
         print("*** Creating and loading a NER pipeline.")
@@ -301,22 +324,16 @@ class Recogniser:
         """
         Predicts named entities in a given sentence using the NER pipeline.
 
-        Notes:
-            This method takes a sentence as input and uses the NER pipeline to
-            predict named entities in the sentence.
-
-            Any n-dash characters (``—``) in the provided sentence are
-            replaced with a comma (``,``) to handle parsing issues related to
-            the n-dash in OCR from historical newspapers.
-
         Arguments:
             sentence (str): The input sentence.
 
         Returns:
-            predictions (list): A list of dictionaries representing the
-                predicted named entities. Each dictionary contains "word",
-                "entity", and "score" keys representing the entity text,
-                entity label, and confidence score respectively. For example:
+            List[dict]:
+                A list of dictionaries representing the predicted named
+                entities. Each dictionary contains the keys ``"word"``,
+                ``"entity"``, and ``"score"`` keys representing the entity
+                text, entity label, and confidence score respectively. For
+                example:
 
                 .. code-block:: json
 
@@ -327,6 +344,14 @@ class Recogniser:
                         "start": 0,
                         "end": 4
                     }
+
+        Note:
+            This method takes a sentence as input and uses the NER pipeline to
+            predict named entities in the sentence.
+
+            Any n-dash characters (``—``) in the provided sentence are
+            replaced with a comma (``,``) to handle parsing issues related to
+            the n-dash in OCR from historical newspapers.
         """
         # Error if the sentence is too short.
         if len(sentence) <= 1:

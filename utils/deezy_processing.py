@@ -1,5 +1,6 @@
 import glob
 import itertools
+import sys
 import os
 import random
 import time
@@ -14,15 +15,19 @@ from gensim.models import Word2Vec
 from thefuzz import fuzz
 from tqdm import tqdm
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    sys.path.insert(0, os.path.abspath(os.path.pardir))
+    from geoparser import ranking
 
 
 def obtain_matches(
     word: str,
     english_words: List[str],
-    sims,
+    sims: List[str],
     fuzz_ratio_threshold: Optional[Union[float, int]] = 70,
-) -> List:
+) -> Tuple[List, List]:
     """
     Given a word and the top 100 nearest neighbours, separate into positive
     and negative matches.
@@ -30,30 +35,37 @@ def obtain_matches(
     Arguments:
         word (str): a word.
         english_words (list): list of words in the English language.
-        sims (list): the list of 100 nearest neighbours from the OCR word2vec model.
+        sims (list): the list of 100 nearest neighbours from the OCR word2vec
+            model.
         fuzz_ratio_threshold (float): threshold for fuzz.ratio
             If the nearest neighbour word is a word of the English language
-            and the string similarity is less than fuzz_ratio_threshold, we consider it a
-            negative match (i.e. not an OCR variation)
+            and the string similarity is less than fuzz_ratio_threshold, we
+            consider it a negative match (i.e. not an OCR variation)
 
     Returns:
-        positive (list): a list of postive matches for the input word.
-        negative (list): a list of negative matches for the input word.
+        Tuple[List, List]: A tuple that contains two lists:
+
+            #. The first list consists of *positive* matches for the input
+               word.
+            #. The second list consists of *negative* (list): a list of
+               negative matches for the input word.
     """
     negative = []
     positive = [word]
     for nn_word in sims:
         # If one word is not a subset of another:
         if not nn_word in word and not word in nn_word:
-            # Split both the word and the nearest neighbour in two parts: the idea is that both
-            # parts should be equally similar or equally dissimilar, in order to consider them
-            # as positive or negative matches (e.g. "careless" and "listless" are two clear words
-            # but have high string similarity due to a big chunk of the word---the suffix---being
-            # identical):
+            # Split both the word and the nearest neighbour in two parts: the
+            # idea is that both parts should be equally similar or equally
+            # dissimilar, in order to consider them as positive or negative
+            # matches (e.g. "careless" and "listless" are two clear words but
+            # have high string similarity due to a big chunk of the word--the
+            # suffix--being identical):
             nn_word_1 = nn_word[: len(nn_word) // 2]
             nn_word_2 = nn_word[len(nn_word) // 2 :]
             word_1 = word[: len(word) // 2]
             word_2 = word[len(word) // 2 :]
+
             # If the nearest neighbour word is a word of the English language
             # and the string similarity is less than 0.50, we consider it a
             # negative match (i.e. not an OCR variation):
@@ -64,9 +76,10 @@ def obtain_matches(
                 and -2 <= (len(word) - len(nn_word)) <= 2  # Similar length of words
             ):
                 negative.append(nn_word)
-            # If the nearest neighbour word is not a word of the English language
-            # and the string similarity is more than 0.50, we consider it a
-            # positive match (i.e. an OCR variation):
+
+            # If the nearest neighbour word is not a word of the English
+            # language and the string similarity is more than 0.50, we
+            # consider it a positive match (i.e. an OCR variation):
             if (
                 not nn_word in english_words
                 and fuzz.ratio(nn_word_1, word_1) > fuzz_ratio_threshold
@@ -74,7 +87,8 @@ def obtain_matches(
             ):
                 positive.append(nn_word)
 
-                # Artificially add white space, hyphen or dot (1/50) at a random position:
+                # Artificially add white space, hyphen or dot (1/50) at a
+                # random position:
                 spc = [" ", ".", "-"] + [""] * 50
                 randomch = random.choice(spc)
                 randompos = random.randint(0, len(word) - 1)
@@ -84,28 +98,37 @@ def obtain_matches(
     return positive, negative
 
 
-def create_training_set(myranker):
+def create_training_set(
+    myranker,
+) -> None:  # TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
     """
-    Given a word2vec model trained on OCRd data, and given a list of words
-    in the English language, this function creates a training set for
-    DeezyMatch, consisting of positive and negative matches (where a
-    positive match is the English word and its OCR variation, taken
-    from the top N w2v neighbours and fitered by string similarity;
-    and a negative match is an English word and a random OCR token.
+    Create a training set for DeezyMatch consisting of positive and negative
+    string matches.
+
+    Given a word2vec model trained on OCR data and a list of words in the
+    English language, this function creates a training set for DeezyMatch.
+    The training set contains pairs of strings, where a positive match is an
+    English word and its OCR variation (obtained from the top N word2vec
+    neighbours and filtered by string similarity), and a negative
+    match is an English word and a randomly selected OCR token.
 
     Arguments:
-        myranker: a Ranker object.
+        myranker (geoparser.ranking.Ranker): An instance of the Ranker class.
 
-    This function creates a new file with the string pairs dataset.
+    Returns:
+        None.
+
+    Note:
+        This function creates a new file with the string pairs dataset.
     """
 
     # Path to the output string pairs dataset:
     string_matching_filename = os.path.join(
-        myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs.txt"
+        myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs.txt"
     )
     if myranker.deezy_parameters["do_test"] == True:
         string_matching_filename = os.path.join(
-            myranker.deezy_parameters["dm_path"], "data", f"w2v_ocr_pairs_test.txt"
+            myranker.deezy_parameters["dm_path"], "data", "w2v_ocr_pairs_test.txt"
         )
 
     Path("/".join(string_matching_filename.split("/")[:-1])).mkdir(
@@ -227,16 +250,27 @@ def create_training_set(myranker):
             fw.write(pm)
 
 
-def train_deezy_model(myranker):
+def train_deezy_model(
+    myranker,
+) -> None:  # TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
     """
-    This function trains a DeezyMatch model given the parameters of a myranker
-    object and the required input files.
+    Train a DeezyMatch model using the provided ``myranker`` parameters and
+    input files.
 
-    Arguments:
-        myranker: a Ranker object.
+    This function trains a DeezyMatch model based on the specified parameters
+    in the myranker object and the required input files. If the
+    ``overwrite_training`` parameter is set to True or the model does not
+    exist, the function will train a new DeezyMatch model.
 
-    This function returns a DeezyMatch model, stored in the location specified
-    in the DeezyMatch input_dfm.yaml file.
+    Args:
+        myranker (geoparser.ranking.Ranker): An instance of the Ranker class.
+
+    Returns:
+        None
+
+    Note:
+        This function returns a DeezyMatch model, stored in the location
+        specified in the DeezyMatch ``input_dfm.yaml`` file.
     """
 
     # Read the filepaths:
@@ -274,16 +308,28 @@ def train_deezy_model(myranker):
         print("The DeezyMatch model is already trained!")
 
 
-def generate_candidates(myranker):
+def generate_candidates(
+    myranker,
+) -> None:  # TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
     """
-    Obtain Wikidata candidates (wikipedia mentions to wikidata
-    entities) and generate their corresponding vectors.
+    Obtain Wikidata candidates (Wikipedia mentions to Wikidata entities) and
+    generate their corresponding vectors.
+
+    This function retrieves Wikidata candidates based on the mentions stored
+    in the ``myranker`` object and generates their corresponding vectors using
+    the DeezyMatch model. It writes the candidates to a file and generates
+    embeddings with the DeezyMatch model.
 
     Arguments:
-        myranker: a Ranker object.
+        myranker (geoparser.ranking.Ranker): TODO
 
-    This function returns a file with all candidates, and the embeddings
-    generated with the DeezyMatch model.
+    Returns:
+        None.
+
+    Note:
+        The function saves the candidates to a file and generates embeddings
+        using the DeezyMatch model. The resulting vectors are stored in the
+        specified output directories.
     """
     deezymatch_outputs_path = myranker.deezy_parameters["dm_path"]
     candidates = myranker.deezy_parameters["dm_cands"]

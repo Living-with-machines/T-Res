@@ -22,3 +22,9 @@ To assess the performance on toponym resolution:
 .. code-block:: bash
 
     $ python CLEF-HIPE-2020-scorer/clef_evaluation.py --ref ../experiments/outputs/results/lwm-true_bundle2_en_1.tsv --pred ../experiments/outputs/results/lwm-pred_bundle2_en_1.tsv --task nel --outdir results/
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Table of contents:
+
+   display_results
