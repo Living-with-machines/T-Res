@@ -90,36 +90,93 @@
 <h1><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module<a class="headerlink" href="#utils-process-wikipedia-module" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_wikipedia.make_wikilinks_consistent">
-<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikilinks_consistent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.process_wikipedia.make_wikilinks_consistent" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikilinks_consistent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#utils.process_wikipedia.make_wikilinks_consistent" title="Permalink to this definition"></a></dt>
+<dd><p>Make the wiki links consistent by performing the following operations:</p>
+<ol class="arabic simple">
+<li><p>Convert the URL to lowercase.</p></li>
+<li><p>Unquote the URL to decode any percent-encoded characters.</p></li>
+<li><p>Replace underscores with spaces if they exist in the unquoted URL.</p></li>
+<li><p>Remove any fragment identifier (text after the ‘#’ symbol) if present.</p></li>
+<li><p>Quote the modified URL to encode any special characters.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The URL to make consistent.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The modified and quoted URL.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Python_(programming_language)#Overview&quot;</span><span class="p">)</span>
+<span class="go">&#39;https://en.wikipedia.org/wiki/Python (programming language)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Data_science&quot;</span><span class="p">)</span>
+<span class="go">&#39;https://en.wikipedia.org/wiki/Data_science&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_wikipedia.make_wikipedia2wikidata_consisent">
-<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikipedia2wikidata_consisent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.process_wikipedia.make_wikipedia2wikidata_consisent" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikipedia2wikidata_consisent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#utils.process_wikipedia.make_wikipedia2wikidata_consisent" title="Permalink to this definition"></a></dt>
+<dd><p>Make the Wikipedia entity consistent with Wikidata by performing the
+following operations:</p>
+<ol class="arabic simple">
+<li><p>Make the wiki links consistent using the ‘make_wikilinks_consistent’
+function.</p></li>
+<li><p>Unquote the modified and quoted URL to decode any percent-encoded
+characters.</p></li>
+<li><p>Replace spaces with underscores in the unquoted URL.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The Wikipedia entity to make consistent.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The modified and consistent Wikipedia entity in Wikidata format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikipedia2wikidata_consistent</span><span class="p">(</span><span class="s2">&quot;Python (programming language)&quot;</span><span class="p">)</span>
+<span class="go">&#39;Python_(programming_language)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikipedia2wikidata_consistent</span><span class="p">(</span><span class="s2">&quot;Data science&quot;</span><span class="p">)</span>
+<span class="go">&#39;Data_science&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_wikipedia.title_to_id">
-<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">title_to_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.process_wikipedia.title_to_id" title="Permalink to this definition"></a></dt>
-<dd><p>This function is adapted from <a class="reference external" href="https://github.com/jcklie/wikimapper">https://github.com/jcklie/wikimapper</a>
-Given a Wikipedia page title, returns the corresponding Wikidata ID.
+<span class="sig-prename descclassname"><span class="pre">utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">title_to_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.process_wikipedia.title_to_id" title="Permalink to this definition"></a></dt>
+<dd><p>Given a Wikipedia page title, returns the corresponding Wikidata ID.
 The page title is the last part of a Wikipedia url <strong>unescaped</strong> and spaces
 replaced by underscores , e.g. for <cite>https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem</cite>,
-the title would be <cite>Fermat’s_Last_Theorem</cite>.
-:param path_to_db: The path to the wikidata2wikipedia db
-:param page_title: The page title of the Wikipedia entry, e.g. <cite>Manatee</cite>.</p>
+the title would be <cite>Fermat’s_Last_Theorem</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>If a mapping could be found for <cite>wiki_page_title</cite>, then return</dt><dd><p>it, else return <cite>None</cite>.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_db</strong> – The path to the wikidata2wikipedia db</p></li>
+<li><p><strong>page_title</strong> – The page title of the Wikipedia entry, e.g. <code class="docutils literal notranslate"><span class="pre">Manatee</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If a mapping could be found for <code class="docutils literal notranslate"><span class="pre">wiki_page_title</span></code>, then returns
+the mapping, otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a>, optional</p>
 </dd>
 </dl>
-</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str, optional</p>
-</dd>
-</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is adapted from <a class="reference external" href="https://github.com/jcklie/wikimapper">https://github.com/jcklie/wikimapper</a>.</p>
+</div>
 </dd></dl>
 
 </section>
@@ -135,7 +192,7 @@ the title would be <cite>Fermat’s_Last_Theorem</cite>.
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Federico Nanni.</p>
+    <p>&#169; Copyright 2023 Living with Machines.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

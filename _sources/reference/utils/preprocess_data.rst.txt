@@ -1,6 +1,8 @@
 ``utils.preprocess_data`` module
 ================================
 
+.. automodule:: utils.preprocess_data
+
 .. autofunction:: utils.preprocess_data.turn_wikipedia2wikidata
 
 .. autofunction:: utils.preprocess_data.reconstruct_sentences

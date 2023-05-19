@@ -90,9 +90,24 @@
 <h1><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module<a class="headerlink" href="#utils-rel-utils-module" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_utils.get_db_emb">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">get_db_emb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embtype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_utils.get_db_emb" title="Permalink to this definition"></a></dt>
-<dd><p>This function returns the wikipedi2vec embedding for a given
-entity or word. If it is an entity, the prefix “ENTITY/” is
+<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">get_db_emb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">embtype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="headerlink" href="#utils.rel_utils.get_db_emb" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieve Wikipedia2Vec embeddings for a given list of words or entities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cursor</strong> – The cursor with the open connection to the Wikipedia2Vec database.</p></li>
+<li><p><strong>mentions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of words or entities whose embeddings to extract.</p></li>
+<li><p><strong>embtype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The type of embedding to retrieve. Possible values are “word”, “entity”, or “snd”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of arrays representing the embeddings for the given mentions.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</dd>
+</dl>
+<p>If it is an entity, the prefix “ENTITY/” is
 preappended. If it is a word, the string is lowercased.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -108,56 +123,77 @@ entity embeddings; if “glove”, we use glove word embeddings.</p></li>
 <dd class="field-even"><p>A list of arrays (or None) with the embedding.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>obtained_embedding</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The embeddings are extracted from the Wikipedia2Vec database using
+the provided cursor.</p></li>
+<li><p>If the mention is an entity, the prefix <code class="docutils literal notranslate"><span class="pre">ENTITY/</span></code> is preappended to
+the mention before querying the database.</p></li>
+<li><p>If the mention is a word, the string is converted to lowercase
+before querying the database.</p></li>
+<li><p>If an embedding is not found for a mention, the corresponding
+element in the returned list is set to None.</p></li>
+</ul>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_utils.eval_with_exception">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">eval_with_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str2parse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_utils.eval_with_exception" title="Permalink to this definition"></a></dt>
-<dd><p>Given a string in the form or a list or dictionary, parse it
+<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">eval_with_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str2parse</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_case</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#utils.rel_utils.eval_with_exception" title="Permalink to this definition"></a></dt>
+<dd><p>Parse a string in the form of a list or dictionary.</p>
+<p>Given a string in the form or a list or dictionary, parse it
 to read it as such.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>str2parse</strong> (<em>str</em>) – the string to parse.</p></li>
-<li><p><strong>in_case</strong> (<em>str</em>) – what should be returned in case of error.</p></li>
+<li><p><strong>str2parse</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The string to parse.</p></li>
+<li><p><strong>in_case</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The value to return in case of an error.
+Default is <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Any</dt><dd><p>The parsed value if successful, or the specified value in case of
+an error.</p>
+</dd>
+</dl>
+</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_utils.prepare_initial_data">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_utils.prepare_initial_data" title="Permalink to this definition"></a></dt>
-<dd><p>This function takes a dataframe (as processed by the
-experiments/prepare_data.py script) and generates the
-equivalent json needed to train a REL model.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+803.g6edc456527)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_len</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.rel_utils.prepare_initial_data" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the initial JSON data needed to train a REL model from a
+DataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – The dataframe containing the linking training data.</p></li>
-<li><p><strong>context_len</strong> – The maximum number of words in the left
-and right contexts of the sentence where the target
-mention is.</p></li>
+<li><p><strong>context_len</strong> – The maximum number of words in the left and right
+contexts of the sentence where the target mention is.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>a dictionary in which the article id is the</dt><dd><p>key, and whose values are a list of dictionaries, each
-containing information about a mention. At this point,
-the mention dictionaries do not yet have the “gold”
-field (the gold standard Wikipedia title) or the selected
-candidates.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A dictionary with article IDs as keys and a list of mention
+dictionaries as values. Each mention dictionary contains
+information about a mention, excluding the “gold” field and
+candidates (at this point).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict_mentions</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The DataFrame passed to this function can be generated by the
+<code class="docutils literal notranslate"><span class="pre">experiments/prepare_data.py</span></code> script.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -204,7 +240,7 @@ the <cite>experiments/prepare_data.py</cite> script.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Federico Nanni.</p>
+    <p>&#169; Copyright 2023 Living with Machines.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

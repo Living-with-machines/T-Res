@@ -90,8 +90,8 @@
 <h1><code class="docutils literal notranslate"><span class="pre">experiments.experiment</span></code><a class="headerlink" href="#experiments-experiment" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">experiments.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'lwm'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'hipe'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myranker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mylinker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_processing</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_experiments</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">experiments.experiment.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'lwm'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'hipe'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+803.g6edc456527)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">myner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myranker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mylinker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_processing</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_experiments</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>A class to represent an experiment with entity linking using NER,
 candidate ranking, and linking methods.</p>
 <dl class="field-list simple">
@@ -99,9 +99,9 @@ candidate ranking, and linking methods.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dataset</strong> (<em>&quot;lwm&quot;</em><em>, </em><em>&quot;hipe&quot;</em>) – The dataset to use for the
 experiment, must be set to either <code class="docutils literal notranslate"><span class="pre">&quot;lwm&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;hipe&quot;</span></code>.</p></li>
-<li><p><strong>data_path</strong> (<em>str</em>) – The path to the dataset directory (with processed
+<li><p><strong>data_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The path to the dataset directory (with processed
 data).</p></li>
-<li><p><strong>results_path</strong> (<em>str</em>) – The path to the directory where the results will
+<li><p><strong>results_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The path to the directory where the results will
 be stored. If it does not exist, it will be created.</p></li>
 <li><p><strong>dataset_df</strong> (<em>pd.DataFrame</em>) – The dataframe representing the resulting,
 preprocessed, dataset.</p></li>
@@ -109,20 +109,20 @@ preprocessed, dataset.</p></li>
 <li><p><strong>myranker</strong> (<em>ranking.Ranker</em>) – An instance of the candidate ranking model
 to use.</p></li>
 <li><p><strong>mylinker</strong> (<em>linking.Linker</em>) – An instance of the linking model to use.</p></li>
-<li><p><strong>overwrite_processing</strong> (<em>bool</em>) – Whether to overwrite the processed data
+<li><p><strong>overwrite_processing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to overwrite the processed data
 if it already exists (default is True).</p></li>
-<li><p><strong>processed_data</strong> (<em>dict</em>) – A dictionary to store the processed data
+<li><p><strong>processed_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary to store the processed data
 (default is an empty dictionary).</p></li>
 <li><p><strong>split</strong> (<em>test</em>) – The data split to use for testing (train/dev/test,
 default is an empty string).</p></li>
-<li><p><strong>rel_experiments</strong> (<em>bool</em>) – Whether to run end-to-end REL experiments
+<li><p><strong>rel_experiments</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to run end-to-end REL experiments
 (default is False).</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment.linking_experiments">
-<span class="sig-name descname"><span class="pre">linking_experiments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment.linking_experiments" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linking_experiments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#experiments.experiment.Experiment.linking_experiments" title="Permalink to this definition"></a></dt>
 <dd><p>Run entity linking experiments on the processed data.</p>
 <p>This function performs the entity linking experiments using the
 prepared data and different linking methods, such as “mostpopular”,
@@ -130,28 +130,30 @@ prepared data and different linking methods, such as “mostpopular”,
 different data splits and store the results in the specified format
 required by the HIPE scorer. Additionally, it provides an option to
 run end-to-end REL experiments.</p>
-<p class="rubric">Notes</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>The results of the experiments are stored in the
 <code class="docutils literal notranslate"><span class="pre">self.processed_data</span></code> attribute of the Experiment instance.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment.load_data">
-<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#experiments.experiment.Experiment.load_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#experiments.experiment.Experiment.load_data" title="Permalink to this definition"></a></dt>
 <dd><p>Load the processed data, if it exists.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>The processed data dictionary.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="experiments.experiment.Experiment.prepare_data">
-<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experiments.experiment.Experiment.prepare_data" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#experiments.experiment.Experiment.prepare_data" title="Permalink to this definition"></a></dt>
 <dd><p>Function that prepares the data for the experiments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -163,7 +165,7 @@ used later for linking.</p>
 </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -183,7 +185,7 @@ used later for linking.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Federico Nanni.</p>
+    <p>&#169; Copyright 2023 Living with Machines.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

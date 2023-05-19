@@ -90,216 +90,279 @@
 <h1><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module<a class="headerlink" href="#utils-ner-module" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.training_tokenize_and_align_labels">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">training_tokenize_and_align_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">examples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_encoding_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.training_tokenize_and_align_labels" title="Permalink to this definition"></a></dt>
-<dd><p>During training, aligns tokens with labels.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">training_tokenize_and_align_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.tokenization_utils.PreTrainedTokenizer</span><span class="p"><span class="pre">,</span> </span><span class="pre">transformers.tokenization_utils_fast.PreTrainedTokenizerFast</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_encoding_dict</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.training_tokenize_and_align_labels" title="Permalink to this definition"></a></dt>
+<dd><p>Tokenize and align labels during training.</p>
+<p>This function takes a training instance, consisting of tokens and named
+entity recognition (NER) tags, and aligns the tokens with their
+corresponding labels. It uses a transformers tokenizer object to tokenize
+the input tokens and then maps the NER tags to label IDs based on the
+provided label encoding dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>examples</strong> (<em>dict</em>) – One training instance (a dictioary with three keys: id, tokens, and ner_tags)</p></li>
-<li><p><strong>tokenizer</strong> (<em>Tokenizer object</em>) – A transformers tokenizer object (the tokeniser of the base model).</p></li>
-<li><p><strong>label_encoding_dict</strong> (<em>dict</em>) – The label2id mapping dictionary.</p></li>
+<li><p><strong>examples</strong> (<em>Dict</em>) – A dictionary representing a single training instance
+with three keys: <code class="docutils literal notranslate"><span class="pre">id</span></code> (instance ID), <code class="docutils literal notranslate"><span class="pre">tokens</span></code> (list of tokens),
+and <code class="docutils literal notranslate"><span class="pre">ner_tags</span></code> (list of NER tags).</p></li>
+<li><p><strong>tokenizer</strong> (<em>Union</em><em>[</em><em>PreTrainedTokenizer</em><em>, </em><em>PreTrainedTokenizerFast</em><em>]</em>) – A
+transformers tokenizer object, which is the tokenizer of the base
+model.</p></li>
+<li><p><strong>label_encoding_dict</strong> (<em>Dict</em>) – A dictionary mapping NER labels to label
+IDs, from <code class="docutils literal notranslate"><span class="pre">label2id</span></code> in
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">train()</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The tokenized input.</p>
+<dd class="field-even"><p>The tokenized inputs with aligned labels.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tokenized_inputs (Dataset object)</p>
+<dd class="field-odd"><p>????? [TODO? is this a dict? or a Tokenizer?]</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>Credit: This function is adapted from
 <a class="reference external" href="https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py">https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py</a>.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.collect_named_entities">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">collect_named_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.collect_named_entities" title="Permalink to this definition"></a></dt>
-<dd><p>Creates a list of Entity named-tuples, storing the entity
-type and the start and end offsets of the entity.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">collect_named_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NamedTuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.ner.collect_named_entities" title="Permalink to this definition"></a></dt>
+<dd><p>Collect named entities from a list of tokens and return a list of named
+tuples representing the entities.</p>
+<p>This function iterates over the tokens and identifies named entities based
+on their entity type (<code class="docutils literal notranslate"><span class="pre">entity_type</span></code>) and link. Each token is represented
+as a tuple with the following format:
+<code class="docutils literal notranslate"><span class="pre">(token,</span> <span class="pre">entity_type,</span> <span class="pre">link,</span> <span class="pre">start_char,</span> <span class="pre">end_char)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>tokens</strong> (<em>list</em>) – a list of tags.</p>
+<dd class="field-odd"><p><strong>tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>]</em>) – <p>A list of tokens, where each token is
+represented as a tuple containing the following elements:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">token</span></code> (str): The token text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entity_type</span></code> (str): The entity type (e.g.,
+<code class="docutils literal notranslate"><span class="pre">&quot;B-LOC&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;I-LOC&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> (str): The entity link.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code> (int): The start character offset of the token.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code> (int): The end character offset of the token.</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of Entity named-tuples</p>
+<dd class="field-even"><p><p>A list of named tuples representing the named entities. Each named
+tuple contains the following fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">e_type</span></code> (str): The entity type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> (str): The entity link.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code> (int): The start offset of the entity (token
+position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code> (int): The end offset of the entity (token
+position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code> (int): The start character offset of the entity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code> (int): The end character offset of the entity.</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>named_entities (list)</p>
+<dd class="field-odd"><p>List[NamedTuple]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.aggregate_mentions">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">aggregate_mentions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.aggregate_mentions" title="Permalink to this definition"></a></dt>
-<dd><p>Aggregates mentions (NER outputs separate tokens) and finds
-mention position in sentence.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">aggregate_mentions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setting</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'pred'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'gold'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.ner.aggregate_mentions" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregate predicted or gold mentions into a consolidated format.</p>
+<p>This function takes a list of predicted or gold mentions and aggregates
+them into a consolidated format. It reconstructs the text of each mention
+by combining the tokens and their corresponding white spaces. It also
+consolidates the NER label, NER score, and entity link for each mention.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>predictions</strong> – a list of lists (the outer list representing
-a sentence, the inner list representing a token) representation
-the NER predictions.</p></li>
-<li><p><strong>setting</strong> – either “pred” or “gold”. If “pred”, set entity_link
-to “O” (because we haven’t performed linking yet) and
-perform average of the NER score of all the tokens that
-belong to the same entity. If “gold”, set ner_score to
-1.0 (it’s manually detected) and consolidate the link of the
-mention subtokens.</p></li>
+<li><p><strong>predictions</strong> (<em>List</em><em>[</em><em>List</em><em>]</em>) – A list of token predictions, where each
+token prediction is represented as a list of values.</p></li>
+<li><p><strong>setting</strong> (<em>Literal</em><em>[</em><em>&quot;pred&quot;</em><em>, </em><em>&quot;gold&quot;</em><em>]</em>) – The setting for aggregation. If set
+to <code class="docutils literal notranslate"><span class="pre">&quot;pred&quot;</span></code>, the function aggregates predicted mentions. Entity
+links will be set to <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> (because we haven’t performed linking
+yet). If set to <code class="docutils literal notranslate"><span class="pre">&quot;gold&quot;</span></code>, the function aggregates gold mentions.
+NER score will be set to 1.0 as it is manually detected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>a list of dictionaries, there the list</dt><dd><p>corresponds to the sentence, and the inner dictionaries
-correspond to the different (multi-token) mentions that
-have been identified (in case of “pred”) or that were
-annotated (in case of “gold”).</p>
-</dd>
-</dl>
+<dd class="field-even"><p><p>A list of dictionaries representing the aggregated mentions, where
+each dictionary contains the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mention</span></code>: The text of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code>: The start offset of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code>: The end offset of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code>: The start character index of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code>: The end character index of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner_score</span></code>: The consolidated NER score of the mention (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>
+for predicted mentions, <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for gold mentions).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner_label</span></code>: The consolidated NER label of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entity_link</span></code>: The consolidated entity link of the mention
+(empty string <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> for predicted mentions, entity label for
+gold mentions).</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>sent_mentions (list)</p>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.fix_capitalization">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_capitalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.fix_capitalization" title="Permalink to this definition"></a></dt>
-<dd><p>These entities are the output of the NER prediction, which returns
-the processed word (uncapitalized, for example). We replace this
-processed word by the true surface form in our original dataset
-(using the character position information).</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_capitalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.ner.fix_capitalization" title="Permalink to this definition"></a></dt>
+<dd><p>Correct capitalization errors in entities.</p>
+<p>This function corrects capitalization errors in entities that occur as a
+result of the NER prediction. The NER prediction may return processed
+words with incorrect capitalization. This function replaces the processed
+word in the entity with the true surface form from the original dataset,
+using the character position information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity</strong> (<em>dict</em>) – A dictionary containing the prediction of one token.</p></li>
-<li><p><strong>sentence</strong> (<em>str</em>) – The original sentence.</p></li>
+<li><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary containing the prediction of one token.</p></li>
+<li><p><strong>sentence</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The original sentence.</p></li>
 </ul>
 </dd>
-</dl>
-<dl class="simple">
-<dt>Returns</dt><dd><p>newEntity (dict): The input dictionary, corrected re capitalisation.</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The corrected entity dictionary with the appropriate
+capitalization.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.fix_hyphens">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_hyphens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.fix_hyphens" title="Permalink to this definition"></a></dt>
-<dd><p>Fix B- and I- prefix assignment errors in hyphenated entities.
-* Description: There is problem with grouping when there are hyphens in
-words, e.g. “Ashton-under-Lyne” ([“Ashton”, “-”, “under”, “-”, “Lyne”])
-is grouped as [“B-LOC”, “B-LOC”, “B-LOC”, “B-LOC”, “B-LOC”], when
-it should be grouped as [“B-LOC”, “I-LOC”, “I-LOC”, “I-LOC”, “I-LOC”].
-* Solution: if the current token or the previous token is a hyphen,
-and the entity type of both previous and current token is the same
-and not “O”, then change the current’s entity preffix to “I-“.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_hyphens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.ner.fix_hyphens" title="Permalink to this definition"></a></dt>
+<dd><p>Fix prefix assignment errors in hyphenated entities.</p>
+<p>This function corrects prefix assignment errors that occur in some
+hyphenated entities, where multiple tokens connected by hyphens form a
+single entity but are incorrectly assigned different prefixes. It
+specifically addresses the issue of grouping in hyphenated entities, where
+a sequence of tokens connected by hyphens should be grouped as a single
+entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>lEntities</strong> (<em>list</em>) – List of dictionaries (corresponding to predicted tokens).</p>
+<dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
+tokens.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>List of dictionaries with the corrected predictions</dt><dd><p>regarding hyphenation.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A list of dictionaries with corrected predictions regarding
+hyphenation.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>hyphEntities (list)</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Description</strong>: There is a problem with grouping when there are
+hyphens in words. For example, the phrase “Ashton-under-Lyne”
+(<code class="docutils literal notranslate"><span class="pre">[&quot;Ashton&quot;,</span> <span class="pre">&quot;-&quot;,</span> <span class="pre">&quot;under&quot;,</span> <span class="pre">&quot;-&quot;,</span> <span class="pre">&quot;Lyne&quot;]</span></code>) is incorrectly grouped
+as <code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;]</span></code>, when it should be
+grouped as <code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;]</span></code>.</p>
+<p><strong>Solution</strong>: If the current token or the previous token is a hyphen,
+and the entity type of both the previous and current tokens is the
+same and not <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, the current entity’s prefix is changed to
+<code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code> to maintain the correct grouping.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.fix_nested">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_nested</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.fix_nested" title="Permalink to this definition"></a></dt>
-<dd><p>Fix B- and I- prefix assignment errors in nested entities.
-* Description: There is problem with grouping in nested entities,
-e.g. “Island of Terceira” ([“Island”, “of”, “Terceira”])
-is grouped as [“B-LOC”, “I-LOC”, “B-LOC”], when it should
-be grouped as [“B-LOC”, “I-LOC”, “I-LOC”], as we consider
-it one entity.
-* Solution: if the current token or the previous token is a hyphen,
-and the entity type of both previous and current token is  not “O”,
-then change the current’s entity preffix to “I-“.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_nested</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.ner.fix_nested" title="Permalink to this definition"></a></dt>
+<dd><p>Fix prefix assignment errors in nested entities.</p>
+<p>This function corrects prefix assignment errors that occur in nested
+entities, where multiple tokens are part of the same entity but are
+incorrectly assigned different prefixes. It specifically addresses the
+issue of grouping in nested entities, where a sequence of tokens that form
+a single entity are incorrectly assigned prefixes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>lEntities</strong> (<em>list</em>) – List of dictionaries (corresponding to predicted tokens).</p>
+<dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
+tokens.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>List of dictionaries with the corrected predictions</dt><dd><p>regarding nested entities.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A list of dictionaries with corrected predictions regarding nested
+entities.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>nestEntities (list)</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Description</strong>: There is a problem with grouping in some nested
+entities. For example, the phrase “Island of Terceira”
+([“Island”, “of”, “Terceira”]) is incorrectly grouped as
+[“B-LOC”, “I-LOC”, “B-LOC”], when it should be
+[“B-LOC”, “I-LOC”, “I-LOC”] as we consider it as one entity.</p>
+<p><strong>Solution</strong>: If the current token or the previous token is a hyphen
+and the entity type of both the previous and current tokens is not
+<code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, the current entity’s prefix is changed to <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code> to
+maintain the correct grouping.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.fix_startEntity">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_startEntity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.fix_startEntity" title="Permalink to this definition"></a></dt>
-<dd><p>Fix B- and I- prefix assignment errors:
-* Case 1: The first token of a sentence can only be either</p>
-<blockquote>
-<div><p>O (i.e. not an entity) or B- (beginning of an
-entity). There’s no way it should be I-. Fix
-those.</p>
-</div></blockquote>
-<ul class="simple">
-<li><dl class="simple">
-<dt>Case 2: If the first token of a grouped entity is assigned</dt><dd><p>the prefix I-, change to B-. We know it’s the first
-token in a grouped entity if the entity type of the
-previous token is different.</p>
-</dd>
-</dl>
-</li>
-</ul>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_startEntity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.ner.fix_startEntity" title="Permalink to this definition"></a></dt>
+<dd><p>Fix prefix assignment errors in entity labeling.</p>
+<p>This function corrects two different cases of prefix assignment errors in
+entity labeling:</p>
+<ol class="arabic simple">
+<li><p>The first token of a sentence can only be either <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> (not an entity)
+or <code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code> (beginning of an entity). If it is incorrectly assigned the
+prefix <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code>, this case is fixed by changing it to <code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code>.</p></li>
+<li><p>If the first token of a grouped entity is assigned the prefix <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code>,
+but the entity type of the previous token is different, it should be
+<code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code> instead. This case is fixed by changing the prefix to <code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code>.</p></li>
+</ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>lEntities</strong> (<em>list</em>) – List of dictionaries (corresponding to predicted tokens).</p>
+<dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
+tokens.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>List of dictionaries with the corrected predictions</dt><dd><p>regarding grouping of labels.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A list of dictionaries with corrected predictions regarding the
+grouping of labels.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>fixEntities (list)</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.ner.aggregate_entities">
-<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">aggregate_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lEntities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.ner.aggregate_entities" title="Permalink to this definition"></a></dt>
-<dd><p>If a word starts with ##, then this is a suffix, and word
-should therefore be joined with previous detected entity.</p>
+<span class="sig-prename descclassname"><span class="pre">utils.ner.</span></span><span class="sig-name descname"><span class="pre">aggregate_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.ner.aggregate_entities" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregates entities by joining split tokens.</p>
+<p>This function aggregates entities by joining split tokens that start with
+<code class="docutils literal notranslate"><span class="pre">&quot;##&quot;</span></code> with the previous detected entity. It takes the current entity
+and the list of all predicted entities as input and returns a new list of
+dictionaries with corrected predictions regarding split tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity</strong> (<em>dict</em>) – A dictionary containing the current entity (predicted token).</p></li>
-<li><p><strong>lEntities</strong> (<em>list</em>) – List of dictionaries (corresponding to all predicted tokens).</p></li>
+<li><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – The current entity (predicted token) as a dictionary.</p></li>
+<li><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of dictionaries corresponding to all
+predicted tokens.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>List of dictionaries with the corrected predictions</dt><dd><p>regarding split tokens.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>A list of dictionaries with the corrected predictions regarding
+split tokens.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>lEntities (list)</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -317,7 +380,7 @@ should therefore be joined with previous detected entity.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Federico Nanni.</p>
+    <p>&#169; Copyright 2023 Living with Machines.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
