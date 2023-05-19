@@ -90,14 +90,17 @@
 <h1><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module<a class="headerlink" href="#utils-rel-utils-module" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_utils.get_db_emb">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">get_db_emb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">embtype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="headerlink" href="#utils.rel_utils.get_db_emb" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">get_db_emb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">embtype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'word'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'entity'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'snd'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="headerlink" href="#utils.rel_utils.get_db_emb" title="Permalink to this definition"></a></dt>
 <dd><p>Retrieve Wikipedia2Vec embeddings for a given list of words or entities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cursor</strong> – The cursor with the open connection to the Wikipedia2Vec database.</p></li>
-<li><p><strong>mentions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of words or entities whose embeddings to extract.</p></li>
-<li><p><strong>embtype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The type of embedding to retrieve. Possible values are “word”, “entity”, or “snd”.</p></li>
+<li><p><strong>cursor</strong> – The cursor with the open connection to the Wikipedia2Vec
+database.</p></li>
+<li><p><strong>mentions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of words or entities whose embeddings to
+extract.</p></li>
+<li><p><strong>embtype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The type of embedding to retrieve. Possible values are
+“word”, “entity”, or “snd”.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -199,12 +202,13 @@ candidates (at this point).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_utils.rank_candidates">
 <span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">rank_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wk_cands</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_utils.rank_candidates" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>TODO: docstring</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_utils.add_publication">
 <span class="sig-prename descclassname"><span class="pre">utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">add_publication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publwqid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_utils.add_publication" title="Permalink to this definition"></a></dt>
-<dd><p>TO DO.</p>
+<dd><p>TODO: docstring</p>
 </dd></dl>
 
 <dl class="py function">
