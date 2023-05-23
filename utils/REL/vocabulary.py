@@ -56,6 +56,10 @@ class Vocabulary:
         Returns:
             str: The normalized token.
 
+        Example:
+            >>> Vocabulary.normalize("Hello, World!", lower=True, digit_0=True)
+            'hello, world0'
+
         Note:
             Special tokens, like the unknown token (``#UNK#``), start token
             (``<s>``), and end token (``</s>``) are not affected by the
@@ -64,10 +68,6 @@ class Vocabulary:
             Certain bracket tokens are replaced with their corresponding
             symbols defined in the :py:const:`~utils.REL.vocabulary.BRACKETS`
             dictionary.
-
-        Example:
-            >>> Vocabulary.normalize("Hello, World!", lower=True, digit_0=True)
-            'hello, world0'
         """
         if token in [Vocabulary.unk_token, "<s>", "</s>"]:
             return token
@@ -92,19 +92,19 @@ class Vocabulary:
         Returns:
             None.
 
-        Note:
-            This method assigns a new ID to the token and updates the
-            necessary dictionaries and lists.
-
-            If the token is already present in the vocabulary, it will not be
-            added again.
-
         Example:
             >>> vocab = Vocabulary()
             >>> vocab.add_to_vocab("apple")
             >>> vocab.add_to_vocab("banana")
             >>> vocab.size()
             2
+
+        Note:
+            This method assigns a new ID to the token and updates the
+            necessary dictionaries and lists.
+
+            If the token is already present in the vocabulary, it will not be
+            added again.
         """
         new_id = len(self.id2word)
         self.id2word.append(token)
@@ -138,13 +138,6 @@ class Vocabulary:
             int: The ID of the token in the vocabulary, or the ID of the
             unknown token if the token is not found.
 
-        Note:
-            This method normalizes the token using the defined normalisation
-            rules before retrieving the ID.
-
-            If the normalized token is not present in the vocabulary, the ID
-            of the unknown token is returned.
-
         Example:
             >>> vocab = Vocabulary()
             >>> vocab.add_to_vocab("apple")
@@ -155,6 +148,13 @@ class Vocabulary:
             1
             >>> vocab.get_id("grape")
             0
+
+        Note:
+            This method normalizes the token using the defined normalisation
+            rules before retrieving the ID.
+
+            If the normalized token is not present in the vocabulary, the ID
+            of the unknown token is returned.
         """
         tok = Vocabulary.normalize(token)
         return self.word2id.get(tok, self.unk_id)

@@ -33,8 +33,8 @@ def training_tokenize_and_align_labels(
         ????? [TODO? is this a dict? or a Tokenizer?]:
             The tokenized inputs with aligned labels.
 
-    Note:
-        Credit: This function is adapted from
+    Credit:
+        This function is adapted from
         https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py.
     """
     label_all_tokens = True

@@ -29,6 +29,18 @@ class Pipeline:
             the pipeline. If None, the default ``Linker`` will be instantiated.
             For the default settings, see Notes below.
 
+    Example:
+        >>> # Instantiate the Pipeline object with a default setup
+        >>> pipeline = Pipeline()
+
+        >>> # Now you can use the pipeline for processing text or sentences
+        >>> text = "I visited Paris and New York City last summer."
+        >>> processed_data = pipeline.run_text(text)
+
+        >>> # Access the processed mentions in the document
+        >>> for mention in processed_data:
+        >>>     print(mention)
+
     Note:
         * The default settings for the ``Recogniser``:
 
@@ -96,18 +108,6 @@ class Pipeline:
                 rel_params={},
                 overwrite_training=False,
             )
-
-    Example:
-        >>> # Instantiate the Pipeline object with a default setup
-        >>> pipeline = Pipeline()
-
-        >>> # Now you can use the pipeline for processing text or sentences
-        >>> text = "I visited Paris and New York City last summer."
-        >>> processed_data = pipeline.run_text(text)
-
-        >>> # Access the processed mentions in the document
-        >>> for mention in processed_data:
-        >>>     print(mention)
     """
 
     def __init__(

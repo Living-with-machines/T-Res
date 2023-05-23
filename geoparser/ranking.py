@@ -207,9 +207,12 @@ class Ranker:
     def train(self) -> None:
         """
         Training a DeezyMatch model. The training will be skipped if the model
-        already exists and ``self.overwrite_training`` is set to ``False``. The
-        training will be run on test mode if ``self.do_test`` is set to
-        ``True``.
+        already exists and the ``overwrite_training`` key in the
+        ``deezy_parameters`` passed when initialising the
+        :py:meth:`~geoparser.ranking.Ranker` object is set to ``False``. The
+        training will be run on test mode if the ``do_test`` key in the
+        ``deezy_parameters`` passed when initialising the
+        :py:meth:`~geoparser.ranking.Ranker` object is set to ``True``.
 
         Returns:
             None.
@@ -363,13 +366,6 @@ class Ranker:
                    candidates for each mention. It is an updated version of the
                    Ranker's ``already_collected_cands`` attribute.
 
-        Note:
-            This method performs partial matching for each mention in the given
-            list. If a mention has already been matched perfectly, it skips the
-            partial matching process for that mention. For the remaining
-            mentions, it calculates the match score based on the specified
-            partial matching method: Levenshtein distance or containment.
-
         Example:
             >>> ranker = Ranker(...)
             >>> queries = ['apple', 'banana', 'orange']
@@ -378,6 +374,14 @@ class Ranker:
             {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.5, 'banana split': 0.75}, 'orange': {'orange': 1.0}}
             >>> print(already_collected)
             {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.5, 'banana split': 0.75}, 'orange': {'orange': 1.0}}
+
+        Note:
+            This method performs partial matching for each mention in the given
+            list. If a mention has already been matched perfectly, it skips the
+            partial matching process for that mention. For the remaining
+            mentions, it calculates the match score based on the specified
+            partial matching method: Levenshtein distance or containment.
+
         """
 
         candidates, self.already_collected_cands = self.perfect_match(queries)
@@ -432,6 +436,15 @@ class Ranker:
                    candidates for each mention. It is an updated version of the
                    Ranker's ``already_collected_cands`` attribute.
 
+        Example:
+            >>> ranker = Ranker(...)
+            >>> queries = ['apple', 'banana', 'orange']
+            >>> candidates, already_collected = ranker.deezy_on_the_fly(queries)
+            >>> print(candidates)
+            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+            >>> print(already_collected)
+            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+
         Note:
             This method performs DeezyMatch on-the-fly for each mention in a
             given list of mentions identified in a text. If a query has
@@ -441,15 +454,6 @@ class Ranker:
             based on the specified ranking metric and selection threshold,
             provided when initialising the :py:meth:`~geoparser.ranking.Ranker`
             object.
-
-        Example:
-            >>> ranker = Ranker(...)
-            >>> queries = ['apple', 'banana', 'orange']
-            >>> candidates, already_collected = ranker.deezy_on_the_fly(queries)
-            >>> print(candidates)
-            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
-            >>> print(already_collected)
-            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
         """
 
         dm_path = self.deezy_parameters["dm_path"]
@@ -519,9 +523,10 @@ class Ranker:
                 to match.
 
         Returns:
-            Tuple[dict, dict]: A tuple containing two dictionaries. The
-                resulting dictionaries will vary depending on the method set
-                in the Ranker object. See Notes above for further information.
+            Tuple[dict, dict]:
+                A tuple containing two dictionaries. The resulting dictionaries
+                will vary depending on the method set in the Ranker object.
+                See Notes below for further information.
 
         Example:
             >>> ranker = Ranker(..., method="deezymatch")
