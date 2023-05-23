@@ -22,11 +22,11 @@ class Pipeline:
             Recogniser) object to use in the pipeline. If None, a default
             ``Recogniser`` will be instantiated. For the default settings, see
             Notes below.
-        myranker (ranking.Ranker): The ``Ranker`` object to use in the
-            pipeline. If None, the default ``Ranker`` will be instantiated.
+        myranker (ranking.Ranker, optional): The ``Ranker`` object to use in
+            the pipeline. If None, the default ``Ranker`` will be instantiated.
             For the default settings, see Notes below.
-        mylinker (linking.Linker): The ``Linker`` object to use in the
-            pipeline. If None, the default ``Linker`` will be instantiated.
+        mylinker (linking.Linker, optional): The ``Linker`` object to use in
+            the pipeline. If None, the default ``Linker`` will be instantiated.
             For the default settings, see Notes below.
 
     Note:
@@ -98,7 +98,7 @@ class Pipeline:
             )
 
     Example:
-        >>> # Instantiate the Pipeline object
+        >>> # Instantiate the Pipeline object with a default setup
         >>> pipeline = Pipeline()
 
         >>> # Now you can use the pipeline for processing text or sentences
@@ -238,47 +238,46 @@ class Pipeline:
         Arguments:
             sentence (str): The input sentence to process.
             sent_idx (int, optional): Index position of the target sentence in
-                a larger text. Default: 0.
+                a larger text. Defaults to ``0``.
             context (tuple, optional): A tuple containing the previous and
-                next sentences as context. Defaults to ("", "").
+                next sentences as context. Defaults to ``("", "")``.
             place (str, optional): The place of publication associated with
                 the sentence as a human-legible string (e.g. "London").
-                Defaults to "".
+                Defaults to ``""``.
             place_wqid (str, optional): The Wikidata ID of the place of
-                publication provided in ``place`` (e.g. "Q84"). Defaults to "".
+                publication provided in ``place`` (e.g. "Q84"). Defaults to
+                ``""``.
             postprocess_output (bool, optional): Whether to postprocess the
-                output, adding geographic coordinates. Defaults to True.
+                output, adding geographic coordinates. Defaults to ``True``.
             without_microtoponyms (bool, optional): Specifies whether to
-                exclude microtoponyms during processing. Defaults to False.
+                exclude microtoponyms during processing. Defaults to ``False``.
 
         Returns:
             List[dict]:
                 A list of dictionaries representing the processed identified
                 and linked toponyms in the sentence. Each dictionary contains
                 the following keys:
-
-                * "sent_idx" (int): The index of the sentence.
-                * "mention" (str): The mention text.
-                * "pos" (int): The starting position of the mention in the
+                - "sent_idx" (int): The index of the sentence.
+                - "mention" (str): The mention text.
+                - "pos" (int): The starting position of the mention in the
                   sentence.
-                * "end_pos" (int): The ending position of the mention in the
+                - "end_pos" (int): The ending position of the mention in the
                   sentence.
-                * "tag" (str): The NER label of the mention.
-                * "prediction" (str): The predicted entity linking result.
-                * "ner_score" (float): The NER score of the mention.
-                * "ed_score" (float): The entity disambiguation score.
-                * "sentence" (str): The input sentence.
-                * "prior_cand_score" (dict): A dictionary of candidate
+                - "tag" (str): The NER label of the mention.
+                - "prediction" (str): The predicted entity linking result.
+                - "ner_score" (float): The NER score of the mention.
+                - "ed_score" (float): The entity disambiguation score.
+                - "sentence" (str): The input sentence.
+                - "prior_cand_score" (dict): A dictionary of candidate
                   entities and their string matching confidence scores.
-                * "cross_cand_score" (dict): A dictionary of candidate
+                - "cross_cand_score" (dict): A dictionary of candidate
                   entities and their cross-candidate confidence scores.
 
                 If ``postprocess_output`` is set to True, the dictionaries
                 will also contain the following two keys:
-
-                * "latlon" (tuple): The latitude and longitude coordinates of
+                - "latlon" (tuple): The latitude and longitude coordinates of
                   the predicted entity.
-                * "wkdt_class" (str): The Wikidata class of the predicted
+                - "wkdt_class" (str): The Wikidata class of the predicted
                   entity.
 
         Note:
@@ -478,12 +477,13 @@ class Pipeline:
         Arguments:
             text (str): The input text document to process.
             place (str, optional): The place of publication associated with
-                the text document as a human-legible string (e.g. "London").
-                Defaults to "".
+                the text document as a human-legible string (e.g.
+                ``"London"``). Defaults to ``""``.
             place_wqid (str, optional): The Wikidata ID of the place of
-                publication provided in ``place`` (e.g. "Q84"). Defaults to "".
+                publication provided in ``place`` (e.g. ``"Q84"``). Defaults
+                to ``""``.
             postprocess_output (bool, optional): Whether to postprocess the
-                output, adding geographic coordinates. Defaults to True.
+                output, adding geographic coordinates. Defaults to ``True``.
 
         Returns:
             List[dict]:

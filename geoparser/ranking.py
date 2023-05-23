@@ -33,12 +33,12 @@ class Ranker:
             mentions. Can also be loaded from the resources through the
             :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
         strvar_parameters (dict): Dictionary of string variant parameters
-            required to create a DeezyMatch training dataset. Defaults to an
-            empty dictionary.
+            required to create a DeezyMatch training dataset. Defaults to
+            ``dict()`` (an empty dictionary).
         deezy_parameters (dict): Dictionary of DeezyMatch parameters for model
-            training. Defaults to an empty dictionary.
+            training. Defaults to ``dict()`` (an empty dictionary).
         already_collected_cands (dict): Dictionary of already collected
-            candidates. Defaults to an empty dictionary.
+            candidates. Defaults to ``dict()`` (an empty dictionary).
 
     Example:
         >>> # Create a Ranker object
@@ -79,11 +79,9 @@ class Ranker:
         self,
         method: Literal["perfectmatch", "partialmatch", "levenshtein", "deezymatch"],
         resources_path: str,
-        mentions_to_wikidata: dict,  # TODO: shouldn't this default to ``dict()``?
-        wikidata_to_mentions: dict,  # TODO: shouldn't this default to ``dict()``?
-        strvar_parameters: Optional[
-            dict
-        ] = dict(),  # TODO: doesn't look like this one is being used?
+        mentions_to_wikidata: dict,  # TODO: shouldn't this default to ``dict()`` as it can be loaded through load_resources?
+        wikidata_to_mentions: dict,  # TODO: shouldn't this default to ``dict()`` as it can be loaded through load_resources?
+        strvar_parameters: Optional[dict] = dict(),
         deezy_parameters: Optional[dict] = dict(),
         already_collected_cands: Optional[dict] = dict(),
     ):
@@ -208,8 +206,12 @@ class Ranker:
     def train(self) -> None:
         """
         Training a DeezyMatch model. The training will be skipped if the model
-        already exists and ``self.overwrite_training`` is set to False. The
-        training will be run on test mode if ``self.do_test`` is set to True.
+        already exists and ``self.overwrite_training`` is set to ``False``. The
+        training will be run on test mode if ``self.do_test`` is set to
+        ``True``.
+
+        Returns:
+            None.
         """
 
         if self.method == "deezymatch":
@@ -229,7 +231,8 @@ class Ranker:
         (``queries``) and the altnames in the knowledge base.
 
         Arguments:
-            queries (list): A list of mentions identified in a text to match.
+            queries (list): A list of mentions (string) identified in a text
+                to match.
 
         Returns:
             Tuple[dict, dict]: A tuple containing two dictionaries:
@@ -270,7 +273,8 @@ class Ranker:
         Arguments:
             query (str): A mention identified in a text.
             row (Series): A pandas Series representing a row in the dataset
-                with a "mentions" column, corresponding to a mention in the KB.
+                with a "mentions" column, corresponding to a mention in the
+                knowledge base.
 
         Returns:
             float:
@@ -305,7 +309,8 @@ class Ranker:
         Arguments:
             query (str): A mention identified in a text.
             row (Series): A pandas Series representing a row in the dataset
-                with a "mentions" column, corresponding to a mention in the KB.
+                with a "mentions" column, corresponding to a mention in the
+                knowledge base.
 
         Returns:
             float:
@@ -339,7 +344,8 @@ class Ranker:
         Perform partial matching for a list of given mentions (``queries``).
 
         Arguments:
-            queries (list): A list of mentions identified in a text to match.
+            queries (list): A list of mentions (strings) identified in a text
+                to match.
             damlev (bool): A flag indicating whether to use the
                 Damerau-Levenshtein distance for matching (True) or
                 containment-based matching (False).
@@ -410,7 +416,8 @@ class Ranker:
         mentions (``queries``).
 
         Arguments:
-            queries (list): A list of mentions identified in a text to match.
+            queries (list): A list of mentions (strings) identified in a text
+                to match.
 
         Returns:
             Tuple[dict, dict]: A tuple containing two dictionaries:
@@ -505,7 +512,8 @@ class Ranker:
         Run the appropriate ranking method based on the specified method.
 
         Arguments:
-            queries (list): A list of mentions identified in a text to match.
+            queries (list): A list of mentions (strings) identified in a text
+                to match.
 
         Returns:
             Tuple[dict, dict]: A tuple containing two dictionaries. The
@@ -545,7 +553,7 @@ class Ranker:
             return self.deezy_on_the_fly(queries)
         raise SyntaxError(f"Unknown method: {self.method}")
 
-    def find_candidates(self, mentions):
+    def find_candidates(self, mentions: List[dict]) -> Tuple[dict, dict]:
         """
         Find candidates for the given mentions using the selected ranking
         method.

@@ -12,6 +12,19 @@ from tqdm import tqdm
 tqdm.pandas()
 
 RANDOM_SEED = 42
+"""Constant representing the random seed used for generating pseudo-random
+numbers.
+
+The `RANDOM_SEED` is a value that initializes the random number generator
+algorithm, ensuring that the sequence of random numbers generated remains the
+same across different runs of the program. This is useful for achieving
+reproducibility in experiments or when consistent random behavior is
+desired.
+
+..
+    If this docstring is changed, also make sure to edit prepare_data.py,
+    rel_utils.py, entity_disambiguation.py.
+"""
 np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
@@ -36,8 +49,10 @@ class Linker:
             resources.
         overwrite_training (bool): Flag indicating whether to overwrite the
             training.
-        rel_params (Optional[dict], optional): Dictionary containing the
-            relative disambiguation parameters. Defaults to ``dict()``.
+        rel_params (dict, optional): Dictionary containing the relative
+            disambiguation parameters. Defaults to ``dict()``. TODO: Mariona,
+            are these parameters documented somewhere? I.e. what's possible to
+            put in this dictionary?
 
     Example:
         >>> linker = Linker(
@@ -45,7 +60,7 @@ class Linker:
                 resources_path="/path/to/linking/resources/",
                 linking_resources={},
                 overwrite_training=True,
-                rel_params={"param1": value1, "param2": value2}
+                rel_params={"with_publication": True, "do_test": True}
             )
     """
 
@@ -197,7 +212,7 @@ class Linker:
         return most_popular_candidate_id, final_score, all_candidates
 
     def by_distance(
-        self, dict_mention: dict, origin_wqid: str = ""
+        self, dict_mention: dict, origin_wqid: Optional[str] = ""
     ) -> Tuple[str, float, dict]:
         """
         Select candidate to place of publication.
@@ -205,8 +220,8 @@ class Linker:
         Arguments:
             dict_mention (dict): dictionary with all the relevant information
                 needed to disambiguate a certain mention.
-            origin_wqid (str): The origin Wikidata ID for distance calculation.
-                Defaults to "".
+            origin_wqid (str, optional): The origin Wikidata ID for distance
+                calculation. Defaults to ``""``.
 
         Returns:
             Tuple[str, float, dict]:
@@ -275,7 +290,7 @@ class Linker:
         Arguments:
             myranker (geoparser.ranking.Ranker): The ranker object used for
             training. split (str, optional): The split type for training.
-            Defaults to "originalsplit".
+            Defaults to ``"originalsplit"``.
 
         Returns:
             entity_disambiguation.EntityDisambiguation:

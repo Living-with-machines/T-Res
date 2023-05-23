@@ -1,8 +1,9 @@
 from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
 from collections import namedtuple
-from typing import Union, List, NamedTuple, Literal
+from typing import Union, List, NamedTuple, Literal, Tuple
 
 
+# TODO/typing: Need an output type, but what is it?
 def training_tokenize_and_align_labels(
     examples: dict,
     tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast],
@@ -17,7 +18,7 @@ def training_tokenize_and_align_labels(
     the input tokens and then maps the NER tags to label IDs based on the
     provided label encoding dictionary.
 
-    Args:
+    Arguments:
         examples (Dict): A dictionary representing a single training instance
             with three keys: ``id`` (instance ID), ``tokens`` (list of tokens),
             and ``ner_tags`` (list of NER tags).
@@ -68,8 +69,8 @@ def training_tokenize_and_align_labels(
 
 
 def collect_named_entities(
-    tokens: List,
-) -> List[NamedTuple]:  # TODO/typing: tokens is list of what?
+    tokens: List[Tuple[str, str, str, int, int]]
+) -> List[NamedTuple]:
     """
     Collect named entities from a list of tokens and return a list of named
     tuples representing the entities.
@@ -79,7 +80,7 @@ def collect_named_entities(
     as a tuple with the following format:
     ``(token, entity_type, link, start_char, end_char)``.
 
-    Args:
+    Arguments:
         tokens (List[tuple]): A list of tokens, where each token is
             represented as a tuple containing the following elements:
 
@@ -92,8 +93,8 @@ def collect_named_entities(
 
     Returns:
         List[NamedTuple]:
-            A list of named tuples representing the named entities. Each named
-            tuple contains the following fields:
+            A list of named tuples (called Entity) representing the named
+            entities. Each named tuple contains the following fields:
 
             - ``e_type`` (str): The entity type.
             - ``link`` (str): The entity link.
@@ -180,7 +181,8 @@ def collect_named_entities(
 
 
 def aggregate_mentions(
-    predictions: List[List], setting: Literal["pred", "gold"]
+    predictions: List[List[Tuple[str, str, str, int, int]]],
+    setting: Literal["pred", "gold"],
 ) -> List[dict]:
     """
     Aggregate predicted or gold mentions into a consolidated format.
@@ -190,14 +192,19 @@ def aggregate_mentions(
     by combining the tokens and their corresponding white spaces. It also
     consolidates the NER label, NER score, and entity link for each mention.
 
-    Args:
+    Arguments:
         predictions (List[List]): A list of token predictions, where each
-            token prediction is represented as a list of values.
-        setting (Literal["pred", "gold"]): The setting for aggregation. If set
-            to ``"pred"``, the function aggregates predicted mentions. Entity
-            links will be set to ``"O"`` (because we haven't performed linking
-            yet). If set to ``"gold"``, the function aggregates gold mentions.
-            NER score will be set to 1.0 as it is manually detected.
+            token prediction is represented as a list of values. For details
+            on each of those tuples, see
+            :py:meth:`~utils.ner.collect_named_entities`.
+        setting (Literal["pred", "gold"]): The setting for aggregation:
+
+            If set to ``"pred"``, the function aggregates predicted mentions.
+            Entity links will be set to ``"O"`` (because we haven't performed
+            linking yet).
+
+            If set to ``"gold"``, the function aggregates gold mentions. NER
+            score will be set to ``1.0`` as it is manually detected.
 
     Returns:
         List[dict]:
@@ -225,7 +232,8 @@ def aggregate_mentions(
         mention_token_range = range(mention.start_offset, mention.end_offset + 1)
         for r in mention_token_range:
             add_whitespaces = ""
-            # Add white spaces between tokens according to token's char starts and ends:
+            # Add white spaces between tokens according to token's char starts
+            # and ends:
             if r - 1 in mention_token_range:
                 prev_end_char = predictions[r - 1][4]
                 curr_start_char = predictions[r][3]
@@ -310,7 +318,7 @@ def fix_capitalization(entity: dict, sentence: str) -> dict:
     word in the entity with the true surface form from the original dataset,
     using the character position information.
 
-    Args:
+    Arguments:
         entity (dict): A dictionary containing the prediction of one token.
         sentence (str): The original sentence.
 
@@ -353,7 +361,7 @@ def fix_hyphens(lEntities: List[dict]) -> List[dict]:
     a sequence of tokens connected by hyphens should be grouped as a single
     entity.
 
-    Args:
+    Arguments:
         lEntities (list): A list of dictionaries corresponding to predicted
             tokens.
 
@@ -489,7 +497,7 @@ def fix_startEntity(lEntities: List[dict]) -> List[dict]:
        but the entity type of the previous token is different, it should be
        ``"B-"`` instead. This case is fixed by changing the prefix to ``"B-"``.
 
-    Args:
+    Arguments:
         lEntities (list): A list of dictionaries corresponding to predicted
             tokens.
 

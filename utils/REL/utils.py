@@ -1,12 +1,23 @@
 import numpy as np
+from typing import List, Any, Optional, Tuple
 
 
-def flatten_list_of_lists(list_of_lists):
+def flatten_list_of_lists(
+    list_of_lists: List[List[Any]],
+) -> Tuple[List[Any], List[int]]:
     """
-    making inputs to torch.nn.EmbeddingBag
-    """
-    """
-    TODO docstring
+    Flatten a list of lists for input to torch.nn.EmbeddingBag.
+
+    Args:
+        list_of_lists (List[List[Any]]): A list of lists to be flattened.
+
+    Returns:
+        tuple: A tuple containing the flattened list and the offsets.
+
+    Example:
+        >>> list_of_lists = [[1, 2, 3], [4, 5], [6]]
+        >>> print(flatten_list_of_lists(list_of_lists))
+        ([1, 2, 3, 4, 5, 6], [3, 5])
     """
     list_of_lists = [[]] + list_of_lists
     offsets = np.cumsum([len(x) for x in list_of_lists])[:-1]
@@ -14,9 +25,29 @@ def flatten_list_of_lists(list_of_lists):
     return flatten, offsets
 
 
-def make_equal_len(lists, fill_in=0, to_right=True):
+def make_equal_len(
+    lists: List[List[Any]], fill_in: Optional[int] = 0, to_right: Optional[bool] = True
+) -> Tuple[List[Any], List[float]]:
     """
-    TODO docstring
+    Make lists of equal length by padding or truncating.
+
+    Args:
+        lists (list): A list of lists to be made of equal length.
+        fill_in (int, optional): The value used for padding. Defaults to ``0``.
+        to_right (bool, optional): Whether to pad or truncate to the right.
+            Defaults to ``True``.
+
+    Returns:
+        tuple: A tuple containing the lists of equal length and the mask.
+
+    Example:
+        >>> lists = [[1, 2, 3], [4, 5], [6, 7, 8, 9]]
+        >>> print(make_equal_len(lists))
+        ([[1, 2, 3], [4, 5, 0], [6, 7, 8]], [[1.0, 1.0, 1.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]])
+
+    Note:
+        The mask indicates the original length of each list with ``1.0`` values
+        and the padded/truncated parts with ``0.0`` values.
     """
     lens = [len(l) for l in lists]
     max_len = max(1, max(lens))
@@ -29,11 +60,20 @@ def make_equal_len(lists, fill_in=0, to_right=True):
     return eq_lists, mask
 
 
-def is_important_word(s):
+def is_important_word(s: str) -> bool:
     """
-    TODO docstring
+    Check if a word is important. An important word is not a stopword, a
+    number, or has a length of 1.
 
-    an important word is not a stopword, a number, or len == 1
+    Args:
+        s (str): The word to be checked.
+
+    Returns:
+        bool: True if the word is important, False otherwise.
+
+    Example:
+        >>> print(is_important_word("apple"))
+        True
     """
     try:
         if len(s) <= 3 or s.lower() in STOPWORDS:
@@ -379,3 +419,4 @@ STOPWORDS = {
     "best",
     "using",
 }
+"""A set of common stopwords used for word filtering."""

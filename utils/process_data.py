@@ -14,6 +14,7 @@ from utils import ner
 
 if TYPE_CHECKING:
     from geoparser import recogniser
+    from experiments import experiment
 
 
 def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
@@ -26,7 +27,7 @@ def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
     Arguments:
         str2parse (str): The string expression to be evaluated.
         in_case (Any, optional): The value to return in case of a
-            ``ValueError``. Defaults to "".
+            ``ValueError``. Defaults to ``""``.
 
     Returns:
         Any:
@@ -255,9 +256,10 @@ def postprocess_predictions(predictions: List[dict], gold_positions) -> dict:
     return postprocessed_sentence
 
 
+# TODO/typing: set ``myner: recogniser.Recogniser`` here, but creates problem with Sphinx currently
 def ner_and_process(
     dSentences: dict, dAnnotated: dict, myner
-):  # TODO/typing: set ``myner: recogniser.Recogniser`` here, but creates problem with Sphinx currently
+) -> Tuple[dict, dict, dict, dict, dict]:
     """
     Perform named entity recognition in the LwM way, and postprocess the
     output to prepare it for the experiments.
@@ -391,18 +393,18 @@ def ner_and_process(
 
 def update_with_linking(ner_predictions: dict, link_predictions: pd.Series) -> dict:
     """
-    Updates the NER predictions with linking results.
+    Updates the NER predictions by incorporating linking results.
 
     Arguments:
-        ner_predictions (dict): dictionary with NER predictions (token-per-token)
-            for a given sentence.
-        link_predictions (pd.Series): a pandas series, corresponding to one
-            row of the test_df, corresponding to one mention.
+        ner_predictions (dict): A dictionary containing NER predictions
+            (token-per-token) for a given sentence.
+        link_predictions (pd.Series): A pandas series corresponding to one row
+            of the test_df, representing one mention.
 
     Returns:
         dict:
-            A dictionary like ``ner_predictions``, only with the added link to
-            Wikidata.
+            A dictionary similar to `ner_predictions`, but with the added
+            Wikidata link for each predicted entity.
     """
     resulting_preds = ner_predictions
     link_predictions = link_predictions.to_dict(orient="index")
@@ -417,19 +419,20 @@ def update_with_linking(ner_predictions: dict, link_predictions: pd.Series) -> d
 
 def update_with_skyline(ner_predictions: dict, link_predictions: pd.Series) -> dict:
     """
-    Update NER predictions with linking results.
+    Updates the NER predictions with the skyline link from entity linking.
 
     Arguments:
-        ner_predictions (dict): dictionary with NER predictions (token-per-
-            token) for a given sentence.
-        link_predictions (pd.Series): a pandas series, corresponding to one
-            row of the test_df, corresponding to one mention.
+        ner_predictions (dict): A dictionary containing NER predictions
+            (token-per-token) for a given sentence.
+        link_predictions (pd.Series): A pandas series corresponding to one row
+            of the test_df, representing one mention.
 
     Returns:
         dict:
-            A dictionary like ``ner_predictions``, only with the added
-            skyline link to Wikidata (i.e. the gold standard candidate if the
-            candidate has been retrieved via candidate ranking).
+            A dictionary similar to ``ner_predictions``, but with the added
+            skyline link to Wikidata. The skyline link represents the gold
+            standard candidate if it has been retrieved through candidate
+            ranking, otherwise it is set to ``"O"``.
     """
     resulting_preds = ner_predictions
     link_predictions = link_predictions.to_dict(orient="index")
@@ -453,21 +456,24 @@ def update_with_skyline(ner_predictions: dict, link_predictions: pd.Series) -> d
 
 
 def prepare_storing_links(
-    processed_data: dict, all_test: list, test_df: pd.DataFrame
+    processed_data: dict, all_test: List[str], test_df: pd.DataFrame
 ) -> dict:
     """
-    Updates the processed data dictionaries (preds and skys) with the
-    predicted links for "preds" and with the skyline for "skys" (where
-    the skyline is "if the gold standard entity is among the candidates,
-    choose that one", providing the skyline of the maximum we can possibly
-    achieve with linking).
+    Updates the processed data dictionaries with predicted links for "preds"
+    and the skyline for "skys". The skyline represents the maximum achievable
+    result by choosing the gold standard entity among the candidates.
 
     Arguments:
-        processed_data (dict): dictionary of all processed data.
-        all_test (list): ids of articles in current data split used for
-            testing.
-        test_df (pd.DataFrame): dataframe with one-mention-per-row that will
-            be used for testing in this current experiment.
+        processed_data (dict): A dictionary containing all processed data.
+        all_test (List[str]): A list of article IDs in the current data split
+            used for testing.
+        test_df (pd.DataFrame): A DataFrame with one mention per row that will
+            be used for testing in the current experiment.
+
+    Returns:
+        dict
+            The updated processed data dictionary with "preds" and "skys"
+            incorporating the predicted links and skyline information.
     """
     for sent_id in processed_data["preds"]:
         article_id = sent_id.split("_")[0]
@@ -494,14 +500,13 @@ def prepare_storing_links(
     return processed_data
 
 
-# TODO/typing: add preparation.Experiment type on ``experiment``
-def load_processed_data(experiment) -> dict:
+def load_processed_data(experiment: experiment.Experiment) -> dict:
     """
     Loads the data already processed in a previous run of the code, using
     the same parameters.
 
     Arguments:
-        experiment (preparation.Experiment): an Experiment object.
+        experiment (experiment.Experiment): an Experiment object.
 
     Returns:
         dict: A dictionary where the processed data is stored.
@@ -548,9 +553,8 @@ def load_processed_data(experiment) -> dict:
         return dict()
 
 
-# TODO/typing: add preparation.Experiment type on ``experiment``
 def store_processed_data(
-    experiment,
+    experiment: experiment.Experiment,
     preds: dict,
     trues: dict,
     skys: dict,
@@ -562,28 +566,32 @@ def store_processed_data(
     dCandidates: dict,
 ) -> dict:
     """
-    This function stores all the postprocessed data as jsons.
+    Stores all the postprocessed data as JSON files and returns a dictionary
+    containing all processed data.
 
     Arguments:
-        experiment (preparation.Experiment): the experiment object.
-        preds (dict): dictionary of tokens with predictions, per sentence.
-        trues (dict): dictionary of tokens with gold standard annotations, per
+        experiment (experiment.Experiment): An experiment object.
+        preds (dict): A dictionary of tokens with predictions per sentence.
+        trues (dict): A dictionary of tokens with gold standard annotations per
             sentence.
-        skys (dict): dictionary of tokens which will keep the skyline, per
+        skys (dict): A dictionary of tokens representing the skyline per
             sentence.
-        gold_tok (dict): dictionary of tokens with gold standard annotations
-            as dictionaries, per sentence.
-        dSentences (dict): dictionary that maps a sentence id with the text.
-        dMetadata (dict): dictionary that maps a sentence id with the
-            associated metadata.
-        dMentionsPred (dict): dictionary of predicted mentions, per sentence.
-        dMentionsGold (dict): dictionary of gold standard mentions, per
+        gold_tok (dict): A dictionary of tokens with gold standard annotations
+            as dictionaries per sentence.
+        dSentences (dict): A dictionary mapping a sentence ID to the
+            corresponding text.
+        dMetadata (dict): A dictionary mapping a sentence ID to associated
+            metadata.
+        dMentionsPred (dict): A dictionary of predicted mentions per sentence.
+        dMentionsGold (dict): A dictionary of gold standard mentions per
             sentence.
-        dCandidates (dict): dictionary of candidates, per mention in sentence.
+        dCandidates (dict): A dictionary of candidates per mention in a
+            sentence.
 
     Returns:
-        dict: A dictionary of dictionaries, keeping all processed data
-            (predictions, REL, gold standard, candidates) in one place.
+        dict:
+            A dictionary containing all processed data (predictions, gold
+            standard, skyline, candidates) in one place.
 
     Note:
         This function also creates one JSON file per dictionary, stored in
@@ -652,13 +660,12 @@ def store_processed_data(
     return dict_processed_data
 
 
-# TODO/typing: add preparation.Experiment type on ``experiment``
-def create_mentions_df(experiment) -> pd.DataFrame:
+def create_mentions_df(experiment: experiment.Experiment) -> pd.DataFrame:
     """
     Create a dataframe for the linking experiment, with one mention per row.
 
     Arguments:
-        experiment (preparation.Experiment): the current experiment.
+        experiment (experiment.Experiment): An experiment object.
 
     Returns:
         pandas.DataFrame:
@@ -666,7 +673,8 @@ def create_mentions_df(experiment) -> pd.DataFrame:
             information for subsequent steps (i.e. for linking).
 
     Note:
-        This function also creates a TSV file in the ``outputs/data/[dataset]/`` folder.
+        This function also creates a TSV file in the
+        ``outputs/data/[dataset]/`` folder.
     """
     dMentions = experiment.processed_data["dMentionsPred"]
     dGoldSt = experiment.processed_data["dMentionsGold"]
@@ -811,19 +819,21 @@ def create_mentions_df(experiment) -> pd.DataFrame:
     return processed_df
 
 
-def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles_test):
+def store_for_scorer(
+    hipe_scorer_results_path: str,
+    scenario_name: str,
+    dresults: dict,
+    articles_test: List[str],
+) -> None:
     """
-    Storing results in the right format for evaluation using the CLEF-HIPE
-    scorer.
+    Stores the results in the required format for evaluation using the CLEF-HIPE scorer.
 
     Arguments:
-        hipe_scorer_results_path (str): first part of the path of the output
-            path.
-        scenario_name (str): second part of the path of the output file.
-        dresults (dict): dictionary with the results.
-        articles_test (list): list of sentences that are part of the
-            split we're using for evaluating the performance on this
-            particular experiment.
+        hipe_scorer_results_path (str): The first part of the output file path.
+        scenario_name (str): The second part of the output file path.
+        dresults (dict): A dictionary containing the results.
+        articles_test (list): A list of sentences that are part of the split used
+            for evaluating the performance in the provided experiment.
 
     Returns:
         None.
@@ -887,17 +897,19 @@ def store_for_scorer(hipe_scorer_results_path, scenario_name, dresults, articles
                 fw.write("\n")
 
 
-# TODO/typing: add preparation.Experiment type on ``experiment``
 # TODO: which_split doesn't seem to be used, so can be removed here?
 def store_results(
-    experiment, task: Literal["ner", "linking"], how_split: str, which_split
+    experiment: experiment.Experiment,
+    task: Literal["ner", "linking"],
+    how_split: str,
+    which_split,
 ) -> None:
     """
     Function which stores the results of an experiment in the format required
     by the HIPE 2020 evaluation scorer.
 
     Arguments:
-        experiment (preparation.Experiment): the current experiment.
+        experiment (experiment.Experiment): the current experiment.
         task (Literal["ner", "linking"]): either "ner" or "linking". Store the
             results for just NER or with links as well.
         how_split (str): which way of splitting the data are we using?

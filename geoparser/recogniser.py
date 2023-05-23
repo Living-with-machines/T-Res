@@ -29,23 +29,23 @@ class Recogniser:
     Arguments:
         model (str): The name of the NER model.
         train_dataset (str, optional): Path to the training dataset
-            (default: "").
+            (default: ``""``).
         test_dataset (str, optional): Path to the testing dataset
-            (default: "").
+            (default: ``""``).
         pipe (transformers.Pipeline, optional): A pre-loaded NER pipeline
-            (default: None).
+            (default: ``None``).
         base_model (str, optional): The name of the base model, for
-            fine-tuning (default: "")
+            fine-tuning (default: ``""``)
         model_path (str, optional): Path to store the trained model
-            (default: "").
+            (default: ``""``).
         training_args (dict, optional): Additional fine-tuning training
-            arguments (default: {}).
+            arguments (default: ``dict()``, an empty dictionary).
         overwrite_training (bool, optional):  Whether to overwrite an existing
-            trained model (default: False).
+            trained model (default: ``False``).
         do_test (bool, optional): Whether to train in test mode
-            (default: False).
+            (default: ``False``).
         load_from_hub (bool, optional): Whether to load the model from
-            HuggingFace model hub (default: False).
+            HuggingFace model hub (default: ``False``).
 
     Example:
         >>> # Create an instance of the Recogniser class
@@ -54,7 +54,10 @@ class Recogniser:
                 train_dataset="train.json",
                 test_dataset="test.json",
                 model_path="/path/to/model/",
-                training_args={"learning_rate": 0.001, "batch_size": 16, "num_train_epochs": 5},
+                training_args={
+                    "learning_rate": 0.001,
+                    "batch_size": 16,
+                    "num_train_epochs": 5},
                 overwrite_training=False,
                 do_test=False,
                 load_from_hub=False

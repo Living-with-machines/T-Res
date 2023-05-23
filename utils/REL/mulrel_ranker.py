@@ -2,29 +2,51 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
+from typing import Any, Optional, Union
 
 
 class PreRank(torch.nn.Module):
     """
-    TODO fix docstring
+    PreRank class implements a neural network model for entity ranking.
 
-    PreRank class is used for preranking entities for a given mention by
-    multiplying entity vectors with word vectors.
+    It can be used to prerank entities for a given mention by multiplying
+    entity vectors with word vectors.
+
+    Arguments:
+        config (dict): Configuration parameters for the model.
+        embeddings (Any, optional): Pre-trained embeddings to use as input, default
+            is ``None``.
     """
 
-    def __init__(self, config, embeddings=None):
+    # TODO/typing: Ensure embeddings has correct type
+    def __init__(self, config: dict, embeddings: Any = None):
         """
         Initialises an PreRank object.
         """
         super(PreRank, self).__init__()
         self.config = config
 
-    def forward(self, token_ids, token_offsets, entity_ids, embeddings):
+    # TODO/typing: Set type of token_ids, token_offsets, entity_ids, and the return type to Tensor
+    def forward(
+        self, token_ids: Any, token_offsets: Any, entity_ids: Any, embeddings: dict
+    ) -> Any:
         """
-        Multiplies local context words with entity vectors for a given mention.
+        Performs the forward pass of the PreRank model.
+
+        Args:
+            token_ids (Any): Tensor of token IDs.
+            token_offsets (Any): Tensor of token offsets.
+            entity_ids (Any): Tensor of entity IDs.
+            embeddings (dict): Dictionary of pre-trained embeddings.
 
         Returns:
-            TODO entity scores.
+            log_probs (Any): Tensor of entity ranking scores.
+
+        Note:
+            The method multiplies local context words with entity vectors
+            for a given mention.
+
+            The input tensors must have appropriate shapes and data types.
         """
 
         sent_vecs = embeddings["word_embeddings_bag"](
@@ -44,20 +66,23 @@ class PreRank(torch.nn.Module):
         return log_probs
 
 
+# TODO/typing: Ensure type of device is set to correct type
 class MulRelRanker(torch.nn.Module):
     """
-    TODO: fix docstring
+    MulRelRanker class implements a neural network model for entity ranking
+    with multiple relations.
 
-    Multi-relational global model with context token attention, using loopy belief propagation.
-    With local model context token attention (from G&H's EMNLP paper).
+    Args:
+        config (dict): Configuration parameters for the model.
+        device (Any): Device on which to run the model.
 
-    Function descriptions will refer to paper.
-
-    Author: Phong Le
-    Paper: Improving Entity Linking by Modeling Latent Relations between Mentions
+    Note:
+        This is a multi-relational global model with context token attention,
+        using loopy belief propagation. With local model context token
+        attention (from G&H's EMNLP paper).
     """
 
-    def __init__(self, config, device):
+    def __init__(self, config: dict, device: Any):
         """
         Initialises a MulRelRanker object.
         """
@@ -113,14 +138,33 @@ class MulRelRanker(torch.nn.Module):
             torch.nn.Linear(self.config["hid_dims"], 1),
         )
 
+    # TODO/typing: Set type of token_ids, tok_mask, entity_ids, entity_mask, p_e_m and the return type to Tensor
     def __local_ent_scores(
-        self, token_ids, tok_mask, entity_ids, entity_mask, embeddings, p_e_m=None
-    ):
+        self,
+        token_ids: Any,
+        tok_mask: Any,
+        entity_ids: Any,
+        entity_mask: Any,
+        embeddings: dict,
+        p_e_m: Optional[Any] = None,
+    ) -> Any:
         """
-        Local entity scores
+        Computes local entity scores based on token and entity inputs.
+
+        Arguments:
+            token_ids (Any): Tensor of token IDs.
+            tok_mask (Any): Tensor of token masks.
+            entity_ids (Any): Tensor of entity IDs.
+            entity_mask (Any): Tensor of entity masks.
+            embeddings (dict): Dictionary of pre-trained embeddings.
+            p_e_m (Any, optional): Tensor of entity prior probabilities,
+                default is ``None``.
 
         Returns:
-            TODO Entity scores.
+            scores (Any): Tensor of local entity scores.
+
+        Note:
+            The input tensors must have appropriate shapes and data types.
         """
 
         batchsize, n_words = token_ids.size()
@@ -179,20 +223,46 @@ class MulRelRanker(torch.nn.Module):
 
         return scores
 
+    # TODO: gold is not used in the method and can be dropped as a keyword argument
+    # TODO/typing: Set type of token_ids, tok_mask, entity_ids, entity_mask, p_e_m and the return type to Tensor
     def forward(
-        self, token_ids, tok_mask, entity_ids, entity_mask, p_e_m, embeddings, gold=None
-    ):
+        self,
+        token_ids: Any,
+        tok_mask: Any,
+        entity_ids: Any,
+        entity_mask: Any,
+        p_e_m: Any,
+        embeddings: dict,
+        gold: Optional[Any] = None,
+    ) -> Tuple[Any, Any]:
         """
-        Responsible for forward pass of ED model and produces a ranking of candidates for a given set of mentions.
+        Performs the forward pass of the entity disambiguation (MulRelRanker)
+        model. Produces a ranking of candidates for a given set of mentions.
 
-        - ctx_layer refers to function f. See Figure 3 in respective paper.
-        - ent_scores refers to function q.
-        - score_combine refers to function g.
+        Arguments:
+            token_ids (Any): Tensor of token IDs.
+            tok_mask (Any): Tensor of token masks.
+            entity_ids (Any): Tensor of entity IDs.
+            entity_mask (Any): Tensor of entity masks.
+            p_e_m (Any): Tensor of entity prior probabilities.
+            embeddings (dict): Dictionary of pre-trained embeddings.
+            gold (Any, optional): Tensor of gold labels for training, default
+                is ``None``.
 
         Returns:
-            TODO Ranking of entities per mention.
-        """
+            Tuple[Any, Any]: A tuple consisting of two tensors:
+                - ``scores`` (Tensor): Tensor of entity ranking scores.
+                - ``ent_scores`` (Tensor): Tensor of entity scores before softmax.
 
+        Note:
+            The method draws on Phong Le, "Improving Entity Linking by
+            Modeling Latent Relations between Mentions",
+            http://dx.doi.org/10.18653/v1/P18-1148:
+            - ``ctx_layer`` refers to function f. See Figure 3 in respective
+              paper.
+            - ``ent_scores`` refers to function q.
+            - ``score_combine`` refers to function g.
+        """
         n_ments, n_cands = entity_ids.size()
         n_rels = self.config["n_rels"]
 
@@ -372,14 +442,24 @@ class MulRelRanker(torch.nn.Module):
             scores = scores[:-1]
         return scores, ent_scores
 
-    def regularize(self, max_norm=1):
+    def regularize(self, max_norm: Union[float, int] = 1) -> None:
         """
-        Regularises model parameters.
+        Regularizes the model's parameters by applying a maximum norm
+        constraint.
+
+        Args:
+            max_norm (Union[float, int]): Maximum norm value to enforce,
+                defaults to ``1``.
 
         Returns:
-            TODO
-        """
+            None.
 
+        Note:
+            The method modifies the model's parameter tensors in-place.
+
+            It ensures that the norms of the linear layer weights and biases
+            are within the maximum norm value.
+        """
         l1_w_norm = self.score_combine_linear_1.weight.norm()
         l1_b_norm = self.score_combine_linear_1.bias.norm()
         l2_w_norm = self.score_combine_linear_2.weight.norm()
@@ -402,12 +482,31 @@ class MulRelRanker(torch.nn.Module):
                 self.score_combine_linear_2.bias.data * max_norm / l2_b_norm.data
             )
 
-    def loss(self, scores, true_pos, lamb=1e-7):
+    # TODO/typing: Set type of scores, true_pos, and the return type to Tensor
+    def loss(self, scores: Any, true_pos: Any, lamb: Optional[float] = 1e-7) -> Any:
         """
-        Computes given ranking loss (Equation 7) and adds a regularization term.
+        Computes the loss based on predicted scores and true positive labels.
+
+        Args:
+            scores (Any): Tensor of predicted entity ranking scores.
+            true_pos (Any): Tensor of true positive labels for entities.
+            lamb (float, optional): Regularization coefficient, defaults to
+                ``1e-7``.
 
         Returns:
-            TODO loss of given batch
+            loss (Any): Scalar tensor representing the computed loss.
+
+        Note:
+            The input tensors must have appropriate shapes and data types.
+
+            The loss is computed using the multi-margin loss function.
+
+            The method also applies regularization to the model's parameters.
+
+            The method draws on Phong Le, "Improving Entity Linking by
+            Modeling Latent Relations between Mentions",
+            http://dx.doi.org/10.18653/v1/P18-1148:
+            - Loss refers to equation 7
         """
         loss = F.multi_margin_loss(scores, true_pos, margin=self.config["margin"])
         if self.config["use_local_only"]:

@@ -29,18 +29,19 @@ def obtain_matches(
     fuzz_ratio_threshold: Optional[Union[float, int]] = 70,
 ) -> Tuple[List, List]:
     """
-    Given a word and the top 100 nearest neighbours, separate into positive
+    Separates the given word and the top 100 nearest neighbors into positive
     and negative matches.
 
     Arguments:
-        word (str): a word.
-        english_words (list): list of words in the English language.
-        sims (list): the list of 100 nearest neighbours from the OCR word2vec
+        word (str): The input word.
+        english_words (list): A list of English words as strings.
+        sims (list): The list of 100 nearest neighbors from the OCR word2vec
             model.
-        fuzz_ratio_threshold (float): threshold for fuzz.ratio
-            If the nearest neighbour word is a word of the English language
-            and the string similarity is less than fuzz_ratio_threshold, we
-            consider it a negative match (i.e. not an OCR variation)
+        fuzz_ratio_threshold (float): The threshold used for
+            :py:meth:`thefuzz.fuzz.ratio`. If the nearest neighbor word is an
+            English word and the string similarity is below
+            ``fuzz_ratio_threshold``, it is considered a negative match, i.e.
+            not an OCR variation. Defaults to ``70``.
 
     Returns:
         Tuple[List, List]: A tuple that contains two lists:
@@ -98,9 +99,8 @@ def obtain_matches(
     return positive, negative
 
 
-def create_training_set(
-    myranker,
-) -> None:  # TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
+# TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
+def create_training_set(myranker) -> None:
     """
     Create a training set for DeezyMatch consisting of positive and negative
     string matches.
@@ -119,7 +119,10 @@ def create_training_set(
         None.
 
     Note:
-        This function creates a new file with the string pairs dataset.
+        This function creates a new file with the string pairs dataset called
+        ``w2v_ocr_pairs.txt`` inside the folder path defined as ``dm_path`` in
+        the DeezyMatch parameters passed in setting up the ranker passed to
+        this function as ``myranker``.
     """
 
     # Path to the output string pairs dataset:
@@ -175,10 +178,11 @@ def create_training_set(
             seedwords_cutoff = 5
             w2v_words = w2v_words[:seedwords_cutoff]
 
-        # For each word in the w2v model, keep likely positive and negative matches:
+        # For each word in the w2v model, keep likely positive and negative
+        # matches:
         for word in tqdm(w2v_words):
-            # For each word in the w2v model that is longer than 4 characters and
-            # is a word in the English language:
+            # For each word in the w2v model that is longer than 4 characters
+            # and is a word in the English language:
             if (
                 len(word) >= myranker.strvar_parameters["min_len"]
                 and len(word) <= myranker.strvar_parameters["max_len"]
@@ -193,7 +197,7 @@ def create_training_set(
                     >= len(x[0])
                     >= myranker.strvar_parameters["min_len"]
                 ]
-                # Distinguist between positive and negative matches, where
+                # Distinguish between positive and negative matches, where
                 # * a positive match is an OCR word variation
                 # * a negative match is a different word
                 positive, negative = obtain_matches(
@@ -202,7 +206,8 @@ def create_training_set(
                     sims,
                     fuzz_ratio_threshold=myranker.strvar_parameters["ocr_threshold"],
                 )
-                # We should have the same number of positive matches as negative:
+                # We should have the same number of positive matches as
+                # negative:
                 shortest_length = min([len(positive), len(negative)])
                 negative = negative[:shortest_length]
                 positive = positive[:shortest_length]
@@ -250,9 +255,8 @@ def create_training_set(
             fw.write(pm)
 
 
-def train_deezy_model(
-    myranker,
-) -> None:  # TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
+# TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
+def train_deezy_model(myranker) -> None:
     """
     Train a DeezyMatch model using the provided ``myranker`` parameters and
     input files.
@@ -262,7 +266,7 @@ def train_deezy_model(
     ``overwrite_training`` parameter is set to True or the model does not
     exist, the function will train a new DeezyMatch model.
 
-    Args:
+    Arguments:
         myranker (geoparser.ranking.Ranker): An instance of the Ranker class.
 
     Returns:
@@ -308,9 +312,8 @@ def train_deezy_model(
         print("The DeezyMatch model is already trained!")
 
 
-def generate_candidates(
-    myranker,
-) -> None:  # TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
+# TODO/typing: set ``myranker: ranking.Ranker`` but causes circular import for now
+def generate_candidates(myranker) -> None:
     """
     Obtain Wikidata candidates (Wikipedia mentions to Wikidata entities) and
     generate their corresponding vectors.
@@ -329,7 +332,9 @@ def generate_candidates(
     Note:
         The function saves the candidates to a file and generates embeddings
         using the DeezyMatch model. The resulting vectors are stored in the
-        specified output directories.
+        output directories specified in the DeezyMatch parameters passed to
+        the ranker passed to this function in the ``myranker`` keyword
+        argument.
     """
     deezymatch_outputs_path = myranker.deezy_parameters["dm_path"]
     candidates = myranker.deezy_parameters["dm_cands"]

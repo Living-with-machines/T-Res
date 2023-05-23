@@ -160,18 +160,18 @@ def process_lwm_for_ner(tsv_topres_path: str):
     Each sentence in the LwM data is assigned a unique identifier, and
     consists of a list of tokens along with their associated NER tags using
     the BIO scheme, e.g.:
-    * ``id``: ``10813493_1 # document_id + "_" + sentence_id``
-    * ``ner_tags``: ``['B-LOC', 'O']``
-    * ``tokens``: ``['INDIA', '.']``
+    - ``id``: ``10813493_1 # document_id + "_" + sentence_id``
+    - ``ner_tags``: ``['B-LOC', 'O']``
+    - ``tokens``: ``['INDIA', '.']``
 
     Arguments:
-        tsv_topres_path (str): The path to the top-level directory containing the annotated TSV files.
+        tsv_topres_path (str): The path to the top-level directory containing
+            the annotated TSV files.
 
     Returns:
         pandas.DataFrame:
             A DataFrame containing the processed LwM data for NER training,
             with the following columns:
-
             - ``id``: The unique identifier of each sentence
                (``document_id + "_" + sentence_id``).
             - ``ner_tags``: A list of NER tags assigned to each token in the
@@ -336,7 +336,8 @@ def process_lwm_for_linking(
                 if "—" in mention:
                     mention = mention.split("—")[0]
 
-                # If the gold standard entity is not in the KB, it's NIL
+                # If the gold standard entity is not in the knowledge base,
+                # it's NIL
                 if not wkdt in gazetteer_ids:
                     wkdt = "NIL"
 
@@ -389,12 +390,6 @@ def aggregate_hipe_entities(entity: dict, lEntities: List[dict]) -> List[dict]:
     Aggregate HIPE entities by joining consecutive tokens belonging to the
     same entity.
 
-    The function takes an entity and a list of entities and aggregates them by
-    joining consecutive tokens that belong to the same entity. If the current
-    entity is part of a multi-token entity (indicated by the ``"I-"`` prefix),
-    it is joined with the previous detected entity. This helps to create
-    complete and contiguous entities.
-
     Arguments:
         entity (dict): The current entity to be aggregated.
         lEntities (list): The list of entities to be updated.
@@ -434,6 +429,13 @@ def aggregate_hipe_entities(entity: dict, lEntities: List[dict]) -> List[dict]:
                 "meto_type": "city",
             }
         ]
+
+    Note:
+        The function takes an entity and a list of entities and aggregates
+        them by joining consecutive tokens that belong to the same entity. If
+        the current entity is part of a multi-token entity (indicated by the
+        ``"I-"`` prefix), it is joined with the previous detected entity. This
+        helps to create complete and contiguous entities.
     """
     newEntity = entity
     # We remove the word index because we're altering it (by joining suffixes)
@@ -473,7 +475,6 @@ def process_hipe_for_linking(hipe_path: str, gazetteer_ids: List[str]) -> pd.Dat
 
     Returns:
         pandas.DataFrame: A DataFrame with the following columns:
-
             - ``article_id``: The identifier of the article.
             - ``sentences``: A list of dictionaries containing the sentence
               position and text.
@@ -785,32 +786,35 @@ def process_tsv(filepath: str) -> Tuple[dict, dict]:
             else:
                 sent_tmp, tok_tmp, token, wkpd, label = line.strip().split("\t")
 
-            # If the annotation corresponds to a multi-token annotation (i.e. WikipediaID string
-            # ends with a number enclosed in square brackets, as in "San[1]" and "Francisco[1]"):
+            # If the annotation corresponds to a multi-token annotation (i.e.
+            # WikipediaID string ends with a number enclosed in square
+            # brackets, as in "San[1]" and "Francisco[1]"):
 
             if re.match(regex_multmention, wkpd):
-                # This code basically collates multi-token mentions in annotations
-                # together. "complete_token" is the resulting multi-token mention,
-                # "sent_pos" is the sentence position in the file, "tok_pos" is the
-                # token position in the sentence, "mtok_start" is the multi-token
+                # This code basically collates multi-token mentions in
+                # annotations together. "complete_token" is the resulting
+                # multi-token mention, "sent_pos" is the sentence position in
+                # the file, "tok_pos" is the token position in the sentence,
+                # "mtok_start" is the multi-token
 
-                # character start position in the document, and "tok_end" is the
-                # multi-token character end position in the document.
+                # character start position in the document, and "tok_end" is
+                # the multi-token character end position in the document.
                 multiple_mention = int(re.match(regex_multmention, wkpd).group(2))
                 complete_label = re.match(regex_multmention, label).group(1)
                 complete_wkpd = re.match(regex_multmention, wkpd).group(1)
 
                 # If we identify that we're dealing with a multi-token mention:
                 if multiple_mention == prev_multmention:
-                    # Preappend as many white spaces as the distance between the end of the
-                    # previous token and the start of the current token:
+                    # Preappend as many white spaces as the distance between
+                    # the end of the previous token and the start of the
+                    # current token:
                     complete_token += " " * (
                         int(tok_tmp.split("-")[0]) - int(prev_endchar)
                     )
                     # Append the current token to the complete token:
                     complete_token += token
-                    # The complete_token end character will be considered to be the end of
-                    # the latest token in the multi-token:
+                    # The complete_token end character will be considered to
+                    # be the end of the latest token in the multi-token:
                     tok_start, tok_end = tok_tmp.split("-")
                     mtok_end = tok_tmp.split("-")[1]
                     # Here we keep the end position of the previous token:
@@ -825,8 +829,8 @@ def process_tsv(filepath: str) -> Tuple[dict, dict]:
                     bio_label = "B-" + label
                 prev_multmention = multiple_mention
 
-            # If the annotation does not correspond to a multi-token annotation,
-            # just keep the token-specific information:
+            # If the annotation does not correspond to a multi-token
+            # annotation, just keep the token-specific information:
             else:
                 sent_pos, tok_pos = sent_tmp.split("-")
                 tok_start, tok_end = tok_tmp.split("-")

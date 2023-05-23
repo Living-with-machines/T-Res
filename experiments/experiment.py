@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_data, rel_utils
+from geoparser import linking, ranking, recogniser
 
 
 class Experiment:
@@ -28,14 +29,14 @@ class Experiment:
         myranker (ranking.Ranker): An instance of the candidate ranking model
             to use.
         mylinker (linking.Linker): An instance of the linking model to use.
-        overwrite_processing (bool): Whether to overwrite the processed data
-            if it already exists (default is True).
-        processed_data (dict): A dictionary to store the processed data
-            (default is an empty dictionary).
-        test split (str): The data split to use for testing (train/dev/test,
-            default is an empty string).
-        rel_experiments (bool): Whether to run end-to-end REL experiments
-            (default is False).
+        overwrite_processing (bool, optional): Whether to overwrite the
+            processed data if it already exists (default is True).
+        processed_data (dict, optional): A dictionary to store the processed
+            data (default is an empty dictionary).
+        test split (str, optional): The data split to use for testing (train/
+            dev/test, default is an empty string).
+        rel_experiments (bool, optional): Whether to run end-to-end REL
+            experiments (default is False).
     """
 
     def __init__(
@@ -44,9 +45,9 @@ class Experiment:
         data_path: str,
         results_path: str,
         dataset_df: pd.DataFrame,
-        myner,
-        myranker,
-        mylinker,
+        myner: recogniser.Recogniser,
+        myranker: ranking.Ranker,
+        mylinker: linking.Linker,
         overwrite_processing: Optional[bool] = True,
         processed_data: Optional[dict] = dict(),
         test_split: Optional[str] = "",
@@ -86,10 +87,9 @@ class Experiment:
         """
         Returns a string representation of the Experiment object.
 
-        Returns
-        -------
-        str
-            A string representation of the Experiment object.
+        Returns:
+            str
+                A string representation of the Experiment object.
         """
         s = "\n>>> Experiment\n"
         s += f"    * Dataset: {self.dataset.upper()}\n"
@@ -102,10 +102,9 @@ class Experiment:
         """
         Load the processed data, if it exists.
 
-        Returns
-        -------
-        dict
-            The processed data dictionary.
+        Returns:
+            dict
+                The processed data dictionary.
         """
         return process_data.load_processed_data(self)
 
@@ -113,12 +112,11 @@ class Experiment:
         """
         Function that prepares the data for the experiments.
 
-        Returns
-        -------
-        dict
-            The processed data dictionary, containing predicted mentions, gold
-                standard, REL end-to-end processing, candidates, which can be
-                used later for linking.
+        Returns:
+            dict
+                The processed data dictionary, containing predicted mentions,
+                gold standard, REL end-to-end processing, candidates, which
+                can be used later for linking.
         """
 
         # ----------------------------------
@@ -212,6 +210,9 @@ class Experiment:
         different data splits and store the results in the specified format
         required by the HIPE scorer. Additionally, it provides an option to
         run end-to-end REL experiments.
+
+        Returns:
+            None.
 
         Note:
             The results of the experiments are stored in the
