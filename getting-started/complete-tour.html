@@ -135,7 +135,7 @@ NER model from the HuggingFace hub:</p>
 <p>To load a NER model that is stored locally (for example, let’s suppose we have
 a NER model in this relative location
 <code class="docutils literal notranslate"><span class="pre">../resources/models/blb_lwm-ner-fine</span></code>), you can also load it in the same
-way (notice that <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> should still be True, probably a better
+way (notice that <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> should still be <code class="docutils literal notranslate"><span class="pre">True</span></code>, probably a better
 name would be <code class="docutils literal notranslate"><span class="pre">load_from_path</span></code>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">recogniser</span>
 
@@ -172,20 +172,20 @@ description of each parameter below):</p>
 </div>
 <p>Description of the arguments:</p>
 <ul>
-<li><p><strong>``load_from_hub``</strong> set to False indicates we’re not using an off-the-shelf
+<li><p><code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code> indicates we’re not using an off-the-shelf
 model. It will prepare the Recogniser to train a new model, unless the model
-already exists or if <strong>``overwrite_training``</strong> is set to True. If
-<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to False and <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to False,
-the Recogniser will be prepared to first try to load the model and—if it does
-not exist—will train it. If <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to True and
-<code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to False, the Recogniser will be ready to directly
-try to train a model.</p></li>
-<li><p><strong>``base_model``</strong> is the path to the model that will be used as base to
+already exists or if <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>. If
+<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code> and <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, the Recogniser will be prepared to first try to load the model
+and—if it does not exist—will train it. If <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, the Recogniser will be
+ready to directly try to train a model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_model</span></code> is the path to the model that will be used as base to
 train our NER model. This can be the path to a HuggingFace model (we are
 using <a class="reference external" href="https://huggingface.co/khosseini/bert_1760_1900">khosseini/bert_1760_1900</a>,
 a BERT model trained on 19th Century texts) or the path to a model stored
 locally.</p></li>
-<li><p><strong>``train_dataset``</strong> and <strong>``test_dataset``</strong> contain the path to the train
+<li><p><code class="docutils literal notranslate"><span class="pre">train_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">test_dataset</span></code> contain the path to the train
 and test data sets necessary for training the NER model. The paths point to a
 json file (one for training, one for testing), in which each line is a
 dictionary corresponding to a sentence. Each sentence-dictionary has three
@@ -288,22 +288,22 @@ two lines from either the training or test json files:</p>
 </pre></div>
 </div>
 </li>
-<li><p><strong>``model_path``</strong> is the path where the Recogniser should store the model,
-and <strong>``model``</strong> is the name of the model. The <strong>``pipe``</strong> argument can be
+<li><p><code class="docutils literal notranslate"><span class="pre">model_path</span></code> is the path where the Recogniser should store the model,
+and <code class="docutils literal notranslate"><span class="pre">model</span></code> is the name of the model. The <code class="docutils literal notranslate"><span class="pre">pipe</span></code> argument can be
 left empty: that’s where we will store the NER pipeline, once the model is
 trained and loaded.</p></li>
-<li><p>The training arguments can be modified in <strong>``training_args``</strong>: you can
+<li><p>The training arguments can be modified in <code class="docutils literal notranslate"><span class="pre">training_args</span></code>: you can
 change the learning rate, batch size, number of training epochs, and weight
 decay.</p></li>
-<li><p>Finally, <strong>``do_test``</strong> allows you to train a mock model and then load it
+<li><p>Finally, <code class="docutils literal notranslate"><span class="pre">do_test</span></code> allows you to train a mock model and then load it
 (the suffix <cite>_test</cite> will be added to the model name). As mentioned above,
-<strong>``overwrite_training``</strong> forces retraining a model, even if a model with
+<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> forces retraining a model, even if a model with
 the same name and characteristics already exists.</p></li>
 </ul>
 <p>This instantiation prepares a new model
 (<code class="docutils literal notranslate"><span class="pre">resources/models/blb_lwm-ner-fine.model</span></code>) to be trained, unless the model
-already exists (<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is False), in which case it will just
-load it.</p>
+already exists (<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>), in which case it will
+just load it.</p>
 </section>
 <section id="train-the-ner-model">
 <h3>1. Train the NER model<a class="headerlink" href="#train-the-ner-model" title="Permalink to this headline"></a></h3>
@@ -311,9 +311,9 @@ load it.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myner</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Note that if <code class="docutils literal notranslate"><span class="pre">load_to_hub</span></code> is set to True or the model already exists (and
-<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to False), the training will be skipped, even if
-you call the <code class="docutils literal notranslate"><span class="pre">train()</span></code> method.</p>
+<p>Note that if <code class="docutils literal notranslate"><span class="pre">load_to_hub</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or the model already exists
+(and <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>), the training will be skipped,
+even if you call the <code class="docutils literal notranslate"><span class="pre">train()</span></code> method.</p>
 </section>
 <section id="create-a-ner-pipeline">
 <h3>3. Create a NER pipeline<a class="headerlink" href="#create-a-ner-pipeline" title="Permalink to this headline"></a></h3>
@@ -430,11 +430,23 @@ confidence score, and start and end characters in the sentence, as follows:</p>
 </section>
 <section id="the-ranker">
 <h2>The Ranker<a class="headerlink" href="#the-ranker" title="Permalink to this headline"></a></h2>
-<p>The Ranker takes the named entities detected by the Recogniser as input. Given a knowledge base, it ranks the entities according to their string similarity to the named entity, and selects a subset of candidates that will be passed on to the next component, the Linker, to do the disambiguation and select the most likely entity.</p>
-<p>In order to use the Ranker and the Linker, we need a knowledge base, a gazetteer. T-Res uses a gazetteer which combines data from Wikipedia and Wikidata. The steps to create it are described in the <a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz">wiki2gaz</a> GitHub repository.</p>
+<p>The Ranker takes the named entities detected by the Recogniser as input. Given
+a knowledge base, it ranks the entities according to their string similarity to
+the named entity, and selects a subset of candidates that will be passed on to
+the next component, the Linker, to do the disambiguation and select the most
+likely entity.</p>
+<p>In order to use the Ranker and the Linker, we need a knowledge base, a
+gazetteer. T-Res uses a gazetteer which combines data from Wikipedia and
+Wikidata. The steps to create it are described in the
+<a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz">wiki2gaz</a> GitHub
+repository.</p>
 <p>The following files are needed to run the Ranker:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code>: dictionary of Wikidata entities (by their QID) mapped to the mentions used in Wikipedia to refer to them (obtained through Wikipedia anchor texts) and the normalised score. For example, the value of entity <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a> is the following:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code>: dictionary of Wikidata entities
+(by their QID) mapped to the mentions used in Wikipedia to refer to them
+(obtained through Wikipedia anchor texts) and the normalised score. For
+example, the value of entity <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a>
+is the following:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;Wiltshire, England&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.005478851632697786</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;Wilton&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
@@ -455,7 +467,9 @@ confidence score, and start and end characters in the sentence, as follows:</p>
 </pre></div>
 </div>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code>: the reverse dictionary to the one above, it maps a mention to all the Wikidata entities that are referred to by this mention in Wikipedia. For example, the value of <cite>“Wiltshire”</cite> is:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code>: the reverse dictionary to the one</p></li>
+<li><p>above, it maps a mention to all the Wikidata entities that are referred to</p></li>
+<li><p>by this mention in Wikipedia. For example, the value of <cite>“Wiltshire”</cite> is:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;Q23183&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9767696690773614</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;Q55448990&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
@@ -463,28 +477,30 @@ confidence score, and start and end characters in the sentence, as follows:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>These scores don’t add up to one, as they are normalised per entity, therefore indicating how often an entity is referred to by this mention. For example, <code class="docutils literal notranslate"><span class="pre">Q55448990</span></code> is always referred to as <code class="docutils literal notranslate"><span class="pre">Wiltshire</span></code>.</p>
+<p>These scores don’t add up to one, as they are normalised per entity,
+therefore indicating how often an entity is referred to by this mention. For
+example, <code class="docutils literal notranslate"><span class="pre">Q55448990</span></code> is always referred to as <code class="docutils literal notranslate"><span class="pre">Wiltshire</span></code>.</p>
 </li>
 </ul>
 <p>We provide four different strategies for selecting candidates:</p>
 <ul class="simple">
-<li><p><strong>``perfectmatch``</strong> retrieves candidates from the knowledge base if one of
+<li><p><code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code> retrieves candidates from the knowledge base if one of
 their alternate names is identical to the detected named entity. For example,
 given the mention “Wiltshire”, the following Wikidata entities will be
 retrieved: <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a>,
 <a class="reference external" href="https://www.wikidata.org/wiki/Q55448990">Q55448990</a>, and
 <a class="reference external" href="https://www.wikidata.org/wiki/Q8023421">Q8023421</a>, because all these
 entities are referred to as “Wiltshire” in Wikipedia anchor texts.</p></li>
-<li><p><strong>``partialmatch``</strong> retrieves candidates from the knowledge base if there is
+<li><p><code class="docutils literal notranslate"><span class="pre">partialmatch</span></code> retrieves candidates from the knowledge base if there is
 a (partial) match between the query and the candidate names, based on string
 overlap. Therefore, the mention “Ashton-under” returns candidates for
 “Ashton-under-Lyne”.</p></li>
-<li><p><strong>``levenshtein``</strong> retrieves candidates from the knowledge base if there is
+<li><p><code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> retrieves candidates from the knowledge base if there is
 a fuzzy match between the query and the candidate names, based on levenshtein
 distance. Therefore, if the mention “Wiltshrre” would still return the
 candidates for “Wiltshire”. This method is often quite accurate when it comes
 to OCR variations, but it is very slow.</p></li>
-<li><p><strong>``deezymatch``</strong> retrieves candidates from the knowledge base if there is a
+<li><p><code class="docutils literal notranslate"><span class="pre">deezymatch</span></code> retrieves candidates from the knowledge base if there is a
 fuzzy match between the query and the candidate names, based on
 <a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch">DeezyMatch</a> embeddings.
 Significantly more complex than the other methods to set up from scratch, but
@@ -495,7 +511,7 @@ the fastest approach.</p></li>
 <p>To use the Ranker for exact matching (<code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code>) or fuzzy string
 matching based either on overlap or Levenshtein distance (<code class="docutils literal notranslate"><span class="pre">partialmatch</span></code> and
 <code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> respectively), instantiate it as follows, changing the
-<strong>``method``</strong> argument accordingly:</p>
+<code class="docutils literal notranslate"><span class="pre">method</span></code> argument accordingly:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">ranking</span>
 
 <span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
@@ -506,10 +522,10 @@ matching based either on overlap or Levenshtein distance (<code class="docutils 
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that <strong>``resources_path``</strong> should contain the path to the directory
+<p>Note that <code class="docutils literal notranslate"><span class="pre">resources_path</span></code> should contain the path to the directory
 where the resources are stored, namely <code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code>
-and <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code>. The <strong>``mentions_to_wikidata``</strong> and
-<strong>``wikidata_to_mentions``</strong> dictionaries should be left empty, as they will be
+and <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code>. The <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata</span></code> and
+<code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions</span></code> dictionaries should be left empty, as they will be
 populated when the Ranker loads the resources.</p>
 <p>DeezyMatch instantiation is trickier, as it requires training a model that,
 ideally, should capture the types of string variations that can be found in
@@ -592,18 +608,18 @@ DeezyMatch model).</p>
 <p>Description of the arguments (to learn more, refer to the
 <a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch/blob/master/README.md">DeezyMatch readme</a>:</p>
 <ul class="simple">
-<li><p><strong>``strvar_parameters``</strong> contains the parameters needed to generate the
+<li><p><code class="docutils literal notranslate"><span class="pre">strvar_parameters</span></code> contains the parameters needed to generate the
 DeezyMatch training set. In this scenario, the DeezyMatch model is already
 trained and there is therefore no need to generate the training set.</p></li>
-<li><p><strong>``deezy_parameters``</strong> contains the set of parameters to train or load a
+<li><p><code class="docutils literal notranslate"><span class="pre">deezy_parameters</span></code> contains the set of parameters to train or load a
 DeezyMatch model:</p>
 <ul>
-<li><p><strong>``dm_path``</strong>: The path to the folder where the DeezyMatch model and
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_path</span></code>: The path to the folder where the DeezyMatch model and
 data will be stored.</p></li>
-<li><p><strong>``dm_cands``</strong>: The name given to the set of alternate names from which
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_cands</span></code>: The name given to the set of alternate names from which
 DeezyMatch will try to find a match for a given mention.</p></li>
-<li><p><strong>``dm_model``</strong>: Name of the DeezyMatch model to train or load.</p></li>
-<li><p><strong>``ranking_metric``</strong> Metric used to TODO</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_model</span></code>: Name of the DeezyMatch model to train or load.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ranking_metric</span></code> Metric used to TODO</p></li>
 </ul>
 </li>
 </ul>
@@ -653,18 +669,24 @@ DeezyMatch will try to find a match for a given mention.</p></li>
 </section>
 <section id="load-the-resources">
 <h3>2. Load the resources<a class="headerlink" href="#load-the-resources" title="Permalink to this headline"></a></h3>
-<p>The following line loads the resources (i.e. the <cite>mentions-to-wikidata</cite> and <cite>wikidata_to_mentions</cite> dictionaries) required to perform candidate selection and ranking, regardless of the Ranker method.</p>
+<p>The following line loads the resources (i.e. the <code class="docutils literal notranslate"><span class="pre">mentions-to-wikidata</span></code> and
+<code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions</span></code> dictionaries) required to perform candidate selection
+and ranking, regardless of the Ranker method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">myranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
 <section id="train-a-deezymatch-model">
 <h3>3. Train a DeezyMatch model<a class="headerlink" href="#train-a-deezymatch-model" title="Permalink to this headline"></a></h3>
-<p>The following line will train a DeezyMatch model, given the arguments specified when instantiating the Ranker.</p>
+<p>The following line will train a DeezyMatch model, given the arguments specified
+when instantiating the Ranker.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myranker</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Note that if the model already exists and overwrite_training is set to False, the training will be skipped, even if you call the train() method. The training will also be skipped if the Ranker is not instantiated for DeezyMatch.</p>
+<p>Note that if the model already exists and overwrite_training is set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, the training will be skipped, even if you call the train() method.
+The training will also be skipped if the Ranker is not instantiated for
+DeezyMatch.</p>
 </section>
 <section id="retrieve-candidates-for-a-given-mention">
 <h3>4. Retrieve candidates for a given mention<a class="headerlink" href="#retrieve-candidates-for-a-given-mention" title="Permalink to this headline"></a></h3>
