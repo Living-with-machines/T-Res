@@ -73,6 +73,14 @@ async def run_pipeline(api_query: APIQuery, request_id: Union[str, None] = None)
     return resolved
 
 
+@app.get("/ner")
+async def run_ner(api_query: APIQuery):
+    
+    predictions = geoparser.myner.ner_predict(api_query.sentence)
+
+    return [pred for pred in predictions if pred["entity"] != "O"]
+
+
 @app.get("/health")
 async def healthcheck():
     return {"status": "ok"}

@@ -25,3 +25,14 @@ def test_t_res():
     assert response.status_code == 200
     assert response.json() == expected_response
 
+
+def test_ner():
+
+    test_body = {"sentence": "Harvey, from London;Thomas and Elizabeth, Barnett."}
+    expected_response = [{"entity":"B-LOC","score":0.990628182888031,"word":"London","start":13,"end":19}]
+    response = requests.get(f'{API_URL}/ner', json=test_body)
+
+    assert response.status_code == 200
+    assert response.json() == expected_response
+
+# 
