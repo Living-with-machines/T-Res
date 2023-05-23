@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Tuple
 
 
 class PreRank(torch.nn.Module):
