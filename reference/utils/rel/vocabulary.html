@@ -111,13 +111,6 @@
 <dd class="field-even"><p>None.</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method assigns a new ID to the token and updates the
-necessary dictionaries and lists.</p>
-<p>If the token is already present in the vocabulary, it will not be
-added again.</p>
-</div>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span> <span class="o">=</span> <span class="n">Vocabulary</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;apple&quot;</span><span class="p">)</span>
@@ -125,6 +118,13 @@ added again.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
 <span class="go">2</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method assigns a new ID to the token and updates the
+necessary dictionaries and lists.</p>
+<p>If the token is already present in the vocabulary, it will not be
+added again.</p>
 </div>
 </dd></dl>
 
@@ -144,13 +144,6 @@ unknown token if the token is not found.</p>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)">int</a></p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method normalizes the token using the defined normalisation
-rules before retrieving the ID.</p>
-<p>If the normalized token is not present in the vocabulary, the ID
-of the unknown token is returned.</p>
-</div>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span> <span class="o">=</span> <span class="n">Vocabulary</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;apple&quot;</span><span class="p">)</span>
@@ -162,6 +155,13 @@ of the unknown token is returned.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="s2">&quot;grape&quot;</span><span class="p">)</span>
 <span class="go">0</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method normalizes the token using the defined normalisation
+rules before retrieving the ID.</p>
+<p>If the normalized token is not present in the vocabulary, the ID
+of the unknown token is returned.</p>
 </div>
 </dd></dl>
 
@@ -186,6 +186,11 @@ with <code class="docutils literal notranslate"><span class="pre">'0'</span></co
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
 </dd>
 </dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vocabulary</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">&quot;Hello, World!&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">digit_0</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&#39;hello, world0&#39;</span>
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Special tokens, like the unknown token (<code class="docutils literal notranslate"><span class="pre">#UNK#</span></code>), start token
@@ -194,11 +199,6 @@ normalisation process.</p>
 <p>Certain bracket tokens are replaced with their corresponding
 symbols defined in the <code class="xref py py-const docutils literal notranslate"><span class="pre">BRACKETS</span></code>
 dictionary.</p>
-</div>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vocabulary</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">&quot;Hello, World!&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">digit_0</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">&#39;hello, world0&#39;</span>
-</pre></div>
 </div>
 </dd></dl>
 
