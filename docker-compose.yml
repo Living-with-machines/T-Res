@@ -17,73 +17,8 @@ services:
       - "8000:80"
       - "8080:8080"
 
-  t-res_deezy_mostpopular:
-    image: t-res_deezy_mostpopular_image:latest
-    restart: always
-    expose:
-      - 80
-    volumes:
-      - ${HOME}/toponym-resolution/resources/:/app/resources/
-      - ${HOME}/toponym-resolution/geoparser/:/app/geoparser/
-      - ${HOME}/toponym-resolution/utils/:/app/utils/
-      - ${HOME}/toponym-resolution/preprocessing/:/app/preprocessing/
-      - ${HOME}/toponym-resolution/experiments/:/app/experiments/
-      - ${HOME}/nltk_data:/root/nltk_data/
-    labels:
-      - traefik.enable=true
-      - traefik.http.services.t-res_deezy_mostpopular.loadbalancer.server.port=80
-      - traefik.http.routers.t-res_deezy_mostpopular_router.service=t-res_deezy_mostpopular
-      - traefik.http.routers.t-res_deezy_mostpopular_router.rule=Host(`20.0.184.45`, `0.0.0.0`) && PathPrefix(`/v1/t-res_deezy_mostpopular`)
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v1/t-res_deezy_mostpopular"
-      - traefik.http.routers.t-res_deezy_mostpopular_router.middlewares=test-stripprefix
-    command: ["poetry", "run", "uvicorn", "app:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
-
-  t-res_exact_mostpopular:
-    image: t-res_exact_mostpopular_image:latest
-    restart: always
-    expose:
-      - 80
-    volumes:
-      - ${HOME}/toponym-resolution/resources/:/app/resources/
-      - ${HOME}/toponym-resolution/geoparser/:/app/geoparser/
-      - ${HOME}/toponym-resolution/utils/:/app/utils/
-      - ${HOME}/toponym-resolution/preprocessing/:/app/preprocessing/
-      - ${HOME}/toponym-resolution/experiments/:/app/experiments/
-      - ${HOME}/nltk_data:/root/nltk_data/
-    labels:
-      - traefik.enable=true
-      - traefik.http.services.t-res_exact_mostpopular.loadbalancer.server.port=80
-      - traefik.http.routers.t-res_exact_mostpopular_router.service=t-res_exact_mostpopular
-      - traefik.http.routers.t-res_exact_mostpopular_router.rule=Host(`20.0.184.45`, `0.0.0.0`) && PathPrefix(`/v1/t-res_exact_mostpopular`)
-      - "traefik.http.middlewares.test-stripprefix-perfect.stripprefix.prefixes=/v1/t-res_exact_mostpopular"
-      - traefik.http.routers.t-res_exact_mostpopular_router.middlewares=test-stripprefix-perfect
-    command: ["poetry", "run", "uvicorn", "app:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
-
-  t-res_deezy_rel-publ-nil:
-    image: t-res_deezy_rel-publ-nil_image:latest
-    restart: always
-    # ports:
-    #   - "8000:80"
-    expose:
-      - 80
-    volumes:
-      - ${HOME}/toponym-resolution/resources/:/app/resources/
-      - ${HOME}/toponym-resolution/geoparser/:/app/geoparser/
-      - ${HOME}/toponym-resolution/utils/:/app/utils/
-      - ${HOME}/toponym-resolution/preprocessing/:/app/preprocessing/
-      - ${HOME}/toponym-resolution/experiments/:/app/experiments/
-      - ${HOME}/nltk_data:/root/nltk_data/
-    labels:
-      - traefik.enable=true
-      - traefik.http.services.t-res_deezy_rel-publ-nil.loadbalancer.server.port=80
-      - traefik.http.routers.t-res_deezy_rel-publ-nil_router.service=t-res_deezy_rel-publ-nil
-      - traefik.http.routers.t-res_deezy_rel-publ-nil_router.rule=Host(`20.0.184.45`, `0.0.0.0`) && PathPrefix(`/v1/t-res_deezy_rel-publ-nil`)
-      - "traefik.http.middlewares.test-stripprefix-rwp.stripprefix.prefixes=/v1/t-res_deezy_rel-publ-nil"
-      - traefik.http.routers.t-res_deezy_rel-publ-nil.middlewares=test-stripprefix-rwp
-    command: ["poetry", "run", "uvicorn", "app:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
-
-  t-res_deezy_rel-nil:
-    image: t-res_deezy_rel-nil_image:latest
+  t-res_deezy_reldisamb-wpubl-wmtops:
+    image: t-res_deezy_reldisamb-wpubl-wmtops_image:latest
     restart: always
     expose:
       - 80
@@ -96,9 +31,10 @@ services:
       - ${HOME}/nltk_data:/root/nltk_data/
     labels:
       - traefik.enable=true
-      - traefik.http.services.t-res_deezy_rel-nil.loadbalancer.server.port=80
-      - traefik.http.routers.t-res_deezy_rel-nil_router.service=t-res_deezy_rel-nil
-      - traefik.http.routers.t-res_deezy_rel-nil_router.rule=Host(`20.0.184.45`, `0.0.0.0`) && PathPrefix(`/v1/t-res_deezy_rel-nil`)
-      - "traefik.http.middlewares.test-stripprefix-rwop.stripprefix.prefixes=/v1/t-res_deezy_rel-nil"
-      - traefik.http.routers.t-res_deezy_rel-nil_router.middlewares=test-stripprefix-rwop
+      - traefik.http.services.t-res_deezy_reldisamb-wpubl-wmtops.loadbalancer.server.port=80
+      - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.service=t-res_deezy_reldisamb-wpubl-wmtops
+      - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.rule=Host(`20.0.184.45`, `0.0.0.0`) && PathPrefix(`/v2/t-res_deezy_reldisamb-wpubl-wmtops`)
+      - "traefik.http.middlewares.test-stripprefix-reldisamb-wpubl-wmtops.stripprefix.prefixes=/v2/t-res_deezy_reldisamb-wpubl-wmtops"
+      - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.middlewares=test-stripprefix-reldisamb-wpubl-wmtops
     command: ["poetry", "run", "uvicorn", "app:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
+  
