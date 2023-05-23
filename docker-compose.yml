@@ -33,7 +33,7 @@ services:
       - traefik.enable=true
       - traefik.http.services.t-res_deezy_reldisamb-wpubl-wmtops.loadbalancer.server.port=80
       - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.service=t-res_deezy_reldisamb-wpubl-wmtops
-      - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.rule=Host(`20.0.184.45`, `0.0.0.0`) && PathPrefix(`/v2/t-res_deezy_reldisamb-wpubl-wmtops`)
+      - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.rule=Host(`${HOST_URL}`, `0.0.0.0`) && PathPrefix(`/v2/t-res_deezy_reldisamb-wpubl-wmtops`)
       - "traefik.http.middlewares.test-stripprefix-reldisamb-wpubl-wmtops.stripprefix.prefixes=/v2/t-res_deezy_reldisamb-wpubl-wmtops"
       - traefik.http.routers.t-res_deezy_reldisamb-wpubl-wmtops_router.middlewares=test-stripprefix-reldisamb-wpubl-wmtops
     command: ["poetry", "run", "uvicorn", "app:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
