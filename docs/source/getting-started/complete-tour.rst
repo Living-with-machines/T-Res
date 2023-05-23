@@ -53,7 +53,7 @@ NER model from the HuggingFace hub:
 To load a NER model that is stored locally (for example, let's suppose we have
 a NER model in this relative location
 ``../resources/models/blb_lwm-ner-fine``), you can also load it in the same
-way (notice that ``load_from_hub`` should still be True, probably a better
+way (notice that ``load_from_hub`` should still be ``True``, probably a better
 name would be ``load_from_path``):
 
 .. code-block:: python
@@ -94,20 +94,20 @@ description of each parameter below):
 
 Description of the arguments:
 
-* **``load_from_hub``** set to False indicates we're not using an off-the-shelf
+* ``load_from_hub`` set to ``False`` indicates we're not using an off-the-shelf
   model. It will prepare the Recogniser to train a new model, unless the model
-  already exists or if **``overwrite_training``** is set to True. If
-  ``overwrite_training`` is set to False and ``load_from_hub`` is set to False,
-  the Recogniser will be prepared to first try to load the model and—if it does
-  not exist—will train it. If ``overwrite_training`` is set to True and
-  ``load_from_hub`` is set to False, the Recogniser will be ready to directly
-  try to train a model.
-* **``base_model``** is the path to the model that will be used as base to
+  already exists or if ``overwrite_training`` is set to ``True``. If
+  ``overwrite_training`` is set to ``False`` and ``load_from_hub`` is set to
+  ``False``, the Recogniser will be prepared to first try to load the model
+  and—if it does not exist—will train it. If ``overwrite_training`` is set to
+  ``True`` and ``load_from_hub`` is set to ``False``, the Recogniser will be
+  ready to directly try to train a model.
+* ``base_model`` is the path to the model that will be used as base to
   train our NER model. This can be the path to a HuggingFace model (we are
   using `khosseini/bert_1760_1900 <https://huggingface.co/khosseini/bert_1760_1900>`_,
   a BERT model trained on 19th Century texts) or the path to a model stored
   locally.
-* **``train_dataset``** and **``test_dataset``** contain the path to the train
+* ``train_dataset`` and ``test_dataset`` contain the path to the train
   and test data sets necessary for training the NER model. The paths point to a
   json file (one for training, one for testing), in which each line is a
   dictionary corresponding to a sentence. Each sentence-dictionary has three
@@ -211,22 +211,22 @@ Description of the arguments:
         ]
     }
 
-* **``model_path``** is the path where the Recogniser should store the model,
-  and **``model``** is the name of the model. The **``pipe``** argument can be
+* ``model_path`` is the path where the Recogniser should store the model,
+  and ``model`` is the name of the model. The ``pipe`` argument can be
   left empty: that's where we will store the NER pipeline, once the model is
   trained and loaded.
-* The training arguments can be modified in **``training_args``**: you can
+* The training arguments can be modified in ``training_args``: you can
   change the learning rate, batch size, number of training epochs, and weight
   decay.
-* Finally, **``do_test``** allows you to train a mock model and then load it
+* Finally, ``do_test`` allows you to train a mock model and then load it
   (the suffix `_test` will be added to the model name). As mentioned above,
-  **``overwrite_training``** forces retraining a model, even if a model with
+  ``overwrite_training`` forces retraining a model, even if a model with
   the same name and characteristics already exists.
 
 This instantiation prepares a new model
 (``resources/models/blb_lwm-ner-fine.model``) to be trained, unless the model
-already exists (``overwrite_training`` is False), in which case it will just
-load it.
+already exists (``overwrite_training`` is ``False``), in which case it will
+just load it.
 
 1. Train the NER model
 ######################
@@ -237,9 +237,9 @@ After having instantiated the Recogniser, to train the model, run:
 
     myner.train()
 
-Note that if ``load_to_hub`` is set to True or the model already exists (and
-``overwrite_training`` is set to False), the training will be skipped, even if
-you call the ``train()`` method.
+Note that if ``load_to_hub`` is set to ``True`` or the model already exists
+(and ``overwrite_training`` is set to ``False``), the training will be skipped,
+even if you call the ``train()`` method.
 
 3. Create a NER pipeline
 ########################
@@ -369,13 +369,25 @@ This returns only the named entities, aggregating multiple tokens together:
 The Ranker
 ----------
 
-The Ranker takes the named entities detected by the Recogniser as input. Given a knowledge base, it ranks the entities according to their string similarity to the named entity, and selects a subset of candidates that will be passed on to the next component, the Linker, to do the disambiguation and select the most likely entity.
+The Ranker takes the named entities detected by the Recogniser as input. Given
+a knowledge base, it ranks the entities according to their string similarity to
+the named entity, and selects a subset of candidates that will be passed on to
+the next component, the Linker, to do the disambiguation and select the most
+likely entity.
 
-In order to use the Ranker and the Linker, we need a knowledge base, a gazetteer. T-Res uses a gazetteer which combines data from Wikipedia and Wikidata. The steps to create it are described in the `wiki2gaz <https://github.com/Living-with-machines/wiki2gaz>`_ GitHub repository.
+In order to use the Ranker and the Linker, we need a knowledge base, a
+gazetteer. T-Res uses a gazetteer which combines data from Wikipedia and
+Wikidata. The steps to create it are described in the
+`wiki2gaz <https://github.com/Living-with-machines/wiki2gaz>`_ GitHub
+repository.
 
 The following files are needed to run the Ranker:
 
-* ``wikidata_to_mentions_normalized.json``: dictionary of Wikidata entities (by their QID) mapped to the mentions used in Wikipedia to refer to them (obtained through Wikipedia anchor texts) and the normalised score. For example, the value of entity `Q23183 <https://www.wikidata.org/wiki/Q23183>`_ is the following:
+* ``wikidata_to_mentions_normalized.json``: dictionary of Wikidata entities
+  (by their QID) mapped to the mentions used in Wikipedia to refer to them
+  (obtained through Wikipedia anchor texts) and the normalised score. For
+  example, the value of entity `Q23183 <https://www.wikidata.org/wiki/Q23183>`_
+  is the following:
 
   .. code-block:: json
   
@@ -397,7 +409,9 @@ The following files are needed to run the Ranker:
           "Wiltshire England": 0.00021915406530791147
       }
 
-* ``mentions_to_wikidata_normalized.json``: the reverse dictionary to the one above, it maps a mention to all the Wikidata entities that are referred to by this mention in Wikipedia. For example, the value of `"Wiltshire"` is:
+* ``mentions_to_wikidata_normalized.json``: the reverse dictionary to the one
+* above, it maps a mention to all the Wikidata entities that are referred to
+* by this mention in Wikipedia. For example, the value of `"Wiltshire"` is:
 
   .. code-block:: json
   
@@ -407,27 +421,29 @@ The following files are needed to run the Ranker:
           "Q8023421": 0.03125
       }
 
-  These scores don't add up to one, as they are normalised per entity, therefore indicating how often an entity is referred to by this mention. For example, ``Q55448990`` is always referred to as ``Wiltshire``.
+  These scores don't add up to one, as they are normalised per entity,
+  therefore indicating how often an entity is referred to by this mention. For
+  example, ``Q55448990`` is always referred to as ``Wiltshire``.
 
 We provide four different strategies for selecting candidates:
 
-* **``perfectmatch``** retrieves candidates from the knowledge base if one of
+* ``perfectmatch`` retrieves candidates from the knowledge base if one of
   their alternate names is identical to the detected named entity. For example,
   given the mention "Wiltshire", the following Wikidata entities will be
   retrieved: `Q23183 <https://www.wikidata.org/wiki/Q23183>`_,
   `Q55448990 <https://www.wikidata.org/wiki/Q55448990>`_, and
   `Q8023421 <https://www.wikidata.org/wiki/Q8023421>`_, because all these
   entities are referred to as "Wiltshire" in Wikipedia anchor texts.
-* **``partialmatch``** retrieves candidates from the knowledge base if there is
+* ``partialmatch`` retrieves candidates from the knowledge base if there is
   a (partial) match between the query and the candidate names, based on string
   overlap. Therefore, the mention "Ashton-under" returns candidates for
   "Ashton-under-Lyne".
-* **``levenshtein``** retrieves candidates from the knowledge base if there is
+* ``levenshtein`` retrieves candidates from the knowledge base if there is
   a fuzzy match between the query and the candidate names, based on levenshtein
   distance. Therefore, if the mention "Wiltshrre" would still return the
   candidates for "Wiltshire". This method is often quite accurate when it comes
   to OCR variations, but it is very slow.
-* **``deezymatch``** retrieves candidates from the knowledge base if there is a
+* ``deezymatch`` retrieves candidates from the knowledge base if there is a
   fuzzy match between the query and the candidate names, based on
   `DeezyMatch <https://github.com/Living-with-machines/DeezyMatch>`_ embeddings.
   Significantly more complex than the other methods to set up from scratch, but
@@ -439,7 +455,7 @@ We provide four different strategies for selecting candidates:
 To use the Ranker for exact matching (``perfectmatch``) or fuzzy string
 matching based either on overlap or Levenshtein distance (``partialmatch`` and
 ``levenshtein`` respectively), instantiate it as follows, changing the
-**``method``** argument accordingly:
+``method`` argument accordingly:
 
 .. code-block:: python
 
@@ -452,10 +468,10 @@ matching based either on overlap or Levenshtein distance (``partialmatch`` and
         wikidata_to_mentions=dict(),
     )
 
-Note that **``resources_path``** should contain the path to the directory
+Note that ``resources_path`` should contain the path to the directory
 where the resources are stored, namely ``wikidata_to_mentions_normalized.json``
-and ``mentions_to_wikidata.json``. The **``mentions_to_wikidata``** and
-**``wikidata_to_mentions``** dictionaries should be left empty, as they will be
+and ``mentions_to_wikidata.json``. The ``mentions_to_wikidata`` and
+``wikidata_to_mentions`` dictionaries should be left empty, as they will be
 populated when the Ranker loads the resources.
 
 DeezyMatch instantiation is trickier, as it requires training a model that,
@@ -545,18 +561,18 @@ The Ranker can then be instantiated as follows:
 Description of the arguments (to learn more, refer to the
 `DeezyMatch readme <https://github.com/Living-with-machines/DeezyMatch/blob/master/README.md>`_:
 
-* **``strvar_parameters``** contains the parameters needed to generate the
+* ``strvar_parameters`` contains the parameters needed to generate the
   DeezyMatch training set. In this scenario, the DeezyMatch model is already
   trained and there is therefore no need to generate the training set.
-* **``deezy_parameters``** contains the set of parameters to train or load a
+* ``deezy_parameters`` contains the set of parameters to train or load a
   DeezyMatch model:
 
-  * **``dm_path``**: The path to the folder where the DeezyMatch model and
+  * ``dm_path``: The path to the folder where the DeezyMatch model and
     data will be stored.
-  * **``dm_cands``**: The name given to the set of alternate names from which
+  * ``dm_cands``: The name given to the set of alternate names from which
     DeezyMatch will try to find a match for a given mention.
-  * **``dm_model``**: Name of the DeezyMatch model to train or load.
-  * **``ranking_metric``** Metric used to TODO
+  * ``dm_model``: Name of the DeezyMatch model to train or load.
+  * ``ranking_metric`` Metric used to TODO
 
 You can download these resources from:
 
@@ -605,7 +621,9 @@ TODO
 2. Load the resources
 #####################
 
-The following line loads the resources (i.e. the `mentions-to-wikidata` and `wikidata_to_mentions` dictionaries) required to perform candidate selection and ranking, regardless of the Ranker method.
+The following line loads the resources (i.e. the ``mentions-to-wikidata`` and
+``wikidata_to_mentions`` dictionaries) required to perform candidate selection
+and ranking, regardless of the Ranker method.
 
 .. code-block:: python
 
@@ -614,13 +632,17 @@ The following line loads the resources (i.e. the `mentions-to-wikidata` and `wik
 3. Train a DeezyMatch model
 ###########################
 
-The following line will train a DeezyMatch model, given the arguments specified when instantiating the Ranker.
+The following line will train a DeezyMatch model, given the arguments specified
+when instantiating the Ranker.
 
 .. code-block:: python
 
     myranker.train()
 
-Note that if the model already exists and overwrite_training is set to False, the training will be skipped, even if you call the train() method. The training will also be skipped if the Ranker is not instantiated for DeezyMatch.
+Note that if the model already exists and overwrite_training is set to
+``False``, the training will be skipped, even if you call the train() method.
+The training will also be skipped if the Ranker is not instantiated for
+DeezyMatch.
 
 4. Retrieve candidates for a given mention
 ##########################################

@@ -500,7 +500,8 @@ def prepare_storing_links(
     return processed_data
 
 
-def load_processed_data(experiment: experiment.Experiment) -> dict:
+# TODO/typing: Add experiment.Experiment as type for experiment keyword arg. Currently causing circular import.
+def load_processed_data(experiment) -> dict:
     """
     Loads the data already processed in a previous run of the code, using
     the same parameters.
@@ -553,8 +554,9 @@ def load_processed_data(experiment: experiment.Experiment) -> dict:
         return dict()
 
 
+# TODO/typing: Add experiment.Experiment as type for experiment keyword arg. Currently causing circular import.
 def store_processed_data(
-    experiment: experiment.Experiment,
+    experiment,
     preds: dict,
     trues: dict,
     skys: dict,
@@ -660,7 +662,8 @@ def store_processed_data(
     return dict_processed_data
 
 
-def create_mentions_df(experiment: experiment.Experiment) -> pd.DataFrame:
+# TODO/typing: Add experiment.Experiment as type for experiment keyword arg. Currently causing circular import.
+def create_mentions_df(experiment) -> pd.DataFrame:
     """
     Create a dataframe for the linking experiment, with one mention per row.
 
@@ -897,9 +900,10 @@ def store_for_scorer(
                 fw.write("\n")
 
 
+# TODO/typing: Add experiment.Experiment as type for experiment keyword arg. Currently causing circular import.
 # TODO: which_split doesn't seem to be used, so can be removed here?
 def store_results(
-    experiment: experiment.Experiment,
+    experiment,
     task: Literal["ner", "linking"],
     how_split: str,
     which_split,

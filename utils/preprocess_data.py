@@ -160,6 +160,7 @@ def process_lwm_for_ner(tsv_topres_path: str):
     Each sentence in the LwM data is assigned a unique identifier, and
     consists of a list of tokens along with their associated NER tags using
     the BIO scheme, e.g.:
+
     - ``id``: ``10813493_1 # document_id + "_" + sentence_id``
     - ``ner_tags``: ``['B-LOC', 'O']``
     - ``tokens``: ``['INDIA', '.']``
@@ -172,6 +173,7 @@ def process_lwm_for_ner(tsv_topres_path: str):
         pandas.DataFrame:
             A DataFrame containing the processed LwM data for NER training,
             with the following columns:
+
             - ``id``: The unique identifier of each sentence
                (``document_id + "_" + sentence_id``).
             - ``ner_tags``: A list of NER tags assigned to each token in the

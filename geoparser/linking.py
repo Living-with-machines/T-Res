@@ -145,11 +145,13 @@ class Linker:
             Tuple[str, float, dict]:
                 The result of the linking process. For details, see below:
 
-                - If the ``method`` provided when initialising the Linker
-                  object was ``"mostpopular"``, see
+                - If the ``method`` provided when initialising the
+                  :py:meth:`~geoparser.linking.Linker` object was
+                  ``"mostpopular"``, see
                   :py:meth:`~geoparser.linking.Linker.most_popular`.
-                - If the ``method`` provided when initialising the Linker
-                  object was ``"bydistance"``, see
+                - If the ``method`` provided when initialising the
+                  :py:meth:`~geoparser.linking.Linker` object was
+                  ``"bydistance"``, see
                   :py:meth:`~geoparser.linking.Linker.by_distance`.
 
         """
@@ -289,8 +291,9 @@ class Linker:
 
         Arguments:
             myranker (geoparser.ranking.Ranker): The ranker object used for
-            training. split (str, optional): The split type for training.
-            Defaults to ``"originalsplit"``.
+                training.
+            split (str, optional): The split type for training. Defaults to
+                ``"originalsplit"``.
 
         Returns:
             entity_disambiguation.EntityDisambiguation:

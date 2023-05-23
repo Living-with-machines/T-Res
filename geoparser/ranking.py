@@ -136,7 +136,8 @@ class Ranker:
         Note:
             This method loads the mentions-to-wikidata and
             wikidata-to-mentions dictionaries from the resources directory,
-            specified when initialising the ``Ranker``. They are required for
+            specified when initialising the
+            :py:meth:`~geoparser.ranking.Ranker`. They are required for
             performing candidate selection and ranking.
 
             It filters the dictionaries to remove noise and updates the class
@@ -239,7 +240,8 @@ class Ranker:
 
                 #. The first dictionary maps each mention to its candidate
                    list, where the candidate list is a dictionary with the
-                   mention itself as the key and a perfect match score of 1.0.
+                   mention itself as the key and a perfect match score of
+                   ``1.0``.
 
                 #. The second dictionary stores the already collected
                    candidates for each mention. It is an updated version of the
@@ -248,7 +250,7 @@ class Ranker:
         Note:
             This method checks if each mention has an exact match in the
             mentions_to_wikidata dictionary. If a match is found, it assigns a
-            perfect match score of 1.0 to the mention. Otherwise, an empty
+            perfect match score of ``1.0`` to the mention. Otherwise, an empty
             dictionary is assigned as the candidate list for the mention.
         """
         candidates = {}
@@ -437,7 +439,8 @@ class Ranker:
             process for that query. For the remaining queries,
             it uses the DeezyMatch model to generate candidates and ranks them
             based on the specified ranking metric and selection threshold,
-            provided when initialising the Ranker object.
+            provided when initialising the :py:meth:`~geoparser.ranking.Ranker`
+            object.
 
         Example:
             >>> ranker = Ranker(...)
@@ -531,7 +534,8 @@ class Ranker:
 
         Note:
             This method executes the appropriate ranking method based on the
-            ``method`` parameter, selected when initialising the Ranker object.
+            ``method`` parameter, selected when initialising the
+            :py:meth:`~geoparser.ranking.Ranker` object.
 
             It delegates the execution to the corresponding method:
 
@@ -592,8 +596,8 @@ class Ranker:
             This method takes a list of mentions and finds candidates for each
             mention using the selected ranking method. It first extracts the
             queries from the mentions and then calls the appropriate method
-            based on the ranking method chosen when initialising the Ranker
-            object.
+            based on the ranking method chosen when initialising the
+            :py:meth:`~geoparser.ranking.Ranker` object.
 
             The method returns a dictionary that maps each original mention to
             a sub-dictionary containing the mention variations as keys and

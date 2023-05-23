@@ -251,6 +251,7 @@ class MulRelRanker(torch.nn.Module):
 
         Returns:
             Tuple[Any, Any]: A tuple consisting of two tensors:
+
                 - ``scores`` (Tensor): Tensor of entity ranking scores.
                 - ``ent_scores`` (Tensor): Tensor of entity scores before softmax.
 
@@ -258,6 +259,7 @@ class MulRelRanker(torch.nn.Module):
             The method draws on Phong Le, "Improving Entity Linking by
             Modeling Latent Relations between Mentions",
             http://dx.doi.org/10.18653/v1/P18-1148:
+
             - ``ctx_layer`` refers to function f. See Figure 3 in respective
               paper.
             - ``ent_scores`` refers to function q.
@@ -506,6 +508,7 @@ class MulRelRanker(torch.nn.Module):
             The method draws on Phong Le, "Improving Entity Linking by
             Modeling Latent Relations between Mentions",
             http://dx.doi.org/10.18653/v1/P18-1148:
+
             - Loss refers to equation 7
         """
         loss = F.multi_margin_loss(scores, true_pos, margin=self.config["margin"])

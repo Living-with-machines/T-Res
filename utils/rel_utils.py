@@ -12,7 +12,7 @@ from typing import Any, Optional, List, Literal
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, ranking
+# from geoparser import linking, ranking
 
 RANDOM_SEED = 42
 """Constant representing the random seed used for generating pseudo-random
@@ -281,9 +281,9 @@ def add_publication(
     return new_json
 
 
-def prepare_rel_trainset(
-    df: pd.DataFrame, mylinker: linking.Linker, myranker: ranking.Ranker, dsplit: str
-) -> dict:
+# TODO/typing: add type linking.Linker for mylinker and ranking.Ranker for
+# myranker keyword args. Currently causing a circular import.
+def prepare_rel_trainset(df: pd.DataFrame, mylinker, myranker, dsplit: str) -> dict:
     """
     Prepare the data for training and testing a REL disambiguation model.
 

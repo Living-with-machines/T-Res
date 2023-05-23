@@ -257,6 +257,7 @@ class Pipeline:
                 A list of dictionaries representing the processed identified
                 and linked toponyms in the sentence. Each dictionary contains
                 the following keys:
+
                 - "sent_idx" (int): The index of the sentence.
                 - "mention" (str): The mention text.
                 - "pos" (int): The starting position of the mention in the
@@ -275,6 +276,7 @@ class Pipeline:
 
                 If ``postprocess_output`` is set to True, the dictionaries
                 will also contain the following two keys:
+
                 - "latlon" (tuple): The latitude and longitude coordinates of
                   the predicted entity.
                 - "wkdt_class" (str): The Wikidata class of the predicted
@@ -531,7 +533,8 @@ class Pipeline:
             :py:meth:`~geoparser.pipeline.Pipeline.run_sentence` method for
             each of the document's sentences. The ``without_microtoponyms``
             keyword, passed to ``run_sentence`` comes from the ``Linker``'s
-            (passed when initialising the ``Pipeline``) ``rel_params``
+            (passed when initialising the
+            :py:meth:`~geoparser.pipeline.Pipeline` object) ``rel_params``
             parameter. See :py:class:`geoparser.linking.Linker` for
             instructions on how to set that up.
 
