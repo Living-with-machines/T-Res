@@ -23,20 +23,20 @@ class Experiment:
             data).
         results_path (str): The path to the directory where the results will
             be stored. If it does not exist, it will be created.
-        dataset_df (pd.DataFrame): The dataframe representing the resulting,
-            preprocessed, dataset.
+        dataset_df (pandas.DataFrame): The dataframe representing the
+            resulting, preprocessed, dataset.
         myner (recogniser.Recogniser): An instance of the NER model to use.
         myranker (ranking.Ranker): An instance of the candidate ranking model
             to use.
         mylinker (linking.Linker): An instance of the linking model to use.
         overwrite_processing (bool, optional): Whether to overwrite the
-            processed data if it already exists (default is True).
+            processed data if it already exists (default is ``True``).
         processed_data (dict, optional): A dictionary to store the processed
             data (default is an empty dictionary).
         test split (str, optional): The data split to use for testing (train/
             dev/test, default is an empty string).
         rel_experiments (bool, optional): Whether to run end-to-end REL
-            experiments (default is False).
+            experiments (default is ``False``).
     """
 
     def __init__(

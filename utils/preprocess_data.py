@@ -174,11 +174,11 @@ def process_lwm_for_ner(tsv_topres_path: str):
             A DataFrame containing the processed LwM data for NER training,
             with the following columns:
 
-            - ``id``: The unique identifier of each sentence
-               (``document_id + "_" + sentence_id``).
-            - ``ner_tags``: A list of NER tags assigned to each token in the
-               sentence.
-            - ``tokens``: A list of tokens in the sentence.
+            - **id**: The unique identifier of each sentence (``<document_id>_
+              <sentence_id>``).
+            - **ner_tags**: A list of NER tags assigned to each token in the
+              sentence.
+            - **tokens**: A list of tokens in the sentence.
 
     Note:
         The function expects the annotated TSV files to be located in the

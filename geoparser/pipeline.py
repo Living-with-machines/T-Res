@@ -258,28 +258,28 @@ class Pipeline:
                 and linked toponyms in the sentence. Each dictionary contains
                 the following keys:
 
-                - "sent_idx" (int): The index of the sentence.
-                - "mention" (str): The mention text.
-                - "pos" (int): The starting position of the mention in the
+                - ``sent_idx`` (int): The index of the sentence.
+                - ``mention`` (str): The mention text.
+                - ``pos`` (int): The starting position of the mention in the
                   sentence.
-                - "end_pos" (int): The ending position of the mention in the
+                - ``end_pos`` (int): The ending position of the mention in the
                   sentence.
-                - "tag" (str): The NER label of the mention.
-                - "prediction" (str): The predicted entity linking result.
-                - "ner_score" (float): The NER score of the mention.
-                - "ed_score" (float): The entity disambiguation score.
-                - "sentence" (str): The input sentence.
-                - "prior_cand_score" (dict): A dictionary of candidate
+                - ``tag`` (str): The NER label of the mention.
+                - prediction`` (str): The predicted entity linking result.
+                - ner_score`` (float): The NER score of the mention.
+                - ed_score`` (float): The entity disambiguation score.
+                - sentence`` (str): The input sentence.
+                - prior_cand_score`` (dict): A dictionary of candidate
                   entities and their string matching confidence scores.
-                - "cross_cand_score" (dict): A dictionary of candidate
+                - ``cross_cand_score`` (dict): A dictionary of candidate
                   entities and their cross-candidate confidence scores.
 
                 If ``postprocess_output`` is set to True, the dictionaries
                 will also contain the following two keys:
 
-                - "latlon" (tuple): The latitude and longitude coordinates of
+                - ``latlon`` (tuple): The latitude and longitude coordinates of
                   the predicted entity.
-                - "wkdt_class" (str): The Wikidata class of the predicted
+                - ``wkdt_class`` (str): The Wikidata class of the predicted
                   entity.
 
         Note:

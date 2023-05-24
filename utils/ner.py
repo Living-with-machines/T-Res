@@ -30,12 +30,11 @@ def training_tokenize_and_align_labels(
             :py:meth:`~geoparser.recogniser.Recogniser.train`.
 
     Returns:
-        ????? [TODO? is this a dict? or a Tokenizer?]:
+        TODO
             The tokenized inputs with aligned labels.
 
     Credit:
-        This function is adapted from
-        https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py.
+        This function is adapted from `HuggingFace <https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py>`_.
     """
     label_all_tokens = True
     tokenized_inputs = tokenizer(
@@ -93,7 +92,7 @@ def collect_named_entities(
 
     Returns:
         List[NamedTuple]:
-            A list of named tuples (called Entity) representing the named
+            A list of named tuples (called ``Entity``) representing the named
             entities. Each named tuple contains the following fields:
 
             - ``e_type`` (str): The entity type.
@@ -199,12 +198,11 @@ def aggregate_mentions(
             :py:meth:`~utils.ner.collect_named_entities`.
         setting (Literal["pred", "gold"]): The setting for aggregation:
 
-            If set to ``"pred"``, the function aggregates predicted mentions.
-            Entity links will be set to ``"O"`` (because we haven't performed
-            linking yet).
-
-            If set to ``"gold"``, the function aggregates gold mentions. NER
-            score will be set to ``1.0`` as it is manually detected.
+            - If set to ``"pred"``, the function aggregates predicted mentions.
+              Entity links will be set to ``"O"`` (because we haven't performed
+              linking yet).
+            - If set to ``"gold"``, the function aggregates gold mentions. NER
+              score will be set to ``1.0`` as it is manually detected.
 
     Returns:
         List[dict]:
@@ -450,9 +448,9 @@ def fix_nested(lEntities: List[dict]) -> List[dict]:
     Note:
         **Description**: There is a problem with grouping in some nested
         entities. For example, the phrase "Island of Terceira"
-        (["Island", "of", "Terceira"]) is incorrectly grouped as
-        ["B-LOC", "I-LOC", "B-LOC"], when it should be
-        ["B-LOC", "I-LOC", "I-LOC"] as we consider it as one entity.
+        (``["Island", "of", "Terceira"]``) is incorrectly grouped as
+        ``["B-LOC", "I-LOC", "B-LOC"]``, when it should be
+        ``["B-LOC", "I-LOC", "I-LOC"]`` as we consider it as one entity.
 
         **Solution**: If the current token or the previous token is a hyphen
         and the entity type of both the previous and current tokens is not

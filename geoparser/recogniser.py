@@ -149,8 +149,8 @@ class Recogniser:
             The training will be run on test mode if ``do_test`` was set to
             True when the Recogniser object was initiated.
 
-            Credit: This function is adapted from a HuggingFace tutorial:
-            https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb.
+        Credit:
+            This function is adapted from `a HuggingFace tutorial <https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb>`_.
         """
 
         # Skip training if the model is obtained from the hub:

@@ -27,7 +27,7 @@ def obtain_matches(
     english_words: List[str],
     sims: List[str],
     fuzz_ratio_threshold: Optional[Union[float, int]] = 70,
-) -> Tuple[List, List]:
+) -> Tuple[List[str], List[str]]:
     """
     Separates the given word and the top 100 nearest neighbors into positive
     and negative matches.
@@ -38,17 +38,17 @@ def obtain_matches(
         sims (list): The list of 100 nearest neighbors from the OCR word2vec
             model.
         fuzz_ratio_threshold (float): The threshold used for
-            :py:meth:`thefuzz.fuzz.ratio`. If the nearest neighbor word is an
-            English word and the string similarity is below
-            ``fuzz_ratio_threshold``, it is considered a negative match, i.e.
-            not an OCR variation. Defaults to ``70``.
+            `thefuzz.fuzz.ratio <https://github.com/seatgeek/thefuzz#simple-ratio>`_.
+            If the nearest neighbor word is an English word and the string
+            similarity is below ``fuzz_ratio_threshold``, it is considered a
+            negative match, i.e. not an OCR variation. Defaults to ``70``.
 
     Returns:
-        Tuple[List, List]: A tuple that contains two lists:
+        Tuple[List[str], List[str]]: A tuple that contains two lists:
 
             #. The first list consists of *positive* matches for the input
                word.
-            #. The second list consists of *negative* (list): a list of
+            #. The second list consists of *negative* matches, a list of
                negative matches for the input word.
     """
     negative = []
