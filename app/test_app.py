@@ -1,4 +1,5 @@
 import os
+import pytest
 import requests
 
 
@@ -6,12 +7,14 @@ import requests
 API_URL = f"http://{os.getenv('HOST_URL')}:8000/v2/t-res_deezy_reldisamb-wpubl-wmtops"
 
 
+@pytest.mark.skip(reason="integration test")
 def test_health():
     response = requests.get(f'{API_URL}/health')
     assert response.status_code == 200
     assert response.json() == {'status': 'ok'}
 
 
+@pytest.mark.skip(reason="integration test")
 def test_t_res():
     
     test_body = {
@@ -26,6 +29,7 @@ def test_t_res():
     assert response.json() == expected_response
 
 
+@pytest.mark.skip(reason="integration test")
 def test_ner():
 
     test_body = {"sentence": "Harvey, from London;Thomas and Elizabeth, Barnett."}
