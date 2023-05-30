@@ -2,6 +2,8 @@ name: Continuous deployment
 
 on: 
   pull_request:
+    types:
+      - closed
     branches:
       - 228-redeploy-api
 
