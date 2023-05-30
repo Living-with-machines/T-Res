@@ -112,19 +112,17 @@ error occurs.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eval_with_exception</span><span class="p">(</span><span class="s2">&quot;2 + 2&quot;</span><span class="p">)</span>
-<span class="go">4</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eval_with_exception</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
-<span class="go">&#39;&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eval_with_exception</span><span class="p">(</span><span class="s2">&quot;[1, 2, 3]&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eval_with_exception</span><span class="p">(</span><span class="s2">&quot;[1, 2, 3]&quot;</span><span class="p">)</span>
 <span class="go">[1, 2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process_data</span><span class="o">.</span><span class="n">eval_with_exception</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[])</span>
+<span class="go">[]</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_data.prepare_sents">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_sents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+828.gf5a5c8d7f0)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.process_data.prepare_sents" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_sents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+851.g3a01556dde)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.process_data.prepare_sents" title="Permalink to this definition"></a></dt>
 <dd><p>Prepares annotated data and metadata on a sentence basis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -219,7 +217,7 @@ labels. Each dictionary contains the same keys as the predictions:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>predictions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – <p>the output of the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser.ner_predict()</span></code> method,
+<a class="reference internal" href="../geoparser/recogniser.html#geoparser.recogniser.Recogniser.ner_predict" title="geoparser.recogniser.Recogniser.ner_predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser.ner_predict()</span></code></a> method,
 where, given a sentence, a list of dictionaries is returned, where
 each dictionary corresponds to a recognised token, e.g.:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -277,7 +275,7 @@ named entity (i.e. its start and end character, as a tuple, as the
 key) and another tuple as its value, which consists of: the type
 of named entity (such as <code class="docutils literal notranslate"><span class="pre">LOC</span></code> or <code class="docutils literal notranslate"><span class="pre">BUILDING</span></code>, the mention, and
 its annotated link), all extracted from the gold standard.</p></li>
-<li><p><strong>myner</strong> (<em>recogniser.Recogniser</em>) – a Recogniser object, for NER.</p></li>
+<li><p><strong>myner</strong> (<a class="reference internal" href="../geoparser/recogniser.html#geoparser.recogniser.Recogniser" title="geoparser.recogniser.Recogniser"><em>recogniser.Recogniser</em></a>) – a Recogniser object, for NER.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -369,7 +367,7 @@ with the gold standard <code class="docutils literal notranslate"><span class="p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_data.update_with_linking">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0.dev0+828.gf5a5c8d7f0)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.update_with_linking" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0.dev0+851.g3a01556dde)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.update_with_linking" title="Permalink to this definition"></a></dt>
 <dd><p>Updates the NER predictions by incorporating linking results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -392,7 +390,7 @@ Wikidata link for each predicted entity.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_data.update_with_skyline">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_skyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0.dev0+828.gf5a5c8d7f0)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.update_with_skyline" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_skyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0.dev0+851.g3a01556dde)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.update_with_skyline" title="Permalink to this definition"></a></dt>
 <dd><p>Updates the NER predictions with the skyline link from entity linking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -417,7 +415,7 @@ ranking, otherwise it is set to <code class="docutils literal notranslate"><span
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.process_data.prepare_storing_links">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_storing_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_test</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+828.gf5a5c8d7f0)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.prepare_storing_links" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_storing_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_test</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+851.g3a01556dde)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.prepare_storing_links" title="Permalink to this definition"></a></dt>
 <dd><p>Updates the processed data dictionaries with predicted links for “preds”
 and the skyline for “skys”. The skyline represents the maximum achievable
 result by choosing the gold standard entity among the candidates.</p>
@@ -440,89 +438,6 @@ incorporating the predicted links and skyline information.</p>
 </p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.process_data.load_processed_data">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">load_processed_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.load_processed_data" title="Permalink to this definition"></a></dt>
-<dd><p>Loads the data already processed in a previous run of the code, using
-the same parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>experiment</strong> (<em>experiment.Experiment</em>) – an Experiment object.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A dictionary where the processed data is stored.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.process_data.store_processed_data">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">store_processed_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">trues</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">skys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_tok</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dSentences</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dMetadata</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dMentionsPred</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dMentionsGold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dCandidates</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.process_data.store_processed_data" title="Permalink to this definition"></a></dt>
-<dd><p>Stores all the postprocessed data as JSON files and returns a dictionary
-containing all processed data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>experiment</strong> (<em>experiment.Experiment</em>) – An experiment object.</p></li>
-<li><p><strong>preds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of tokens with predictions per sentence.</p></li>
-<li><p><strong>trues</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of tokens with gold standard annotations per
-sentence.</p></li>
-<li><p><strong>skys</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of tokens representing the skyline per
-sentence.</p></li>
-<li><p><strong>gold_tok</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of tokens with gold standard annotations
-as dictionaries per sentence.</p></li>
-<li><p><strong>dSentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary mapping a sentence ID to the
-corresponding text.</p></li>
-<li><p><strong>dMetadata</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary mapping a sentence ID to associated
-metadata.</p></li>
-<li><p><strong>dMentionsPred</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of predicted mentions per sentence.</p></li>
-<li><p><strong>dMentionsGold</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of gold standard mentions per
-sentence.</p></li>
-<li><p><strong>dCandidates</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of candidates per mention in a
-sentence.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A dictionary containing all processed data (predictions, gold
-standard, skyline, candidates) in one place.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function also creates one JSON file per dictionary, stored in
-<code class="docutils literal notranslate"><span class="pre">outputs/data</span></code>.</p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.process_data.create_mentions_df">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">create_mentions_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+828.gf5a5c8d7f0)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.process_data.create_mentions_df" title="Permalink to this definition"></a></dt>
-<dd><p>Create a dataframe for the linking experiment, with one mention per row.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>experiment</strong> (<em>experiment.Experiment</em>) – An experiment object.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A dataframe with one mention per row, and containing all relevant
-information for subsequent steps (i.e. for linking).</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+828.gf5a5c8d7f0)">pandas.DataFrame</a></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function also creates a TSV file in the
-<code class="docutils literal notranslate"><span class="pre">outputs/data/[dataset]/</span></code> folder.</p>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -550,43 +465,6 @@ format required by the scorer.</p>
 <p>For more information about the CLEF-HIPE scorer, see
 <a class="reference external" href="https://github.com/impresso/CLEF-HIPE-2020-scorer">https://github.com/impresso/CLEF-HIPE-2020-scorer</a>.</p>
 </div>
-<p class="rubric">Example</p>
-<p>Assuming the CLEF-HIPE scorer is stored in
-<code class="docutils literal notranslate"><span class="pre">../CLEF-HIPE-2020-scorer/</span></code>, you can run scorer as follows:</p>
-<p>For NER:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>../CLEF-HIPE-2020-scorer/clef_evaluation.py<span class="w"> </span>--ref<span class="w"> </span>outputs/results/lwm-true_bundle2_en_1.tsv<span class="w"> </span>--pred<span class="w"> </span>outputs/results/lwm-pred_bundle2_en_1.tsv<span class="w"> </span>--task<span class="w"> </span>nerc_coarse<span class="w"> </span>--outdir<span class="w"> </span>outputs/results/
-</pre></div>
-</div>
-<p>For EL:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>../CLEF-HIPE-2020-scorer/clef_evaluation.py<span class="w"> </span>--ref<span class="w"> </span>outputs/results/lwm-true_bundle2_en_1.tsv<span class="w"> </span>--pred<span class="w"> </span>outputs/results/lwm-pred_bundle2_en_1.tsv<span class="w"> </span>--task<span class="w"> </span>nel<span class="w"> </span>--outdir<span class="w"> </span>outputs/results/
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.process_data.store_results">
-<span class="sig-prename descclassname"><span class="pre">utils.process_data.</span></span><span class="sig-name descname"><span class="pre">store_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'ner'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'linking'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">which_split</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.process_data.store_results" title="Permalink to this definition"></a></dt>
-<dd><p>Function which stores the results of an experiment in the format required
-by the HIPE 2020 evaluation scorer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>experiment</strong> (<em>experiment.Experiment</em>) – the current experiment.</p></li>
-<li><p><strong>task</strong> (<em>Literal</em><em>[</em><em>&quot;ner&quot;</em><em>, </em><em>&quot;linking&quot;</em><em>]</em>) – either “ner” or “linking”. Store the
-results for just NER or with links as well.</p></li>
-<li><p><strong>how_split</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – which way of splitting the data are we using?
-It could be the <code class="docutils literal notranslate"><span class="pre">&quot;originalsplit&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;Ashton1860&quot;</span></code>, for
-example, which would mean that <code class="docutils literal notranslate"><span class="pre">&quot;Ashton1860&quot;</span></code> is left out for
-test only.</p></li>
-<li><p><strong>which_split</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – on which split are we testing our experiments?
-It can be <code class="docutils literal notranslate"><span class="pre">&quot;dev&quot;</span></code> while we’re developing the code, or <code class="docutils literal notranslate"><span class="pre">&quot;test&quot;</span></code>
-when we run it in the final experiments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
 </dd></dl>
 
 </section>

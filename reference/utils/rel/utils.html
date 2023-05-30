@@ -113,9 +113,25 @@
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">list_of_lists</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">flatten_list_of_lists</span><span class="p">(</span><span class="n">list_of_lists</span><span class="p">))</span>
-<span class="go">([1, 2, 3, 4, 5, 6], [3, 5])</span>
+<span class="go">([1, 2, 3, 4, 5, 6], array([0, 3, 5]))</span>
 </pre></div>
 </div>
+<dl>
+<dt>Credit:</dt><dd><p>This function is taken from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud Entity Linker</a> Github repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Reference</span><span class="p">:</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
+<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
+<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
+<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
+<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -141,21 +157,32 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">True</s
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lists</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">make_equal_len</span><span class="p">(</span><span class="n">lists</span><span class="p">))</span>
-<span class="go">([[1, 2, 3], [4, 5, 0], [6, 7, 8]], [[1.0, 1.0, 1.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]])</span>
+<span class="go">([[1, 2, 3, 0], [4, 5, 0, 0], [6, 7, 8, 9]], [[1.0, 1.0, 1.0, 0.0], [1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]])</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The mask indicates the original length of each list with <code class="docutils literal notranslate"><span class="pre">1.0</span></code> values
-and the padded/truncated parts with <code class="docutils literal notranslate"><span class="pre">0.0</span></code> values.</p>
+<dl>
+<dt>Credit:</dt><dd><p>This function is taken from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud Entity Linker</a> Github repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Reference</span><span class="p">:</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
+<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
+<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
+<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
+<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 </div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.REL.utils.is_important_word">
 <span class="sig-prename descclassname"><span class="pre">utils.REL.utils.</span></span><span class="sig-name descname"><span class="pre">is_important_word</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#utils.REL.utils.is_important_word" title="Permalink to this definition"></a></dt>
 <dd><p>Check if a word is important. An important word is not a stopword, a
-number, or has a length of 1.</p>
+number, or has a length of 3 or more characters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>s</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The word to be checked.</p>
@@ -172,6 +199,22 @@ number, or has a length of 1.</p>
 <span class="go">True</span>
 </pre></div>
 </div>
+<dl>
+<dt>Credit:</dt><dd><p>This function is adapted from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud Entity Linker</a> Github repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Reference</span><span class="p">:</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
+<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
+<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
+<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
+<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">

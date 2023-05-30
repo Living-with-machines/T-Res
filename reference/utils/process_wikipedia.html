@@ -111,10 +111,12 @@
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Python_(programming_language)#Overview&quot;</span><span class="p">)</span>
-<span class="go">&#39;https://en.wikipedia.org/wiki/Python (programming language)&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Data_science&quot;</span><span class="p">)</span>
-<span class="go">&#39;https://en.wikipedia.org/wiki/Data_science&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;Python_(programming_language)#Overview&quot;</span><span class="p">)</span>
+<span class="go">&#39;python%20%28programming%20language%29&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;Data_science&quot;</span><span class="p">)</span>
+<span class="go">&#39;data%20science&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikilinks_consistent</span><span class="p">(</span><span class="s2">&quot;San_Francisco&quot;</span><span class="p">)</span>
+<span class="go">&#39;san%20francisco&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -136,17 +138,18 @@ characters.</p></li>
 <dd class="field-odd"><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The Wikipedia entity to make consistent.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The modified and consistent Wikipedia entity in Wikidata format.</p>
+<dd class="field-even"><p>The modified Wikipedia entity consistent with the
+wikipedia2wikidata mapper.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikipedia2wikidata_consistent</span><span class="p">(</span><span class="s2">&quot;Python (programming language)&quot;</span><span class="p">)</span>
-<span class="go">&#39;Python_(programming_language)&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikipedia2wikidata_consistent</span><span class="p">(</span><span class="s2">&quot;New York City&quot;</span><span class="p">)</span>
+<span class="go">&#39;new_york_city&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">make_wikipedia2wikidata_consistent</span><span class="p">(</span><span class="s2">&quot;Data science&quot;</span><span class="p">)</span>
-<span class="go">&#39;Data_science&#39;</span>
+<span class="go">&#39;data_science&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -173,10 +176,10 @@ the mapping, otherwise None.</p>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a>, optional</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function is adapted from <a class="reference external" href="https://github.com/jcklie/wikimapper">https://github.com/jcklie/wikimapper</a>.</p>
-</div>
+<dl class="simple">
+<dt>Credit:</dt><dd><p>This function is adapted from <a class="reference external" href="https://github.com/jcklie/wikimapper">https://github.com/jcklie/wikimapper</a>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

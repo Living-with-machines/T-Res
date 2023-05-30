@@ -99,6 +99,25 @@
 <dt class="sig sig-object py" id="utils.REL.vocabulary.Vocabulary">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">utils.REL.vocabulary.</span></span><span class="sig-name descname"><span class="pre">Vocabulary</span></span><a class="headerlink" href="#utils.REL.vocabulary.Vocabulary" title="Permalink to this definition"></a></dt>
 <dd><p>A class representing a vocabulary object used for storing references to embeddings.</p>
+<dl>
+<dt>Credit:</dt><dd><p>The code for this class and its methods is taken from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud
+Entity Linker</a> Github repository. See
+<a href="#id1"><span class="problematic" id="id2">`https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py`_</span></a> for more
+information.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Reference</span><span class="p">:</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
+<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
+<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
+<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
+<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="utils.REL.vocabulary.Vocabulary.add_to_vocab">
 <span class="sig-name descname"><span class="pre">add_to_vocab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.REL.vocabulary.Vocabulary.add_to_vocab" title="Permalink to this definition"></a></dt>
@@ -111,21 +130,6 @@
 <dd class="field-even"><p>None.</p>
 </dd>
 </dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span> <span class="o">=</span> <span class="n">Vocabulary</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;apple&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;banana&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method assigns a new ID to the token and updates the
-necessary dictionaries and lists.</p>
-<p>If the token is already present in the vocabulary, it will not be
-added again.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
@@ -144,25 +148,6 @@ unknown token if the token is not found.</p>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)">int</a></p>
 </dd>
 </dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span> <span class="o">=</span> <span class="n">Vocabulary</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;apple&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;banana&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="s2">&quot;apple&quot;</span><span class="p">)</span>
-<span class="go">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="s2">&quot;orange&quot;</span><span class="p">)</span>
-<span class="go">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="s2">&quot;grape&quot;</span><span class="p">)</span>
-<span class="go">0</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method normalizes the token using the defined normalisation
-rules before retrieving the ID.</p>
-<p>If the normalized token is not present in the vocabulary, the ID
-of the unknown token is returned.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
@@ -186,20 +171,6 @@ with <code class="docutils literal notranslate"><span class="pre">'0'</span></co
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
 </dd>
 </dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vocabulary</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">&quot;Hello, World!&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">digit_0</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">&#39;hello, world0&#39;</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Special tokens, like the unknown token (<code class="docutils literal notranslate"><span class="pre">#UNK#</span></code>), start token
-(<code class="docutils literal notranslate"><span class="pre">&lt;s&gt;</span></code>), and end token (<code class="docutils literal notranslate"><span class="pre">&lt;/s&gt;</span></code>) are not affected by the
-normalisation process.</p>
-<p>Certain bracket tokens are replaced with their corresponding
-symbols defined in the <code class="xref py py-const docutils literal notranslate"><span class="pre">BRACKETS</span></code>
-dictionary.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
@@ -208,20 +179,12 @@ dictionary.</p>
 <dd><p>Get the size of the vocabulary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The number of unique words in the vocabulary.</p>
+<dd class="field-odd"><p>The number of words in the vocabulary.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)">int</a></p>
 </dd>
 </dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span> <span class="o">=</span> <span class="n">Vocabulary</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;apple&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">add_to_vocab</span><span class="p">(</span><span class="s2">&quot;banana&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vocab</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-<span class="go">2</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py attribute">

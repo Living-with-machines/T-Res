@@ -95,6 +95,131 @@
              
   <section id="utils-rel-mulrel-ranker-module">
 <h1><code class="docutils literal notranslate"><span class="pre">utils.REL.mulrel_ranker</span></code> module<a class="headerlink" href="#utils-rel-mulrel-ranker-module" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.PreRank">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">utils.REL.mulrel_ranker.</span></span><span class="sig-name descname"><span class="pre">PreRank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.REL.mulrel_ranker.PreRank" title="Permalink to this definition"></a></dt>
+<dd><p>PreRank class is used for preranking entities for a given mention
+by multiplying entity vectors with word vectors.</p>
+<dl>
+<dt>Credit:</dt><dd><p>This class and its methods are taken (minimally
+adapted when necessary) from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud Entity
+Linker</a> Github
+repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Reference</span><span class="p">:</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
+<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
+<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
+<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
+<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.PreRank.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.REL.mulrel_ranker.PreRank.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Multiplies local context words with entity vectors for a given mention.</p>
+<p>Returns: entity scores.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.PreRank.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#utils.REL.mulrel_ranker.PreRank.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.MulRelRanker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">utils.REL.mulrel_ranker.</span></span><span class="sig-name descname"><span class="pre">MulRelRanker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.REL.mulrel_ranker.MulRelRanker" title="Permalink to this definition"></a></dt>
+<dd><p>The MulRelRanker class implements a neural network model for entity disambiguation.</p>
+<dl>
+<dt>Credit:</dt><dd><p>This class and its methods are taken (minimally
+adapted when necessary) from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud Entity
+Linker</a> Github
+repository, which is based on the <code class="docutils literal notranslate"><span class="pre">mulrel-nel</span></code>
+approach developed by Le and Titov (2018), whose original
+code is available in the <a class="reference external" href="https://github.com/lephong/mulrel-nel">mulrel-nel: Multi-relational Named
+Entity Linking</a> Github
+repository, and on Ganea and Hofmann (2017).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">References</span><span class="p">:</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
+<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
+<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
+<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
+<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">ganea2017deep</span><span class="p">,</span>
+<span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Deep</span> <span class="n">Joint</span> <span class="n">Entity</span> <span class="n">Disambiguation</span> <span class="k">with</span> <span class="n">Local</span> <span class="n">Neural</span> <span class="n">Attention</span><span class="p">},</span>
+<span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Ganea</span><span class="p">,</span> <span class="n">Octavian</span><span class="o">-</span><span class="n">Eugen</span> <span class="ow">and</span> <span class="n">Hofmann</span><span class="p">,</span> <span class="n">Thomas</span><span class="p">},</span>
+<span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">2017</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Empirical</span> <span class="n">Methods</span> <span class="ow">in</span> <span class="n">Natural</span> <span class="n">Language</span> <span class="n">Processing</span><span class="p">},</span>
+<span class="n">pages</span><span class="o">=</span><span class="p">{</span><span class="mi">2619</span><span class="o">--</span><span class="mi">2629</span><span class="p">},</span>
+<span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2017</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">le2018improving</span><span class="p">,</span>
+<span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Improving</span> <span class="n">Entity</span> <span class="n">Linking</span> <span class="n">by</span> <span class="n">Modeling</span> <span class="n">Latent</span> <span class="n">Relations</span> <span class="n">between</span> <span class="n">Mentions</span><span class="p">},</span>
+<span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Le</span><span class="p">,</span> <span class="n">Phong</span> <span class="ow">and</span> <span class="n">Titov</span><span class="p">,</span> <span class="n">Ivan</span><span class="p">},</span>
+<span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">56</span><span class="n">th</span> <span class="n">Annual</span> <span class="n">Meeting</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Association</span> <span class="k">for</span> <span class="n">Computational</span> <span class="n">Linguistics</span> <span class="p">(</span><span class="n">Volume</span> <span class="mi">1</span><span class="p">:</span> <span class="n">Long</span> <span class="n">Papers</span><span class="p">)},</span>
+<span class="n">pages</span><span class="o">=</span><span class="p">{</span><span class="mi">1595</span><span class="o">--</span><span class="mi">1604</span><span class="p">},</span>
+<span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2018</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.MulRelRanker.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tok_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_e_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.REL.mulrel_ranker.MulRelRanker.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Responsible for the forward pass of the entity disambiguation model
+and produces a ranking of candidates for a given set of mentions.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ctx_layer refers to function f. See Figure 3 in Le and Titov (2018).</p></li>
+<li><p>ent_scores refers to function q.</p></li>
+<li><p>score_combine refers to function g.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Ranking of entities per mention.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.MulRelRanker.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lamb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.REL.mulrel_ranker.MulRelRanker.loss" title="Permalink to this definition"></a></dt>
+<dd><p>Computes given ranking loss (Equation 7) and adds a regularization term.</p>
+<p>Returns: loss of given batch.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.MulRelRanker.regularize">
+<span class="sig-name descname"><span class="pre">regularize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.REL.mulrel_ranker.MulRelRanker.regularize" title="Permalink to this definition"></a></dt>
+<dd><p>Regularizes model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="utils.REL.mulrel_ranker.MulRelRanker.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#utils.REL.mulrel_ranker.MulRelRanker.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
 

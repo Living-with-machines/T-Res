@@ -108,15 +108,14 @@ transformers tokenizer object, which is the tokenizer of the base
 model.</p></li>
 <li><p><strong>label_encoding_dict</strong> (<em>Dict</em>) – A dictionary mapping NER labels to label
 IDs, from <code class="docutils literal notranslate"><span class="pre">label2id</span></code> in
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">train()</span></code>.</p></li>
+<a class="reference internal" href="../geoparser/recogniser.html#geoparser.recogniser.Recogniser.train" title="geoparser.recogniser.Recogniser.train"><code class="xref py py-meth docutils literal notranslate"><span class="pre">train()</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>TODO</dt><dd><p>The tokenized inputs with aligned labels.</p>
+<dd class="field-even"><p>The tokenized inputs with aligned labels.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>transformers.tokenization_utils_base.BatchEncoding</p>
 </dd>
 </dl>
 <dl class="simple">
@@ -131,21 +130,21 @@ IDs, from <code class="docutils literal notranslate"><span class="pre">label2id<
 <dd><p>Collect named entities from a list of tokens and return a list of named
 tuples representing the entities.</p>
 <p>This function iterates over the tokens and identifies named entities based
-on their entity type (<code class="docutils literal notranslate"><span class="pre">entity_type</span></code>) and link. Each token is represented
-as a tuple with the following format:
-<code class="docutils literal notranslate"><span class="pre">(token,</span> <span class="pre">entity_type,</span> <span class="pre">link,</span> <span class="pre">start_char,</span> <span class="pre">end_char)</span></code>.</p>
+on their entity type (<code class="docutils literal notranslate"><span class="pre">entity_type</span></code>), keeping the tokens that are not
+tagged as <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>. Each token is represented as a tuple with the following
+format: <code class="docutils literal notranslate"><span class="pre">(token,</span> <span class="pre">entity_type,</span> <span class="pre">link,</span> <span class="pre">start_char,</span> <span class="pre">end_char)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>]</em>) – <p>A list of tokens, where each token is
 represented as a tuple containing the following elements:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">token</span></code> (str): The token text.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">entity_type</span></code> (str): The entity type (e.g.,
-<code class="docutils literal notranslate"><span class="pre">&quot;B-LOC&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;I-LOC&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> (str): The entity link.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code> (int): The start character offset of the token.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code> (int): The end character offset of the token.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entity_type</span></code> (str): The entity type (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;B-LOC&quot;</span></code>,</p></li>
 </ul>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;I-LOC&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>).
+- <code class="docutils literal notranslate"><span class="pre">link</span></code> (str): Empty string reserved for the entity link.
+- <code class="docutils literal notranslate"><span class="pre">start_char</span></code> (int): The start character offset of the token.
+- <code class="docutils literal notranslate"><span class="pre">end_char</span></code> (int): The end character offset of the token.</p>
 </p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -153,7 +152,7 @@ represented as a tuple containing the following elements:</p>
 entities. Each named tuple contains the following fields:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">e_type</span></code> (str): The entity type.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> (str): The entity link.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> (str): Empty string reserved for the entity link.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code> (int): The start offset of the entity (token
 position).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code> (int): The end offset of the entity (token
@@ -200,8 +199,8 @@ score will be set to <code class="docutils literal notranslate"><span class="pre
 each dictionary contains the following keys:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">mention</span></code>: The text of the mention.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code>: The start offset of the mention.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code>: The end offset of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code>: The start offset of the mention (token position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code>: The end offset of the mention (token position).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code>: The start character index of the mention.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code>: The end character index of the mention.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ner_score</span></code>: The consolidated NER score of the mention (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>
@@ -251,10 +250,10 @@ capitalization.</p>
 <dd><p>Fix prefix assignment errors in hyphenated entities.</p>
 <p>This function corrects prefix assignment errors that occur in some
 hyphenated entities, where multiple tokens connected by hyphens form a
-single entity but are incorrectly assigned different prefixes. It
-specifically addresses the issue of grouping in hyphenated entities, where
-a sequence of tokens connected by hyphens should be grouped as a single
-entity.</p>
+single entity but are incorrectly assigned different prefixes (i.e.
+<code class="docutils literal notranslate"><span class="pre">B-</span></code> and <code class="docutils literal notranslate"><span class="pre">I-</span></code>). It specifically addresses the issue of grouping
+in hyphenated entities, where a sequence of tokens connected by hyphens
+should be grouped as a single entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
@@ -290,7 +289,7 @@ same and not <code class="docutils literal notranslate"><span class="pre">&quot;
 entities, where multiple tokens are part of the same entity but are
 incorrectly assigned different prefixes. It specifically addresses the
 issue of grouping in nested entities, where a sequence of tokens that form
-a single entity are incorrectly assigned prefixes.</p>
+a single entity are assigned incorrect prefixes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
@@ -311,10 +310,9 @@ entities. For example, the phrase “Island of Terceira”
 (<code class="docutils literal notranslate"><span class="pre">[&quot;Island&quot;,</span> <span class="pre">&quot;of&quot;,</span> <span class="pre">&quot;Terceira&quot;]</span></code>) is incorrectly grouped as
 <code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;]</span></code>, when it should be
 <code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;]</span></code> as we consider it as one entity.</p>
-<p><strong>Solution</strong>: If the current token or the previous token is a hyphen
-and the entity type of both the previous and current tokens is not
-<code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, the current entity’s prefix is changed to <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code> to
-maintain the correct grouping.</p>
+<p><strong>Solution</strong>: If the current token is preposition <code class="docutils literal notranslate"><span class="pre">&quot;of&quot;</span></code> and
+the previous and current entity types are not <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, the current
+entity’s prefix is changed to <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code> to maintain the correct grouping.</p>
 </div>
 </dd></dl>
 
