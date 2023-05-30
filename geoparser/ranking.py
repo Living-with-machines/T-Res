@@ -2,7 +2,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Literal, Optional, Tuple, List
+from typing import List, Literal, Optional, Tuple
 
 import pandas as pd
 from DeezyMatch import candidate_ranker
@@ -16,54 +16,51 @@ from utils import deezy_processing
 
 class Ranker:
     """
-    The Ranker class implements a ranking system for candidate selection. It
-    provides methods to rank candidates based on different matching methods,
-    such as perfect match, partial match, Levenshtein distance, and DeezyMatch.
-    The class also handles loading and processing of resources related to
-    candidate selection.
+    The Ranker class implements a system for candidate selection through string
+    variation ranking. It provides methods to select candidates based on different
+    matching approaches, such as perfect match, partial match, Levenshtein distance,
+    and DeezyMatch. The class also handles loading and processing of resources
+    related to candidate selection.
 
     Arguments:
         method (str): The candidate selection and ranking method to use.
         resources_path (str): Relative path to the resources directory
             (containing Wikidata resources).
-        mentions_to_wikidata (dict): A dictionary mapping mentions to Wikidata
-            IDs. Can also be loaded from the resources through the
+        mentions_to_wikidata (dict, optional): An empty dictionary which
+            will store the mapping between mentions and Wikidata IDs,
+            which will be loaded through the
             :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
-        wikidata_to_mentions (dict): A dictionary mapping Wikidata IDs to
-            mentions. Can also be loaded from the resources through the
+        wikidata_to_mentions (dict, optional): An empty dictionary which
+            will store the mapping between Wikidata IDs and mentions,
+            which will be loaded through the
             :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
-        strvar_parameters (dict): Dictionary of string variant parameters
-            required to create a DeezyMatch training dataset. Defaults to
-            ``dict()`` (an empty dictionary).
-        deezy_parameters (dict): Dictionary of DeezyMatch parameters for model
-            training. Defaults to ``dict()`` (an empty dictionary).
-        already_collected_cands (dict): Dictionary of already collected
-            candidates. Defaults to ``dict()`` (an empty dictionary).
+        strvar_parameters (dict, optional): Dictionary of string variation
+            parameters required to create a DeezyMatch training dataset.
+            For the default settings, see Notes below.
+        deezy_parameters (dict, optional): Dictionary of DeezyMatch parameters
+            for model training. For the default settings, see Notes below.
+        already_collected_cands (dict, optional): Dictionary of already
+            collected candidates. Defaults to ``dict()`` (an empty dictionary).
 
     Example:
-        >>> # Create a Ranker object
+        >>> # Create a Ranker object:
         >>> ranker = Ranker(
-                method="partialmatch",
+                method="perfectmatch",
                 resources_path="/path/to/resources/",
-                mentions_to_wikidata={},
-                wikidata_to_mentions={},
-                strvar_parameters={},
-                deezy_parameters={},
-                already_collected_cands={}
             )
 
         >>> # Load resources
-        >>> ranker.load_resources()
+        >>> ranker.mentions_to_wikidata = ranker.load_resources()
 
         >>> # Train the ranker (if applicable)
         >>> ranker.train()
 
         >>> # Perform candidate selection
-        >>> queries = ['apple', 'banana', 'orange']
+        >>> queries = ['London', 'Paraguay']
         >>> candidates, already_collected = ranker.run(queries)
 
         >>> # Find candidates for mentions
-        >>> mentions = [{'mention': 'apple'}, {'mention': 'banana'}, {'mention': 'orange'}]
+        >>> mentions = [{'mention': 'London'}, {'mention': 'Paraguay'}]
         >>> mention_candidates, mention_already_collected = ranker.find_candidates(mentions)
 
         >>> # Print the results
@@ -73,16 +70,74 @@ class Ranker:
         >>> print("Find Candidates Results:")
         >>> print(mention_candidates)
         >>> print(mention_already_collected)
+
+    Note:
+        * The default settings for ``strvar_parameters``:
+
+          .. code-block:: python
+
+            strvar_parameters: Optional[dict] = {
+                # Parameters to create the string pair dataset:
+                "ocr_threshold": 60,
+                "top_threshold": 85,
+                "min_len": 5,
+                "max_len": 15,
+                "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
+                "w2v_ocr_model": "w2v_*_news",
+                "overwrite_dataset": False,
+            }
+
+        * The default settings for ``deezy_parameters``:
+
+          .. code-block:: python
+
+            deezy_parameters: Optional[dict] = {
+                "dm_path": str(Path("resources/deezymatch/").resolve()),
+                "dm_cands": "wkdtalts",
+                "dm_model": "w2v_ocr",
+                "dm_output": "deezymatch_on_the_fly",
+                "ranking_metric": "faiss",
+                "selection_threshold": 25,
+                "num_candidates": 3,
+                "search_size": 3,
+                "verbose": False,
+                "overwrite_training": False,
+                "do_test": False,
+            }
     """
 
     def __init__(
         self,
         method: Literal["perfectmatch", "partialmatch", "levenshtein", "deezymatch"],
         resources_path: str,
-        mentions_to_wikidata: dict,  # TODO: shouldn't this default to ``dict()`` as it can be loaded through load_resources?
-        wikidata_to_mentions: dict,  # TODO: shouldn't this default to ``dict()`` as it can be loaded through load_resources?
-        strvar_parameters: Optional[dict] = dict(),
-        deezy_parameters: Optional[dict] = dict(),
+        mentions_to_wikidata: Optional[dict] = dict(),
+        wikidata_to_mentions: Optional[dict] = dict(),
+        strvar_parameters: Optional[dict] = {
+            # Parameters to create the string pair dataset:
+            "ocr_threshold": 60,
+            "top_threshold": 85,
+            "min_len": 5,
+            "max_len": 15,
+            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
+            "w2v_ocr_model": "w2v_*_news",
+            "overwrite_dataset": False,
+        },
+        deezy_parameters: Optional[dict] = {
+            # Paths and filenames of DeezyMatch models and data:
+            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_cands": "wkdtalts",
+            "dm_model": "w2v_ocr",
+            "dm_output": "deezymatch_on_the_fly",
+            # Ranking measures:
+            "ranking_metric": "faiss",
+            "selection_threshold": 25,
+            "num_candidates": 3,
+            "search_size": 3,
+            "verbose": False,
+            # DeezyMatch training:
+            "overwrite_training": False,
+            "do_test": False,
+        },
         already_collected_cands: Optional[dict] = dict(),
     ):
         """
@@ -131,7 +186,7 @@ class Ranker:
                 mention (e.g. ``"London"``) to the Wikidata entities that are
                 referred to by this mention on Wikipedia (e.g. ``Q84``,
                 ``Q2477346``). The data also includes, for each entity, their
-                "relevance", i.e. number of in-links across Wikipedia.
+                normalized "relevance", i.e. number of in-links across Wikipedia.
 
         Note:
             This method loads the mentions-to-wikidata and
@@ -223,9 +278,13 @@ class Ranker:
             if self.deezy_parameters["do_test"] == True:
                 self.deezy_parameters["dm_model"] += "_test"
                 self.deezy_parameters["dm_cands"] += "_test"
-            deezy_processing.create_training_set(self)
-            deezy_processing.train_deezy_model(self)
-            deezy_processing.generate_candidates(self)
+            deezy_processing.create_training_set(
+                self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions
+            )
+            deezy_processing.train_deezy_model(self.deezy_parameters)
+            deezy_processing.generate_candidates(
+                self.deezy_parameters, self.mentions_to_wikidata
+            )
         # This dictionary is not used anymore:
         self.wikidata_to_mentions = dict()
 
@@ -278,8 +337,8 @@ class Ranker:
         Arguments:
             query (str): A mention identified in a text.
             row (Series): A pandas Series representing a row in the dataset
-                with a "mentions" column, corresponding to a mention in the
-                knowledge base.
+                with a "mentions" column, corresponding to an alternate name
+                of an etity in the knowledge base.
 
         Returns:
             float:
@@ -300,7 +359,7 @@ class Ranker:
             >>> row = pd.Series({'mentions': 'orange'})
             >>> similarity = ranker.damlev_dist(query, row)
             >>> print(similarity)
-            0.4
+            0.1666666865348816
         """
         return 1.0 - normalized_damerau_levenshtein_distance(
             query.lower(), row["mentions"].lower()
@@ -328,7 +387,7 @@ class Ranker:
             >>> row = pd.Series({'mentions': 'Delicious apple'})
             >>> match_score = ranker.check_if_contained(query, row)
             >>> print(match_score)
-            0.625
+            0.3333333333333333
         """
         # Fix strings
         s1 = query.lower()
@@ -341,8 +400,6 @@ class Ranker:
         # E.g. query is 'County of Dorset' and candidate mention is 'Dorset'
         if s2 in s1:
             return len(row["mentions"]) / len(query)
-
-        # TODO: Should this return 0.0 if there is no overlap?
 
     def partial_match(self, queries: List[str], damlev: bool) -> Tuple[dict, dict]:
         """
@@ -418,8 +475,8 @@ class Ranker:
 
     def deezy_on_the_fly(self, queries: List[str]) -> Tuple[dict, dict]:
         """
-        Perform DeezyMatch (fuzzy matching) on-the-fly for a list of given
-        mentions (``queries``).
+        Perform DeezyMatch (a deep neural network approach to fuzzy string
+        matching) on-the-fly for a list of given mentions (``queries``).
 
         Arguments:
             queries (list): A list of mentions (strings) identified in a text
@@ -438,17 +495,18 @@ class Ranker:
 
         Example:
             >>> ranker = Ranker(...)
-            >>> queries = ['apple', 'banana', 'orange']
+            >>> ranker.mentions_to_wikidata = ranker.load_resources()
+            >>> queries = ['London', 'Shefrield']
             >>> candidates, already_collected = ranker.deezy_on_the_fly(queries)
             >>> print(candidates)
-            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+            {'London': {'London': 1.0}, 'Shefrield': {'Sheffield': 0.03382000000000005}}
             >>> print(already_collected)
-            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+            {'London': {'London': 1.0}, 'Shefrield': {'Sheffield': 0.03382000000000005}}
 
         Note:
             This method performs DeezyMatch on-the-fly for each mention in a
             given list of mentions identified in a text. If a query has
-            already been matched perfectly, it skips the partial matching
+            already been matched perfectly, it skips the fuzzy matching
             process for that query. For the remaining queries,
             it uses the DeezyMatch model to generate candidates and ranks them
             based on the specified ranking metric and selection threshold,
@@ -529,13 +587,14 @@ class Ranker:
                 See Notes below for further information.
 
         Example:
-            >>> ranker = Ranker(..., method="deezymatch")
-            >>> queries = ['apple', 'banana', 'orange']
-            >>> candidates, already_collected = ranker.run(queries)
+            >>> myranker = Ranker(method="perfectmatch", ...)
+            >>> myranker.mentions_to_wikidata = myranker.load_resources()
+            >>> queries = ['London', 'Barcelona', 'Bologna']
+            >>> candidates, already_collected = myranker.run(queries)
             >>> print(candidates)
-            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+            {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
             >>> print(already_collected)
-            {'apple': {'apple': 1.0}, 'banana': {'bananas': 0.8, 'banana split': 0.9}, 'orange': {'orange': 1.0}}
+            {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
 
         Note:
             This method executes the appropriate ranking method based on the
@@ -575,7 +634,11 @@ class Ranker:
 
             #. The first dictionary maps each original mention to a
                sub-dictionary, where the sub-dictionary maps the mention
-               variations to their match scores.
+               variations to a sub-sub-dictionary with two keys: ``"Score"``
+               (the string matching similarity score) and ``"Candidates"``
+               (a dictionary containing the Wikidata candidates, where the
+               key is the Wikidata ID and value is the the relative mention-
+               to-wikidata frequency).
             #. The second dictionary stores the already collected candidates
                for each query.
 
@@ -591,8 +654,8 @@ class Ranker:
                     "Guadaloupe": {
                         "Score": 1.0,
                         "Candidates": {
-                            "Q17012": 10,
-                            "Q3153836": 2
+                            "Q17012": 0.003935458480913026,
+                            "Q3153836": 0.07407407407407407
                         }
                     }
                 }
@@ -606,7 +669,7 @@ class Ranker:
 
             The method returns a dictionary that maps each original mention to
             a sub-dictionary containing the mention variations as keys and
-            their corresponding match scores as values.
+            their corresponding Wikidata match scores as values.
 
             Additionally, it updates the already collected candidates
             dictionary (the Ranker object's ``already_collected_cands``
@@ -623,16 +686,25 @@ class Ranker:
         for original_mention in cands:
             wk_cands[original_mention] = dict()
             for variation in cands[original_mention]:
-                match_score = cands[original_mention][variation]
-
-                # Check we've actually loaded the mentions2wikidata dictionary:
-                assert self.mentions_to_wikidata["London"] is not None
-
-                # Find Wikidata ID and relv.
-                found_cands = self.mentions_to_wikidata.get(variation, dict())
-
-                if found_cands and not variation in wk_cands[original_mention]:
-                    wk_cands[original_mention][variation] = {"Score": match_score}
-                    wk_cands[original_mention][variation]["Candidates"] = found_cands
+                # If the candidates of the variation of the original mention
+                # have already been stored, reuse them:
+                stored_value = self.already_collected_cands[original_mention][variation]
+                if type(stored_value) == dict:
+                    wk_cands[original_mention][variation] = stored_value
+                # If the candidates of the variation of the original mention
+                # have not yet been found, find them:
+                else:
+                    match_score = cands[original_mention][variation]
+                    # Find Wikidata ID and relv.
+                    found_cands = self.mentions_to_wikidata.get(variation, dict())
+                    if found_cands and not variation in wk_cands[original_mention]:
+                        wk_cands[original_mention][variation] = {
+                            "Score": match_score,
+                            "Candidates": found_cands,
+                        }
+                        self.already_collected_cands[original_mention][variation] = {
+                            "Score": match_score,
+                            "Candidates": found_cands,
+                        }
 
         return wk_cands, self.already_collected_cands

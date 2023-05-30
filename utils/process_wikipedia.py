@@ -1,5 +1,5 @@
 import sqlite3
-import urllib
+import urllib.parse
 from typing import Optional
 
 
@@ -20,10 +20,12 @@ def make_wikilinks_consistent(url: str) -> str:
         str: The modified and quoted URL.
 
     Example:
-        >>> make_wikilinks_consistent("https://en.wikipedia.org/wiki/Python_(programming_language)#Overview")
-        'https://en.wikipedia.org/wiki/Python (programming language)'
-        >>> make_wikilinks_consistent("https://en.wikipedia.org/wiki/Data_science")
-        'https://en.wikipedia.org/wiki/Data_science'
+        >>> make_wikilinks_consistent("Python_(programming_language)#Overview")
+        'python%20%28programming%20language%29'
+        >>> make_wikilinks_consistent("Data_science")
+        'data%20science'
+        >>> make_wikilinks_consistent("San_Francisco")
+        'san%20francisco'
     """
     url = url.lower()
     unquote = urllib.parse.unquote(url)
@@ -50,13 +52,14 @@ def make_wikipedia2wikidata_consisent(entity: str) -> str:
         entity (str): The Wikipedia entity to make consistent.
 
     Returns:
-        str: The modified and consistent Wikipedia entity in Wikidata format.
+        str: The modified Wikipedia entity consistent with the
+        wikipedia2wikidata mapper.
 
     Example:
-        >>> make_wikipedia2wikidata_consistent("Python (programming language)")
-        'Python_(programming_language)'
+        >>> make_wikipedia2wikidata_consistent("New York City")
+        'new_york_city'
         >>> make_wikipedia2wikidata_consistent("Data science")
-        'Data_science'
+        'data_science'
     """
     quoted_entity = make_wikilinks_consistent(entity)
     underscored = urllib.parse.unquote(quoted_entity).replace(" ", "_")
@@ -81,7 +84,7 @@ def title_to_id(
             If a mapping could be found for ``wiki_page_title``, then returns
             the mapping, otherwise None.
 
-    Note:
+    Credit:
         This function is adapted from https://github.com/jcklie/wikimapper.
     """
 

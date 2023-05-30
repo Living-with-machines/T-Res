@@ -30,9 +30,9 @@ np.random.seed(RANDOM_SEED)
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
+from geoparser import ranking
 from utils import rel_utils
 from utils.REL import entity_disambiguation
-from geoparser import ranking
 
 
 class Linker:
@@ -44,15 +44,15 @@ class Linker:
     Arguments:
         method (Literal["mostpopular", "reldisamb", "bydistance"]): The
             linking method to use.
-        resources_path (str): The path to the linking resources.
-        linking_resources (dict): Dictionary containing the necessary linking
-            resources.
+        resources_path (str, optional): The path to the linking resources.
+        linking_resources (dict, optional): Dictionary containing the
+            necessary linking resources. Defaults to ``dict()`` (an empty
+            dictionary).
         overwrite_training (bool): Flag indicating whether to overwrite the
-            training.
-        rel_params (dict, optional): Dictionary containing the relative
-            disambiguation parameters. Defaults to ``dict()``. TODO: Mariona,
-            are these parameters documented somewhere? I.e. what's possible to
-            put in this dictionary?
+            training. Defaults to ``False``.
+        rel_params (dict, optional): Dictionary containing the parameters
+            for performing entity disambiguation using the ``reldisamb``
+            approach. For the default settings, see Notes below.
 
     Example:
         >>> linker = Linker(
@@ -62,15 +62,73 @@ class Linker:
                 overwrite_training=True,
                 rel_params={"with_publication": True, "do_test": True}
             )
+
+    Note:
+
+        * Note that, in order to instantiate the Linker with the ``reldisamb``
+        method, the Linker needs to be wrapped by a context manager in which
+        a connection to the entity embeddings database is established and a
+        cursor is created:
+
+          .. code-block:: python
+
+            with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
+                cursor = conn.cursor()
+                mylinker = linking.Linker(
+                    method="reldisamb",
+                    resources_path="../resources/",
+                    linking_resources=dict(),
+                    rel_params={
+                        "model_path": "../resources/models/disambiguation/",
+                        "data_path": "../experiments/outputs/data/lwm/",
+                        "training_split": "",
+                        "db_embeddings": cursor,
+                        "with_publication": wpubl,
+                        "without_microtoponyms": wmtops,
+                        "do_test": False,
+                        "default_publname": "",
+                        "default_publwqid": "",
+                    },
+                    overwrite_training=False,
+                )
+
+        * See below the default settings for ``rel_params``. Note that
+        `db_embeddings` defaults to None, but it should be assigned a
+        cursor to the entity embeddings database, as described above:
+
+          .. code-block:: python
+
+            rel_params: Optional[dict] = {
+                "model_path": "../resources/models/disambiguation/",
+                "data_path": "../experiments/outputs/data/lwm/",
+                "training_split": "originalsplit",
+                "db_embeddings": None,
+                "with_publication": True,
+                "without_microtoponyms": True,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+            }
+
     """
 
     def __init__(
         self,
         method: Literal["mostpopular", "reldisamb", "bydistance"],
         resources_path: str,
-        linking_resources: dict,
-        overwrite_training: bool,
-        rel_params: Optional[dict] = dict(),
+        linking_resources: Optional[dict] = dict(),
+        overwrite_training: Optional[bool] = False,
+        rel_params: Optional[dict] = {
+            "model_path": "../resources/models/disambiguation/",
+            "data_path": "../experiments/outputs/data/lwm/",
+            "training_split": "originalsplit",
+            "db_embeddings": None,  # The cursor to the embeddings database.
+            "with_publication": True,
+            "without_microtoponyms": True,
+            "do_test": False,
+            "default_publname": "United Kingdom",
+            "default_publwqid": "Q145",
+        },
     ):
         """
         Initialises a Linker object.
@@ -136,7 +194,8 @@ class Linker:
 
     def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
         """
-        Executes the linking process based on the specified method.
+        Executes the linking process based on the specified unsupervised
+        method.
 
         Arguments:
             dict_mention: Dictionary containing the mention information.
@@ -180,10 +239,9 @@ class Linker:
 
         Note:
             Applying the "most popular" disambiguation method for linking
-            entities, with a painfully strong baseline. Given a set of
-            candidates for a given mention, the function returns as a
-            prediction of the more relevant candidate, determined from the
-            in-link structure of Wikipedia.
+            entities. Given a set of candidates for a given mention, the
+            function returns as a prediction the more relevant Wikidata
+            candidate, determined from the in-link structure of Wikipedia.
         """
         cands = dict_mention["candidates"]
         most_popular_candidate_id = "NIL"
@@ -217,7 +275,7 @@ class Linker:
         self, dict_mention: dict, origin_wqid: Optional[str] = ""
     ) -> Tuple[str, float, dict]:
         """
-        Select candidate to place of publication.
+        Select candidate based on distance to the place of publication.
 
         Arguments:
             dict_mention (dict): dictionary with all the relevant information
@@ -227,10 +285,11 @@ class Linker:
 
         Returns:
             Tuple[str, float, dict]:
-                A tuple containing the most popular candidate's Wikidata ID
-                (e.g. ``"Q84"``) or ``"NIL"``, the confidence score of the
-                predicted link as a float (rounded to 3 decimals), and a
-                dictionary of all candidates and their confidence scores.
+                A tuple containing the Wikidata ID of the closest candidate
+                to the place of publication (e.g. ``"Q84"``) or ``"NIL"``,
+                the confidence score of the predicted link as a float (rounded
+                to 3 decimals), and a dictionary of all candidates and their
+                confidence scores.
 
         Note:
             Applying the "by distance" disambiguation method for linking
@@ -297,7 +356,7 @@ class Linker:
 
         Returns:
             entity_disambiguation.EntityDisambiguation:
-                A trained DeezyMatch model.
+                A trained Entity Disambiguation model.
 
         Note:
             The training will be skipped if the model already exists and
@@ -350,9 +409,19 @@ class Linker:
 
                 # Prepare the dataset into the format required by REL:
                 train_json = rel_utils.prepare_rel_trainset(
-                    train_df, self, myranker, "train"
+                    train_df,
+                    self.rel_params,
+                    self.linking_resources["mentions_to_wikidata"],
+                    myranker,
+                    "train",
                 )
-                dev_json = rel_utils.prepare_rel_trainset(dev_df, self, myranker, "dev")
+                dev_json = rel_utils.prepare_rel_trainset(
+                    dev_df,
+                    self.rel_params,
+                    self.linking_resources["mentions_to_wikidata"],
+                    myranker,
+                    "dev",
+                )
 
                 # Set ED configuration to train mode:
                 config_rel = {

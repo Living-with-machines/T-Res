@@ -2,7 +2,7 @@ import os
 import sys
 from functools import partial
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 from datasets import load_dataset, load_metric
@@ -39,25 +39,29 @@ class Recogniser:
         model_path (str, optional): Path to store the trained model
             (default: ``""``).
         training_args (dict, optional): Additional fine-tuning training
-            arguments (default: ``dict()``, an empty dictionary).
+            arguments (default: {"batch_size": 4, "num_train_epochs": 5,
+            "learning_rate": 0.00005, "weight_decay": 0.0}``, a dictionary).
         overwrite_training (bool, optional):  Whether to overwrite an existing
             trained model (default: ``False``).
         do_test (bool, optional): Whether to train in test mode
             (default: ``False``).
         load_from_hub (bool, optional): Whether to load the model from
-            HuggingFace model hub (default: ``False``).
+            HuggingFace model hub or locally (default: ``False``).
 
     Example:
         >>> # Create an instance of the Recogniser class
         >>> recogniser = Recogniser(
-                model="bert-base-uncased",
+                model="ner-model",
                 train_dataset="train.json",
                 test_dataset="test.json",
+                base_model="bert-base-uncased",
                 model_path="/path/to/model/",
                 training_args={
-                    "learning_rate": 0.001,
-                    "batch_size": 16,
-                    "num_train_epochs": 5},
+                    "batch_size": 4,
+                    "num_train_epochs": 5,
+                    "learning_rate": 0.00005,
+                    "weight_decay": 0.0,
+                    },
                 overwrite_training=False,
                 do_test=False,
                 load_from_hub=False
@@ -83,7 +87,12 @@ class Recogniser:
         pipe: Optional[Pipeline] = None,
         base_model: Optional[str] = "",
         model_path: Optional[str] = "",
-        training_args: Optional[dict] = dict(),
+        training_args: Optional[dict] = {
+            "batch_size": 4,
+            "num_train_epochs": 5,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
         overwrite_training: Optional[bool] = False,
         do_test: Optional[bool] = False,
         load_from_hub: Optional[bool] = False,
@@ -302,9 +311,9 @@ class Recogniser:
             This method creates and loads a NER pipeline for performing named
             entity recognition tasks. It uses the specified model name and
             model path (if the model is not obtained from the HuggingFace
-            model hub) to initialise the pipeline. The created pipeline is
-            stored in the ``pipe`` attribute of the ``Recogniser`` object. It
-            is also returned by the method.
+            model hub or from a local path) to initialise the pipeline.
+            The created pipeline is stored in the ``pipe`` attribute of the
+            ``Recogniser`` object. It is also returned by the method.
         """
 
         print("*** Creating and loading a NER pipeline.")
@@ -334,9 +343,10 @@ class Recogniser:
             List[dict]:
                 A list of dictionaries representing the predicted named
                 entities. Each dictionary contains the keys ``"word"``,
-                ``"entity"``, and ``"score"`` keys representing the entity
-                text, entity label, and confidence score respectively. For
-                example:
+                ``"entity"``, ``"score"``, ``"start"`` , and ``"end"``
+                representing the entity text, entity label, confidence
+                score and start and end character position of the text
+                respectively. For example:
 
                 .. code-block:: json
 
@@ -375,7 +385,6 @@ class Recogniser:
         lEntities = []
         predictions = []
         for pred_ent in ner_preds:
-            prev_tok = pred_ent["word"]
             pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = pred_ent["entity"]
             pred_ent = ner.fix_capitalization(pred_ent, sentence)

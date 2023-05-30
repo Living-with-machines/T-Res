@@ -1,9 +1,9 @@
-from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
 from collections import namedtuple
-from typing import Union, List, NamedTuple, Literal, Tuple
+from typing import List, Literal, NamedTuple, Tuple, Union
+
+from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
 
 
-# TODO/typing: Need an output type, but what is it?
 def training_tokenize_and_align_labels(
     examples: dict,
     tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast],
@@ -30,7 +30,7 @@ def training_tokenize_and_align_labels(
             :py:meth:`~geoparser.recogniser.Recogniser.train`.
 
     Returns:
-        TODO
+        transformers.tokenization_utils_base.BatchEncoding:
             The tokenized inputs with aligned labels.
 
     Credit:
@@ -75,18 +75,18 @@ def collect_named_entities(
     tuples representing the entities.
 
     This function iterates over the tokens and identifies named entities based
-    on their entity type (``entity_type``) and link. Each token is represented
-    as a tuple with the following format:
-    ``(token, entity_type, link, start_char, end_char)``.
+    on their entity type (``entity_type``), keeping the tokens that are not
+    tagged as ``"O"``. Each token is represented as a tuple with the following
+    format: ``(token, entity_type, link, start_char, end_char)``.
 
     Arguments:
         tokens (List[tuple]): A list of tokens, where each token is
             represented as a tuple containing the following elements:
 
             - ``token`` (str): The token text.
-            - ``entity_type`` (str): The entity type (e.g.,
-              ``"B-LOC"``, ``"I-LOC"``, ``"O"``).
-            - ``link`` (str): The entity link.
+            - ``entity_type`` (str): The entity type (e.g., ``"B-LOC"``,
+            ``"I-LOC"``, ``"O"``).
+            - ``link`` (str): Empty string reserved for the entity link.
             - ``start_char`` (int): The start character offset of the token.
             - ``end_char`` (int): The end character offset of the token.
 
@@ -96,7 +96,7 @@ def collect_named_entities(
             entities. Each named tuple contains the following fields:
 
             - ``e_type`` (str): The entity type.
-            - ``link`` (str): The entity link.
+            - ``link`` (str): Empty string reserved for the entity link.
             - ``start_offset`` (int): The start offset of the entity (token
               position).
             - ``end_offset`` (int): The end offset of the entity (token
@@ -210,8 +210,8 @@ def aggregate_mentions(
             each dictionary contains the following keys:
 
             - ``mention``: The text of the mention.
-            - ``start_offset``: The start offset of the mention.
-            - ``end_offset``: The end offset of the mention.
+            - ``start_offset``: The start offset of the mention (token position).
+            - ``end_offset``: The end offset of the mention (token position).
             - ``start_char``: The start character index of the mention.
             - ``end_char``: The end character index of the mention.
             - ``ner_score``: The consolidated NER score of the mention (``0.0``
@@ -354,10 +354,10 @@ def fix_hyphens(lEntities: List[dict]) -> List[dict]:
 
     This function corrects prefix assignment errors that occur in some
     hyphenated entities, where multiple tokens connected by hyphens form a
-    single entity but are incorrectly assigned different prefixes. It
-    specifically addresses the issue of grouping in hyphenated entities, where
-    a sequence of tokens connected by hyphens should be grouped as a single
-    entity.
+    single entity but are incorrectly assigned different prefixes (i.e.
+    ``B-`` and ``I-``). It specifically addresses the issue of grouping
+    in hyphenated entities, where a sequence of tokens connected by hyphens
+    should be grouped as a single entity.
 
     Arguments:
         lEntities (list): A list of dictionaries corresponding to predicted
@@ -434,7 +434,7 @@ def fix_nested(lEntities: List[dict]) -> List[dict]:
     entities, where multiple tokens are part of the same entity but are
     incorrectly assigned different prefixes. It specifically addresses the
     issue of grouping in nested entities, where a sequence of tokens that form
-    a single entity are incorrectly assigned prefixes.
+    a single entity are assigned incorrect prefixes.
 
     Arguments:
         lEntities (list): A list of dictionaries corresponding to predicted
@@ -452,10 +452,9 @@ def fix_nested(lEntities: List[dict]) -> List[dict]:
         ``["B-LOC", "I-LOC", "B-LOC"]``, when it should be
         ``["B-LOC", "I-LOC", "I-LOC"]`` as we consider it as one entity.
 
-        **Solution**: If the current token or the previous token is a hyphen
-        and the entity type of both the previous and current tokens is not
-        ``"O"``, the current entity's prefix is changed to ``"I-"`` to
-        maintain the correct grouping.
+        **Solution**: If the current token is preposition ``"of"`` and
+        the previous and current entity types are not ``"O"``, the current
+        entity's prefix is changed to ``"I-"`` to maintain the correct grouping.
     """
     nestEntities = []
     nestEntities.append(lEntities[0])

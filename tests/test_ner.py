@@ -47,11 +47,11 @@ def test_create_pipeline():
     Test that create_pipeline returns a model folder path that exists and an Pipeline object
     """
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
+        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
@@ -97,7 +97,7 @@ def test_ner_predict():
     assert (type(preds[0])) == dict
     assert len(preds) == 16
     assert preds[4]["entity"] == "B-LOC"
-    assert preds[4]["score"] == 0.9933644533157349
+    assert preds[4]["score"] == 0.9919903874397278
 
     # Test that ner_predict() can handle hyphens
     preds = myner.ner_predict("- I grew up in Plymouth—Kingston.")

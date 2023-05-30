@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 from sentence_splitter import split_text_into_sentences
 
@@ -71,30 +71,6 @@ class Pipeline:
             ranking.Ranker(
                 method="perfectmatch",
                 resources_path="../resources/wikidata/",
-                mentions_to_wikidata=dict(),
-                wikidata_to_mentions=dict(),
-                strvar_parameters={
-                    "ocr_threshold": 60,
-                    "top_threshold": 85,
-                    "min_len": 5,
-                    "max_len": 15,
-                    "w2v_ocr_path": str(Path("../resources/models/w2v/").resolve()),
-                    "w2v_ocr_model": "w2v_*_news",
-                    "overwrite_dataset": False,
-                },
-                deezy_parameters={
-                    "dm_path": str(Path("../resources/deezymatch/").resolve()),
-                    "dm_cands": "wkdtalts",
-                    "dm_model": "w2v_ocr",
-                    "dm_output": "deezymatch_on_the_fly",
-                    "ranking_metric": "faiss",
-                    "selection_threshold": 25,
-                    "num_candidates": 3,
-                    "search_size": 3,
-                    "verbose": False,
-                    "overwrite_training": False,
-                    "do_test": False,
-                },
             )
 
         * The default settings for the ``Linker``:
@@ -104,9 +80,6 @@ class Pipeline:
             linking.Linker(
                 method="mostpopular",
                 resources_path="../resources/",
-                linking_resources=dict(),
-                rel_params={},
-                overwrite_training=False,
             )
     """
 
@@ -147,39 +120,9 @@ class Pipeline:
 
         # If myranker is None, instantiate the default Ranker.
         if not self.myranker:
-            # Parameters to create the string pair dataset:
-            ocr_path = str(Path("../resources/models/w2v/").resolve())
-            strvar_parameters = {
-                "ocr_threshold": 60,
-                "top_threshold": 85,
-                "min_len": 5,
-                "max_len": 15,
-                "w2v_ocr_path": ocr_path,
-                "w2v_ocr_model": "w2v_*_news",
-                "overwrite_dataset": False,
-            }
-
-            # Paths and filenames of DeezyMatch models and data:
-            deezy_parameters = {
-                "dm_path": str(Path("../resources/deezymatch/").resolve()),
-                "dm_cands": "wkdtalts",
-                "dm_model": "w2v_ocr",
-                "dm_output": "deezymatch_on_the_fly",
-                "ranking_metric": "faiss",  # Ranking measures
-                "selection_threshold": 25,
-                "num_candidates": 3,
-                "search_size": 3,
-                "verbose": False,
-                "overwrite_training": False,  # DeezyMatch training
-                "do_test": False,
-            }
             self.myranker = ranking.Ranker(
                 method="perfectmatch",
                 resources_path="../resources/wikidata/",
-                mentions_to_wikidata=dict(),
-                wikidata_to_mentions=dict(),
-                strvar_parameters=strvar_parameters,
-                deezy_parameters=deezy_parameters,
             )
 
         # If mylinker is None, instantiate the default Linker.
@@ -187,9 +130,6 @@ class Pipeline:
             self.mylinker = linking.Linker(
                 method="mostpopular",
                 resources_path="../resources/",
-                linking_resources=dict(),
-                rel_params={},
-                overwrite_training=False,
             )
 
         # -----------------------------------------
@@ -221,6 +161,9 @@ class Pipeline:
         self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
             self.myranker
         )
+
+        # Check we've actually loaded the mentions2wikidata dictionary:
+        assert self.myranker.mentions_to_wikidata["London"] is not None
 
     def run_sentence(
         self,
@@ -489,9 +432,9 @@ class Pipeline:
 
         Returns:
             List[dict]:
-                A list of dictionaries representing the processed identified
-                and linked toponyms in the sentence. Each dictionary contains
-                the following keys:
+                A list of dictionaries representing the identified and linked
+                toponyms in the sentence. Each dictionary contains the following
+                keys:
 
                 * "sent_idx" (int): The index of the sentence.
                 * "mention" (str): The mention text.
@@ -519,11 +462,12 @@ class Pipeline:
 
         Note:
             The ``run_text`` method processes an entire text through the
-            pipeline, after splitting it into sentences, performing tasks such
-            as Named Entity Recognition (NER), ranking, and linking. It takes
+            pipeline, after splitting it into sentences, performing the tasks
+            of Named Entity Recognition (NER), ranking, and linking. It takes
             the input text document along with optional parameters like the
-            place of publication and its related Wikidata ID. By default, the
-            method performs post-processing on the output.
+            place of publication and its related Wikidata ID and splits it
+            into sentences. By default, the method performs post-processing
+            on the output.
 
             It first identifies toponyms in each of the text document's
             sentences, then finds relevant candidates and ranks them, and
