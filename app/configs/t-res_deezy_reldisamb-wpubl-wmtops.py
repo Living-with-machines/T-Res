@@ -39,8 +39,8 @@ myranker = ranking.Ranker(
         "do_test": False,
     },
 )
-print("***********\n\n\n\n**********", os.getcwd())
-with sqlite3.connect("../resources/rel_db/embedding_database.db") as conn:
+
+with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
     cursor = conn.cursor()
     mylinker = linking.Linker(
         method="reldisamb",
