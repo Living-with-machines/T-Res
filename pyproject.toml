@@ -34,7 +34,7 @@ fastapi = "^0.87.0"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
 ipykernel = "^6.21.3"
 python-levenshtein = "^0.20.9"
-torch = "1.13"
+torch = "1.13.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
