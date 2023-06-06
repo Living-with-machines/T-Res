@@ -94,6 +94,20 @@ async def run_text(api_query: FullTextAPIQuery):
     return resolved
 
 
+@app.get("/candidates")
+async def run_candidate_selection(toponym: str):
+    candidates = geoparser.myranker.find_candidates([{"mention": toponym}])[0]
+    new_cand_dict = dict()
+    for m in candidates:
+        new_cand_dict[m] = dict()
+        for nvariation in candidates[m]:
+            new_cand_dict[m] = {nvariation: {"Score": round(candidates[m][nvariation]["Score"], 3)}}
+            new_cand_dict[m][nvariation]["Candidates"] = dict()
+            for c in candidates[m][nvariation]["Candidates"]:
+                new_cand_dict[m][nvariation]["Candidates"][c] = round(candidates[m][nvariation]["Candidates"][c], 3)
+    return new_cand_dict
+
+
 @app.get("/ner")
 async def run_ner(api_query: APIQuery):
     
