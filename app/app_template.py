@@ -30,6 +30,12 @@ class APIQuery(BaseModel):
     place_wqid: Union[str, None] = None
 
 
+class FullTextAPIQuery(BaseModel):
+    text: str
+    place: Union[str, None] = None
+    place_wqid: Union[str, None] = None
+
+
 app_config_name = os.environ["APP_CONFIG_NAME"]
 app = FastAPI(title=f"Toponym Resolution Pipeline API ({app_config_name})")
 
@@ -64,6 +70,21 @@ async def run_pipeline(api_query: APIQuery, request_id: Union[str, None] = None)
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
     resolved = geoparser.run_sentence(
         api_query.sentence, place=api_query.place, place_wqid=api_query.place_wqid
+    )
+
+    return resolved
+
+
+@app.get("/resolve_full_text")
+async def run_text(api_query: FullTextAPIQuery):
+    print(api_query)
+    print(api_query.text)
+    print(api_query.place)
+    print(api_query.place_wqid)
+    place = "" if api_query.place is None else api_query.place
+    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
+    resolved = geoparser.run_text(
+        api_query.text, place=api_query.place, place_wqid=api_query.place_wqid
     )
 
     return resolved
