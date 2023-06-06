@@ -74,7 +74,15 @@ async def run_ner(api_query: APIQuery):
     
     predictions = geoparser.myner.ner_predict(api_query.sentence)
 
-    return [pred for pred in predictions if pred["entity"] != "O"]
+    procpreds = [
+        [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+        for x in predictions
+    ]
+
+    # Aggregate mentions:
+    mentions = geoparser.myner.aggregate_mentions(procpreds, "pred")
+
+    return mentions
 
 
 @app.get("/health")
