@@ -70,14 +70,14 @@ def test_deezy_mostpopular():
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
     resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
     )
-    assert resolved[0]["mention"] == "Shefrield"
+    assert resolved[0]["mention"] == "Shefiield"
     assert resolved[0]["prior_cand_score"] == dict()
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
+    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.898
     assert resolved[0]["prediction"] == "Q42448"
-    assert resolved[0]["ed_score"] == 0.903
-    assert resolved[0]["ner_score"] == 0.997
+    assert resolved[0]["ed_score"] == 0.898
+    assert resolved[0]["ner_score"] == 0.996
 
     resolved = geoparser.run_sentence("")
     assert resolved == []
@@ -157,7 +157,6 @@ def test_deezy_rel_wpubl_wmtops():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "without_microtoponyms": True,
@@ -171,17 +170,17 @@ def test_deezy_rel_wpubl_wmtops():
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
     resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
         place="Sheffield",
         place_wqid="Q42448",
     )
 
-    assert resolved[0]["mention"] == "Shefrield"
-    assert resolved[0]["prior_cand_score"]["Q42448"] == 0.674
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.379
+    assert resolved[0]["mention"] == "Shefiield"
+    assert resolved[0]["prior_cand_score"]["Q42448"] == 0.89
+    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.731
     assert resolved[0]["prediction"] == "Q42448"
-    assert resolved[0]["ed_score"] == 0.034
-    assert resolved[0]["ner_score"] == 0.997
+    assert resolved[0]["ed_score"] == 0.015
+    assert resolved[0]["ner_score"] == 0.996
 
 
 def test_perfect_rel_wpubl_wmtops():
@@ -248,7 +247,6 @@ def test_perfect_rel_wpubl_wmtops():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "without_microtoponyms": True,
@@ -262,14 +260,20 @@ def test_perfect_rel_wpubl_wmtops():
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
     resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefrield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
         place="Sheffield",
         place_wqid="Q42448",
     )
 
-    assert resolved[0]["mention"] == "Shefrield"
+    resolved = geoparser.run_text(
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        place="Sheffield",
+        place_wqid="Q42448",
+    )
+
+    assert resolved[0]["mention"] == "Shefiield"
     assert resolved[0]["prior_cand_score"] == dict()
     assert resolved[0]["cross_cand_score"] == dict()
     assert resolved[0]["prediction"] == "NIL"
     assert resolved[0]["ed_score"] == 0.0
-    assert resolved[0]["ner_score"] == 0.997
+    assert resolved[0]["ner_score"] == 0.996

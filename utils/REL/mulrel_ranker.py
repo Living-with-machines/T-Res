@@ -3,14 +3,36 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-"""
-PreRank class is used for preranking entities for a given mention by multiplying entity vectors with
-word vectors
-"""
-
 
 class PreRank(torch.nn.Module):
+    """
+    PreRank class is used for preranking entities for a given mention
+    by multiplying entity vectors with word vectors.
+
+    Credit:
+        This class and its methods are taken (minimally
+        adapted when necessary) from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github
+        repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+    """
+
     def __init__(self, config, embeddings=None):
+        """
+        Initialises an PreRank object.
+        """
         super(PreRank, self).__init__()
         self.config = config
 
@@ -18,7 +40,7 @@ class PreRank(torch.nn.Module):
         """
         Multiplies local context words with entity vectors for a given mention.
 
-        :return: entity scores.
+        Returns: entity scores.
         """
 
         sent_vecs = embeddings["word_embeddings_bag"](
@@ -38,19 +60,54 @@ class PreRank(torch.nn.Module):
         return log_probs
 
 
-"""
-Multi-relational global model with context token attention, using loopy belief propagation.
-With local model context token attention (from G&H's EMNLP paper).
-
-Function descriptions will refer to paper.
-
-Author: Phong Le
-Paper: Improving Entity Linking by Modeling Latent Relations between Mentions
-"""
-
-
 class MulRelRanker(torch.nn.Module):
+    """
+    The MulRelRanker class implements a neural network model for entity disambiguation.
+
+    Credit:
+        This class and its methods are taken (minimally
+        adapted when necessary) from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github
+        repository, which is based on the ``mulrel-nel``
+        approach developed by Le and Titov (2018), whose original
+        code is available in the `mulrel-nel: Multi-relational Named
+        Entity Linking <https://github.com/lephong/mulrel-nel>`_ Github
+        repository, and on Ganea and Hofmann (2017).
+
+        ::
+
+            References:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+
+            @inproceedings{ganea2017deep,
+            title={Deep Joint Entity Disambiguation with Local Neural Attention},
+            author={Ganea, Octavian-Eugen and Hofmann, Thomas},
+            booktitle={Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing},
+            pages={2619--2629},
+            year={2017}
+            }
+
+            @inproceedings{le2018improving,
+            title={Improving Entity Linking by Modeling Latent Relations between Mentions},
+            author={Le, Phong and Titov, Ivan},
+            booktitle={Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+            pages={1595--1604},
+            year={2018}
+            }
+    """
+
     def __init__(self, config, device):
+        """
+        Initialises a MulRelRanker object.
+        """
         super(MulRelRanker, self).__init__()
         self.config = config
         self.device = device
@@ -104,12 +161,18 @@ class MulRelRanker(torch.nn.Module):
         )
 
     def __local_ent_scores(
-        self, token_ids, tok_mask, entity_ids, entity_mask, embeddings, p_e_m=None
+        self,
+        token_ids,
+        tok_mask,
+        entity_ids,
+        entity_mask,
+        embeddings,
+        p_e_m=None,
     ):
         """
-        Local entity scores
+        Computes local entity scores.
 
-        :return: Entity scores.
+        Returns: entity scores.
         """
 
         batchsize, n_words = token_ids.size()
@@ -169,18 +232,25 @@ class MulRelRanker(torch.nn.Module):
         return scores
 
     def forward(
-        self, token_ids, tok_mask, entity_ids, entity_mask, p_e_m, embeddings, gold=None
+        self,
+        token_ids,
+        tok_mask,
+        entity_ids,
+        entity_mask,
+        p_e_m,
+        embeddings,
+        gold=None,
     ):
         """
-        Responsible for forward pass of ED model and produces a ranking of candidates for a given set of mentions.
+        Responsible for the forward pass of the entity disambiguation model
+        and produces a ranking of candidates for a given set of mentions.
+         - ctx_layer refers to function f. See Figure 3 in Le and Titov (2018).
+         - ent_scores refers to function q.
+         - score_combine refers to function g.
 
-        - ctx_layer refers to function f. See Figure 3 in respective paper.
-        - ent_scores refers to function q.
-        - score_combine refers to function g.
-
-        :return: Ranking of entities per mention.
+        Returns:
+            Ranking of entities per mention.
         """
-
         n_ments, n_cands = entity_ids.size()
         n_rels = self.config["n_rels"]
 
@@ -362,11 +432,11 @@ class MulRelRanker(torch.nn.Module):
 
     def regularize(self, max_norm=1):
         """
-        Regularises model parameters.
+        Regularizes model parameters.
 
-        :return: -
+        Returns:
+            None
         """
-
         l1_w_norm = self.score_combine_linear_1.weight.norm()
         l1_b_norm = self.score_combine_linear_1.bias.norm()
         l2_w_norm = self.score_combine_linear_2.weight.norm()
@@ -393,7 +463,7 @@ class MulRelRanker(torch.nn.Module):
         """
         Computes given ranking loss (Equation 7) and adds a regularization term.
 
-        :return: loss of given batch
+        Returns: loss of given batch.
         """
         loss = F.multi_margin_loss(scores, true_pos, margin=self.config["margin"])
         if self.config["use_local_only"]:

@@ -1,21 +1,40 @@
 from collections import namedtuple
+from typing import List, Literal, NamedTuple, Tuple, Union
+
+from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
 
 
-def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict):
+def training_tokenize_and_align_labels(
+    examples: dict,
+    tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast],
+    label_encoding_dict: dict,
+):
     """
-    During training, aligns tokens with labels.
+    Tokenize and align labels during training.
+
+    This function takes a training instance, consisting of tokens and named
+    entity recognition (NER) tags, and aligns the tokens with their
+    corresponding labels. It uses a transformers tokenizer object to tokenize
+    the input tokens and then maps the NER tags to label IDs based on the
+    provided label encoding dictionary.
 
     Arguments:
-        examples (dict): One training instance (a dictioary with three keys: id, tokens, and ner_tags)
-        tokenizer (Tokenizer object): A transformers tokenizer object (the tokeniser of the base model).
-        label_encoding_dict (dict): The label2id mapping dictionary.
+        examples (Dict): A dictionary representing a single training instance
+            with three keys: ``id`` (instance ID), ``tokens`` (list of tokens),
+            and ``ner_tags`` (list of NER tags).
+        tokenizer (Union[PreTrainedTokenizer, PreTrainedTokenizerFast]): A
+            transformers tokenizer object, which is the tokenizer of the base
+            model.
+        label_encoding_dict (Dict): A dictionary mapping NER labels to label
+            IDs, from ``label2id`` in
+            :py:meth:`~geoparser.recogniser.Recogniser.train`.
 
     Returns:
-        tokenized_inputs (Dataset object): The tokenized input.
+        transformers.tokenization_utils_base.BatchEncoding:
+            The tokenized inputs with aligned labels.
 
-    Notes:
-        Credit: This function is adapted from
-        https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py.
+    Credit:
+        This function is adapted from `HuggingFace <https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py>`_.
     """
     label_all_tokens = True
     tokenized_inputs = tokenizer(
@@ -27,8 +46,8 @@ def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict)
         previous_word_idx = None
         label_ids = []
         for word_idx in word_ids:
-            # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-            # ignored in the loss function.
+            # Special tokens have a word id that is None. We set the label to
+            # -100 so they are automatically ignored in the loss function.
             if word_idx is None:
                 label_ids.append(-100)
             elif label[word_idx] == "0":
@@ -36,8 +55,8 @@ def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict)
             # We set the label for the first token of each word.
             elif word_idx != previous_word_idx:
                 label_ids.append(label_encoding_dict[label[word_idx]])
-            # For the other tokens in a word, we set the label to either the current label or -100, depending on
-            # the label_all_tokens flag.
+            # For the other tokens in a word, we set the label to either the
+            # current label or -100, depending on the label_all_tokens flag.
             else:
                 label_ids.append(
                     label_encoding_dict[label[word_idx]] if label_all_tokens else -100
@@ -48,18 +67,43 @@ def training_tokenize_and_align_labels(examples, tokenizer, label_encoding_dict)
     return tokenized_inputs
 
 
-def collect_named_entities(tokens):
+def collect_named_entities(
+    tokens: List[Tuple[str, str, str, int, int]]
+) -> List[NamedTuple]:
     """
-    Creates a list of Entity named-tuples, storing the entity
-    type and the start and end offsets of the entity.
+    Collect named entities from a list of tokens and return a list of named
+    tuples representing the entities.
+
+    This function iterates over the tokens and identifies named entities based
+    on their entity type (``entity_type``), keeping the tokens that are not
+    tagged as ``"O"``. Each token is represented as a tuple with the following
+    format: ``(token, entity_type, link, start_char, end_char)``.
 
     Arguments:
-        tokens (list): a list of tags.
+        tokens (List[tuple]): A list of tokens, where each token is
+            represented as a tuple containing the following elements:
+
+            - ``token`` (str): The token text.
+            - ``entity_type`` (str): The entity type (e.g., ``"B-LOC"``,
+            ``"I-LOC"``, ``"O"``).
+            - ``link`` (str): Empty string reserved for the entity link.
+            - ``start_char`` (int): The start character offset of the token.
+            - ``end_char`` (int): The end character offset of the token.
 
     Returns:
-        named_entities (list): a list of Entity named-tuples
-    """
+        List[NamedTuple]:
+            A list of named tuples (called ``Entity``) representing the named
+            entities. Each named tuple contains the following fields:
 
+            - ``e_type`` (str): The entity type.
+            - ``link`` (str): Empty string reserved for the entity link.
+            - ``start_offset`` (int): The start offset of the entity (token
+              position).
+            - ``end_offset`` (int): The end offset of the entity (token
+              position).
+            - ``start_char`` (int): The start character offset of the entity.
+            - ``end_char`` (int): The end character offset of the entity.
+    """
     named_entities = []
     start_offset = None
     end_offset = None
@@ -135,30 +179,48 @@ def collect_named_entities(tokens):
     return named_entities
 
 
-def aggregate_mentions(predictions, setting):
+def aggregate_mentions(
+    predictions: List[List[Tuple[str, str, str, int, int]]],
+    setting: Literal["pred", "gold"],
+) -> List[dict]:
     """
-    Aggregates mentions (NER outputs separate tokens) and finds
-    mention position in sentence.
+    Aggregate predicted or gold mentions into a consolidated format.
+
+    This function takes a list of predicted or gold mentions and aggregates
+    them into a consolidated format. It reconstructs the text of each mention
+    by combining the tokens and their corresponding white spaces. It also
+    consolidates the NER label, NER score, and entity link for each mention.
 
     Arguments:
-        predictions: a list of lists (the outer list representing
-            a sentence, the inner list representing a token) representation
-            the NER predictions.
-        setting: either "pred" or "gold". If "pred", set entity_link
-            to "O" (because we haven't performed linking yet) and
-            perform average of the NER score of all the tokens that
-            belong to the same entity. If "gold", set ner_score to
-            1.0 (it's manually detected) and consolidate the link of the
-            mention subtokens.
+        predictions (List[List]): A list of token predictions, where each
+            token prediction is represented as a list of values. For details
+            on each of those tuples, see
+            :py:meth:`~utils.ner.collect_named_entities`.
+        setting (Literal["pred", "gold"]): The setting for aggregation:
+
+            - If set to ``"pred"``, the function aggregates predicted mentions.
+              Entity links will be set to ``"O"`` (because we haven't performed
+              linking yet).
+            - If set to ``"gold"``, the function aggregates gold mentions. NER
+              score will be set to ``1.0`` as it is manually detected.
 
     Returns:
-        sent_mentions (list): a list of dictionaries, there the list
-            corresponds to the sentence, and the inner dictionaries
-            correspond to the different (multi-token) mentions that
-            have been identified (in case of "pred") or that were
-            annotated (in case of "gold").
-    """
+        List[dict]:
+            A list of dictionaries representing the aggregated mentions, where
+            each dictionary contains the following keys:
 
+            - ``mention``: The text of the mention.
+            - ``start_offset``: The start offset of the mention (token position).
+            - ``end_offset``: The end offset of the mention (token position).
+            - ``start_char``: The start character index of the mention.
+            - ``end_char``: The end character index of the mention.
+            - ``ner_score``: The consolidated NER score of the mention (``0.0``
+              for predicted mentions, ``1.0`` for gold mentions).
+            - ``ner_label``: The consolidated NER label of the mention.
+            - ``entity_link``: The consolidated entity link of the mention
+              (empty string ``"O"`` for predicted mentions, entity label for
+              gold mentions).
+    """
     mentions = collect_named_entities(predictions)
 
     sent_mentions = []
@@ -168,7 +230,8 @@ def aggregate_mentions(predictions, setting):
         mention_token_range = range(mention.start_offset, mention.end_offset + 1)
         for r in mention_token_range:
             add_whitespaces = ""
-            # Add white spaces between tokens according to token's char starts and ends:
+            # Add white spaces between tokens according to token's char starts
+            # and ends:
             if r - 1 in mention_token_range:
                 prev_end_char = predictions[r - 1][4]
                 curr_start_char = predictions[r][3]
@@ -243,19 +306,24 @@ def aggregate_mentions(predictions, setting):
 # * aggregate_entities
 
 
-def fix_capitalization(entity, sentence):
+def fix_capitalization(entity: dict, sentence: str) -> dict:
     """
-    These entities are the output of the NER prediction, which returns
-    the processed word (uncapitalized, for example). We replace this
-    processed word by the true surface form in our original dataset
-    (using the character position information).
+    Correct capitalization errors in entities.
+
+    This function corrects capitalization errors in entities that occur as a
+    result of the NER prediction. The NER prediction may return processed
+    words with incorrect capitalization. This function replaces the processed
+    word in the entity with the true surface form from the original dataset,
+    using the character position information.
 
     Arguments:
         entity (dict): A dictionary containing the prediction of one token.
         sentence (str): The original sentence.
 
-    Returns
-        newEntity (dict): The input dictionary, corrected re capitalisation.
+    Returns:
+        dict:
+            The corrected entity dictionary with the appropriate
+            capitalization.
     """
 
     newEntity = entity
@@ -280,25 +348,38 @@ def fix_capitalization(entity, sentence):
     return newEntity
 
 
-def fix_hyphens(lEntities):
+def fix_hyphens(lEntities: List[dict]) -> List[dict]:
     """
-    Fix B- and I- prefix assignment errors in hyphenated entities.
-    * Description: There is problem with grouping when there are hyphens in
-    words, e.g. "Ashton-under-Lyne" (["Ashton", "-", "under", "-", "Lyne"])
-    is grouped as ["B-LOC", "B-LOC", "B-LOC", "B-LOC", "B-LOC"], when
-    it should be grouped as ["B-LOC", "I-LOC", "I-LOC", "I-LOC", "I-LOC"].
-    * Solution: if the current token or the previous token is a hyphen,
-    and the entity type of both previous and current token is the same
-    and not "O", then change the current's entity preffix to "I-".
+    Fix prefix assignment errors in hyphenated entities.
+
+    This function corrects prefix assignment errors that occur in some
+    hyphenated entities, where multiple tokens connected by hyphens form a
+    single entity but are incorrectly assigned different prefixes (i.e.
+    ``B-`` and ``I-``). It specifically addresses the issue of grouping
+    in hyphenated entities, where a sequence of tokens connected by hyphens
+    should be grouped as a single entity.
 
     Arguments:
-        lEntities (list): List of dictionaries (corresponding to predicted tokens).
+        lEntities (list): A list of dictionaries corresponding to predicted
+            tokens.
 
     Returns:
-        hyphEntities (list): List of dictionaries with the corrected predictions
-            regarding hyphenation.
-    """
+        list:
+            A list of dictionaries with corrected predictions regarding
+            hyphenation.
 
+    Note:
+        **Description**: There is a problem with grouping when there are
+        hyphens in words. For example, the phrase "Ashton-under-Lyne"
+        (``["Ashton", "-", "under", "-", "Lyne"]``) is incorrectly grouped
+        as ``["B-LOC", "B-LOC", "B-LOC", "B-LOC", "B-LOC"]``, when it should be
+        grouped as ``["B-LOC", "I-LOC", "I-LOC", "I-LOC", "I-LOC"]``.
+
+        **Solution**: If the current token or the previous token is a hyphen,
+        and the entity type of both the previous and current tokens is the
+        same and not ``"O"``, the current entity's prefix is changed to
+        ``"I-"`` to maintain the correct grouping.
+    """
     numbers = [str(x) for x in range(0, 10)]
     connectors = [
         "-",
@@ -345,26 +426,36 @@ def fix_hyphens(lEntities):
     return hyphEntities
 
 
-def fix_nested(lEntities):
+def fix_nested(lEntities: List[dict]) -> List[dict]:
     """
-    Fix B- and I- prefix assignment errors in nested entities.
-    * Description: There is problem with grouping in nested entities,
-    e.g. "Island of Terceira" (["Island", "of", "Terceira"])
-    is grouped as ["B-LOC", "I-LOC", "B-LOC"], when it should
-    be grouped as ["B-LOC", "I-LOC", "I-LOC"], as we consider
-    it one entity.
-    * Solution: if the current token or the previous token is a hyphen,
-    and the entity type of both previous and current token is  not "O",
-    then change the current's entity preffix to "I-".
+    Fix prefix assignment errors in nested entities.
+
+    This function corrects prefix assignment errors that occur in nested
+    entities, where multiple tokens are part of the same entity but are
+    incorrectly assigned different prefixes. It specifically addresses the
+    issue of grouping in nested entities, where a sequence of tokens that form
+    a single entity are assigned incorrect prefixes.
 
     Arguments:
-        lEntities (list): List of dictionaries (corresponding to predicted tokens).
+        lEntities (list): A list of dictionaries corresponding to predicted
+            tokens.
 
     Returns:
-        nestEntities (list): List of dictionaries with the corrected predictions
-            regarding nested entities.
-    """
+        list:
+            A list of dictionaries with corrected predictions regarding nested
+            entities.
 
+    Note:
+        **Description**: There is a problem with grouping in some nested
+        entities. For example, the phrase "Island of Terceira"
+        (``["Island", "of", "Terceira"]``) is incorrectly grouped as
+        ``["B-LOC", "I-LOC", "B-LOC"]``, when it should be
+        ``["B-LOC", "I-LOC", "I-LOC"]`` as we consider it as one entity.
+
+        **Solution**: If the current token is preposition ``"of"`` and
+        the previous and current entity types are not ``"O"``, the current
+        entity's prefix is changed to ``"I-"`` to maintain the correct grouping.
+    """
     nestEntities = []
     nestEntities.append(lEntities[0])
     for i in range(1, len(lEntities)):
@@ -389,26 +480,29 @@ def fix_nested(lEntities):
     return nestEntities
 
 
-def fix_startEntity(lEntities):
+def fix_startEntity(lEntities: List[dict]) -> List[dict]:
     """
-    Fix B- and I- prefix assignment errors:
-    * Case 1: The first token of a sentence can only be either
-            O (i.e. not an entity) or B- (beginning of an
-            entity). There's no way it should be I-. Fix
-            those.
-    * Case 2: If the first token of a grouped entity is assigned
-            the prefix I-, change to B-. We know it's the first
-            token in a grouped entity if the entity type of the
-            previous token is different.
+    Fix prefix assignment errors in entity labeling.
+
+    This function corrects two different cases of prefix assignment errors in
+    entity labeling:
+
+    1. The first token of a sentence can only be either ``"O"`` (not an entity)
+       or ``"B-"`` (beginning of an entity). If it is incorrectly assigned the
+       prefix ``"I-"``, this case is fixed by changing it to ``"B-"``.
+    2. If the first token of a grouped entity is assigned the prefix ``"I-"``,
+       but the entity type of the previous token is different, it should be
+       ``"B-"`` instead. This case is fixed by changing the prefix to ``"B-"``.
 
     Arguments:
-        lEntities (list): List of dictionaries (corresponding to predicted tokens).
+        lEntities (list): A list of dictionaries corresponding to predicted
+            tokens.
 
     Returns:
-        fixEntities (list): List of dictionaries with the corrected predictions
-            regarding grouping of labels.
+        list:
+            A list of dictionaries with corrected predictions regarding the
+            grouping of labels.
     """
-
     fixEntities = []
 
     # Case 1: If necessary, fix first entity
@@ -449,23 +543,32 @@ def fix_startEntity(lEntities):
     return fixEntities
 
 
-def aggregate_entities(entity, lEntities):
+def aggregate_entities(entity: dict, lEntities: List[dict]) -> List[dict]:
     """
-    If a word starts with ##, then this is a suffix, and word
-    should therefore be joined with previous detected entity.
+    Aggregates entities by joining split tokens.
+
+    This function aggregates entities by joining split tokens that start with
+    ``"##"`` with the previous detected entity. It takes the current entity
+    and the list of all predicted entities as input and returns a new list of
+    dictionaries with corrected predictions regarding split tokens.
 
     Arguments:
-        entity (dict): A dictionary containing the current entity (predicted token).
-        lEntities (list): List of dictionaries (corresponding to all predicted tokens).
+        entity (dict): The current entity (predicted token) as a dictionary.
+        lEntities (list): The list of dictionaries corresponding to all
+            predicted tokens.
 
     Returns:
-        lEntities (list): List of dictionaries with the corrected predictions
-            regarding split tokens.
+        list:
+            A list of dictionaries with the corrected predictions regarding
+            split tokens.
     """
     newEntity = entity
+
     # We remove the word index because we're altering it (by joining suffixes)
     newEntity.pop("index", None)
-    # If word starts with ##, then this is a suffix, join with previous detected entity
+
+    # If word starts with ##, then this is a suffix, join with previous
+    # detected entity
     if entity["word"].startswith("##"):
         prevEntity = lEntities.pop()
         newEntity = {

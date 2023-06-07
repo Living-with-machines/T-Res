@@ -1,9 +1,42 @@
+from typing import Any, List, Optional, Tuple
+
 import numpy as np
 
 
-def flatten_list_of_lists(list_of_lists):
+def flatten_list_of_lists(
+    list_of_lists: List[List[Any]],
+) -> Tuple[List[Any], List[int]]:
     """
-    making inputs to torch.nn.EmbeddingBag
+    Flatten a list of lists for input to torch.nn.EmbeddingBag.
+
+    Args:
+        list_of_lists (List[List[Any]]): A list of lists to be flattened.
+
+    Returns:
+        tuple: A tuple containing the flattened list and the offsets.
+
+    Example:
+        >>> list_of_lists = [[1, 2, 3], [4, 5], [6]]
+        >>> print(flatten_list_of_lists(list_of_lists))
+        ([1, 2, 3, 4, 5, 6], array([0, 3, 5]))
+
+    Credit:
+        This function is taken from the `REL: Radboud Entity Linker
+        <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+
     """
     list_of_lists = [[]] + list_of_lists
     offsets = np.cumsum([len(x) for x in list_of_lists])[:-1]
@@ -11,7 +44,44 @@ def flatten_list_of_lists(list_of_lists):
     return flatten, offsets
 
 
-def make_equal_len(lists, fill_in=0, to_right=True):
+def make_equal_len(
+    lists: List[List[Any]], fill_in: Optional[int] = 0, to_right: Optional[bool] = True
+) -> Tuple[List[Any], List[float]]:
+    """
+    Make lists of equal length by padding or truncating.
+
+    Args:
+        lists (list): A list of lists to be made of equal length.
+        fill_in (int, optional): The value used for padding. Defaults to ``0``.
+        to_right (bool, optional): Whether to pad or truncate to the right.
+            Defaults to ``True``.
+
+    Returns:
+        tuple: A tuple containing the lists of equal length and the mask.
+
+    Example:
+        >>> lists = [[1, 2, 3], [4, 5], [6, 7, 8, 9]]
+        >>> print(make_equal_len(lists))
+        ([[1, 2, 3, 0], [4, 5, 0, 0], [6, 7, 8, 9]], [[1.0, 1.0, 1.0, 0.0], [1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]])
+
+    Credit:
+        This function is taken from the `REL: Radboud Entity Linker
+        <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+
+    """
     lens = [len(l) for l in lists]
     max_len = max(1, max(lens))
     if to_right:
@@ -23,9 +93,37 @@ def make_equal_len(lists, fill_in=0, to_right=True):
     return eq_lists, mask
 
 
-def is_important_word(s):
+def is_important_word(s: str) -> bool:
     """
-    an important word is not a stopword, a number, or len == 1
+    Check if a word is important. An important word is not a stopword, a
+    number, or has a length of 3 or more characters.
+
+    Args:
+        s (str): The word to be checked.
+
+    Returns:
+        bool: True if the word is important, False otherwise.
+
+    Example:
+        >>> print(is_important_word("apple"))
+        True
+
+    Credit:
+        This function is adapted from the `REL: Radboud Entity Linker
+        <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
     """
     try:
         if len(s) <= 3 or s.lower() in STOPWORDS:
@@ -371,3 +469,4 @@ STOPWORDS = {
     "best",
     "using",
 }
+"""A set of common stopwords used for word filtering, obtained from the `REL: Radboud Entity Linker <https://github.com/informagi/REL/>`_ Github repository."""

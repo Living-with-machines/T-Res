@@ -1,5 +1,5 @@
 general:
-  use_gpu: True    # only if available
+  use_gpu: False    # only if available
   # specify CUDA device, these are 0-indexed, e.g.,
   #   cuda:0, cuda:1 or others. "cuda" is the default CUDA device
   gpu_device: "cuda"
@@ -74,7 +74,7 @@ gru_lstm:
 
   learning_rate: 0.005
   optimizer: adam
-  epochs: 10
+  epochs: 5
   batch_size: 64
   # shuffle when creating DataLoader
   dl_shuffle: True
@@ -83,7 +83,7 @@ gru_lstm:
   # Number of epochs with no improvement after which training will be stopped and
   #   the model with the least validation loss will be saved
   # If 0 or negative, early stopping will be deactivated
-  early_stopping_patience: 1
+  early_stopping_patience: 0
 
   # if -1 or 1, perform the validation step in every epoch;
   # if 0, no validation will be done

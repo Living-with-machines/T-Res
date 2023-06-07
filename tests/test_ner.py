@@ -47,11 +47,11 @@ def test_create_pipeline():
     Test that create_pipeline returns a model folder path that exists and an Pipeline object
     """
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
+        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
@@ -157,7 +157,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[0]["mention"] == "Bologna"
     assert mentions[1]["mention"] == "Florence"
@@ -177,7 +177,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[0]["mention"] == "New York City"
     assert mentions[1]["mention"] == "United States"
@@ -197,7 +197,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[-1]["mention"] == "Ashton-cnder-Ltne"
     for i in range(len(mentions)):
