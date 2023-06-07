@@ -2,18 +2,16 @@ import json
 import os
 import pickle
 import random
-import re  # TODO: not used, can be dropped
 import sys
 import time
 from pathlib import Path
 from string import punctuation
-from typing import Any, Dict, Optional, Tuple, List, Union
+from typing import Any, Dict
 
 import numpy as np
 import torch
 import torch.optim as optim
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score  # TODO: not used, can be dropped
 from torch.autograd import Variable
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -21,7 +19,6 @@ import utils.REL.utils as utils
 from utils import rel_utils
 from utils.REL.mulrel_ranker import MulRelRanker, PreRank
 from utils.REL.vocabulary import Vocabulary
-
 
 RANDOM_SEED = 42
 """Constant representing the random seed used for generating pseudo-random
@@ -44,46 +41,33 @@ class EntityDisambiguation:
     """
     EntityDisambiguation is a class that performs entity disambiguation, which
     is the task of resolving entity mentions in text to their corresponding
-    entities in a knowledge base. It uses a trained model to predict the most
-    likely entity for each mention based on contextual information and
-    pre-computed scores.
-
-    The ``EntityDisambiguation`` class provides methods for training the
-    disambiguation model, predicting entity mentions in raw text, evaluating
-    the performance of the model, and saving/loading the trained model.
+    entities in a knowledge base. It trains a model if it does not exist
+    and uses the trained model to predict the most likely entity for each
+    mention.
 
     This class uses a deep learning architecture, specifically the
     :py:class:`~utils.REL.mulrel_ranker.MulRelRanker` model, for entity
-    disambiguation. The model takes into account the context of the mention,
-    the pre-computed scores, and the candidate entities, and makes predictions
-    based on these features.
+    disambiguation.
 
-    The entity disambiguation process involves preranking the candidate
-    entities, computing scores, predicting the most likely entity, and
-    evaluating the performance of the predictions. The class encapsulates
-    these steps and provides a convenient interface for performing entity
-    disambiguation tasks.
+    Credit:
+        This class and its methods are adapted from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github repository.
 
-    Arguments:
-        db_embs (TODO/typing: set correct type): The connection to a SQLite
-            database containing the word and entity embeddings.
-        user_config (dict): A dictionary containing custom configuration
-            settings for the model. If not provided, default settings will be
-            used.
-        reset_embeddings (bool, optional): Specifies whether to reset the
-            embeddings even if a pre-trained model is loaded. Defaults to
-            ``False``.
+        ::
 
-    ..
-        TODO: Is it correct to say that "If [user_config] is not provided,
-        default settings will be used here, as it is a required keyword
-        argument?
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
     """
 
-    # TODO/typing: Set correct typing on db_embs
-    def __init__(
-        self, db_embs, user_config: dict, reset_embeddings: Optional[bool] = False
-    ):
+    def __init__(self, db_embs, user_config, reset_embeddings=False):
         """
         Initialises an EntityDisambiguation object.
         """
@@ -145,24 +129,12 @@ class EntityDisambiguation:
                 raise Exception("You cannot train a model and reset the embeddings.")
             self.model = MulRelRanker(self.config, self.device).to(self.device)
 
-    def __get_config(self, user_config: dict) -> dict:
+    def __get_config(self, user_config):
         """
-        Retrieves the configuration used for entity disambiguation,
-        considering user-defined settings.
-
-        This method retrieves the configuration used for entity disambiguation.
-        It considers user-defined settings provided through the ``user_config``
-        parameter and combines them with default settings. The resulting
-        configuration dictionary is returned.
-
-        Arguments:
-            user_config: A dictionary containing user-defined configuration
-                settings.
+        User configuration that may overwrite default settings.
 
         Returns:
-            dict:
-                The configuration used for entity disambiguation, including
-                both user-defined and default settings.
+            dict: The configuration used for entity disambiguation.
         """
 
         default_config: Dict[str, Any] = {
@@ -201,15 +173,12 @@ class EntityDisambiguation:
 
         return config
 
-    def __load_embeddings(self) -> None:
+    def __load_embeddings(self):
         """
-        Loads the embeddings for different entities.
-
-        This method initializes and loads the embeddings for different
-        entities (``snd``, ``entity``, and ``word``). It sets up the necessary
-        data structures and initializes the embeddings with pre-trained values.
-        It also adds the unknown token to the vocabulary and retrieves the
-        corresponding embedding from the database.
+        This method initializes and loads the embeddings for different tokens
+        and entities (``snd``, ``entity``, and ``word``). It also adds the
+        unknown token to the vocabulary and retrieves the corresponding embedding
+        from the database.
 
         Returns:
             None
@@ -231,21 +200,9 @@ class EntityDisambiguation:
             self.__batch_embs[name] = []
             self.__batch_embs[name].append(torch.tensor(e))
 
-    # TODO/typing: Set types for org_train_dataset and org_dev_dataset correctly
-    def train(self, org_train_dataset: Any, org_dev_dataset: Any) -> None:
+    def train(self, org_train_dataset, org_dev_dataset):
         """
         Trains the entity disambiguation model.
-
-        This method is responsible for training the entity disambiguation
-        model using the provided training dataset and evaluating its
-        performance on the development dataset. It iterates over multiple
-        epochs and performs mini-batch training. The model parameters are
-        updated using the Adam optimizer, and the training loss is computed
-        and monitored during the training process.
-
-        Arguments:
-            org_train_dataset: The original training dataset.
-            org_dev_dataset: The original development dataset.
 
         Returns:
             None.
@@ -410,30 +367,10 @@ class EntityDisambiguation:
                     break
         self.best_performance = {"f1": best_f1, "p": best_p, "r": best_r}
 
-    # TODO/typing: Set types for dataset correctly
-    def __create_dataset_LR(
-        self, dataset: Any, predictions: dict
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def __create_dataset_LR(self, dataset, predictions):
         """
-        Creates a dataset for logistic regression training.
-
-        This method takes as input a dataset and the corresponding predictions
-        made by the entity disambiguation model. It constructs a dataset
-        suitable for logistic regression training by extracting features,
-        labels, and metadata. The features are represented by the prediction
-        scores, the labels indicate whether a prediction is correct or not, and
-        the metadata contains additional information about each instance,
-        including the document, ground truth, and candidate entity.
-
-        Arguments:
-            dataset (Any): The input dataset.
-            predictions (dict): A dictionary containing the predictions made
-                by the entity disambiguation model.
-
-        Returns:
-            Tuple[np.ndarray, np.ndarray, np.ndarray]:
-                A tuple containing the feature matrix, label array, and
-                metadata array, respectively.
+        Creates a dataset for logistic regression, to estimate posterior
+        probabilities of the linked entities.
         """
         X = []
         y = []
@@ -458,22 +395,11 @@ class EntityDisambiguation:
 
         return np.array(X), np.array(y), np.array(meta)
 
-    # TODO/typing: Set types for train_json and dev_json correctly
-    def train_LR(self, train_json: Any, dev_json: Any, model_path_lr: str) -> None:
+    def train_LR(self, train_json, dev_json, model_path_lr):
         """
-        Trains a logistic regression model to obtain confidence scores.
-
-        This method applies logistic regression (LR) in an attempt to obtain
-        confidence scores for entity disambiguation predictions. It trains an
-        LR model using the training dataset and evaluates it on the
-        development dataset. The LR model is trained to achieve high recall
-        since it aims to avoid ignoring correct entities. The resulting LR
-        model is saved to the specified ``model_path_lr``.
-
-        Arguments:
-            train_json (Any): The path to the training dataset in JSON format.
-            dev_json (Any): The path to the development dataset in JSON format.
-            model_path_lr (str): The path to save the trained LR model.
+        Function that applies LR to get confidence scores for the
+        disambiguated entities. Recall should be high, because if
+        it is low than we would have ignored a corrrect entity.
 
         Returns:
             None
@@ -500,49 +426,20 @@ class EntityDisambiguation:
 
     def predict(self, data):
         """
-        Predicts entity disambiguation on the given raw text data.
+        Performs entity disambiguation on the given data. It does not require
+        ground truth entities to be present.
 
-        This method is responsible for predicting entity disambiguation on any
-        raw text input. It takes the raw text data as input and performs the
-        necessary preprocessing steps to prepare it for entity disambiguation.
-        The trained model is used to make predictions on the preprocessed data,
-        generating entity disambiguation results.
-
-        Arguments:
-            data: The raw text data to be processed and disambiguated.
-
-        Returns:
-            dict:
-                A dictionary containing the predictions for each document in
-                the input data. The keys of the dictionary are the document
-                names, and the values are lists of prediction objects. Each
-                prediction object contains the mention, predicted entity, list
-                of candidate entities, confidence score, and other relevant
-                information.
-
-        Note:
-            The predictions are made using the trained model and do not
-            require ground truth entities to be present.
-
-            The confidence scores indicate the level of confidence or
-            certainty in the predicted entity.
-
-            The number of predictions and the time taken for the entity
-            disambiguation step may vary depending on the input data and the
-            complexity of the model.
+        Returns: Predictions and time taken for the ED step.
         """
         data = self.get_data_items(data, "raw", predict=True)
         predictions, timing = self.__predict(data, include_timing=True, eval_raw=True)
 
         return predictions
 
-    def normalize_scores(self, scores: List[float]) -> List[float]:
+    def normalize_scores(self, scores):
         """
         Normalizes a list of scores between 0 and 1 by rescaling them and
         computing their ratio over their sum.
-
-        Arguments:
-            scores (List[float]): A list of numerical scores.
 
         Returns:
             List[float]:
@@ -566,10 +463,10 @@ class EntityDisambiguation:
 
         return normalized_scores
 
-    def __compute_cross_cand_confidence(self, scores: np.ndarray) -> List[List[float]]:
+    def __compute_cross_cand_confidence(self, scores):
         """
-        This function takes a series of numpy arrays of scores and returns a
-        list of lists of confidence scores.
+        This function takes a series of numpy arrays of scores and returns
+        a list of lists of confidence scores.
 
         Arguments:
             scores (numpy.ndarray): A numpy array of scores.
@@ -580,18 +477,10 @@ class EntityDisambiguation:
         normalised_scores = [self.normalize_scores(score) for score in scores]
         return normalised_scores
 
-    # TODO: Set type of preds to Tensor
-    def __compute_confidence(self, scores: np.ndarray, preds) -> List[float]:
+    def __compute_confidence(self, scores, preds):
         """
         Computes confidence scores for the given entity disambiguation outputs
         using logistic regression.
-
-        This method uses logistic regression (LR) to calculate confidence
-        scores for the entity disambiguation outputs. It takes the prediction
-        scores and corresponding predicted entities as input. The LR model,
-        trained to obtain confidence scores, is applied to the input data.
-        The resulting confidence scores reflect the level of confidence or
-        certainty in the predicted entities.
 
         Arguments:
             scores: The prediction scores for each candidate entity.
@@ -611,64 +500,11 @@ class EntityDisambiguation:
             confidence_scores = [0.0 for _ in scores]
         return confidence_scores
 
-    # TODO/typing: What's the correct type to use for data here?
-    def __predict(
-        self,
-        data,
-        include_timing: Optional[bool] = False,
-        eval_raw: Optional[bool] = False,
-    ) -> Union[Tuple[dict, List[float]], dict]:
+    def __predict(self, data, include_timing=False, eval_raw=False):
         """
-        Applies the trained model to make predictions on input data.
+        Uses the trained model to make predictions of individual batches (i.e. documents).
 
-        This method utilizes the trained model to predict entity
-        disambiguation outputs for a given dataset or raw text. It processes
-        the input data in batches, performs necessary computations, and
-        returns the predicted entities along with optional timing information.
-
-        Arguments:
-            data: The input dataset or raw text to be processed and predicted.
-            include_timing (bool, optional): A flag indicating whether to
-                include timing information for the prediction step. Defaults
-                to ``False``.
-            eval_raw (bool, optional): A flag indicating whether the
-                prediction is being performed for evaluation on raw text.
-                Defaults to ``False``.
-
-        Returns:
-            Union[Tuple[dict, List[float]], dict]
-                If ``include_timing`` is ``True``, the function returns a
-                tuple containing a dictionary of predicted entities and
-                optional timing information for the prediction step.
-
-                If ``include_timing`` is ``False``, the function simply
-                returns a dictionary of predicted entities.
-
-        Note:
-            The prediction can be performed on both structured datasets and
-            raw text inputs.
-
-            For structured datasets, the input data is typically organized
-            into documents and mentions.
-
-            Batches of data are processed sequentially, and the predictions
-            are accumulated into a dictionary structure.
-
-            The model is set to evaluation mode (self.model.eval()) before
-            making predictions.
-
-            The prediction process involves tokenizing the input data,
-            applying the model's forward pass, and extracting the predicted
-            entities and their confidence scores.
-
-            The predicted entities can be stored in different formats
-            depending on the evaluation mode.
-
-            If ``eval_raw=True``, additional information such as mention,
-            candidates, and scores may be included in the predicted entities.
-
-            Timing information can be useful for measuring the performance of
-            the prediction step.
+        Returns: Predictions and time taken for the ED step
         """
         predictions = {items[0]["doc_name"]: [] for items in data}
         self.model.eval()
@@ -849,54 +685,12 @@ class EntityDisambiguation:
         else:
             return predictions
 
-    # TODO/typing: Set type for dataset correctly
-    def prerank(
-        self, dataset: Any, dname: str, predict: Optional[bool] = False
-    ) -> List[List[Any]]:
+    def prerank(self, dataset, dname, predict=False):
         """
-        Preranks the candidate entities in the dataset using context and
-        p(e|m) scores.
+        Responsible for preranking the set of possible candidates using both
+        context and p(e|m) scores.
 
-        This method is responsible for preranking the set of possible
-        candidates for entity disambiguation. It utilises both contextual
-        information and the p(e|m) scores to rank the candidates for each
-        mention. The preranking process helps narrow down the candidate pool,
-        making the subsequent disambiguation step more efficient.
-
-        Arguments:
-            dataset: The dataset containing the mentions and candidate
-                entities to be preranked.
-            dname (str): The name of the dataset, specifying its type or
-                purpose.
-            predict (bool, optional): A flag indicating whether the preranking
-                is performed for prediction purposes. Defaults to ``False``.
-
-        Returns:
-            List[List[Any]]: The preranked dataset with a reduced (max 3 + 4)
-                set of candidate entities for each mention.
-
-        Note:
-            The preranking process is applied to each mention in the dataset.
-
-            The candidate entities are ranked based on a combination of their
-            contextual relevance (context scores) and the p(e|m) scores.
-
-            The number of candidates to keep during preranking is determined
-            by the configuration settings.
-
-            For each mention, the top candidates based on context scores and
-            p(e|m) scores are selected.
-
-            The preranked candidates are stored in a modified dataset, where
-            each mention is associated with a reduced set of candidate
-            entities.
-
-            The preranking step helps improve efficiency by reducing the
-            number of candidates for subsequent disambiguation.
-
-            In prediction mode, additional considerations may be taken into
-            account, such as including a fake gold candidate if no valid
-            candidate is found.
+        Returns: Dataset with, by default, max 3 + 4 candidates per mention.
         """
         new_dataset = []
         has_gold = 0
@@ -1014,47 +808,13 @@ class EntityDisambiguation:
 
         return new_dataset
 
-    # TODO/typing: Ensure embs is set to the correct type here
-    def __update_embeddings(self, emb_name: str, embs: Any) -> None:
+    def __update_embeddings(self, emb_name, embs):
         """
-        Updates the embeddings with the respective ``word``, ``entity``, or
-        ``snd`` (GloVe) embeddings.
-
-        This method is responsible for updating the embedding dictionaries
-        with new ``word``, ``entity``, or ``snd`` (GloVe) embeddings. It takes
-        the embeddings as input and incorporates them into the existing
-        dictionaries.
-
-        Arguments:
-            emb_name (str): The name of the embedding type, specifying whether
-                it is ``word``, ``entity``, or ``snd`` (GloVe) embeddings.
-            embs: The new embeddings to be added to the existing ones.
+        Responsible for updating the dictionaries with their respective word,
+        entity and snd embeddings.
 
         Returns:
             None
-
-        Notes:
-            The embedding update process involves adding the new embeddings to
-            the existing embedding dictionaries.
-
-            The updated embeddings are stored in embedding layers for
-            efficient retrieval during the disambiguation process.
-
-            If the embedding layer for the specified embedding type already
-            exists, the new embeddings are concatenated with the existing
-            embeddings.
-
-            If the embedding layer for the specified embedding type doesn't
-            exist, a new embedding layer is created with the new embeddings.
-
-            The size of the new embeddings should match the expected embedding
-            dimensions specified in the configuration.
-
-            After updating the embedding dictionaries, the new embeddings are
-            made available for disambiguation.
-
-            The __update_embeddings method is typically called after
-            retrieving embeddings from an external source.
         """
         embs = embs.to(self.device)
 
@@ -1084,42 +844,12 @@ class EntityDisambiguation:
 
         del new_weights
 
-    def __embed_words(self, words_filt: List[str], name: str) -> None:
+    def __embed_words(self, words_filt, name):
         """
-        Embeds words using the given SQLite3 database.
-
-        This method retrieves embeddings for the specified words from a
-        SQLite3 database and updates the corresponding embedding dictionaries.
-
-        Arguments:
-            words_filt (List[str]): A list of words for which embeddings need
-                to be retrieved.
-            name (str): The name of the embedding type, specifying whether it
-                is ``word``, ``entity``, or ``snd`` (GloVe) embeddings.
+        Responsible for retrieving embeddings using the given sqlite3 database.
 
         Returns:
             None.
-
-        Notes:
-            The __embed_words method retrieves embeddings for the specified
-            words using an SQLite3 database.
-
-            The embedding dictionaries and sets are updated with the new words
-            and their embeddings.
-
-            If an embedding for a word is not found in the database, it is
-            treated as an out-of-vocabulary (OOV) word.
-
-            The OOV words are added to the respective "seen" sets to keep
-            track of the words for which embeddings are not available.
-
-            The embedding vectors retrieved from the database are appended to
-            the batch embeddings for later updating of the embedding
-            dictionaries.
-
-            The __embed_words method is typically called during the data
-            preprocessing stage to embed words, entities, or GloVe
-            representations.
         """
         embs = rel_utils.get_db_emb(self.db_embs, words_filt, name)
 
@@ -1131,33 +861,12 @@ class EntityDisambiguation:
                 self.embeddings["{}_voca".format(name)].add_to_vocab(c)
                 self.__batch_embs[name].append(torch.tensor(e))
 
-    # TODO/typing: Add correct type for dataset and output
-    def get_data_items(
-        self, dataset: Any, dname: str, predict: Optional[bool] = False
-    ) -> Any:
+    def get_data_items(self, dataset, dname, predict=False):
         """
-        Formats the dataset and triggers the preranking function.
-
-        This method is responsible for formatting the input dataset, preparing
-        it for entity disambiguation. It iterates over the dataset items and
-        performs various data processing steps such as embedding words,
-        extracting context, handling candidate entities, and creating data
-        items. It triggers the preranking function to rank the candidate
-        entities for each mention. The formatted data is returned for further
-        processing.
-
-        Arguments:
-            dataset (Any): The input dataset to be formatted.
-            dname (str): The name of the dataset, specifying its type or
-                purpose.
-            predict (bool, optional): A flag indicating whether the data
-                formatting is for prediction purposes or not. Defaults to
-                ``False``.
+        Responsible for formatting the dataset. Triggers the preranking function.
 
         Returns:
-            Any:
-                The formatted dataset that has undergone various preprocessing
-                steps, ready for preranking.
+            Preranking function.
         """
 
         data = []
@@ -1369,47 +1078,15 @@ class EntityDisambiguation:
 
         return self.prerank(data, dname, predict)
 
-    # TODO/typing: Make sure the types of testset and system_pred are correctly set
-    def __eval(self, testset: Any, system_pred: Any) -> Tuple[float, float, float, int]:
+    def __eval(self, testset, system_pred):
         """
-        Evaluates the performance of the local entity disambiguation step.
-
-        This method evaluates the performance of the local entity
-        disambiguation by comparing the predicted entity labels with the gold
-        labels from the testset.
-
-        Arguments:
-            testset (Any): The testset containing the ground truth labels for
-                evaluation.
-            system_pred (Any): The predicted entity labels generated by the
-                system.
+        Responsible for evaluating data points, which is solely used for the
+        local entity disambiguation step.
 
         Returns:
             Tuple[float, float, float, int]:
                 A tuple containing the F1 score, recall, precision, and the
-                number of mentions without valid candidate entities.
-
-        Notes:
-            The __eval method compares the predicted entity labels with the
-            gold labels to compute evaluation metrics.
-
-            The gold labels are extracted from the testset, while the
-            predicted labels are obtained from the system predictions.
-
-            The method calculates the true positives, total number of NIL (no
-            valid candidate) mentions, precision, recall, and F1 score.
-
-            The precision is the ratio of true positives to the total number
-            of predicted labels excluding NIL mentions.
-
-            The recall is the ratio of true positives to the total number of
-            gold labels.
-
-            The F1 score is the harmonic mean of precision and recall,
-            providing a balanced measure of the model's performance.
-
-            The number of mentions without valid candidate entities indicates
-            the cases where the system could not find a suitable entity label.
+                number of mentions for which there is no valid candidate.
         """
         gold = []
         pred = []
@@ -1433,19 +1110,9 @@ class EntityDisambiguation:
         f1 = 2 * precision * recall / (precision + recall)
         return f1, recall, precision, total_nil
 
-    def __save(self, path: str) -> None:
+    def __save(self, path):
         """
-        Saves the trained model and its configuration during optimization.
-
-        This method saves the state dictionary of the trained model and its
-        configuration to the specified ``path``. The trained model's state
-        dictionary contains the learned parameters and can be used to restore
-        the model for later use or further optimization. The configuration
-        file contains the settings and hyperparameters used during training.
-
-        Arguments:
-            path (str): The path where the model and configuration files will
-                be saved.
+        Responsible for storing the trained model during optimisation.
 
         Returns:
             None.
@@ -1454,32 +1121,13 @@ class EntityDisambiguation:
         with open("{}.config".format(path), "w") as f:
             json.dump(self.config, f)
 
-    def __load(self, path: str) -> MulRelRanker:
+    def __load(self, path):
         """
-        Loads a trained model and its configuration from the specified path.
+        Responsible for loading a trained model and its respective config. Note
+        that this config cannot be overwritten. If required, this behavior may
+        be modified in future releases.
 
-        This method loads a trained model and its corresponding configuration
-        from the given ``path``. The model is instantiated based on the loaded
-        configuration, and the learned parameters are loaded into the model.
-        The configuration file provides the settings and hyperparameters used
-        during training.
-
-        If a configuration file is found at the specified path, it will be
-        loaded and replace the existing configuration in the ``self.config``
-        attribute. If no configuration file is found, default settings will be
-        used.
-
-        Arguments:
-            path (str): The path where the model and configuration files are
-                stored.
-
-        Returns:
-            model (utils.REL.mulrel_ranker.MulRelRanker):
-                The loaded trained model.
-
-        Note:
-            The cofiguration can currently not be overwritten. If required,
-            this behavior may be modified in future releases.
+        Returns: The loaded trained model.
         """
         if os.path.exists("{}.config".format(path)):
             with open("{}.config".format(path), "r") as f:

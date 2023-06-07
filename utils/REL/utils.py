@@ -1,5 +1,6 @@
+from typing import Any, List, Optional, Tuple
+
 import numpy as np
-from typing import List, Any, Optional, Tuple
 
 
 def flatten_list_of_lists(
@@ -17,7 +18,25 @@ def flatten_list_of_lists(
     Example:
         >>> list_of_lists = [[1, 2, 3], [4, 5], [6]]
         >>> print(flatten_list_of_lists(list_of_lists))
-        ([1, 2, 3, 4, 5, 6], [3, 5])
+        ([1, 2, 3, 4, 5, 6], array([0, 3, 5]))
+
+    Credit:
+        This function is taken from the `REL: Radboud Entity Linker
+        <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+
     """
     list_of_lists = [[]] + list_of_lists
     offsets = np.cumsum([len(x) for x in list_of_lists])[:-1]
@@ -43,11 +62,25 @@ def make_equal_len(
     Example:
         >>> lists = [[1, 2, 3], [4, 5], [6, 7, 8, 9]]
         >>> print(make_equal_len(lists))
-        ([[1, 2, 3], [4, 5, 0], [6, 7, 8]], [[1.0, 1.0, 1.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]])
+        ([[1, 2, 3, 0], [4, 5, 0, 0], [6, 7, 8, 9]], [[1.0, 1.0, 1.0, 0.0], [1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]])
 
-    Note:
-        The mask indicates the original length of each list with ``1.0`` values
-        and the padded/truncated parts with ``0.0`` values.
+    Credit:
+        This function is taken from the `REL: Radboud Entity Linker
+        <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+
     """
     lens = [len(l) for l in lists]
     max_len = max(1, max(lens))
@@ -63,7 +96,7 @@ def make_equal_len(
 def is_important_word(s: str) -> bool:
     """
     Check if a word is important. An important word is not a stopword, a
-    number, or has a length of 1.
+    number, or has a length of 3 or more characters.
 
     Args:
         s (str): The word to be checked.
@@ -74,6 +107,23 @@ def is_important_word(s: str) -> bool:
     Example:
         >>> print(is_important_word("apple"))
         True
+
+    Credit:
+        This function is adapted from the `REL: Radboud Entity Linker
+        <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
     """
     try:
         if len(s) <= 3 or s.lower() in STOPWORDS:
@@ -419,4 +469,4 @@ STOPWORDS = {
     "best",
     "using",
 }
-"""A set of common stopwords used for word filtering."""
+"""A set of common stopwords used for word filtering, obtained from the `REL: Radboud Entity Linker <https://github.com/informagi/REL/>`_ Github repository."""

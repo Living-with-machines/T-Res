@@ -1,10 +1,8 @@
 import os
 import sqlite3
 import sys
-from array import array
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 # Add "../" to path to import utils
@@ -50,7 +48,7 @@ def test_prepare_initial_data():
     df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
     ).iloc[:1]
-    parsed_doc = rel_utils.prepare_initial_data(df, context_len=100)
+    parsed_doc = rel_utils.prepare_initial_data(df)
     assert parsed_doc["4939308_1"][0]["mention"] == "STALYBRIDGE"
     assert parsed_doc["4939308_1"][0]["gold"][0] == "Q1398653"
     assert parsed_doc["4939308_6"][1]["mention"] == "Market-street"
@@ -119,7 +117,6 @@ def test_train():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": False,
                 "without_microtoponyms": True,
@@ -156,7 +153,7 @@ def test_train():
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.675
 
 
 def test_load_eval_model():
@@ -222,7 +219,6 @@ def test_load_eval_model():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "topn_candidates": 10,
                 "db_embeddings": cursor,
                 "with_publication": False,
@@ -322,7 +318,6 @@ def test_predict():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "without_microtoponyms": True,

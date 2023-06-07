@@ -130,7 +130,6 @@ for exp_param in experiments:
                 "model_path": "../resources/models/disambiguation/",
                 "data_path": "../experiments/outputs/data/lwm/",
                 "training_split": "",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": wpubl,
                 "without_microtoponyms": wmtops,

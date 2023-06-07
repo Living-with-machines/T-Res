@@ -7,15 +7,13 @@ import glob
 import os
 import re
 import sys
+from typing import List, Optional, Tuple
 
 import pandas as pd
-
-from typing import Optional, List, Tuple
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_wikipedia
-
 
 # Path to Wikipedia resources (where the wiki2wiki mapper is located):
 path_to_wikipedia = "../resources/wikipedia/"
@@ -34,11 +32,11 @@ def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
 
     Example:
         >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum")
-        'Q23002'
+        'Q10285'
         >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt")
-        'Q11765'
+        'Q11768'
         >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location")
-        None
+        Warning: invalid_location is not in wikipedia2wikidata, the wkdt_qid will be None.
     """
     if not wikipedia_title == "NIL" and not wikipedia_title == "*":
         wikipedia_title = wikipedia_title.split("/wiki/")[-1]
@@ -246,7 +244,7 @@ def process_lwm_for_linking(
 
     Arguments:
         tsv_topres_path (str): The path to the top-level directory containing the annotated TSV files.
-        gazetteer_ids (list): A set of Wikidata IDs in the gazetteer.
+        gazetteer_ids (list): The set of Wikidata IDs in the gazetteer.
 
     Returns:
         pandas.DataFrame: A DataFrame with the following columns:
@@ -473,7 +471,7 @@ def process_hipe_for_linking(hipe_path: str, gazetteer_ids: List[str]) -> pd.Dat
 
     Arguments:
         hipe_path (str): The path to the HIPE data file.
-        gazetteer_ids (List[str]): A set of Wikidata IDs in the gazetteer.
+        gazetteer_ids (List[str]): The set of Wikidata IDs in the gazetteer.
 
     Returns:
         pandas.DataFrame: A DataFrame with the following columns:
