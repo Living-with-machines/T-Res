@@ -36,6 +36,10 @@ class FullTextAPIQuery(BaseModel):
     place_wqid: Union[str, None] = None
 
 
+class CandidatesAPIQuery(BaseModel):
+    toponym: str
+
+
 app_config_name = os.environ["APP_CONFIG_NAME"]
 app = FastAPI(title=f"Toponym Resolution Pipeline API ({app_config_name})")
 
@@ -91,8 +95,8 @@ async def run_text(api_query: FullTextAPIQuery):
 
 
 @app.get("/candidates")
-async def run_candidate_selection(toponym: str):
-    candidates = geoparser.myranker.find_candidates([{"mention": toponym}])[0]
+async def run_candidate_selection(api_query: CandidatesAPIQuery):
+    candidates = geoparser.myranker.find_candidates([{"mention": api_query.toponym}])[0]
     new_cand_dict = dict()
     for m in candidates:
         new_cand_dict[m] = dict()
