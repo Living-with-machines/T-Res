@@ -24,6 +24,7 @@ pipeline_config = config_mod.CONFIG
 
 
 from geoparser import pipeline
+from utils import ner
 
 geoparser = pipeline.Pipeline(**pipeline_config)
 
@@ -123,7 +124,7 @@ async def run_ner(api_query: APIQuery):
     ]
 
     # Aggregate mentions:
-    mentions = geoparser.myner.aggregate_mentions(procpreds, "pred")
+    mentions = ner.aggregate_mentions(procpreds, "pred")
 
     return mentions
 
