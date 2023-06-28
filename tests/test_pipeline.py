@@ -16,10 +16,10 @@ def test_deezy_mostpopular():
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -49,9 +49,8 @@ def test_deezy_mostpopular():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -62,9 +61,6 @@ def test_deezy_mostpopular():
     mylinker = linking.Linker(
         method="mostpopular",
         resources_path="resources/",
-        linking_resources=dict(),
-        rel_params={},
-        overwrite_training=False,
     )
 
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
@@ -74,10 +70,11 @@ def test_deezy_mostpopular():
     )
     assert resolved[0]["mention"] == "Shefiield"
     assert resolved[0]["prior_cand_score"] == dict()
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.898
+    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
+    assert resolved[0]["string_match_score"]["Sheffield"][0] == 0.999
     assert resolved[0]["prediction"] == "Q42448"
-    assert resolved[0]["ed_score"] == 0.898
-    assert resolved[0]["ner_score"] == 0.996
+    assert resolved[0]["ed_score"] == 0.903
+    assert resolved[0]["ner_score"] == 1.0
 
     resolved = geoparser.run_sentence("")
     assert resolved == []
@@ -102,10 +99,10 @@ def test_deezy_rel_wpubl_wmtops():
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -137,9 +134,8 @@ def test_deezy_rel_wpubl_wmtops():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -176,11 +172,11 @@ def test_deezy_rel_wpubl_wmtops():
     )
 
     assert resolved[0]["mention"] == "Shefiield"
-    assert resolved[0]["prior_cand_score"]["Q42448"] == 0.89
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.731
+    assert resolved[0]["prior_cand_score"]["Q42448"] == 0.891
+    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.576
     assert resolved[0]["prediction"] == "Q42448"
-    assert resolved[0]["ed_score"] == 0.015
-    assert resolved[0]["ner_score"] == 0.996
+    assert resolved[0]["ed_score"] == 0.039
+    assert resolved[0]["ner_score"] == 1.0
 
 
 def test_perfect_rel_wpubl_wmtops():
@@ -192,10 +188,10 @@ def test_perfect_rel_wpubl_wmtops():
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -227,9 +223,8 @@ def test_perfect_rel_wpubl_wmtops():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -265,15 +260,9 @@ def test_perfect_rel_wpubl_wmtops():
         place_wqid="Q42448",
     )
 
-    resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
-        place="Sheffield",
-        place_wqid="Q42448",
-    )
-
     assert resolved[0]["mention"] == "Shefiield"
     assert resolved[0]["prior_cand_score"] == dict()
     assert resolved[0]["cross_cand_score"] == dict()
     assert resolved[0]["prediction"] == "NIL"
     assert resolved[0]["ed_score"] == 0.0
-    assert resolved[0]["ner_score"] == 0.996
+    assert resolved[0]["ner_score"] == 1.0

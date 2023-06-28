@@ -97,9 +97,8 @@ class Ranker:
                 "dm_model": "w2v_ocr",
                 "dm_output": "deezymatch_on_the_fly",
                 "ranking_metric": "faiss",
-                "selection_threshold": 25,
-                "num_candidates": 3,
-                "search_size": 3,
+                "selection_threshold": 50,
+                "num_candidates": 1,
                 "verbose": False,
                 "overwrite_training": False,
                 "do_test": False,
@@ -130,9 +129,8 @@ class Ranker:
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -169,7 +167,6 @@ class Ranker:
             s += f"      * Ranking metric: {self.deezy_parameters['ranking_metric']}\n"
             s += f"      * Selection threshold: {self.deezy_parameters['selection_threshold']}\n"
             s += f"      * Num candidates: {self.deezy_parameters['num_candidates']}\n"
-            s += f"      * Search size: {self.deezy_parameters['search_size']}\n"
             s += f"      * Overwrite training: {self.deezy_parameters['overwrite_training']}\n"
             s += f"      * Overwrite dataset: {self.strvar_parameters['overwrite_dataset']}\n"
             s += f"      * Test mode: {self.deezy_parameters['do_test']}\n"
@@ -542,7 +539,7 @@ class Ranker:
                 ranking_metric=self.deezy_parameters["ranking_metric"],
                 selection_threshold=self.deezy_parameters["selection_threshold"],
                 num_candidates=self.deezy_parameters["num_candidates"],
-                search_size=self.deezy_parameters["search_size"],
+                search_size=self.deezy_parameters["num_candidates"],
                 verbose=self.deezy_parameters["verbose"],
                 output_path=os.path.join(dm_path, "ranking", dm_output),
                 pretrained_model_path=pretrained_model_path,

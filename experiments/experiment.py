@@ -38,6 +38,9 @@ class Experiment:
             dev/test, default is an empty string).
         rel_experiments (bool, optional): Whether to run end-to-end REL
             experiments (default is ``False``).
+        end_to_end_eval (bool, optional): Whether to run the experiment for
+            end-to-end evaluation or entity-linking-only evaluation (default
+            is ``False``, i.e. run EL-only).
     """
 
     def __init__(
@@ -53,6 +56,7 @@ class Experiment:
         processed_data: Optional[dict] = dict(),
         test_split: Optional[str] = "",
         rel_experiments: Optional[bool] = False,
+        end_to_end_eval: Optional[bool] = False,
     ):
         """
         Initialises an Experiment object.
@@ -68,6 +72,7 @@ class Experiment:
         self.processed_data = processed_data
         self.test_split = test_split
         self.rel_experiments = rel_experiments
+        self.end_to_end_eval = end_to_end_eval
 
         # Load the dataset as a dataframe:
         dataset_path = os.path.join(
@@ -84,6 +89,12 @@ class Experiment:
                 "\nError: The dataset has not been created, you should first run the prepare_data.py script.\n"
             )
 
+        if self.end_to_end_eval == True:
+            self.data_path = self.data_path + "end_to_end/"
+            self.results_path = self.results_path + "end_to_end/"
+            Path(self.data_path + self.dataset).mkdir(parents=True, exist_ok=True)
+            Path(self.results_path + self.dataset).mkdir(parents=True, exist_ok=True)
+
     def __str__(self) -> str:
         """
         Returns a string representation of the Experiment object.
@@ -96,7 +107,8 @@ class Experiment:
         s += f"    * Dataset: {self.dataset.upper()}\n"
         s += f"    * Overwrite processing: {self.overwrite_processing}\n"
         s += f"    * Experiments on: {self.test_split}\n"
-        s += f"    * Run end-to-end REL experiments: {self.rel_experiments}"
+        s += f"    * Run end-to-end REL experiments: {self.rel_experiments}\n"
+        s += f"    * Run for end-to-end evaluation: {self.end_to_end_eval}"
         return s
 
     def load_data(self) -> dict:
@@ -197,7 +209,12 @@ class Experiment:
         dTrues = output_lwm_ner[1]
         dSkys = output_lwm_ner[2]
         gold_tokenization = output_lwm_ner[3]
-        dMentionsPred = output_lwm_ner[4]
+        # Use the gold standard named entities unless we specify performing the
+        # evaluation end-to-end:
+        dMentionsPred = output_lwm_ner[5]
+        if self.end_to_end_eval == True:
+            # In this case, use the predicted named entities:
+            dMentionsPred = output_lwm_ner[4]
         dMentionsGold = output_lwm_ner[5]
 
         # -------------------------------------------
@@ -216,15 +233,15 @@ class Experiment:
         # -------------------------------------------
         # Store temporary postprocessed data
         self.processed_data = self.store_processed_data(
-            dPreds,
-            dTrues,
-            dSkys,
-            gold_tokenization,
-            dSentences,
-            dMetadata,
-            dMentionsPred,
-            dMentionsGold,
-            dCandidates,
+            dPreds,  # preds, _ner_predictions.json
+            dTrues,  # trues, _gold_standard.json
+            dSkys,  # skys, _ner_skyline.json
+            gold_tokenization,  # gold_tok, _gold_positions.json
+            dSentences,  # dSentences, _dict_sentences.json
+            dMetadata,  # dMetadata, _dict_metadata.json
+            dMentionsPred,  # dMentionsPred, _pred_mentions.json
+            dMentionsGold,  # dMentionsGold, _gold_mentions.json
+            dCandidates,  # dCandidates, _candidates_xxx.json
         )
 
         # -------------------------------------------
@@ -351,6 +368,8 @@ class Experiment:
             ``outputs/data/[dataset]/`` folder.
         """
         dMentions = self.processed_data["dMentionsPred"]
+        if self.end_to_end_eval == False:
+            dMentions = self.processed_data["dMentionsGold"]
         dGoldSt = self.processed_data["dMentionsGold"]
         dSentences = self.processed_data["dSentences"]
         dMetadata = self.processed_data["dMetadata"]
@@ -507,12 +526,38 @@ class Experiment:
         Returns:
             None.
         """
+
+        # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
+        # 'test' of the Ashton1860 split, etc):
+        all = self.dataset_df
+        test_articles = list(all[all[how_split] == "test"].article_id.unique())
+        test_articles = [str(art) for art in test_articles]
+
+        # Path to scorer results:
         hipe_scorer_results_path = os.path.join(self.results_path, self.dataset)
         Path(hipe_scorer_results_path).mkdir(parents=True, exist_ok=True)
 
         scenario_name = ""
         if task == "ner":
             scenario_name += task + "_" + self.myner.model + "_"
+
+            # Store predictions results formatted for CLEF-HIPE scorer:
+            preds_name = "preds"
+            process_data.store_for_scorer(
+                hipe_scorer_results_path,
+                scenario_name + preds_name,
+                self.processed_data["preds"],
+                test_articles,
+            )
+
+            # Store gold standard results formatted for CLEF-HIPE scorer:
+            process_data.store_for_scorer(
+                hipe_scorer_results_path,
+                scenario_name + "trues",
+                self.processed_data["trues"],
+                test_articles,
+            )
+
         if task == "linking":
             scenario_name += task + "_" + self.myner.model + "_"
             cand_approach = self.myranker.method
@@ -523,42 +568,33 @@ class Experiment:
                 cand_approach += "+" + str(
                     self.myranker.deezy_parameters["selection_threshold"]
                 )
-
             scenario_name += cand_approach + "_" + how_split + "_"
 
-        link_approach = self.mylinker.method
-        if self.mylinker.method == "reldisamb":
-            if self.mylinker.rel_params["with_publication"]:
-                link_approach += "+wpubl"
-            if self.mylinker.rel_params["without_microtoponyms"]:
-                link_approach += "+wmtops"
-            if self.mylinker.rel_params["do_test"]:
-                link_approach += "_test"
+            link_approach = self.mylinker.method
+            if self.mylinker.method == "reldisamb":
+                if self.mylinker.rel_params["with_publication"]:
+                    link_approach += "+wpubl"
+                if self.mylinker.rel_params["without_microtoponyms"]:
+                    link_approach += "+wmtops"
+                if self.mylinker.rel_params["do_test"]:
+                    link_approach += "_test"
 
-        # Find article ids of the corresponding test set (e.g. 'dev' of the original split,
-        # 'test' of the Ashton1860 split, etc):
-        all = self.dataset_df
-        test_articles = list(all[all[how_split] == "test"].article_id.unique())
-        test_articles = [str(art) for art in test_articles]
+            # Store predictions results formatted for CLEF-HIPE scorer:
+            process_data.store_for_scorer(
+                hipe_scorer_results_path,
+                scenario_name + link_approach,
+                self.processed_data["preds"],
+                test_articles,
+            )
 
-        # Store predictions results formatted for CLEF-HIPE scorer:
-        preds_name = link_approach if task == "linking" else "preds"
-        process_data.store_for_scorer(
-            hipe_scorer_results_path,
-            scenario_name + preds_name,
-            self.processed_data["preds"],
-            test_articles,
-        )
+            # Store gold standard results formatted for CLEF-HIPE scorer:
+            process_data.store_for_scorer(
+                hipe_scorer_results_path,
+                scenario_name + "trues",
+                self.processed_data["trues"],
+                test_articles,
+            )
 
-        # Store gold standard results formatted for CLEF-HIPE scorer:
-        process_data.store_for_scorer(
-            hipe_scorer_results_path,
-            scenario_name + "trues",
-            self.processed_data["trues"],
-            test_articles,
-        )
-
-        if task == "linking":
             # If task is "linking", store the skyline results (but not for the
             # ranking method of REL):
             process_data.store_for_scorer(
@@ -760,7 +796,7 @@ class Experiment:
 
             # Prepare data for scorer:
             self.processed_data = process_data.prepare_storing_links(
-                self.processed_data, test_article_ids, test_df
+                self.processed_data, test_article_ids, test_df, self.end_to_end_eval
             )
 
             # Store linking results:

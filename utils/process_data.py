@@ -196,7 +196,9 @@ def align_gold(predictions: List[dict], annotations: dict) -> List[dict]:
     return gold_standard
 
 
-def postprocess_predictions(predictions: List[dict], gold_positions) -> dict:
+def postprocess_predictions(
+    predictions: List[dict], gold_positions: List[dict]
+) -> dict:
     """
     Postprocess predictions to be used later in the pipeline.
 
@@ -242,7 +244,7 @@ def postprocess_predictions(predictions: List[dict], gold_positions) -> dict:
         for x in gold_positions
     ]
     sentence_skys = [
-        [x["word"], x["entity"], "O", x["start"], x["end"]] for x in predictions
+        [x["word"], x["entity"], "O", x["start"], x["end"]] for x in gold_positions
     ]
 
     postprocessed_sentence["sentence_preds"] = sentence_preds
@@ -452,7 +454,10 @@ def update_with_skyline(ner_predictions: dict, link_predictions: pd.Series) -> d
 
 
 def prepare_storing_links(
-    processed_data: dict, all_test: List[str], test_df: pd.DataFrame
+    processed_data: dict,
+    all_test: List[str],
+    test_df: pd.DataFrame,
+    end_to_end_eval: bool,
 ) -> dict:
     """
     Updates the processed data dictionaries with predicted links for "preds"
@@ -465,32 +470,51 @@ def prepare_storing_links(
             used for testing.
         test_df (pd.DataFrame): A DataFrame with one mention per row that will
             be used for testing in the current experiment.
+        end_to_end_eval (bool): Whether to use mentions predicted by us or provided
+            by the gold standard (for end-to-end and entity-linking only
+            evaluation settings respectively).
 
     Returns:
         dict
             The updated processed data dictionary with "preds" and "skys"
             incorporating the predicted links and skyline information.
     """
-    for sent_id in processed_data["preds"]:
+    # If we're evaluating entity linking end-to-end in the experiment, use
+    # mentions that have been predicted by us:
+    preds_to_use = "trues"
+    if end_to_end_eval == True:
+        # If we're evaluating entity linking only in the experiment, use
+        # mentions from gold standard:
+        preds_to_use = "preds"
+    for sent_id in processed_data[preds_to_use]:
         article_id = sent_id.split("_")[0]
-        # First: is sentence in the current dev/test set?
+        # First: sentence should be in the current test set:
         if article_id in all_test:
+            ner_predictions = processed_data[preds_to_use][sent_id]
             # Update predictions with linking:
             # >> Step 1. If there is no mention in the sentence, it will
             #            not be in the per-mention dataframe. However,
             #            it should still be in the results file.
             if not sent_id in test_df["sentence_id"].unique():
-                processed_data["preds"][sent_id] = processed_data["preds"][sent_id]
-            if not sent_id in test_df["sentence_id"].unique():
-                processed_data["skys"][sent_id] = processed_data["skys"][sent_id]
+                resulting_preds = [
+                    [x[0], x[1], "O", x[3], x[4]] for x in ner_predictions
+                ]
+                processed_data["preds"][sent_id] = resulting_preds
+                processed_data["skys"][sent_id] = resulting_preds
             # >> Step 2: If there is a mention in the sentence, update the link:
             else:
+                resulting_preds = [
+                    [x[0], x[1], "O", x[3], x[4]] for x in ner_predictions
+                ]
                 processed_data["preds"][sent_id] = update_with_linking(
-                    processed_data["preds"][sent_id],  # NER predictions
+                    resulting_preds,  # NER predictions
                     test_df[test_df["sentence_id"] == sent_id],  # Processed df
                 )
+                resulting_preds = [
+                    [x[0], x[1], "O", x[3], x[4]] for x in ner_predictions
+                ]
                 processed_data["skys"][sent_id] = update_with_skyline(
-                    processed_data["skys"][sent_id],  # NER predictions
+                    resulting_preds,  # NER predictions
                     test_df[test_df["sentence_id"] == sent_id],  # Processed df
                 )
     return processed_data

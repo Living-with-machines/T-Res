@@ -26,20 +26,14 @@ experiments = [
     # ["lwm", "deezymatch", "reldisamb", "fine", True, False],
     # ["lwm", "deezymatch", "reldisamb", "fine", False, True],
     # ["lwm", "deezymatch", "reldisamb", "fine", True, True],
-    # ["hipe", "perfectmatch", "mostpopular", "coarse", "", ""],
-    # ["hipe", "perfectmatch", "bydistance", "coarse", "", ""],
-    # ["hipe", "deezymatch", "mostpopular", "coarse", "", ""],
-    # ["hipe", "deezymatch", "bydistance", "coarse", "", ""],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", False, False],
-    # ["hipe", "deezymatch", "reldisamb", "coarse", True, False],
     # ["hipe", "perfectmatch", "mostpopular", "fine", "", ""],
     # ["hipe", "perfectmatch", "bydistance", "fine", "", ""],
     # ["hipe", "deezymatch", "mostpopular", "fine", "", ""],
     # ["hipe", "deezymatch", "bydistance", "fine", "", ""],
-    # ["hipe", "deezymatch", "reldisamb", "fine", True, True],
+    # ["hipe", "deezymatch", "reldisamb", "fine", False, False],
     # ["hipe", "deezymatch", "reldisamb", "fine", True, False],
     # ["hipe", "deezymatch", "reldisamb", "fine", False, True],
-    # ["hipe", "deezymatch", "reldisamb", "fine", False, False],
+    # ["hipe", "deezymatch", "reldisamb", "fine", True, True],
 ]
 
 # Mapping experiment parameters:
@@ -73,11 +67,11 @@ for exp_param in experiments:
         # trained on the "Fill-Mask" objective (filter by task).
         model_path="../resources/models/",  # Path where the NER model will be stored.
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
-        },  # Training arguments: you can change them.
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },  # Training arguments: you can change them. These are selected based on: https://github.com/dbmdz/clef-hipe/tree/main/experiments/clef-hipe-2022#topres19th
         overwrite_training=False,  # Set to True if you want to overwrite an existing model with the same name.
         do_test=False,  # Set to True if you want to perform the training on test mode (the string "_test" will be appended to your model name).
         load_from_hub=False,  # Whether the model should be loaded from the HuggingFace hub
@@ -108,9 +102,8 @@ for exp_param in experiments:
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -154,6 +147,7 @@ for exp_param in experiments:
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
         rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
+        end_to_end_eval=False,  # False if we're not evaluating end-to-end for EL, True if we're evaluating "EL-only"
     )
 
     # Print experiment information:

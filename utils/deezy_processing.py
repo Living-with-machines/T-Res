@@ -339,10 +339,31 @@ def generate_candidates(deezy_parameters: dict, mentions_to_wikidata: dict) -> N
     candidates = deezy_parameters["dm_cands"]
     dm_model = deezy_parameters["dm_model"]
 
-    unique_placenames_array = list(set(list(mentions_to_wikidata.keys())))
+    # Sort dictionary by mention-to-entity length (in views of removing less common duplicates,
+    # e.g. "Liverpool" and "LIverpool"):
+    unique_placenames_array = sorted(
+        mentions_to_wikidata.items(), key=lambda x: len(x[1]), reverse=True
+    )
+    # Strip white characters and tabs:
     unique_placenames_array = [
-        " ".join(x.strip().split("\t")) for x in unique_placenames_array if x
+        " ".join(x[0].strip().split("\t")) for x in unique_placenames_array if x
     ]
+    # Get unique place names:
+    relevant_toponyms = list(set(unique_placenames_array))
+    # Remove all-lowercased toponyms (usually not toponyms):
+    relevant_toponyms = [x for x in relevant_toponyms if not x.islower()]
+    # Remove one-character toponyms (rarely toponyms):
+    relevant_toponyms = [x for x in relevant_toponyms if len(x) >= 2]
+    # Get rid of less common lower-cased duplicates:
+    result_list = []
+    already_seen = set()
+    for l in relevant_toponyms:
+        ll = l.lower()
+        if ll not in already_seen:
+            already_seen.add(ll)
+            result_list.append(l)
+    relevant_toponyms = result_list
+    unique_placenames_array = relevant_toponyms
 
     if deezy_parameters["do_test"] == True:
         unique_placenames_array = unique_placenames_array[:100]
