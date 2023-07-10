@@ -163,6 +163,107 @@ For the default settings, see Notes below.</p></li>
 </ul>
 </div>
 <dl class="py method">
+<dt class="sig sig-object py" id="geoparser.pipeline.Pipeline.run_candidate_selection">
+<span class="sig-name descname"><span class="pre">run_candidate_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document_dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#geoparser.pipeline.Pipeline.run_candidate_selection" title="Permalink to this definition"></a></dt>
+<dd><p>Performs candidate selection on already identified toponyms,
+resulting from the <code class="docutils literal notranslate"><span class="pre">run_text_recognition</span></code> method. Given a
+list of dictionaries corresponding to mentions, this method
+first extracts the subset of mentions for which to try to find
+candidates and then runs the <code class="docutils literal notranslate"><span class="pre">find_candidates</span></code> function from
+the Ranker object. This method returns a dictionary of all
+mentions and their candidates, with a similarity score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>document_dataset</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em>) – The list of mentions identified,
+formatted as dictionaries.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A three-level nested dictionary, as show in the example
+in the Note below. The outermost key is the mention as
+has been identified in the text, the first-level nested
+keys are candidate mentions found in Wikidata (i.e. potential
+matches for the original mention). The second-level nested
+keys are the match confidence score and the Wikidata entities
+that correspond to the candidate mentions, each with its
+associated normalised mention-to-wikidata relevance score.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;Salop&#39;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s1">&#39;Salop&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Score&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="s1">&#39;Candidates&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;Q201970&#39;</span><span class="p">:</span> <span class="mf">0.0006031363088057901</span><span class="p">,</span>
+            <span class="s1">&#39;Q23103&#39;</span><span class="p">:</span> <span class="mf">0.0075279261777561925</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geoparser.pipeline.Pipeline.run_disambiguation">
+<span class="sig-name descname"><span class="pre">run_disambiguation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wk_cands</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_wqid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geoparser.pipeline.Pipeline.run_disambiguation" title="Permalink to this definition"></a></dt>
+<dd><p>Performs entity disambiguation given a list of already identified
+toponyms and selected candidates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em>) – The list of mentions identified,
+formatted as dictionaries.</p></li>
+<li><p><strong>wk_cands</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A three-level nested dictionary mapping
+mentions to potential Wikidata entities.</p></li>
+<li><p><strong>place</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The place of publication associated with
+the text document as a human-legible string (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;London&quot;</span></code>). Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+<li><p><strong>place_wqid</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The Wikidata ID of the place of
+publication provided in <code class="docutils literal notranslate"><span class="pre">place</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Q84&quot;</span></code>). Defaults
+to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A list of dictionaries representing the identified and linked
+toponyms in the sentence. Each dictionary contains the following
+keys:</p>
+<ul class="simple">
+<li><p>”mention” (str): The mention text.</p></li>
+<li><p>”ner_score” (float): The NER score of the mention.</p></li>
+<li><p>”pos” (int): The starting position of the mention in the
+sentence.</p></li>
+<li><p>”sent_idx” (int): The index of the sentence.</p></li>
+<li><p>”end_pos” (int): The ending position of the mention in the
+sentence.</p></li>
+<li><p>”tag” (str): The NER label of the mention.</p></li>
+<li><p>”sentence” (str): The input sentence.</p></li>
+<li><p>”prediction” (str): The predicted entity linking result.</p></li>
+<li><p>”ed_score” (float): The entity disambiguation score.</p></li>
+<li><p>”string_match_score” (dict): A dictionary of candidate
+entities and their string matching confidence scores.</p></li>
+<li><p>”prior_cand_score” (dict): A dictionary of candidate
+entities and their prior confidence scores.</p></li>
+<li><p>”cross_cand_score” (dict): A dictionary of candidate
+entities and their cross-candidate confidence scores.</p></li>
+<li><p>”latlon” (tuple): The latitude and longitude coordinates of
+the predicted entity.</p></li>
+<li><p>”wkdt_class” (str): The Wikidata class of the predicted
+entity.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="geoparser.pipeline.Pipeline.run_sentence">
 <span class="sig-name descname"><span class="pre">run_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sent_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('',</span> <span class="pre">'')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_wqid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postprocess_output</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">without_microtoponyms</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.pipeline.Pipeline.run_sentence" title="Permalink to this definition"></a></dt>
 <dd><p>Runs the pipeline on a single sentence.</p>
@@ -308,6 +409,65 @@ keyword, passed to <code class="docutils literal notranslate"><span class="pre">
 <a class="reference internal" href="#geoparser.pipeline.Pipeline" title="geoparser.pipeline.Pipeline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Pipeline()</span></code></a> object) <code class="docutils literal notranslate"><span class="pre">rel_params</span></code>
 parameter. See <a class="reference internal" href="linker.html#geoparser.linking.Linker" title="geoparser.linking.Linker"><code class="xref py py-class docutils literal notranslate"><span class="pre">geoparser.linking.Linker</span></code></a> for
 instructions on how to set that up.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geoparser.pipeline.Pipeline.run_text_recognition">
+<span class="sig-name descname"><span class="pre">run_text_recognition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">place</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_wqid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.pipeline.Pipeline.run_text_recognition" title="Permalink to this definition"></a></dt>
+<dd><p>Runs the NER on a text document and returns the recognised entities
+in the format required by future steps: candidate selection and
+entity disambiguation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The input text document to process.</p></li>
+<li><p><strong>place</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The place of publication associated with
+the text document as a human-legible string (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;London&quot;</span></code>). Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+<li><p><strong>place_wqid</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The Wikidata ID of the place of
+publication provided in <code class="docutils literal notranslate"><span class="pre">place</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Q84&quot;</span></code>). Defaults
+to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A list of dictionaries representing the identified toponyms
+in the sentence, in the format required by the following
+steps in the pipeline: candidate selection and entity
+disambiguation. Each dictionary contains the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mention</span></code> (str): The mention text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code> (list): List of two strings corresponding to
+the context (i.e. previous and next sentence).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">candidates</span></code> (list): List of candidates, which at this
+point will be empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gold</span></code> (list): List containing the gold standard entity,
+which is and will remain <code class="docutils literal notranslate"><span class="pre">['NONE']</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner_score</span></code> (float): The NER score of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pos</span></code> (int): The starting position of the mention in the
+sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sent_idx</span></code> (int): The index of the sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_pos</span></code> (int): The ending position of the mention in the
+sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ngram</span></code> (str): The mention text (redundant).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conf_md</span></code> (str): The NER score of the mention (redundant).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag</span></code> (str): The NER label of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code> (str): The predicted entity linking result.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sentence</span></code> (str): The input sentence.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a>]</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run_text_recognition</span></code> method runs Named Entity Recognition
+(NER) on a full text, one sentence at a time. It takes the input text
+(along with optional parameters like the place of publication
+and its related Wikidata ID) and splits it into sentences, and
+after that finds mentions for each sentence.</p>
 </div>
 </dd></dl>
 
