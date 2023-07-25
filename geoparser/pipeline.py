@@ -237,17 +237,8 @@ class Pipeline:
             candidates and ranks them, and finally links them to the Wikidata
             ID.
         """
-        # Get predictions:
-        predictions = self.myner.ner_predict(sentence)
 
-        # Process predictions:
-        procpreds = [
-            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-            for x in predictions
-        ]
-
-        # Aggregate mentions:
-        mentions = ner.aggregate_mentions(procpreds, "pred")
+        mentions = self.run_sentence_recognition(sentence)
 
         # List of mentions for the ranker:
         rmentions = []
@@ -266,23 +257,7 @@ class Pipeline:
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
         for m in mentions:
-            prediction = dict()
-            prediction["mention"] = m["mention"]
-            prediction["context"] = context
-            prediction["candidates"] = []
-            prediction["gold"] = ["NONE"]
-            prediction["ner_score"] = m["ner_score"]
-            prediction["pos"] = m["start_char"]
-            prediction["sent_idx"] = sent_idx
-            prediction["end_pos"] = m["end_char"]
-            prediction["ngram"] = m["mention"]
-            prediction["conf_md"] = m["ner_score"]
-            prediction["tag"] = m["ner_label"]
-            prediction["sentence"] = sentence
-            prediction["string_match_candidates"] = wk_cands.get(m["mention"], dict())
-            prediction["candidates"] = wk_cands.get(m["mention"], dict())
-            prediction["place"] = place
-            prediction["place_wqid"] = place_wqid
+            prediction = self.format_prediction(m, sentence, wk_cands=wk_cands, context=context, sent_idx=sent_idx, place=place, place_wqid=place_wqid)
             mentions_dataset["linking"].append(prediction)
 
         # If the linking method is "reldisamb", rank and format candidates,
@@ -533,6 +508,55 @@ class Pipeline:
 
         return document_dataset
 
+
+    def run_sentence_recognition(
+            self,
+            sentence
+    ) -> List[dict]:
+        # Get predictions:
+        predictions = self.myner.ner_predict(sentence)
+
+        # Process predictions:
+        procpreds = [
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+            for x in predictions
+        ]
+
+        # Aggregate mentions:
+        mentions = ner.aggregate_mentions(procpreds, "pred")
+        return mentions
+    
+
+    def format_prediction(self, mention,
+                          sentence: str, 
+                          wk_cands: Optional[dict] = None,
+                          context: Optional[Tuple[str, str]] = ("", ""), 
+                          sent_idx: Optional[int] = 0,
+                          place: Optional[str] = "",
+                          place_wqid: Optional[str] = ""
+    ) -> dict:
+        prediction = dict()
+        prediction["mention"] = mention["mention"]
+        prediction["context"] = context
+        prediction["candidates"] = []
+        prediction["gold"] = ["NONE"]
+        prediction["ner_score"] = mention["ner_score"]
+        prediction["pos"] = mention["start_char"]
+        prediction["sent_idx"] = sent_idx
+        prediction["end_pos"] = mention["end_char"]
+        prediction["ngram"] = mention["mention"]
+        prediction["conf_md"] = mention["ner_score"]
+        prediction["tag"] = mention["ner_label"]
+        prediction["sentence"] = sentence
+        prediction["place"] = place
+        prediction["place_wqid"] = place_wqid
+        if wk_cands:
+            prediction["string_match_candidates"] = wk_cands.get(mention["mention"], dict())
+            prediction["candidates"] = wk_cands.get(mention["mention"], dict())
+        return prediction
+
+
+
     def run_text_recognition(
         self,
         text: str,
@@ -599,35 +623,12 @@ class Pipeline:
             if idx + 1 < len(sentences):
                 context[1] = sentences[idx + 1]
 
-            # Get predictions:
-            predictions = self.myner.ner_predict(sentence)
-
-            # Process predictions:
-            procpreds = [
-                [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-                for x in predictions
-            ]
-
-            # Aggregate mentions:
-            mentions = ner.aggregate_mentions(procpreds, "pred")
+            mentions = self.run_sentence_recognition(sentence)
 
             mentions_dataset = []
             for m in mentions:
-                prediction = dict()
-                prediction["mention"] = m["mention"]
-                prediction["context"] = context
-                prediction["candidates"] = []
-                prediction["gold"] = ["NONE"]
-                prediction["ner_score"] = m["ner_score"]
-                prediction["pos"] = m["start_char"]
-                prediction["sent_idx"] = idx
-                prediction["end_pos"] = m["end_char"]
-                prediction["ngram"] = m["mention"]
-                prediction["conf_md"] = m["ner_score"]
-                prediction["tag"] = m["ner_label"]
-                prediction["sentence"] = sentence
-                prediction["place"] = place
-                prediction["place_wqid"] = place_wqid
+                prediction = self.format_prediction(m, sentence, wk_cands=None, context=context, sent_idx=idx, place=place, place_wqid=place_wqid)
+                # mentions_dataset["linking"].append(prediction)
                 if not len(m["mention"]) == 1 and not m["mention"].islower():
                     mentions_dataset.append(prediction)
 
