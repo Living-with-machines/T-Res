@@ -253,7 +253,7 @@ def create_training_set(
             fw.write(pm)
 
 
-def train_deezy_model(deezy_parameters: dict) -> None:
+def train_deezy_model(deezy_parameters: dict, strvar_parameters: dict, wikidata_to_mentions: dict) -> None:
     """
     Train a DeezyMatch model using the provided ``myranker`` parameters and
     input files.
@@ -300,6 +300,9 @@ def train_deezy_model(deezy_parameters: dict) -> None:
             )
         ).exists()
     ):
+        # Create the training set (if it already exists, it will be skipped):
+        create_training_set(deezy_parameters, strvar_parameters, wikidata_to_mentions)
+
         # Training a DeezyMatch model
         dm_train(
             input_file_path=input_file_path,
