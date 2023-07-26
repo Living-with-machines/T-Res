@@ -47,12 +47,7 @@ def test_load_data():
         train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
-        },
+        training_args=dict(),
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
         load_from_hub=False,
@@ -62,8 +57,6 @@ def test_load_data():
     myranker = ranking.Ranker(
         method="perfectmatch",
         resources_path="resources/wikidata/",
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
     )
 
     # --------------------------------------
@@ -71,9 +64,6 @@ def test_load_data():
     mylinker = linking.Linker(
         method="mostpopular",
         resources_path="resources/",
-        linking_resources=dict(),
-        rel_params=dict(),
-        overwrite_training=False,
     )
 
     myner.train()
@@ -96,7 +86,7 @@ def test_load_data():
         mylinker=mylinker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
-        test_split="dev",  # "dev" while experimenting, "test" when running final experiments.
+        test_split="test",  # "dev" while experimenting, "test" when running final experiments.
         rel_experiments=False,  # False if we're not interested in running the different experiments with REL, True otherwise.
     )
 
@@ -136,8 +126,6 @@ def test_wrong_ranker_method():
         # wrong naming: it should be perfectmatch
         method="perfect_match",
         resources_path="resources/wikidata/",
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
     )
 
     exp = experiment.Experiment(
@@ -162,12 +150,7 @@ def test_apply():
         train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
-        },
+        training_args=dict(),
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
         load_from_hub=False,
@@ -177,8 +160,6 @@ def test_apply():
     myranker = ranking.Ranker(
         method="perfectmatch",
         resources_path="resources/wikidata/",
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
     )
 
     # --------------------------------------
@@ -186,9 +167,6 @@ def test_apply():
     mylinker = linking.Linker(
         method="mostpopular",
         resources_path="resources/",
-        linking_resources=dict(),
-        rel_params=dict(),
-        overwrite_training=False,
     )
 
     myner.train()

@@ -1,32 +1,69 @@
 import json
 import os
+import sqlite3
 import sys
 from array import array
 from ast import literal_eval
+from typing import Any, List, Literal, Optional
 
 import numpy as np
+import pandas as pd
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
+from geoparser import ranking
 
 RANDOM_SEED = 42
+"""Constant representing the random seed used for generating pseudo-random
+numbers.
+
+The `RANDOM_SEED` is a value that initializes the random number generator
+algorithm, ensuring that the sequence of random numbers generated remains the
+same across different runs of the program. This is useful for achieving
+reproducibility in experiments or when consistent random behavior is
+desired.
+
+..
+    If this docstring is changed, also make sure to edit prepare_data.py,
+    linking.py, entity_disambiguation.py.
+"""
 np.random.seed(RANDOM_SEED)
 
 
-def get_db_emb(cursor, mentions, embtype):
+def get_db_emb(
+    cursor: sqlite3.Cursor,
+    mentions: List[str],
+    embtype: Literal["word", "entity", "snd"],
+) -> List[Optional[np.ndarray]]:
     """
-    This function returns the wikipedi2vec embedding for a given
-    entity or word. If it is an entity, the prefix "ENTITY/" is
-    preappended. If it is a word, the string is lowercased.
+    Retrieve Wikipedia2Vec embeddings for a given list of words or entities.
 
     Arguments:
-        cursor: The cursor with the open connection to the wikipedia2vec db.
-        mentions: The list of words or entitys whose embeddings to extract.
-        embtype: A string, either "word", "entity" or "snd". If "word", we
-            use wikipedia2vec word embeddings; if "entity, we use wikipedia2vec
-            entity embeddings; if "glove", we use glove word embeddings.
+        cursor: The cursor with the open connection to the Wikipedia2Vec
+            database.
+        mentions (List[str]): The list of words or entities whose embeddings to
+            extract.
+        embtype (Literal["word", "entity", "snd"]): The type of embedding to
+            retrieve. Possible values are ``"word"``, ``"entity"``, or
+            ``"snd"``. If it is set to ``"word"`` or ``"snd"``, we use
+            Wikipedia2Vec word embeddings, if it is set to ``"entity"``, we
+            use Wikipedia2Vec entity embeddings.
 
     Returns:
-        obtained_embedding: A list of arrays (or None) with the embedding.
+        List[Optional[np.ndarray]]:
+            A list of arrays (or ``None``) representing the embeddings for the
+            given mentions.
+
+    Note:
+        - The embeddings are extracted from the Wikipedia2Vec database using
+          the provided cursor.
+        - If the mention is an entity, the prefix ``ENTITY/`` is preappended to
+          the mention before querying the database.
+        - If the mention is a word, the string is converted to lowercase
+          before querying the database.
+        - If an embedding is not found for a mention, the corresponding
+          element in the returned list is set to None.
+        - Differently from the original REL implementation, we use Wikipedia2vec
+          embeddings both for ``"word"`` and ``"snd"``.
     """
 
     results = []
@@ -52,14 +89,19 @@ def get_db_emb(cursor, mentions, embtype):
     return results
 
 
-def eval_with_exception(str2parse, in_case=""):
+def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
     """
-    Given a string in the form or a list or dictionary, parse it
-    to read it as such.
+    Parse a string in the form of a list or dictionary.
 
     Arguments:
-        str2parse (str): the string to parse.
-        in_case (str): what should be returned in case of error.
+        str2parse (str): The string to parse.
+        in_case (str, optional): The value to return in case of an error.
+            Default is ``""``.
+
+    Returns:
+        Any
+            The parsed value if successful, or the specified value in case of
+            an error.
     """
     try:
         return literal_eval(str2parse)
@@ -67,25 +109,24 @@ def eval_with_exception(str2parse, in_case=""):
         return in_case
 
 
-def prepare_initial_data(df, context_len=100):
+def prepare_initial_data(df: pd.DataFrame) -> dict:
     """
-    This function takes a dataframe (as processed by the
-    experiments/prepare_data.py script) and generates the
-    equivalent json needed to train a REL model.
+    Generate the initial JSON data needed to train a REL model from a
+    DataFrame.
 
-    Args:
+    Arguments:
         df: The dataframe containing the linking training data.
-        context_len: The maximum number of words in the left
-            and right contexts of the sentence where the target
-            mention is.
 
     Returns:
-        dict_mentions: a dictionary in which the article id is the
-            key, and whose values are a list of dictionaries, each
-            containing information about a mention. At this point,
-            the mention dictionaries do not yet have the "gold"
-            field (the gold standard Wikipedia title) or the selected
-            candidates.
+        dict:
+            A dictionary with article IDs as keys and a list of mention
+            dictionaries as values. Each mention dictionary contains
+            information about a mention, excluding the "gold" field and
+            candidates (at this point).
+
+    Note:
+        The DataFrame passed to this function can be generated by the
+        ``experiments/prepare_data.py`` script.
     """
     dict_mentions = dict()
     for i, row in df.iterrows():
@@ -136,7 +177,20 @@ def prepare_initial_data(df, context_len=100):
     return dict_mentions
 
 
-def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
+def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) -> dict:
+    """
+    Rank the candidates for each mention in the provided JSON data.
+
+    Arguments:
+        rel_json (dict): The JSON data containing articles and mention
+            information.
+        wk_cands (dict): Dictionary of Wikidata candidates for each mention.
+        mentions_to_wikidata (dict): Dictionary mapping mentions to Wikidata
+            entities.
+
+    Returns:
+        dict: A new JSON dictionary with ranked candidates for each mention.
+    """
     new_json = dict()
     for article in rel_json:
         new_json[article] = []
@@ -177,9 +231,22 @@ def rank_candidates(rel_json, wk_cands, mentions_to_wikidata):
     return new_json
 
 
-def add_publication(rel_json, publname="", publwqid=""):
+def add_publication(
+    rel_json: dict, publname: Optional[str] = "", publwqid: Optional[str] = ""
+) -> dict:
     """
-    TO DO.
+    Add publication information to the provided JSON data.
+
+    Arguments:
+        rel_json (dict): The JSON data containing articles and mention
+            information.
+        publname (str, optional): The name of the publication. Defaults to an
+            empty string.
+        publwqid (str, optional): The Wikidata ID of the publication. Defaults
+            to an empty string.
+
+    Returns:
+        dict: A new JSON dictionary with the added publication information.
     """
     new_json = rel_json.copy()
     for article in rel_json:
@@ -208,27 +275,45 @@ def add_publication(rel_json, publname="", publwqid=""):
     return new_json
 
 
-def prepare_rel_trainset(df, mylinker, myranker, dsplit):
+def prepare_rel_trainset(
+    df: pd.DataFrame,
+    rel_params,
+    mentions_to_wikidata,
+    myranker: ranking.Ranker,
+    dsplit: str,
+) -> dict:
     """
-    This function takes as input the data prepared for linking, plus
-    a Linking and Ranking objects. It prepares the data in the format
-    that is required to train and test a REL disambiguation model,
-    using the candidates from our ranker.
+    Prepare the data for training and testing a REL disambiguation model.
+
+    This function takes as input a pandas DataFrame (`df`) containing the
+    dataset generated in the ``experiments/prepare_data.py`` script, along
+    with a Linking object (``mylinker``) and a Ranking object (``myranker``).
+    It prepares the data in the format required to train and test a REL
+    disambiguation model, using the candidates from the ranker.
 
     Arguments:
-        df: a pandas dataframe containing the dataset generated in
-            the `experiments/prepare_data.py` script.
-        mylinker: a Linking object.
-        myranker: a Ranking object.
+        df (pandas.DataFrame): The pandas DataFrame containing the prepared
+            dataset.
+        rel_params (dict): Dictionary containing the parameters for performing
+            entity disambiguation using the ``reldisamb`` approach.
+        mentions_to_wikidata (dict): Dictionary mapping mentions to Wikidata
+            entities, with counts.
+        myranker (geoparser.ranking.Ranker): The Ranking object.
+        dsplit (str): The split identifier for the data (e.g., ``"train"``,
+            ``"test"``).
 
-    This function stores the dataset formatted as a json.
+    Returns:
+        dict: The prepared data in the format of a JSON dictionary.
+
+    Note:
+        This function stores the formatted dataset as a JSON file.
     """
-    rel_json = prepare_initial_data(df, mylinker.rel_params["context_length"])
+    rel_json = prepare_initial_data(df)
 
     # Get unique mentions, to run them through the ranker:
     all_mentions = []
     for article in rel_json:
-        if mylinker.rel_params["without_microtoponyms"]:
+        if rel_params["without_microtoponyms"]:
             all_mentions += [
                 y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"
             ]
@@ -243,20 +328,20 @@ def prepare_rel_trainset(df, mylinker, myranker, dsplit):
     rel_json = rank_candidates(
         rel_json,
         wk_cands,
-        mylinker.linking_resources["mentions_to_wikidata"],
+        mentions_to_wikidata,
     )
     # If "publ" is taken into account for the disambiguation, add the place
     # of publication as an additional already disambiguated entity per row:
-    if mylinker.rel_params["with_publication"] == True:
+    if rel_params["with_publication"] == True:
         rel_json = add_publication(
             rel_json,
-            mylinker.rel_params["default_publname"],
-            mylinker.rel_params["default_publwqid"],
+            rel_params["default_publname"],
+            rel_params["default_publwqid"],
         )
 
     ## TO DO
     with open(
-        os.path.join(mylinker.rel_params["data_path"], "rel_{}.json").format(dsplit),
+        os.path.join(rel_params["data_path"], "rel_{}.json").format(dsplit),
         "w",
     ) as f:
         json.dump(rel_json, f)

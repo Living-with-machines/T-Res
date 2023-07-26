@@ -1,16 +1,12 @@
 import os
 import sqlite3
 import sys
-from array import array
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 # Add "../" to path to import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
-import sqlite3
-
 from geoparser import linking, pipeline, ranking, recogniser
 from utils import rel_utils
 from utils.REL import entity_disambiguation
@@ -52,7 +48,7 @@ def test_prepare_initial_data():
     df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
     ).iloc[:1]
-    parsed_doc = rel_utils.prepare_initial_data(df, context_len=100)
+    parsed_doc = rel_utils.prepare_initial_data(df)
     assert parsed_doc["4939308_1"][0]["mention"] == "STALYBRIDGE"
     assert parsed_doc["4939308_1"][0]["gold"][0] == "Q1398653"
     assert parsed_doc["4939308_6"][1]["mention"] == "Market-street"
@@ -68,10 +64,10 @@ def test_train():
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -101,9 +97,8 @@ def test_train():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -121,7 +116,6 @@ def test_train():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": False,
                 "without_microtoponyms": True,
@@ -158,7 +152,7 @@ def test_train():
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6583541147132169
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
 
 
 def test_load_eval_model():
@@ -170,10 +164,10 @@ def test_load_eval_model():
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -203,9 +197,8 @@ def test_load_eval_model():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -224,7 +217,6 @@ def test_load_eval_model():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "topn_candidates": 10,
                 "db_embeddings": cursor,
                 "with_publication": False,
@@ -304,9 +296,8 @@ def test_predict():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -324,7 +315,6 @@ def test_predict():
                 "model_path": "resources/models/disambiguation/",
                 "data_path": "experiments/outputs/data/lwm/",
                 "training_split": "originalsplit",
-                "context_length": 100,
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "without_microtoponyms": True,

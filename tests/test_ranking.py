@@ -32,8 +32,6 @@ def test_perfect_match():
     myranker = ranking.Ranker(
         method="perfectmatch",
         resources_path="resources/wikidata/",
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
     )
     myranker.mentions_to_wikidata = myranker.load_resources()
     candidates, already_collected_cands = myranker.perfect_match(["London"])
@@ -53,8 +51,6 @@ def test_damlev():
     myranker = ranking.Ranker(
         method="partialmatch",
         resources_path="resources/wikidata/",
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
     )
     score = myranker.damlev_dist("Lvndon", {"mentions": "London"})
     assert score == 0.8333333283662796
@@ -320,9 +316,8 @@ def test_deezy_candidate_ranker():
         "dm_output": "deezymatch_on_the_fly",
         # Ranking measures:
         "ranking_metric": "faiss",
-        "selection_threshold": 25,
-        "num_candidates": 3,
-        "search_size": 3,
+        "selection_threshold": 50,
+        "num_candidates": 1,
         "verbose": False,
         # DeezyMatch training:
         "overwrite_training": False,
@@ -342,7 +337,7 @@ def test_deezy_candidate_ranker():
         ranking_metric=deezy_parameters["ranking_metric"],
         selection_threshold=deezy_parameters["selection_threshold"],
         num_candidates=deezy_parameters["num_candidates"],
-        search_size=deezy_parameters["search_size"],
+        search_size=deezy_parameters["num_candidates"],
         verbose=deezy_parameters["verbose"],
         output_path=os.path.join(dm_path, "ranking", dm_output),
         pretrained_model_path=os.path.join(

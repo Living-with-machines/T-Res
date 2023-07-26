@@ -18,6 +18,11 @@ dApprNames["rel_end_to_end_api"] = "rel-api"
 dApprNames["rel_wiki2019_aida"] = "rel-19aida"
 dApprNames["rel_wikilwm_lwm_locs"] = "rel-19lwmlocs"
 
+# Comment out one of the two following lines, to evaluate
+# end_to_end or entity-linking-only:
+# end_to_end_suffix = "end_to_end/"
+end_to_end_suffix = ""
+
 
 # -------------------------------------
 # CREATE TEMPORARY RESULTS FOLDER
@@ -39,12 +44,11 @@ true_files = []
 approach_names = []
 for dataset in datasets:
     for granularity in granularities:
-        if dataset == "hipe" and granularity == "fine":
-            continue
         for ner_model in ner_models:
             # String in common in pred and true filenames:
             filename_common_str = (
                 "../experiments/outputs/results/"
+                + end_to_end_suffix
                 + dataset
                 + "/ner_"
                 + ner_model
@@ -75,6 +79,7 @@ for dataset in datasets:
             for rel_approach in dApprNames.keys():
                 pred_file = (
                     "../experiments/outputs/results/"
+                    + end_to_end_suffix
                     + dataset
                     + "/"
                     + rel_approach
@@ -87,6 +92,7 @@ for dataset in datasets:
                 )
                 true_file = (
                     "../experiments/outputs/results/"
+                    + end_to_end_suffix
                     + dataset
                     + "/ner_"
                     + ner_model
@@ -105,8 +111,8 @@ for dataset in datasets:
 
 # -------------------------
 # Produce results for the selected files:
-ne_tag = "ALL"
-settings = ["strict", "partial", "exact"]
+ne_tags = ["ALL", "LOC", "STREET", "BUILDING"]
+settings = ["strict", "partial", "exact", "ent_type"]
 measures = ["P_micro", "R_micro", "F1_micro"]
 df_ner = pd.DataFrame()
 overall_results_nerc = dict()
@@ -128,26 +134,31 @@ for i in range(len(pred_files)):
         )
 
         # Produce results table:
-        overall_results_nerc["ner_method"] = [approach_fullname]
-        for setting in settings:
-            for measure in measures:
-                if (
-                    # Using REL, if dataset is LwM, "strict" is not fair,
-                    # because the tagsets are different.
-                    approach_fullname.split("-")[2] == "rel"
-                    and approach_fullname.split("-")[0] == "lwm"
-                    and setting == "strict"
-                ) or (
-                    # If granularity is "coarse", if dataset is LwM, "strict"
-                    # is not fair, because again the tagsets are different.
-                    "-coarse-" in approach_fullname
-                    and approach_fullname.split("-")[0] == "lwm"
-                    and setting == "strict"
-                ):
-                    overall_results_nerc[
-                        setting.replace("_", "") + ":" + measure.split("_")[0]
-                    ] = "---"
-                else:
+        for ne_tag in ne_tags:
+            if (
+                "hipe" in approach_fullname or "rel" in approach_fullname
+            ) and ne_tag != "LOC":
+                continue
+            overall_results_nerc["ner_method"] = [approach_fullname + "-" + ne_tag]
+            for setting in settings:
+                for measure in measures:
+                    # if (
+                    #     # Using REL, if dataset is LwM, "strict" is not fair,
+                    #     # because the tagsets are different.
+                    #     approach_fullname.split("-")[2] == "rel"
+                    #     and approach_fullname.split("-")[0] == "lwm"
+                    #     and setting == "strict"
+                    # ) or (
+                    #     # If granularity is "coarse", if dataset is LwM, "strict"
+                    #     # is not fair, because again the tagsets are different.
+                    #     "-coarse-" in approach_fullname
+                    #     and approach_fullname.split("-")[0] == "lwm"
+                    #     and setting == "strict"
+                    # ):
+                    #     overall_results_nerc[
+                    #         setting.replace("_", "") + ":" + measure.split("_")[0]
+                    #     ] = "---"
+                    # else:
                     overall_results_nerc[
                         setting.replace("_", "") + ":" + measure.split("_")[0]
                     ] = round(
@@ -156,7 +167,7 @@ for i in range(len(pred_files)):
                         ][measure],
                         3,
                     )
-        df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
+            df_ner = df_ner.append(pd.DataFrame(overall_results_nerc))
     except FileNotFoundError:
         print("File does not exist.")
 
@@ -174,7 +185,7 @@ datasets = ["lwm", "hipe"]
 ner_approaches = ["blb_lwm-ner"]
 ranking_approaches = [
     "perfectmatch",
-    "deezymatch+3+25",
+    "deezymatch+1+50",
 ]
 linking_approaches = [
     "skys",
@@ -216,6 +227,7 @@ for dataset in datasets:
                     for granularity in granularities:
                         pred = (
                             "../experiments/outputs/results/"
+                            + end_to_end_suffix
                             + dataset
                             + "/linking_"
                             + ner_approach
@@ -231,6 +243,7 @@ for dataset in datasets:
                         )
                         true = (
                             "../experiments/outputs/results/"
+                            + end_to_end_suffix
                             + dataset
                             + "/linking_"
                             + ner_approach
@@ -266,6 +279,7 @@ for dataset in datasets:
                 for split in splits:
                     pred_file = (
                         "../experiments/outputs/results/"
+                        + end_to_end_suffix
                         + dataset
                         + "/"
                         + rel_approach
@@ -279,6 +293,7 @@ for dataset in datasets:
                     )
                     true_file = (
                         "../experiments/outputs/results/"
+                        + end_to_end_suffix
                         + dataset
                         + "/linking_"
                         + ner_approach
@@ -319,7 +334,7 @@ for i in range(len(pred_files)):
         )
 
         ne_tags = ["ALL"]
-        settings = ["ent_type"]  # ["strict", "ent_type"]
+        settings = ["strict"]
         measures = ["P_micro", "R_micro", "F1_micro"]
 
         overall_results_nel["dataset:approach"] = [str(i) + " > " + approach_fullname]
