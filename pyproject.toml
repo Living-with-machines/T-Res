@@ -34,6 +34,10 @@ fastapi = "^0.87.0"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
 ipykernel = "^6.21.3"
 python-levenshtein = "^0.20.9"
+Sphinx = { version = "4.2.0", optional = true }
+sphinx-rtd-theme = { version = "1.0.0", optional = true }
+sphinxcontrib-napoleon = { version = "0.7", optional = true }
+torch = "1.13.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -53,3 +57,6 @@ include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
+
+[tool.poetry.extras]
+docs = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-napoleon"]
