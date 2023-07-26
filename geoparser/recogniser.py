@@ -39,7 +39,7 @@ class Recogniser:
         model_path (str, optional): Path to store the trained model
             (default: ``""``).
         training_args (dict, optional): Additional fine-tuning training
-            arguments (default: {"batch_size": 4, "num_train_epochs": 5,
+            arguments (default: {"batch_size": 8, "num_train_epochs": 10,
             "learning_rate": 0.00005, "weight_decay": 0.0}``, a dictionary).
         overwrite_training (bool, optional):  Whether to overwrite an existing
             trained model (default: ``False``).
@@ -57,8 +57,8 @@ class Recogniser:
                 base_model="bert-base-uncased",
                 model_path="/path/to/model/",
                 training_args={
-                    "batch_size": 4,
-                    "num_train_epochs": 5,
+                    "batch_size": 8,
+                    "num_train_epochs": 10,
                     "learning_rate": 0.00005,
                     "weight_decay": 0.0,
                     },
@@ -88,8 +88,8 @@ class Recogniser:
         base_model: Optional[str] = "",
         model_path: Optional[str] = "",
         training_args: Optional[dict] = {
-            "batch_size": 4,
-            "num_train_epochs": 5,
+            "batch_size": 8,
+            "num_train_epochs": 10,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },

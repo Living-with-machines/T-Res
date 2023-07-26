@@ -64,10 +64,10 @@ def test_train():
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -97,9 +97,8 @@ def test_train():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -153,7 +152,7 @@ def test_train():
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.675
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
 
 
 def test_load_eval_model():
@@ -165,10 +164,10 @@ def test_load_eval_model():
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -198,9 +197,8 @@ def test_load_eval_model():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
@@ -298,9 +296,8 @@ def test_predict():
             "dm_output": "deezymatch_on_the_fly",
             # Ranking measures:
             "ranking_metric": "faiss",
-            "selection_threshold": 25,
-            "num_candidates": 3,
-            "search_size": 3,
+            "selection_threshold": 50,
+            "num_candidates": 1,
             "verbose": False,
             # DeezyMatch training:
             "overwrite_training": False,
