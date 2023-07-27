@@ -47,21 +47,8 @@ class Pipeline:
           .. code-block:: python
 
             recogniser.Recogniser(
-                model="blb_lwm-ner-fine",
-                pipe=None,
-                base_model="khosseini/bert_1760_1900",
-                train_dataset="../experiments/outputs/data/lwm/ner_fine_train.json",
-                test_dataset="../experiments/outputs/data/lwm/ner_fine_dev.json",
-                model_path="../resources/models/",
-                training_args={
-                    "learning_rate": 5e-5,
-                    "batch_size": 16,
-                    "num_train_epochs": 4,
-                    "weight_decay": 0.01,
-                },
-                overwrite_training=False,
-                do_test=False,
-                load_from_hub=False,
+                model="Livingwithmachines/toponym-19thC-en",
+                load_from_hub=True,
             )
 
         * The default settings for the ``Ranker``:
@@ -99,23 +86,9 @@ class Pipeline:
 
         # If myner is None, instantiate the default Recogniser.
         if not self.myner:
-            dataset_path = "../experiments/outputs/data/lwm"
             self.myner = recogniser.Recogniser(
-                model="blb_lwm-ner-fine",
-                pipe=None,
-                base_model="khosseini/bert_1760_1900",
-                train_dataset=f"{dataset_path}/ner_fine_train.json",
-                test_dataset=f"{dataset_path}/ner_fine_dev.json",
-                model_path="../resources/models/",
-                training_args={
-                    "learning_rate": 5e-5,
-                    "batch_size": 16,
-                    "num_train_epochs": 4,
-                    "weight_decay": 0.01,
-                },
-                overwrite_training=False,
-                do_test=False,
-                load_from_hub=False,
+                model="Livingwithmachines/toponym-19thC-en",
+                load_from_hub=True,
             )
 
         # If myranker is None, instantiate the default Ranker.
@@ -257,7 +230,15 @@ class Pipeline:
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
         for m in mentions:
-            prediction = self.format_prediction(m, sentence, wk_cands=wk_cands, context=context, sent_idx=sent_idx, place=place, place_wqid=place_wqid)
+            prediction = self.format_prediction(
+                m,
+                sentence,
+                wk_cands=wk_cands,
+                context=context,
+                sent_idx=sent_idx,
+                place=place,
+                place_wqid=place_wqid,
+            )
             mentions_dataset["linking"].append(prediction)
 
         # If the linking method is "reldisamb", rank and format candidates,
@@ -508,11 +489,7 @@ class Pipeline:
 
         return document_dataset
 
-
-    def run_sentence_recognition(
-            self,
-            sentence
-    ) -> List[dict]:
+    def run_sentence_recognition(self, sentence) -> List[dict]:
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
 
@@ -525,15 +502,16 @@ class Pipeline:
         # Aggregate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
         return mentions
-    
 
-    def format_prediction(self, mention,
-                          sentence: str, 
-                          wk_cands: Optional[dict] = None,
-                          context: Optional[Tuple[str, str]] = ("", ""), 
-                          sent_idx: Optional[int] = 0,
-                          place: Optional[str] = "",
-                          place_wqid: Optional[str] = ""
+    def format_prediction(
+        self,
+        mention,
+        sentence: str,
+        wk_cands: Optional[dict] = None,
+        context: Optional[Tuple[str, str]] = ("", ""),
+        sent_idx: Optional[int] = 0,
+        place: Optional[str] = "",
+        place_wqid: Optional[str] = "",
     ) -> dict:
         prediction = dict()
         prediction["mention"] = mention["mention"]
@@ -551,11 +529,11 @@ class Pipeline:
         prediction["place"] = place
         prediction["place_wqid"] = place_wqid
         if wk_cands:
-            prediction["string_match_candidates"] = wk_cands.get(mention["mention"], dict())
+            prediction["string_match_candidates"] = wk_cands.get(
+                mention["mention"], dict()
+            )
             prediction["candidates"] = wk_cands.get(mention["mention"], dict())
         return prediction
-
-
 
     def run_text_recognition(
         self,
@@ -627,7 +605,15 @@ class Pipeline:
 
             mentions_dataset = []
             for m in mentions:
-                prediction = self.format_prediction(m, sentence, wk_cands=None, context=context, sent_idx=idx, place=place, place_wqid=place_wqid)
+                prediction = self.format_prediction(
+                    m,
+                    sentence,
+                    wk_cands=None,
+                    context=context,
+                    sent_idx=idx,
+                    place=place,
+                    place_wqid=place_wqid,
+                )
                 # mentions_dataset["linking"].append(prediction)
                 if not len(m["mention"]) == 1 and not m["mention"].islower():
                     mentions_dataset.append(prediction)

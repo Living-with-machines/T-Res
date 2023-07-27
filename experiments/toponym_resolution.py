@@ -59,10 +59,10 @@ for exp_param in experiments:
         + granularity
         + "_dev.json",  # Path to the json file containing the test set (see note above).
         pipe=None,  # We'll store the NER pipeline here, leave this empty.
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune for NER. The value can be: either
+        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune for NER. The value can be: either
         # your local path to a model or the huggingface path.
         # In this case, we use the huggingface path:
-        # https://huggingface.co/khosseini/bert_1760_1900). You can
+        # https://huggingface.co/Livingwithmachines/bert_1760_1900). You can
         # chose any other model from the HuggingFace hub, as long as it's
         # trained on the "Fill-Mask" objective (filter by task).
         model_path="../resources/models/",  # Path where the NER model will be stored.
