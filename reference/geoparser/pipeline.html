@@ -125,8 +125,21 @@ For the default settings, see Notes below.</p></li>
 <ul>
 <li><p>The default settings for the <code class="docutils literal notranslate"><span class="pre">Recogniser</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Livingwithmachines/toponym-19thC-en&quot;</span><span class="p">,</span>
-    <span class="n">load_from_hub</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;blb_lwm-ner-fine&quot;</span><span class="p">,</span>
+    <span class="n">pipe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">base_model</span><span class="o">=</span><span class="s2">&quot;khosseini/bert_1760_1900&quot;</span><span class="p">,</span>
+    <span class="n">train_dataset</span><span class="o">=</span><span class="s2">&quot;../experiments/outputs/data/lwm/ner_fine_train.json&quot;</span><span class="p">,</span>
+    <span class="n">test_dataset</span><span class="o">=</span><span class="s2">&quot;../experiments/outputs/data/lwm/ner_fine_dev.json&quot;</span><span class="p">,</span>
+    <span class="n">model_path</span><span class="o">=</span><span class="s2">&quot;../resources/models/&quot;</span><span class="p">,</span>
+    <span class="n">training_args</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">5e-5</span><span class="p">,</span>
+        <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">do_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">load_from_hub</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
