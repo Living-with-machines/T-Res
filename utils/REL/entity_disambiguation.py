@@ -2,7 +2,6 @@ import json
 import os
 import pickle
 import random
-import re
 import sys
 import time
 from pathlib import Path
@@ -13,7 +12,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
 from torch.autograd import Variable
 
 sys.path.insert(0, os.path.abspath(os.path.pardir))
@@ -22,17 +20,57 @@ from utils import rel_utils
 from utils.REL.mulrel_ranker import MulRelRanker, PreRank
 from utils.REL.vocabulary import Vocabulary
 
-"""
-Parent Entity Disambiguation class that directs the various subclasses used
-for the ED step.
-"""
-
 RANDOM_SEED = 42
+"""Constant representing the random seed used for generating pseudo-random
+numbers.
+
+The `RANDOM_SEED` is a value that initializes the random number generator
+algorithm, ensuring that the sequence of random numbers generated remains the
+same across different runs of the program. This is useful for achieving
+reproducibility in experiments or when consistent random behavior is
+desired.
+
+..
+    If this docstring is changed, also make sure to edit prepare_data.py,
+    linking.py, rel_utils.py.
+"""
 random.seed(RANDOM_SEED)
 
 
 class EntityDisambiguation:
+    """
+    EntityDisambiguation is a class that performs entity disambiguation, which
+    is the task of resolving entity mentions in text to their corresponding
+    entities in a knowledge base. It trains a model if it does not exist
+    and uses the trained model to predict the most likely entity for each
+    mention.
+
+    This class uses a deep learning architecture, specifically the
+    :py:class:`~utils.REL.mulrel_ranker.MulRelRanker` model, for entity
+    disambiguation.
+
+    Credit:
+        This class and its methods are adapted from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github repository.
+
+        ::
+
+            Reference:
+
+            @inproceedings{vanHulst:2020:REL,
+            author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+            title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+            booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+            series =    {SIGIR '20},
+            year =      {2020},
+            publisher = {ACM}
+            }
+    """
+
     def __init__(self, db_embs, user_config, reset_embeddings=False):
+        """
+        Initialises an EntityDisambiguation object.
+        """
         self.embeddings = {}
         self.config = self.__get_config(user_config)
 
@@ -95,7 +133,8 @@ class EntityDisambiguation:
         """
         User configuration that may overwrite default settings.
 
-        :return: configuration used for ED.
+        Returns:
+            dict: The configuration used for entity disambiguation.
         """
 
         default_config: Dict[str, Any] = {
@@ -136,8 +175,13 @@ class EntityDisambiguation:
 
     def __load_embeddings(self):
         """
-        Initialised embedding dictionary and creates #UNK# token for respective embeddings.
-        :return: -
+        This method initializes and loads the embeddings for different tokens
+        and entities (``snd``, ``entity``, and ``word``). It also adds the
+        unknown token to the vocabulary and retrieves the corresponding embedding
+        from the database.
+
+        Returns:
+            None
         """
         self.__batch_embs = {}
 
@@ -158,9 +202,10 @@ class EntityDisambiguation:
 
     def train(self, org_train_dataset, org_dev_dataset):
         """
-        Responsible for training the ED model.
+        Trains the entity disambiguation model.
 
-        :return: -
+        Returns:
+            None.
         """
 
         train_dataset = self.get_data_items(org_train_dataset, "train", predict=False)
@@ -323,6 +368,10 @@ class EntityDisambiguation:
         self.best_performance = {"f1": best_f1, "p": best_p, "r": best_r}
 
     def __create_dataset_LR(self, dataset, predictions):
+        """
+        Creates a dataset for logistic regression, to estimate posterior
+        probabilities of the linked entities.
+        """
         X = []
         y = []
         meta = []
@@ -348,10 +397,12 @@ class EntityDisambiguation:
 
     def train_LR(self, train_json, dev_json, model_path_lr):
         """
-        Function that applies LR in an attempt to get confidence scores. Recall should be high,
-        because if it is low than we would have ignored a corrrect entity.
+        Function that applies LR to get confidence scores for the
+        disambiguated entities. Recall should be high, because if
+        it is low than we would have ignored a corrrect entity.
 
-        :return: -
+        Returns:
+            None
         """
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
@@ -375,10 +426,10 @@ class EntityDisambiguation:
 
     def predict(self, data):
         """
-        Parent function responsible for predicting on any raw text as input. This does not require ground
-        truth entities to be present.
+        Performs entity disambiguation on the given data. It does not require
+        ground truth entities to be present.
 
-        :return: predictions and time taken for the ED step.
+        Returns: Predictions and time taken for the ED step.
         """
         data = self.get_data_items(data, "raw", predict=True)
         predictions, timing = self.__predict(data, include_timing=True, eval_raw=True)
@@ -387,15 +438,14 @@ class EntityDisambiguation:
 
     def normalize_scores(self, scores):
         """
-        Normalizes a list of scores between 0 and 1 by rescaling them and computing their ratio over their sum.
-
-        Args:
-            scores (list): A list of numerical scores.
+        Normalizes a list of scores between 0 and 1 by rescaling them and
+        computing their ratio over their sum.
 
         Returns:
-            list: A list of normalized scores where each score is the ratio of the rescaled score over their sum.
+            List[float]:
+                A list of normalized scores where each score is the ratio of
+                the rescaled score over their sum.
         """
-
         min_score = min(scores)
         max_score = max(scores)
         if min_score == max_score:
@@ -415,23 +465,32 @@ class EntityDisambiguation:
 
     def __compute_cross_cand_confidence(self, scores):
         """
-        This function takes a series of numpy arrays of scores and returns a list of lists of confidence scores.
+        This function takes a series of numpy arrays of scores and returns
+        a list of lists of confidence scores.
 
-        Args:
+        Arguments:
             scores (numpy.ndarray): A numpy array of scores.
 
         Returns:
-            list: A list of lists of confidence scores.
+            List[List[float]]: A list of lists of confidence scores.
         """
-
         normalised_scores = [self.normalize_scores(score) for score in scores]
         return normalised_scores
 
     def __compute_confidence(self, scores, preds):
         """
-        Uses LR to find confidence scores for given ED outputs.
+        Computes confidence scores for the given entity disambiguation outputs
+        using logistic regression.
 
-        :return:
+        Arguments:
+            scores: The prediction scores for each candidate entity.
+            preds: The predicted entities corresponding to the prediction
+                scores.
+
+        Returns:
+            List[float]:
+                A list of confidence scores for each entity disambiguation
+                output.
         """
         X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
         if self.model_lr:
@@ -445,9 +504,8 @@ class EntityDisambiguation:
         """
         Uses the trained model to make predictions of individual batches (i.e. documents).
 
-        :return: predictions and time taken for the ED step.
+        Returns: Predictions and time taken for the ED step
         """
-
         predictions = {items[0]["doc_name"]: [] for items in data}
         self.model.eval()
 
@@ -629,8 +687,10 @@ class EntityDisambiguation:
 
     def prerank(self, dataset, dname, predict=False):
         """
-        Responsible for preranking the set of possible candidates using both context and p(e|m) scores.
-        :return: dataset with, by default, max 3 + 4 candidates per mention.
+        Responsible for preranking the set of possible candidates using both
+        context and p(e|m) scores.
+
+        Returns: Dataset with, by default, max 3 + 4 candidates per mention.
         """
         new_dataset = []
         has_gold = 0
@@ -750,11 +810,12 @@ class EntityDisambiguation:
 
     def __update_embeddings(self, emb_name, embs):
         """
-        Responsible for updating the dictionaries with their respective word, entity and snd (GloVe) embeddings.
+        Responsible for updating the dictionaries with their respective word,
+        entity and snd embeddings.
 
-        :return: -
+        Returns:
+            None
         """
-
         embs = embs.to(self.device)
 
         if self.embeddings["{}_embeddings".format(emb_name)]:
@@ -787,7 +848,8 @@ class EntityDisambiguation:
         """
         Responsible for retrieving embeddings using the given sqlite3 database.
 
-        :return: -
+        Returns:
+            None.
         """
         embs = rel_utils.get_db_emb(self.db_embs, words_filt, name)
 
@@ -801,9 +863,10 @@ class EntityDisambiguation:
 
     def get_data_items(self, dataset, dname, predict=False):
         """
-        Responsible for formatting dataset. Triggers the preranking function.
+        Responsible for formatting the dataset. Triggers the preranking function.
 
-        :return: preranking function.
+        Returns:
+            Preranking function.
         """
 
         data = []
@@ -997,8 +1060,9 @@ class EntityDisambiguation:
                 )
 
             if len(items) > 0:
-                # note: this shouldn't affect the order of prediction because we use doc_name to add predicted entities,
-                # and we don't shuffle the data for prediction
+                # note: this shouldn't affect the order of prediction because
+                # we use doc_name to add predicted entities, and we don't
+                # shuffle the data for prediction
                 if len(items) > 100:
                     for k in range(0, len(items), 100):
                         data.append(items[k : min(len(items), k + 100)])
@@ -1016,9 +1080,13 @@ class EntityDisambiguation:
 
     def __eval(self, testset, system_pred):
         """
-        Responsible for evaluating data points, which is solely used for the local ED step.
+        Responsible for evaluating data points, which is solely used for the
+        local entity disambiguation step.
 
-        :return: F1, Recall, Precision and number of mentions for which we have no valid candidate.
+        Returns:
+            Tuple[float, float, float, int]:
+                A tuple containing the F1 score, recall, precision, and the
+                number of mentions for which there is no valid candidate.
         """
         gold = []
         pred = []
@@ -1046,7 +1114,8 @@ class EntityDisambiguation:
         """
         Responsible for storing the trained model during optimisation.
 
-        :return: -.
+        Returns:
+            None.
         """
         torch.save(self.model.state_dict(), "{}.state_dict".format(path))
         with open("{}.config".format(path), "w") as f:
@@ -1054,12 +1123,12 @@ class EntityDisambiguation:
 
     def __load(self, path):
         """
-        Responsible for loading a trained model and its respective config. Note that this config cannot be
-        overwritten. If required, this behavior may be modified in future releases.
+        Responsible for loading a trained model and its respective config. Note
+        that this config cannot be overwritten. If required, this behavior may
+        be modified in future releases.
 
-        :return: model
+        Returns: The loaded trained model.
         """
-
         if os.path.exists("{}.config".format(path)):
             with open("{}.config".format(path), "r") as f:
                 temp = self.config["model_path"]

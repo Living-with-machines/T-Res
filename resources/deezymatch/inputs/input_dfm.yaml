@@ -1,5 +1,5 @@
 general:
-  use_gpu: True    # only if available
+  use_gpu: False    # only if available
   # specify CUDA device, these are 0-indexed, e.g.,
   #   cuda:0, cuda:1 or others. "cuda" is the default CUDA device
   gpu_device: "cuda"
@@ -74,8 +74,8 @@ gru_lstm:
 
   learning_rate: 0.005
   optimizer: adam
-  epochs: 10
-  batch_size: 64
+  epochs: 5
+  batch_size: 32
   # shuffle when creating DataLoader
   dl_shuffle: True
   random_seed: 123

@@ -28,10 +28,10 @@ def test_training():
         test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=True,  # Set to True if you want to overwrite model if existing
         do_test=True,  # Set to True if you want to train on test mode
@@ -50,14 +50,14 @@ def test_create_pipeline():
         model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
+        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
+        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=True,  # Set to True if you want to train on test mode
@@ -79,10 +79,10 @@ def test_ner_predict():
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -97,7 +97,7 @@ def test_ner_predict():
     assert (type(preds[0])) == dict
     assert len(preds) == 16
     assert preds[4]["entity"] == "B-LOC"
-    assert preds[4]["score"] == 0.9933644533157349
+    assert preds[4]["score"] == 0.9994915723800659
 
     # Test that ner_predict() can handle hyphens
     preds = myner.ner_predict("- I grew up in Plymouth—Kingston.")
@@ -113,12 +113,7 @@ def test_ner_load_from_hub():
         train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
-        },
+        training_args=dict(),
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
         load_from_hub=True,
@@ -139,10 +134,10 @@ def test_aggregate_mentions():
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
         training_args={
-            "learning_rate": 5e-5,
-            "batch_size": 16,
-            "num_train_epochs": 4,
-            "weight_decay": 0.01,
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
@@ -157,7 +152,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[0]["mention"] == "Bologna"
     assert mentions[1]["mention"] == "Florence"
@@ -177,7 +172,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[0]["mention"] == "New York City"
     assert mentions[1]["mention"] == "United States"
@@ -197,7 +192,7 @@ def test_aggregate_mentions():
         [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
         for x in predictions
     ]
-    # Aggretate mentions:
+    # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
     assert mentions[-1]["mention"] == "Ashton-cnder-Ltne"
     for i in range(len(mentions)):

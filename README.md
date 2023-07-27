@@ -1,11 +1,4 @@
-<div style="text-align: center">
-<h1>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers</h1>
-    <p align="center">
-        <a href="https://github.com/Living-with-machines/T-Res/blob/master/LICENSE">
-        <img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg"></a> 
-        <br/>
-    </p>
-    </div>
+
 
 ## Table of contents
 <div style="text-align: left">
@@ -65,7 +58,7 @@ toponym-resolution/
 ```
 
 ## The T-Res API
-    
+
 **[TODO]**
 
 [[^Go back to the Table of contents]](#table-of-contents)

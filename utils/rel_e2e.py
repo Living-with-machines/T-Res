@@ -9,37 +9,37 @@ from tqdm import tqdm
 # Import utils
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 from utils import process_data, process_wikipedia
+from experiments import experiment
 
 
-def rel_end_to_end(sent):
+def rel_end_to_end(sent: str) -> dict:
     """
-    REL end-to-end entity linking using the API.
+    Perform REL end-to-end entity linking using the API.
 
     Arguments:
-        sent (str): a sentence in plain text.
+        sent (str): A sentence in plain text.
 
     Returns:
-        el_result (dict): the output from REL end-to-end API
-            for the input sentence.
+        dict: The output from the REL end-to-end API for the input sentence.
     """
     API_URL = "https://rel.cs.ru.nl/api"
     el_result = requests.post(API_URL, json={"text": sent, "spans": []}).json()
     return el_result
 
 
-def get_rel_from_api(dSentences, rel_end2end_path):
+def get_rel_from_api(dSentences: dict, rel_end2end_path: str) -> None:
     """
-    Uses the REL API to do end-to-end entity linking.
+    Use the REL API to perform end-to-end entity linking.
 
     Arguments:
-        dSentences (dict): dictionary of sentences, where the
-            key is the article-sent identifier and the value
-            is the full text of the sentence.
-        rel_end2end_path (str): the path of the file where the
-            REL results will be stored.
+        dSentences (dict): A dictionary of sentences, where the key is the
+            article-sent identifier and the value is the full text of the
+            sentence.
+        rel_end2end_path (str): The path of the file where the REL results
+            will be stored.
 
     Returns:
-        A JSON file with the REL results.
+        None.
     """
     # Dictionary to store REL predictions:
     rel_preds = dict()
@@ -57,15 +57,17 @@ def get_rel_from_api(dSentences, rel_end2end_path):
                 rel_preds = json.load(f)
 
 
-def match_wikipedia_to_wikidata(wiki_title):
+def match_wikipedia_to_wikidata(wiki_title: str) -> str:
     """
-    Get the Wikidata ID from a Wikipedia title.
+    Retrieve the Wikidata ID corresponding to a Wikipedia title.
 
     Arguments:
-        wiki_title (str): a Wikipedia title, underscore-separated.
+        wiki_title (str): A Wikipedia title in underscore-separated format.
 
     Returns:
-        a string, either the Wikidata QID corresponding entity, or NIL.
+        str:
+            The corresponding Wikidata QID for the entity, or ``"NIL"`` if not
+            found.
     """
     wqid = process_wikipedia.title_to_id(
         wiki_title,
@@ -79,20 +81,23 @@ def match_wikipedia_to_wikidata(wiki_title):
 
 def match_ent(pred_ents, start, end, prev_ann, gazetteer_ids):
     """
-    Function that, given the position in a sentence of a
-    specific gold standard token, finds the corresponding
-    string and prediction information returned by REL.
+    Find the corresponding string and prediction information returned by REL
+    for a specific gold standard token position in a sentence.
 
     Arguments:
-        pred_ents (list): a list of lists, each inner list
-            corresponds to a token.
-        start (int): start character of a token in the gold standard.
-        end (int): end character of a token in the gold standard.
-        prev_ann (str): entity type of the previous token.
+        pred_ents (list): A list of lists, where each inner list corresponds
+            to a token.
+        start (int): The start character offset of the token in the gold
+            standard.
+        end (int): The end character offset of the token in the gold standard.
+        prev_ann (str): The entity type of the previous token.
+        gazetteer_ids (set): A set of entity IDs in the knowledge base.
 
     Returns:
-        A tuple with three elements: (1) the entity type, (2) the
-        entity link and (3) the entity type of the previous token.
+        tuple: A tuple with three elements:
+            #. The entity type.
+            #. The entity link.
+            #. The entity type of the previous token.
     """
     for ent in pred_ents:
         wqid = match_wikipedia_to_wikidata(ent[3])
@@ -124,19 +129,20 @@ def match_ent(pred_ents, start, end, prev_ann, gazetteer_ids):
 
 def postprocess_rel(rel_preds, dSentences, gold_tokenization, wikigaz_ids):
     """
-    For each sentence, retokenizes the REL output to match the gold
-    standard tokenization.
+    Retokenize the REL output for each sentence to match the gold standard
+    tokenization.
 
     Arguments:
-        rel_preds (dict): dictionary containing the predictions using REL.
-        dSentences (dict): dictionary that maps a sentence id to the text.
-        gold_tokenization (dict): dictionary that contains the tokenized
-            sentence with gold standard annotations of entity type and
-            link, per sentence.
-        wikigaz_ids (set): set of Wikidata IDs of entities in the gazetteer.
+        rel_preds (dict): A dictionary containing the predictions using REL.
+        dSentences (dict): A dictionary that maps a sentence ID to the text.
+        gold_tokenization (dict): A dictionary that contains the tokenized
+            sentence with gold standard annotations of entity type and link
+            per sentence.
+        wikigaz_ids (set): A set of Wikidata IDs of entities in the gazetteer.
 
     Returns:
-        dREL (dict): dictionary that maps a sentence id with the REL predictions,
+        dict:
+            A dictionary that maps a sentence ID to the REL predictions,
             retokenized as in the gold standard.
     """
     dREL = dict()
@@ -156,19 +162,27 @@ def postprocess_rel(rel_preds, dSentences, gold_tokenization, wikigaz_ids):
     return dREL
 
 
-def store_rel(experiment, dREL, approach, how_split):
+def store_rel(
+    experiment: experiment.Experiment, dREL: dict, approach: str, how_split: str
+) -> None:
     """
-    Prepare the data to be stored in the format required by the HIPE scorer.
+    Store the REL results for a specific experiment, approach, and split, in
+    the format required by the HIPE scorer.
 
     Arguments:
-        experiment (Experiment object): object for the current experiment.
-        dREL (dict): dictionary with the results using the REL approach.
-        approach (str): name of the REL approach (only rel_end_to_end_api available).
-        how_split (str): data split to store the results for.
+        experiment (Experiment): The experiment object containing the results
+            path and dataset.
+        dREL (dict): A dictionary mapping sentence IDs to REL predictions.
+        approach (str): The approach used for REL.
+        how_split (str): The type of split for which to store the results
+            (e.g., ``originalsplit``, ``Ashton1860``).
 
     Returns:
-        A tsv with the results in the Conll format required by the scorer.
+        None.
 
+    Note:
+        This function saves a TSV file with the results in the Conll format
+        required by the scorer.
     """
     hipe_scorer_results_path = os.path.join(experiment.results_path, experiment.dataset)
     scenario_name = (
@@ -194,9 +208,12 @@ def store_rel(experiment, dREL, approach, how_split):
     )
 
 
-def run_rel_experiments(self):
+def run_rel_experiments(self) -> None:
     """
-    Function that runs the end-to-end experiments using REL.
+    Run the end-to-end REL experiments.
+
+    Returns:
+        None.
     """
     # Continue only if flag is True:
     if self.rel_experiments == False:
