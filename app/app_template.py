@@ -2,7 +2,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional, List
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -20,25 +20,25 @@ os.chdir(experiments_path)
 from config import CONFIG as pipeline_config
 
 from geoparser import pipeline
-from utils import ner
 
 geoparser = pipeline.Pipeline(**pipeline_config)
 
 
 class APIQuery(BaseModel):
-    sentence: str
-    place: Union[str, None] = None
-    place_wqid: Union[str, None] = None
-
-
-class FullTextAPIQuery(BaseModel):
     text: str
-    place: Union[str, None] = None
-    place_wqid: Union[str, None] = None
+    place: Optional[Union[str, None]] = None
+    place_wqid: Optional[Union[str, None]] = None
 
 
 class CandidatesAPIQuery(BaseModel):
-    toponym: str
+    toponyms: List[dict]
+
+
+class DisambiguationAPIQuery(BaseModel):
+    dataset: List[dict]
+    wk_cands: dict
+    place: Optional[Union[str, None]] = None
+    place_wqid: Optional[Union[str, None]] = None
 
 
 app_config_name = os.environ["APP_CONFIG_NAME"]
@@ -74,55 +74,52 @@ async def run_pipeline(api_query: APIQuery, request_id: Union[str, None] = None)
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
     resolved = geoparser.run_sentence(
-        api_query.sentence, place=api_query.place, place_wqid=api_query.place_wqid
+        api_query.text, place=place, place_wqid=place_wqid
     )
 
     return resolved
 
 
 @app.get("/resolve_full_text")
-async def run_text(api_query: FullTextAPIQuery):
-    print(api_query)
-    print(api_query.text)
-    print(api_query.place)
-    print(api_query.place_wqid)
+async def run_text(api_query: APIQuery):
+    
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
     resolved = geoparser.run_text(
-        api_query.text, place=api_query.place, place_wqid=api_query.place_wqid
+        api_query.text, place=place, place_wqid=place_wqid
     )
 
     return resolved
 
 
 @app.get("/candidates")
-async def run_candidate_selection(api_query: CandidatesAPIQuery):
-    candidates = geoparser.myranker.find_candidates([{"mention": api_query.toponym}])[0]
-    new_cand_dict = dict()
-    for m in candidates:
-        new_cand_dict[m] = dict()
-        for nvariation in candidates[m]:
-            new_cand_dict[m] = {nvariation: {"Score": round(candidates[m][nvariation]["Score"], 3)}}
-            new_cand_dict[m][nvariation]["Candidates"] = dict()
-            for c in candidates[m][nvariation]["Candidates"]:
-                new_cand_dict[m][nvariation]["Candidates"][c] = round(candidates[m][nvariation]["Candidates"][c], 3)
-    return new_cand_dict
+async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
+
+    wk_cands = geoparser.run_candidate_selection(cand_api_query.toponyms)
+    return wk_cands
 
 
 @app.get("/ner")
 async def run_ner(api_query: APIQuery):
     
-    predictions = geoparser.myner.ner_predict(api_query.sentence)
+    place = "" if api_query.place is None else api_query.place
+    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
+    resolved = geoparser.run_text_recognition(
+        api_query.text, place=place, place_wqid=place_wqid
+    )
 
-    procpreds = [
-        [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-        for x in predictions
-    ]
+    return resolved
 
-    # Aggregate mentions:
-    mentions = ner.aggregate_mentions(procpreds, "pred")
 
-    return mentions
+@app.get("/disambiguation")
+async def run_disambiguation(api_query: DisambiguationAPIQuery):
+    place = "" if api_query.place is None else api_query.place
+    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
+    resolved = geoparser.run_disambiguation(api_query.dataset,
+                                            api_query.wk_cands,
+                                            place,
+                                            place_wqid)
+    return resolved
 
 
 @app.get("/health")
