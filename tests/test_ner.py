@@ -22,8 +22,7 @@ def test_training():
 
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
@@ -48,8 +47,7 @@ def test_create_pipeline():
     """
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
@@ -73,8 +71,7 @@ def test_create_pipeline():
 def test_ner_predict():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
@@ -107,15 +104,7 @@ def test_ner_predict():
 
 def test_ner_load_from_hub():
     myner = recogniser.Recogniser(
-        model="dslim/bert-base-NER",  # Test loading from huggingface hub
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args=dict(),
-        overwrite_training=False,  # Set to True if you want to overwrite model if existing
-        do_test=False,  # Set to True if you want to train on test mode
+        model="Livingwithmachines/toponym-19thC-en",
         load_from_hub=True,
     )
     pipe = myner.create_pipeline()
@@ -128,8 +117,7 @@ def test_ner_load_from_hub():
 def test_aggregate_mentions():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
+        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
         test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
         model_path="resources/models/",  # Path where the NER model is or will be stored
