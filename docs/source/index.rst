@@ -7,10 +7,10 @@ T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers
    :alt: License
 
 T-Res is an end-to-end pipeline for toponym resolution for digitised historical
-newspapers. Given an input text (a sentence or a text), T-Res identifies the
-places that are mentioned in it, links them to their corresponding Wikidata
-IDs, and provides their geographic coordinates. T-Res has been designed to
-tackle common problems of working with digitised historical newspapers.
+newspapers. Given an input text, T-Res identifies the places that are mentioned
+in it, links them to their corresponding Wikidata IDs, and provides their
+geographic coordinates. T-Res has been designed to tackle common problems of
+working with digitised historical newspapers.
 
 The pipeline has three main components:
 
@@ -24,13 +24,13 @@ We also provide the code to deploy T-Res as an API, and show how to use it.
 Each of these elements are described in this documentation.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Table of contents:
 
    getting-started/index
    reference/index
    t-res-api/index
-   other-files/index
+   experiments/index
 
 Indices and tables
 ==================

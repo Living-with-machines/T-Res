@@ -17,12 +17,4 @@
 
 .. autofunction:: utils.process_data.prepare_storing_links
 
-.. autofunction:: utils.process_data.load_processed_data
-
-.. autofunction:: utils.process_data.store_processed_data
-
-.. autofunction:: utils.process_data.create_mentions_df
-
 .. autofunction:: utils.process_data.store_for_scorer
-
-.. autofunction:: utils.process_data.store_results

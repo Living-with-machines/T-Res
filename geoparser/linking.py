@@ -12,19 +12,6 @@ from tqdm import tqdm
 tqdm.pandas()
 
 RANDOM_SEED = 42
-"""Constant representing the random seed used for generating pseudo-random
-numbers.
-
-The `RANDOM_SEED` is a value that initializes the random number generator
-algorithm, ensuring that the sequence of random numbers generated remains the
-same across different runs of the program. This is useful for achieving
-reproducibility in experiments or when consistent random behavior is
-desired.
-
-..
-    If this docstring is changed, also make sure to edit prepare_data.py,
-    rel_utils.py, entity_disambiguation.py.
-"""
 np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
@@ -55,13 +42,16 @@ class Linker:
             approach. For the default settings, see Notes below.
 
     Example:
-        >>> linker = Linker(
-                method="mostpopular",
-                resources_path="/path/to/linking/resources/",
-                linking_resources={},
-                overwrite_training=True,
-                rel_params={"with_publication": True, "do_test": True}
-            )
+
+    .. code-block:: python
+
+       linker = Linker(
+         method="mostpopular",
+         resources_path="/path/to/linking/resources/",
+         linking_resources={},
+         overwrite_training=True,
+         rel_params={"with_publication": True, "do_test": True}
+       )
 
     Note:
 
@@ -70,45 +60,45 @@ class Linker:
         a connection to the entity embeddings database is established and a
         cursor is created:
 
-          .. code-block:: python
+        .. code-block:: python
 
-            with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
-                cursor = conn.cursor()
-                mylinker = linking.Linker(
-                    method="reldisamb",
-                    resources_path="../resources/",
-                    linking_resources=dict(),
-                    rel_params={
-                        "model_path": "../resources/models/disambiguation/",
-                        "data_path": "../experiments/outputs/data/lwm/",
-                        "training_split": "",
-                        "db_embeddings": cursor,
-                        "with_publication": wpubl,
-                        "without_microtoponyms": wmtops,
-                        "do_test": False,
-                        "default_publname": "",
-                        "default_publwqid": "",
-                    },
-                    overwrite_training=False,
-                )
+           with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
+             cursor = conn.cursor()
+             mylinker = linking.Linker(
+             method="reldisamb",
+             resources_path="../resources/",
+             linking_resources=dict(),
+             rel_params={
+               "model_path": "../resources/models/disambiguation/",
+               "data_path": "../experiments/outputs/data/lwm/",
+               "training_split": "",
+               "db_embeddings": cursor,
+               "with_publication": wpubl,
+               "without_microtoponyms": wmtops,
+               "do_test": False,
+               "default_publname": "",
+               "default_publwqid": "",
+             },
+             overwrite_training=False,
+           )
 
-        * See below the default settings for ``rel_params``. Note that
+        See below the default settings for ``rel_params``. Note that
         `db_embeddings` defaults to None, but it should be assigned a
         cursor to the entity embeddings database, as described above:
 
-          .. code-block:: python
+        .. code-block:: python
 
-            rel_params: Optional[dict] = {
-                "model_path": "../resources/models/disambiguation/",
-                "data_path": "../experiments/outputs/data/lwm/",
-                "training_split": "originalsplit",
-                "db_embeddings": None,
-                "with_publication": True,
-                "without_microtoponyms": True,
-                "do_test": False,
-                "default_publname": "United Kingdom",
-                "default_publwqid": "Q145",
-            }
+           rel_params: Optional[dict] = {
+             "model_path": "../resources/models/disambiguation/",
+             "data_path": "../experiments/outputs/data/lwm/",
+             "training_split": "originalsplit",
+             "db_embeddings": None,
+             "with_publication": True,
+             "without_microtoponyms": True,
+             "do_test": False,
+             "default_publname": "United Kingdom",
+             "default_publwqid": "Q145",
+           }
 
     """
 
@@ -148,7 +138,7 @@ class Linker:
         """
         s = ">>> Entity Linking:\n"
         s += f"    * Method: {self.method}\n"
-        s += "    * Overwrite training: {self.overwrite_training}\n"
+        s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
 
     def load_resources(self) -> dict:

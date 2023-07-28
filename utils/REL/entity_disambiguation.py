@@ -21,19 +21,6 @@ from utils.REL.mulrel_ranker import MulRelRanker, PreRank
 from utils.REL.vocabulary import Vocabulary
 
 RANDOM_SEED = 42
-"""Constant representing the random seed used for generating pseudo-random
-numbers.
-
-The `RANDOM_SEED` is a value that initializes the random number generator
-algorithm, ensuring that the sequence of random numbers generated remains the
-same across different runs of the program. This is useful for achieving
-reproducibility in experiments or when consistent random behavior is
-desired.
-
-..
-    If this docstring is changed, also make sure to edit prepare_data.py,
-    linking.py, rel_utils.py.
-"""
 random.seed(RANDOM_SEED)
 
 
@@ -49,9 +36,14 @@ class EntityDisambiguation:
     :py:class:`~utils.REL.mulrel_ranker.MulRelRanker` model, for entity
     disambiguation.
 
-    Credit:
+    .. note::
+
+        **Credit:**
+
         This class and its methods are adapted from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github repository.
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
 
         ::
 
@@ -65,6 +57,7 @@ class EntityDisambiguation:
             year =      {2020},
             publisher = {ACM}
             }
+
     """
 
     def __init__(self, db_embs, user_config, reset_embeddings=False):

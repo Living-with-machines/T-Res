@@ -13,15 +13,13 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("."))
-sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(0, os.path.abspath("../geoparser"))
+sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
 
 project = "T-Res"
-copyright = "2023 Living with Machines"
-author = "Federico Nanni"
+copyright = "2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King's College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge"
+author = "Living with Machines"
 
 # The full version, including alpha/beta/rc tags
 release = "0.1.0"

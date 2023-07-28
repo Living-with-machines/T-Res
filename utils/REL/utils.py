@@ -20,9 +20,14 @@ def flatten_list_of_lists(
         >>> print(flatten_list_of_lists(list_of_lists))
         ([1, 2, 3, 4, 5, 6], array([0, 3, 5]))
 
-    Credit:
-        This function is taken from the `REL: Radboud Entity Linker
-        <https://github.com/informagi/REL/>`_ Github repository.
+    .. note::
+
+        **Credit:**
+
+        This function is taken from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
 
         ::
 
@@ -64,9 +69,14 @@ def make_equal_len(
         >>> print(make_equal_len(lists))
         ([[1, 2, 3, 0], [4, 5, 0, 0], [6, 7, 8, 9]], [[1.0, 1.0, 1.0, 0.0], [1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]])
 
-    Credit:
-        This function is taken from the `REL: Radboud Entity Linker
-        <https://github.com/informagi/REL/>`_ Github repository.
+    .. note::
+
+        **Credit:**
+
+        This function is taken from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
 
         ::
 
@@ -108,9 +118,14 @@ def is_important_word(s: str) -> bool:
         >>> print(is_important_word("apple"))
         True
 
-    Credit:
-        This function is adapted from the `REL: Radboud Entity Linker
-        <https://github.com/informagi/REL/>`_ Github repository.
+    .. note::
+
+        **Credit:**
+
+        This function is adapted from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
 
         ::
 
