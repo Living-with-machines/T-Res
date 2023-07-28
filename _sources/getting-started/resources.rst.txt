@@ -16,8 +16,10 @@ We provide the dataset we used to train T-Res for the tasks of toponym recogniti
 linking task focused on geographical entities). The dataset is based on the
 `TopRes19th dataset <https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.56>`_.
 
-You can download the data (in the format required by T-Res) from the `British
-Library research repository <https://bl.iro.bl.uk/concern/datasets/ef537c70-87cb-495a-86c8-edffefa6bdc6>`_.
+.. note::
+
+    You can download the data (in the format required by T-Res) from the `British
+    Library research repository <https://bl.iro.bl.uk/concern/datasets/ef537c70-87cb-495a-86c8-edffefa6bdc6>`_.
 
 By default, T-Res assumes the files are stored in the following location:
 
@@ -173,10 +175,12 @@ T-Res requires a series of Wikipedia- and Wikidata-based resources:
 * ``wikidata_gazetteer.csv``
 * ``entity2class.txt``
 
-These files can be generated using the
-`wiki2gaz <https://github.com/Living-with-machines/wiki2gaz>`_ GitHub
-repository (**[coming soon]**). For more information on how they are built,
-refer to the ``wiki2gaz`` documentation.
+.. note::
+
+    These files can be generated using the
+    `wiki2gaz <https://github.com/Living-with-machines/wiki2gaz>`_ GitHub
+    repository (**[coming soon]**). For more information on how they are built,
+    refer to the ``wiki2gaz`` documentation.
 
 T-Res assumes these files in the following default location:
 
@@ -367,15 +371,18 @@ Generate the embeddings database
 ################################
 
 In our experiments, we derived the embeddings database from REL's shared resources.
-We are working towards improving this step in the pipeline. Meanwhile, to generate
-the ``embeddings_database.db``, please follow these steps:
 
-#. Make sure you have ``wikidata_gazetteer.csv`` in ``./resources/wikidata/`` (see
-   `above <#wikipedia-and-wikidata-based-resources>`_).
-#. Generate a Wikipedia-to-Wikidata index, following `this instructions
-   <https://github.com/jcklie/wikimapper#create-your-own-index>`_, save it as: ``./resources/wikipedia/index_enwiki-latest.db``.
-#. Run `this script <https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py>`_
-   to create the embeddings database.
+.. note::
+
+    We are working towards improving this step in the pipeline. Meanwhile, to generate
+    the ``embeddings_database.db``, please follow these steps:
+
+    #. Make sure you have ``wikidata_gazetteer.csv`` in ``./resources/wikidata/`` (see
+    `above <#wikipedia-and-wikidata-based-resources>`_).
+    #. Generate a Wikipedia-to-Wikidata index, following `this instructions
+    <https://github.com/jcklie/wikimapper#create-your-own-index>`_, save it as: ``./resources/wikipedia/index_enwiki-latest.db``.
+    #. Run `this script <https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py>`_
+    to create the embeddings database.
 
 You can load the file, and access a token embedding, as follows:
 
@@ -424,8 +431,10 @@ negative string pairs is required. We provide a dataset of positive and negative
 OCR variations, which can be used to train a DeezyMatch model, which can then be
 used to perform fuzzy string matching to find candidates for entity linking.
 
-The DeezyMatch training set can be downloaded from the `British Library research
-repository <https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63>`_.
+.. note::
+
+    The DeezyMatch training set can be downloaded from the `British Library research
+    repository <https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63>`_.
 
 T-Res assumes by default the DeezyMatch training set to be named ``w2v_ocr_pairs.txt``
 and to be in the following location:

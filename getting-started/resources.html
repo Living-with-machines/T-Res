@@ -111,8 +111,11 @@ the instructions provided in this section.</p>
 (i.e. a named entity recognition task) and toponym disambiguation (i.e. an entity
 linking task focused on geographical entities). The dataset is based on the
 <a class="reference external" href="https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.56">TopRes19th dataset</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>You can download the data (in the format required by T-Res) from the <a class="reference external" href="https://bl.iro.bl.uk/concern/datasets/ef537c70-87cb-495a-86c8-edffefa6bdc6">British
 Library research repository</a>.</p>
+</div>
 <p>By default, T-Res assumes the files are stored in the following location:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
 └── experiments/
@@ -253,10 +256,13 @@ test set of the original dataset are left out. The training set is split into
 <li><p><code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code></p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>These files can be generated using the
 <a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz">wiki2gaz</a> GitHub
 repository (<strong>[coming soon]</strong>). For more information on how they are built,
 refer to the <code class="docutils literal notranslate"><span class="pre">wiki2gaz</span></code> documentation.</p>
+</div>
 <p>T-Res assumes these files in the following default location:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
 └── resources/
@@ -414,16 +420,17 @@ tokens: <code class="docutils literal notranslate"><span class="pre">#ENTITY/UNK
 </ul>
 <section id="generate-the-embeddings-database">
 <h3>Generate the embeddings database<a class="headerlink" href="#generate-the-embeddings-database" title="Permalink to this headline"></a></h3>
-<p>In our experiments, we derived the embeddings database from REL’s shared resources.
-We are working towards improving this step in the pipeline. Meanwhile, to generate
+<p>In our experiments, we derived the embeddings database from REL’s shared resources.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We are working towards improving this step in the pipeline. Meanwhile, to generate
 the <code class="docutils literal notranslate"><span class="pre">embeddings_database.db</span></code>, please follow these steps:</p>
-<ol class="arabic simple">
-<li><p>Make sure you have <code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code> in <code class="docutils literal notranslate"><span class="pre">./resources/wikidata/</span></code> (see
-<a class="reference external" href="#wikipedia-and-wikidata-based-resources">above</a>).</p></li>
-<li><p>Generate a Wikipedia-to-Wikidata index, following <a class="reference external" href="https://github.com/jcklie/wikimapper#create-your-own-index">this instructions</a>, save it as: <code class="docutils literal notranslate"><span class="pre">./resources/wikipedia/index_enwiki-latest.db</span></code>.</p></li>
-<li><p>Run <a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py">this script</a>
-to create the embeddings database.</p></li>
-</ol>
+<p>#. Make sure you have <code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code> in <code class="docutils literal notranslate"><span class="pre">./resources/wikidata/</span></code> (see
+<a class="reference external" href="#wikipedia-and-wikidata-based-resources">above</a>).
+#. Generate a Wikipedia-to-Wikidata index, following <a class="reference external" href="https://github.com/jcklie/wikimapper#create-your-own-index">this instructions</a>, save it as: <code class="docutils literal notranslate"><span class="pre">./resources/wikipedia/index_enwiki-latest.db</span></code>.
+#. Run <a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py">this script</a>
+to create the embeddings database.</p>
+</div>
 <p>You can load the file, and access a token embedding, as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">array</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span>
@@ -464,8 +471,11 @@ to create the embeddings database.</p></li>
 negative string pairs is required. We provide a dataset of positive and negative
 OCR variations, which can be used to train a DeezyMatch model, which can then be
 used to perform fuzzy string matching to find candidates for entity linking.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>The DeezyMatch training set can be downloaded from the <a class="reference external" href="https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63">British Library research
 repository</a>.</p>
+</div>
 <p>T-Res assumes by default the DeezyMatch training set to be named <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code>
 and to be in the following location:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
