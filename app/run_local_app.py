@@ -17,9 +17,12 @@ sys.path.insert(0, str(root_path))
 sys.path.insert(0, str(experiments_path))
 os.chdir(experiments_path)
 
-os.environ['APP_CONFIG_NAME'] = "t-res_deezy_reldisamb-wpubl-wmtops"
+os.environ["APP_CONFIG_NAME"] = "t-res_deezy_reldisamb-wpubl-wmtops"
 import importlib
-config_mod = importlib.import_module('.t-res_deezy_reldisamb-wpubl-wmtops', 'app.configs')
+
+config_mod = importlib.import_module(
+    ".t-res_deezy_reldisamb-wpubl-wmtops", "app.configs"
+)
 pipeline_config = config_mod.CONFIG
 
 
@@ -73,8 +76,8 @@ async def test_pipeline():
     return resolved
 
 
-@app.get("/toponym_resolution")
-async def run_pipeline(api_query: APIQuery, request_id: Union[str, None] = None):
+@app.get("/resolve_sentence")
+async def run_sentence(api_query: APIQuery, request_id: Union[str, None] = None):
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
     resolved = geoparser.run_sentence(
@@ -86,44 +89,41 @@ async def run_pipeline(api_query: APIQuery, request_id: Union[str, None] = None)
 
 @app.get("/resolve_full_text")
 async def run_text(api_query: APIQuery):
-    
+
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_text(
-        api_query.text, place=place, place_wqid=place_wqid
-    )
+    resolved = geoparser.run_text(api_query.text, place=place, place_wqid=place_wqid)
 
     return resolved
 
 
-@app.get("/candidates")
-async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
-    
-    wk_cands = geoparser.run_candidate_selection(cand_api_query.toponyms)
-    return wk_cands
-
-
-@app.get("/ner")
+@app.get("/run_ner")
 async def run_ner(api_query: APIQuery):
 
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_text_recognition(
+    ner_output = geoparser.run_text_recognition(
         api_query.text, place=place, place_wqid=place_wqid
     )
 
-    return resolved
+    return ner_output
 
 
-@app.get("/disambiguation")
+@app.get("/run_candidate_selection")
+async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
+
+    wk_cands = geoparser.run_candidate_selection(cand_api_query.toponyms)
+    return wk_cands
+
+
+@app.get("/run_disambiguation")
 async def run_disambiguation(api_query: DisambiguationAPIQuery):
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_disambiguation(api_query.dataset,
-                                            api_query.wk_cands,
-                                            place,
-                                            place_wqid)
-    return resolved
+    disamb_output = geoparser.run_disambiguation(
+        api_query.dataset, api_query.wk_cands, place, place_wqid
+    )
+    return disamb_output
 
 
 @app.get("/health")

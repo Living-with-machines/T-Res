@@ -2,6 +2,7 @@ import os
 import sys
 import sqlite3
 from pathlib import Path
+
 # sys.path.insert(0, os.path.abspath(os.path.pardir))
 from geoparser import pipeline, ranking, linking
 
@@ -30,9 +31,8 @@ myranker = ranking.Ranker(
         "dm_output": "deezymatch_on_the_fly",
         # Ranking measures:
         "ranking_metric": "faiss",
-        "selection_threshold": 25,
-        "num_candidates": 3,
-        "search_size": 3,
+        "selection_threshold": 50,
+        "num_candidates": 1,
         "verbose": False,
         # DeezyMatch training:
         "overwrite_training": False,
@@ -48,7 +48,6 @@ with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
         linking_resources=dict(),
         rel_params={
             "model_path": "../resources/models/disambiguation/",
-            # "data_path": "../experiments/outputs/data/lwm/",
             "data_path": "outputs/data/lwm/",
             "training_split": "originalsplit",
             "context_length": 100,
@@ -56,8 +55,8 @@ with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
             "with_publication": True,
             "without_microtoponyms": True,
             "do_test": False,
-            "default_publname": "United Kingdom",
-            "default_publwqid": "Q145",
+            "default_publname": "",
+            "default_publwqid": "",
         },
         overwrite_training=False,
     )
