@@ -11,8 +11,6 @@ from geoparser import pipeline, ranking, linking
 myranker = ranking.Ranker(
     method="deezymatch",
     resources_path="../resources/wikidata/",
-    mentions_to_wikidata=dict(),
-    wikidata_to_mentions=dict(),
     strvar_parameters={
         # Parameters to create the string pair dataset:
         "ocr_threshold": 60,
@@ -50,7 +48,6 @@ with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
             "model_path": "../resources/models/disambiguation/",
             "data_path": "outputs/data/lwm/",
             "training_split": "originalsplit",
-            "context_length": 100,
             "db_embeddings": cursor,
             "with_publication": True,
             "without_microtoponyms": True,
