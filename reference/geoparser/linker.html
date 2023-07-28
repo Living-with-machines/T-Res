@@ -52,7 +52,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../other-files/index.html">Other files in repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
         </div>
@@ -106,14 +106,14 @@ approach. For the default settings, see Notes below.</p></li>
 </ul>
 </dd>
 </dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">linker</span> <span class="o">=</span> <span class="n">Linker</span><span class="p">(</span>
-<span class="go">        method=&quot;mostpopular&quot;,</span>
-<span class="go">        resources_path=&quot;/path/to/linking/resources/&quot;,</span>
-<span class="go">        linking_resources={},</span>
-<span class="go">        overwrite_training=True,</span>
-<span class="go">        rel_params={&quot;with_publication&quot;: True, &quot;do_test&quot;: True}</span>
-<span class="go">    )</span>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">linker</span> <span class="o">=</span> <span class="n">Linker</span><span class="p">(</span>
+  <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mostpopular&quot;</span><span class="p">,</span>
+  <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;/path/to/linking/resources/&quot;</span><span class="p">,</span>
+  <span class="n">linking_resources</span><span class="o">=</span><span class="p">{},</span>
+  <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+  <span class="n">rel_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -124,49 +124,43 @@ approach. For the default settings, see Notes below.</p></li>
 <p>method, the Linker needs to be wrapped by a context manager in which
 a connection to the entity embeddings database is established and a
 cursor is created:</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;../resources/rel_db/embeddings_database.db&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-    <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-    <span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;reldisamb&quot;</span><span class="p">,</span>
-        <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;../resources/&quot;</span><span class="p">,</span>
-        <span class="n">linking_resources</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
-        <span class="n">rel_params</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../resources/models/disambiguation/&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../experiments/outputs/data/lwm/&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="n">cursor</span><span class="p">,</span>
-            <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="n">wpubl</span><span class="p">,</span>
-            <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="n">wmtops</span><span class="p">,</span>
-            <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ul class="simple">
-<li><p>See below the default settings for <code class="docutils literal notranslate"><span class="pre">rel_params</span></code>. Note that</p></li>
-</ul>
-<p><cite>db_embeddings</cite> defaults to None, but it should be assigned a
-cursor to the entity embeddings database, as described above:</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rel_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;../resources/rel_db/embeddings_database.db&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+  <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+  <span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span>
+  <span class="n">method</span><span class="o">=</span><span class="s2">&quot;reldisamb&quot;</span><span class="p">,</span>
+  <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;../resources/&quot;</span><span class="p">,</span>
+  <span class="n">linking_resources</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
+  <span class="n">rel_params</span><span class="o">=</span><span class="p">{</span>
     <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../resources/models/disambiguation/&quot;</span><span class="p">,</span>
     <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../experiments/outputs/data/lwm/&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;originalsplit&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="n">cursor</span><span class="p">,</span>
+    <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="n">wpubl</span><span class="p">,</span>
+    <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="n">wmtops</span><span class="p">,</span>
     <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;United Kingdom&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;Q145&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+  <span class="p">},</span>
+  <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See below the default settings for <code class="docutils literal notranslate"><span class="pre">rel_params</span></code>. Note that
+<cite>db_embeddings</cite> defaults to None, but it should be assigned a
+cursor to the entity embeddings database, as described above:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rel_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../resources/models/disambiguation/&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../experiments/outputs/data/lwm/&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;originalsplit&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+  <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+  <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+  <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;United Kingdom&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;Q145&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div></blockquote>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="geoparser.linking.Linker.by_distance">
@@ -328,7 +322,7 @@ object.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023 Living with Machines.</p>
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -41,7 +41,7 @@
 <li class="toctree-l1"><a class="reference internal" href="getting-started/index.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Running T-Res as API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="other-files/index.html">Other files in repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
         </div>
@@ -72,10 +72,10 @@
 <h1>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers<a class="headerlink" href="#t-res-a-toponym-resolution-pipeline-for-digitised-historical-newspapers" title="Permalink to this headline"></a></h1>
 <a class="reference external image-reference" href="https://github.com/Living-with-machines/T-Res/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg" /></a>
 <p>T-Res is an end-to-end pipeline for toponym resolution for digitised historical
-newspapers. Given an input text (a sentence or a text), T-Res identifies the
-places that are mentioned in it, links them to their corresponding Wikidata
-IDs, and provides their geographic coordinates. T-Res has been designed to
-tackle common problems of working with digitised historical newspapers.</p>
+newspapers. Given an input text, T-Res identifies the places that are mentioned
+in it, links them to their corresponding Wikidata IDs, and provides their
+geographic coordinates. T-Res has been designed to tackle common problems of
+working with digitised historical newspapers.</p>
 <p>The pipeline has three main components:</p>
 <ol class="arabic simple">
 <li><p><strong>The Recogniser</strong> performs named entity recognition.</p></li>
@@ -89,22 +89,63 @@ Each of these elements are described in this documentation.</p>
 <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/index.html">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html">Installing T-Res</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started/complete-tour.html">The complete tour</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html">Installing T-Res</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/installation.html#update-the-system">Update the system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/installation.html#install-pyenv">Install pyenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/installation.html#install-poetry">Install poetry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/installation.html#project-installation">Project Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/installation.html#how-to-use-poetry">How to use poetry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/installation.html#pre-commit-hoooks">Pre-commit hoooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/resources.html">Resources and directory structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/resources.html#toponym-recognition-and-disambiguation-training-data">Toponym recognition and disambiguation training data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/resources.html#wikipedia-and-wikidata-based-resources">Wikipedia- and Wikidata-based resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/resources.html#entity-and-word-embeddings">Entity and word embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/resources.html#deezymatch-training-set">DeezyMatch training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/resources.html#summary-of-resources-and-directory-structure">Summary of resources and directory structure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/complete-tour.html">The complete tour</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/complete-tour.html#the-pipeline">The Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/complete-tour.html#the-recogniser">The Recogniser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/complete-tour.html#the-ranker">The Ranker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started/complete-tour.html#the-linker">The Linker</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/utils/index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/linker.html"><code class="docutils literal notranslate"><span class="pre">geoparser.linking.Linker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/ranker.html"><code class="docutils literal notranslate"><span class="pre">geoparser.ranking.</span> <span class="pre">Ranker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/recogniser.html"><code class="docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/pipeline.html"><code class="docutils literal notranslate"><span class="pre">geoparser.pipeline.Pipeline</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reference/utils/index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/ner.html"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Running T-Res as API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="t-res-api/installation.html">Installing T-Res as API</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="other-files/index.html">Other files in repository</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="other-files/evaluation/index.html">Evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-files/experiments/index.html">Reproducing the Experiments: <code class="docutils literal notranslate"><span class="pre">experiments</span></code> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiments/index.html">Experiments and evaluation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiments/index.html#obtain-the-external-resources">1. Obtain the external resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiments/index.html#preparing-the-data">2. Preparing the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiments/index.html#running-the-experiments">3. Running the experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiments/index.html#evaluate">4. Evaluate</a></li>
 </ul>
 </li>
 </ul>
@@ -129,7 +170,7 @@ Each of these elements are described in this documentation.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023 Living with Machines.</p>
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

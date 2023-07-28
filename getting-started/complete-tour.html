@@ -19,7 +19,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Reference" href="../reference/index.html" />
-    <link rel="prev" title="Installing T-Res" href="installation.html" /> 
+    <link rel="prev" title="Resources and directory structure" href="resources.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,12 +41,16 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installing T-Res</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html">Resources and directory structure</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">The complete tour</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-pipeline">The Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#instantiate-the-pipeline">1. Instantiate the Pipeline</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#use-the-pipeline">2. Use the Pipeline</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#the-recogniser">The Recogniser</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#instantiate-the-recogniser">1. Instantiate the Recogniser</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#train-the-ner-model">1. Train the NER model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#create-a-ner-pipeline">3. Create a NER pipeline</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#use-the-ner-pipeline">1. Use the NER pipeline</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#train-the-ner-model">2. Train the NER model</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#the-ranker">The Ranker</a><ul>
@@ -56,15 +60,19 @@
 <li class="toctree-l4"><a class="reference internal" href="#retrieve-candidates-for-a-given-mention">4. Retrieve candidates for a given mention</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#the-linker">The Linker</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-pipeline">The Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-linker">The Linker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#instantiate-the-linker">1. Instantiate the Linker</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id9">2. Load the resources</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#train-an-entity-disambiguation-model">3. Train an entity disambiguation model</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../t-res-api/index.html">Running T-Res as API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../other-files/index.html">Other files in repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
         </div>
@@ -93,27 +101,396 @@
            <div itemprop="articleBody">
              
   <section id="the-complete-tour">
-<span id="top"></span><h1>The complete tour<a class="headerlink" href="#the-complete-tour" title="Permalink to this headline"></a></h1>
-<p>The T-Res has three main classes: the Recogniser class (which performs named
-entity recognition—NER), the Ranker class (which performs candidate
-selection and ranking for the named entities identified by the Recogniser),
-and the Linker class (which selectes the most likely candidate from those
-provided by the Ranker). An additional class, the Pipeline, wraps these three
-components into one, therefore making end-to-end T-Res easier to use.</p>
-<section id="the-recogniser">
-<h2>The Recogniser<a class="headerlink" href="#the-recogniser" title="Permalink to this headline"></a></h2>
-<p>The Recogniser allows (1) loading an existing model (either directly
-downloading a model from the HuggingFace hub or loading a locally stored NER
-model) and (2) training a new model and loading it if it is already trained.</p>
-<p>The following notebooks show examples using the Recogniser:</p>
+<span id="top-tour"></span><h1>The complete tour<a class="headerlink" href="#the-complete-tour" title="Permalink to this headline"></a></h1>
+<p>The T-Res has three main classes: the <strong>Recogniser</strong> class (which performs
+toponym recognition, which is a named entity recognition task), the <strong>Ranker</strong>
+class (which performs candidate selection and ranking for the named entities
+identified by the Recogniser), and the <strong>Linker</strong> class (which selectes the
+most likely candidate from those provided by the Ranker).</p>
+<p>An additional class, the <strong>Pipeline</strong>, wraps these three components into one,
+therefore making it easier for the user to perform end-to-end entity linking.</p>
+<p>In the following sections, we provide a complete tour: including an in-depth
+description of each of the four classes. We recommend that you start with the
+Pipeline, which wraps the three other classes, and refer to the description of
+each of the other classes to learn more about them. We also recommend that
+you first try to run T-Res using the default pipeline, and then change it
+accordingly to your needs.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Note that, before being able to run the pipeline, you will need to make sure
+you have all the required resources. Refer to the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page
+in the documentation.</p>
+</div>
+<section id="the-pipeline">
+<h2>The Pipeline<a class="headerlink" href="#the-pipeline" title="Permalink to this headline"></a></h2>
+<p>The Pipeline wraps the Recogniser, the Ranker and the Linker into one object,
+to make it easier to use T-Res for end-to-end entity linking.</p>
+<section id="instantiate-the-pipeline">
+<h3>1. Instantiate the Pipeline<a class="headerlink" href="#instantiate-the-pipeline" title="Permalink to this headline"></a></h3>
+<p>By default, the Pipeline instantiates:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">./examples/load_use_ner_model.ipynb</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">./examples/train_use_ner_model.ipynb</span></code></p></li>
+<li><p>a Recogniser (from a HuggingFace model),</p></li>
+<li><p>a Ranker (using the <cite>perfectmatch</cite> approach), and</p></li>
+<li><p>a Linker (using the <cite>mostpopular</cite> approach).</p></li>
 </ul>
+<p>To instantiate the default T-Res pipeline, do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">pipeline</span>
+
+<span class="n">geoparser</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also instantiate a pipeline using a customised Recogniser, Ranker and
+Linker. To see the different options, refer to the sections on instantiating
+each of them: <a class="reference internal" href="#the-recogniser"><span class="std std-ref">Recogniser</span></a>, <a class="reference internal" href="#the-ranker"><span class="std std-ref">Ranker</span></a>
+and <a class="reference internal" href="#the-linker"><span class="std std-ref">Linker</span></a>.</p>
+<p>In order to instantiate a pipeline using a customised Recogniser, Ranker and
+Linker, just instantiate them beforehand, and then pass them as arguments To
+the Pipeline, as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">recogniser</span><span class="p">,</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">linking</span>
+
+<span class="n">myner</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="n">geoparser</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="n">myner</span><span class="o">=</span><span class="n">myner</span><span class="p">,</span> <span class="n">myranker</span><span class="o">=</span><span class="n">myranker</span><span class="p">,</span> <span class="n">mylinker</span><span class="o">=</span><span class="n">mylinker</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Note that the default Pipeline expects to be run from the <code class="docutils literal notranslate"><span class="pre">experiments/</span></code>
+or the <code class="docutils literal notranslate"><span class="pre">examples</span></code> folder (or any other folder in the same level). The
+Pipeline will look for the resources at <code class="docutils literal notranslate"><span class="pre">../resources/</span></code>. Make sure all
+the required resources are in the right locations.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a model needs to be trained, the Pipeline itself will take care of it.
+Therefore, you should expect that the first time the Pipeline is used (or
+if you change certain input parameters) T-Res will take long to be ready
+to be used for prediction, as it will train the models if the approaches
+require so.</p>
+</div>
+</section>
+<section id="use-the-pipeline">
+<h3>2. Use the Pipeline<a class="headerlink" href="#use-the-pipeline" title="Permalink to this headline"></a></h3>
+<p>Once instantiated (and once all the models have been trained or loaded, if needed),
+the Pipeline can be used to perform end-to-end toponym recognition and linking
+(given an input text) or to perform each of the three steps individually: (1)
+toponym recognition given an input text, (2) candidate selection given a toponym
+or list of toponyms, and (3) toponym disambiguation given the output from the
+first two steps.</p>
+<section id="end-to-end-pipeline">
+<h4>End-to-end pipeline<a class="headerlink" href="#end-to-end-pipeline" title="Permalink to this headline"></a></h4>
+<p>The Pipeline can be used to perform end-to-end toponym recognition and linking
+given an input text, using the <code class="docutils literal notranslate"><span class="pre">run_sentence()</span></code> method (which applies the
+T-Res pipeline to the input text) or the <code class="docutils literal notranslate"><span class="pre">run_text()</span></code> method (which takes
+care of splitting a text into sentences, before running <code class="docutils literal notranslate"><span class="pre">run_sentence()</span></code>
+on each sentence).</p>
+<p>See this with examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_text</span><span class="p">(</span><span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_sentence</span><span class="p">(</span><span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In both cases, the following parameters are optional <strong>[TODO: link to docstrings]</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">place</span></code>: The place of publication associated with the text document as a
+human-legible string (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;London&quot;</span></code>). This defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">place_wqid</span></code>: The Wikidata ID of the place of publication provided in
+<code class="docutils literal notranslate"><span class="pre">place</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Q84&quot;</span></code>). This defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+</ul>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_text</span><span class="p">(</span><span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">,</span>
+    <span class="n">place</span><span class="o">=</span><span class="s2">&quot;Alston, Cumbria, England&quot;</span><span class="p">,</span>
+    <span class="n">place_wqid</span><span class="o">=</span><span class="s2">&quot;Q2560190&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>The output of this example is the following:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[{</span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Durham&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ner_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.999</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">74</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sent_idx&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;end_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sentence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;prediction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q179815&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ed_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.039</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;cross_cand_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Q179815&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.396</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q23082&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.327</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q49229&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.141</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q5316459&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.049</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q458393&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.045</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q17003433&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.042</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q1075483&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;string_match_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Durham&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Q1137286&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Q5316477&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Q752266&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">]]},</span>
+<span class="w">  </span><span class="nt">&quot;prior_cand_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Q179815&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.881</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q49229&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.522</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q5316459&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.457</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q17003433&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.455</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q23082&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.313</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q458393&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.295</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q1075483&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.293</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;latlon&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">54.783333</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.566667</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;wkdt_class&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q515&quot;</span><span class="p">}]</span>
+</pre></div>
+</div>
+</section>
+<section id="step-by-step-pipeline">
+<h4>Step-by-step pipeline<a class="headerlink" href="#step-by-step-pipeline" title="Permalink to this headline"></a></h4>
+<p>See how to perform toponym recognition with the Pipeline, with an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_text_recognition</span><span class="p">(</span>
+    <span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">,</span>
+    <span class="n">place</span><span class="o">=</span><span class="s2">&quot;Alston, Cumbria, England&quot;</span><span class="p">,</span>
+    <span class="n">place_wqid</span><span class="o">=</span><span class="s2">&quot;Q2560190&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This is the output for this example:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[{</span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Durham&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;candidates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">  </span><span class="nt">&quot;gold&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;NONE&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;ner_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.999</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">74</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sent_idx&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;end_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ngram&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Durham&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;conf_md&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.999</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sentence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;place&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Alston, Cumbria, England&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;place_wqid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q2560190&quot;</span>
+<span class="w">  </span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>See how to perform candidate selection given the output from the previous
+step, with an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ner_output</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;mention&#39;</span><span class="p">:</span> <span class="s1">&#39;Durham&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;context&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;candidates&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s1">&#39;gold&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;NONE&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;ner_score&#39;</span><span class="p">:</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="s1">&#39;pos&#39;</span><span class="p">:</span> <span class="mi">74</span><span class="p">,</span>
+        <span class="s1">&#39;sent_idx&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;end_pos&#39;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="s1">&#39;ngram&#39;</span><span class="p">:</span> <span class="s1">&#39;Durham&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;conf_md&#39;</span><span class="p">:</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="s1">&#39;LOC&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sentence&#39;</span><span class="p">:</span> <span class="s1">&#39;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;place&#39;</span><span class="p">:</span> <span class="s1">&#39;Alston, Cumbria, England&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;place_wqid&#39;</span><span class="p">:</span> <span class="s1">&#39;Q2560190&#39;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">cands</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_candidate_selection</span><span class="p">(</span><span class="n">ner_output</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is the output for this example:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;Durham&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;Durham&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;Score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;Candidates&quot;</span><span class="p">:</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;Q1137286&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.022222222222222223</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;Q5316477&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3157894736842105</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;Q752266&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.013513513513513514</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;Q23082&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.06484443152079093</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Finally, see how to perform toponym disambiguation given the output from
+the two previous steps, with an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ner_output</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;mention&#39;</span><span class="p">:</span> <span class="s1">&#39;Durham&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;context&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;candidates&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s1">&#39;gold&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;NONE&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;ner_score&#39;</span><span class="p">:</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="s1">&#39;pos&#39;</span><span class="p">:</span> <span class="mi">74</span><span class="p">,</span>
+        <span class="s1">&#39;sent_idx&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;end_pos&#39;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="s1">&#39;ngram&#39;</span><span class="p">:</span> <span class="s1">&#39;Durham&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;conf_md&#39;</span><span class="p">:</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="s1">&#39;LOC&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sentence&#39;</span><span class="p">:</span> <span class="s1">&#39;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;place&#39;</span><span class="p">:</span> <span class="s1">&#39;Alston, Cumbria, England&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;place_wqid&#39;</span><span class="p">:</span> <span class="s1">&#39;Q2560190&#39;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">cands</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Durham&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Durham&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Score&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                               <span class="s1">&#39;Candidates&#39;</span><span class="p">:</span> <span class="p">{</span>
+                                  <span class="s1">&#39;Q1137286&#39;</span><span class="p">:</span> <span class="mf">0.022222222222222223</span><span class="p">,</span>
+                                  <span class="s1">&#39;Q5316477&#39;</span><span class="p">:</span> <span class="mf">0.3157894736842105</span><span class="p">,</span>
+                                  <span class="s1">&#39;Q752266&#39;</span><span class="p">:</span> <span class="mf">0.013513513513513514</span><span class="p">,</span>
+                                  <span class="s1">&#39;Q23082&#39;</span><span class="p">:</span> <span class="mf">0.06484443152079093</span><span class="p">}}}}</span>
+
+<span class="n">disamb_output</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_disambiguation</span><span class="p">(</span><span class="n">ner_output</span><span class="p">,</span> <span class="n">cands</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will return the exact same output as running the pipeline end-to-end.</p>
+</section>
+<section id="description-of-the-output">
+<h4>Description of the output<a class="headerlink" href="#description-of-the-output" title="Permalink to this headline"></a></h4>
+<p>The output of running the pipeline (both using the end-to-end method or
+in a step-wise manner, regardless of the methods used for each of the
+three components), will have the following format:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[{</span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Durham&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ner_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.999</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">74</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sent_idx&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;end_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sentence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;prediction&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q179815&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ed_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.039</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;cross_cand_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Q179815&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.396</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q23082&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.327</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q49229&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.141</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q5316459&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.049</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q458393&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.045</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q17003433&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.042</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q1075483&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;string_match_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Durham&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Q1137286&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Q5316477&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Q752266&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">]]},</span>
+<span class="w">  </span><span class="nt">&quot;prior_cand_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Q179815&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.881</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q49229&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.522</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q5316459&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.457</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q17003433&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.455</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q23082&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.313</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q458393&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.295</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q1075483&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.293</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;latlon&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">54.783333</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.566667</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;wkdt_class&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q515&quot;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>Description of the fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mention</span></code>: The mention text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner_score</span></code>: The NER confidence score of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pos</span></code>: The starting position of the mention in the sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sent_idx</span></code>: The index of the sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_pos</span></code>: The ending position of the mention in the sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag</span></code>: The NER label of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sentence</span></code>: The input sentence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code>: The predicted entity linking result (a Wikidata QID or NIL).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ed_score</span></code>: The entity disambiguation score.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">string_match_score</span></code>: A dictionary of candidate entities and their string
+matching confidence scores.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prior_cand_score</span></code>: A dictionary of candidate entities and their prior
+confidence scores.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cross_cand_score</span></code>: A dictionary of candidate entities and their
+cross-candidate confidence scores.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">latlon</span></code>: The latitude and longitude coordinates of the predicted entity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wkdt_class</span></code>: The Wikidata class of the predicted entity.</p></li>
+</ul>
+</section>
+<section id="pipeline-recommendations">
+<h4>Pipeline recommendations<a class="headerlink" href="#pipeline-recommendations" title="Permalink to this headline"></a></h4>
+<ul>
+<li><p>To get started with T-Res, we recommend to start using the default pipeline,
+as its significantly less complex than the better performing approaches.</p></li>
+<li><p>The default pipeline may not be a bad option if you are planning to perform
+toponym recognition on modern global clean data. However, take into account
+that it uses context-agnostic approaches, which often perform quantitavively
+quite well just because of the higher probability of the most common sense
+to appear in texts.</p></li>
+<li><p>Running T-Res with DeezyMatch for candidate selection and <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code> for
+entity disambiguation takes considerably longer than using the default
+pipeline. If you want to run T-Res on a few sentences, you can use the
+end-to-end <code class="docutils literal notranslate"><span class="pre">run_text()</span></code> or <code class="docutils literal notranslate"><span class="pre">run_sentence()</span></code> methods. If, however, you
+have a large number of texts on which to run T-Res, then we recommend that
+you use the step-wise approach. If done efficiently, this can save a lot
+of time. Using this approach, you should:</p>
+<ol class="arabic simple">
+<li><p>Perform toponym recognition on all the texts,</p></li>
+<li><p>Obtain the set of all unique toponyms identified in the full dataset,
+and perform candidate selection on the unique set of toponyms,</p></li>
+<li><p>Perform toponym disambiguation on a per-text basis, passing as argument
+the dictionary of candidates returned in the previous step.</p></li>
+</ol>
+<p>See an example, assuming the dataset is in a <code class="docutils literal notranslate"><span class="pre">CSV</span></code> format, with one text
+per row:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data:</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="s2">&quot;1880-1900-LwM-HMD-subsample.csv&quot;</span><span class="p">)</span>
+<span class="n">location</span> <span class="o">=</span> <span class="s2">&quot;London&quot;</span>
+<span class="n">wikidata_id</span> <span class="o">=</span> <span class="s2">&quot;Q84&quot;</span>
+
+<span class="c1"># Instantiate the recogniser, ranker and linker:</span>
+<span class="n">myner</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># Instantiate the pipeline:</span>
+<span class="n">geoparser</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="n">myner</span><span class="o">=</span><span class="n">myner</span><span class="p">,</span> <span class="n">myranker</span><span class="o">=</span><span class="n">myranker</span><span class="p">,</span> <span class="n">mylinker</span><span class="o">=</span><span class="n">mylinker</span><span class="p">)</span>
+
+<span class="c1"># Find mentions for each text in the dataframe:</span>
+<span class="n">nlp_df</span><span class="p">[</span><span class="s2">&quot;identified_toponyms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nlp_df</span><span class="o">.</span><span class="n">progress_apply</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_text_recognition</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">],</span>
+        <span class="n">place_wqid</span><span class="o">=</span><span class="n">wikidata_id</span><span class="p">,</span>
+        <span class="n">place</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Obtain the set of unique mentions in the whole dataset and find their candidates:</span>
+<span class="n">all_toponyms</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">nlp_df</span><span class="p">[</span><span class="s2">&quot;identified_toponyms&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span>
+<span class="n">all_cands</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_candidate_selection</span><span class="p">(</span><span class="n">all_toponyms</span><span class="p">)</span>
+
+<span class="c1"># Disambiguate the mentions for each text in the dataframe, taking as an input the</span>
+<span class="c1"># recognised mentions and the mention-to-candidate dictionaries:</span>
+<span class="n">nlp_df</span><span class="p">[</span><span class="s2">&quot;identified_toponyms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nlp_df</span><span class="o">.</span><span class="n">progress_apply</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_disambiguation</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">[</span><span class="s2">&quot;identified_toponyms&quot;</span><span class="p">],</span>
+        <span class="n">all_cands</span><span class="p">,</span>
+        <span class="n">place_wqid</span><span class="o">=</span><span class="n">wikidata_id</span><span class="p">,</span>
+        <span class="n">place</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p><a class="reference external" href="#top-tour">back to top</a></p>
+</section>
+</section>
+</section>
+<section id="the-recogniser">
+<span id="id1"></span><h2>The Recogniser<a class="headerlink" href="#the-recogniser" title="Permalink to this headline"></a></h2>
+<p>The Recogniser performs toponym recognition (i.e. geographic named entity
+recognition). Users can either:</p>
+<ol class="arabic simple">
+<li><p>Load an existing model (either directly downloading a model from the HuggingFace hub or loading a locally stored NER model), or</p></li>
+<li><p>Fine-tune a new model on top of a base model and loading it, or directly load it if it is already pre-trained.</p></li>
+</ol>
+<p>The following notebooks provide examples of both training or loading a
+NER model using the Recogniser, and using it for detecting entities:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">examples</span><span class="o">/</span><span class="n">train_use_ner_model</span><span class="o">.</span><span class="n">ipynb</span>
+<span class="o">./</span><span class="n">examples</span><span class="o">/</span><span class="n">load_use_ner_model</span><span class="o">.</span><span class="n">ipynb</span>
+</pre></div>
+</div>
 <section id="instantiate-the-recogniser">
 <h3>1. Instantiate the Recogniser<a class="headerlink" href="#instantiate-the-recogniser" title="Permalink to this headline"></a></h3>
-<p>To load an already trained model (both from HuggingFace or a local model), you
-can just instantiate the recogniser as follows:</p>
+<p>To load an already trained model (both from HuggingFace or a locally stored
+pre-trained model), you can just instantiate the recogniser as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">recogniser</span>
 
 <span class="n">myner</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span>
@@ -122,21 +499,21 @@ can just instantiate the recogniser as follows:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>For example, to load the <a class="reference external" href="https://huggingface.co/dslim/bert-base-NER">dslim/bert-base-NER</a>
-NER model from the HuggingFace hub:</p>
+<p>For example, in order to load the <a class="reference external" href="https://huggingface.co/Livingwithmachines/toponym-19thC-en">Livingwithmachines/toponym-19thC-en</a> NER model
+from the HuggingFace hub, initialise the Recogniser as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">recogniser</span>
 
 <span class="n">myner</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;dslim/bert-base-NER&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Livingwithmachines/toponym-19thC-en&quot;</span><span class="p">,</span>
     <span class="n">load_from_hub</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>To load a NER model that is stored locally (for example, let’s suppose we have
-a NER model in this relative location
-<code class="docutils literal notranslate"><span class="pre">../resources/models/blb_lwm-ner-fine</span></code>), you can also load it in the same
-way (notice that <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> should still be <code class="docutils literal notranslate"><span class="pre">True</span></code>, probably a better
-name would be <code class="docutils literal notranslate"><span class="pre">load_from_path</span></code>):</p>
+<p>You can also load a model that is stored locally in the same way. For example,
+let’s suppose the user has a NER model stored in the relative location
+<code class="docutils literal notranslate"><span class="pre">../resources/models/blb_lwm-ner-fine</span></code>. The user could load it as follows
+(notice that <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> should still be True, a better name for this
+would probably be <code class="docutils literal notranslate"><span class="pre">load_from_path</span></code>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">recogniser</span>
 
 <span class="n">myner</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span>
@@ -146,23 +523,23 @@ name would be <code class="docutils literal notranslate"><span class="pre">load_
 </pre></div>
 </div>
 <p>Alternatively, you can use the Recogniser to train a new model (and load it,
-once it’s trained). To instantiate the Recogniser for training a new model and
-loading it once it’s trained, you can do it as in the example (see the
-description of each parameter below):</p>
+once it’s trained). The model will be trained using HuggingFace’s
+<code class="docutils literal notranslate"><span class="pre">transformers</span></code> library. To instantiate the Recogniser for training a new
+model and loading it once it’s trained, you can do it as in the example
+(see the description of each parameter below):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">recogniser</span>
 
 <span class="n">myner</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">Recogniser</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="s2">&quot;blb_lwm-ner-fine&quot;</span><span class="p">,</span>
     <span class="n">train_dataset</span><span class="o">=</span><span class="s2">&quot;experiments/outputs/data/lwm/ner_fine_train.json&quot;</span><span class="p">,</span>
     <span class="n">test_dataset</span><span class="o">=</span><span class="s2">&quot;experiments/outputs/data/lwm/ner_fine_dev.json&quot;</span><span class="p">,</span>
-    <span class="n">pipe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">base_model</span><span class="o">=</span><span class="s2">&quot;khosseini/bert_1760_1900&quot;</span><span class="p">,</span>
+    <span class="n">base_model</span><span class="o">=</span><span class="s2">&quot;Livingwithmachines/bert_1760_1900&quot;</span><span class="p">,</span>
     <span class="n">model_path</span><span class="o">=</span><span class="s2">&quot;resources/models/&quot;</span><span class="p">,</span>
     <span class="n">training_args</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">5e-5</span><span class="p">,</span>
-        <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
-        <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-        <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+        <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;num_train_epochs&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.00005</span><span class="p">,</span>
+        <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">do_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -170,403 +547,145 @@ description of each parameter below):</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Description of the arguments:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code> indicates we’re not using an off-the-shelf
-model. It will prepare the Recogniser to train a new model, unless the model
-already exists or if <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>. If
-<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code> and <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to
-<code class="docutils literal notranslate"><span class="pre">False</span></code>, the Recogniser will be prepared to first try to load the model
-and—if it does not exist—will train it. If <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to
-<code class="docutils literal notranslate"><span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, the Recogniser will be
-ready to directly try to train a model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">base_model</span></code> is the path to the model that will be used as base to
-train our NER model. This can be the path to a HuggingFace model (we are
-using <a class="reference external" href="https://huggingface.co/khosseini/bert_1760_1900">khosseini/bert_1760_1900</a>,
-a BERT model trained on 19th Century texts) or the path to a model stored
-locally.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">train_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">test_dataset</span></code> contain the path to the train
-and test data sets necessary for training the NER model. The paths point to a
-json file (one for training, one for testing), in which each line is a
-dictionary corresponding to a sentence. Each sentence-dictionary has three
-key-value pairs: <code class="docutils literal notranslate"><span class="pre">id</span></code> is an ID of the sentence (a string), <code class="docutils literal notranslate"><span class="pre">tokens</span></code> is
-the list of tokens into which the sentence has been split, and <code class="docutils literal notranslate"><span class="pre">ner_tags</span></code>
-is the list of annotations per token (in BIO format). The length of
-<code class="docutils literal notranslate"><span class="pre">tokens</span></code> and <code class="docutils literal notranslate"><span class="pre">ner_tags</span></code> should always be the same. This is an example of
-two lines from either the training or test json files:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;3896239_29&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;ner_tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;B-STREET&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;I-STREET&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;B-BUILDING&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;I-BUILDING&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Old&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Millgate&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;to&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;the&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Collegiate&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Church&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;where&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;they&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;arrived&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;a&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;little&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;after&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;ten&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;oclock&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;.&quot;</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="p">}</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;8262498_11&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;ner_tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;B-LOC&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;B-LOC&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;O&quot;</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;On&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;the&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;\u2018&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;JSth&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;November&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;the&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;ship&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Santo&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Christo&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;from&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Monteveido&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;to&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;Cadiz&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;with&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;hides&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;and&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;copper&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;.&quot;</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">model_path</span></code> is the path where the Recogniser should store the model,
-and <code class="docutils literal notranslate"><span class="pre">model</span></code> is the name of the model. The <code class="docutils literal notranslate"><span class="pre">pipe</span></code> argument can be
-left empty: that’s where we will store the NER pipeline, once the model is
-trained and loaded.</p></li>
-<li><p>The training arguments can be modified in <code class="docutils literal notranslate"><span class="pre">training_args</span></code>: you can
-change the learning rate, batch size, number of training epochs, and weight
-decay.</p></li>
-<li><p>Finally, <code class="docutils literal notranslate"><span class="pre">do_test</span></code> allows you to train a mock model and then load it
-(the suffix <cite>_test</cite> will be added to the model name). As mentioned above,
-<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> forces retraining a model, even if a model with
-the same name and characteristics already exists.</p></li>
+<p>Description of the parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code>: it indicates whether to load a pre-trained NER model. If it is
+set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, the Recogniser will be prepared to train a new model, unless
+the model already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code>: it indicates whether a model should be re-trained, even if
+there already is a model with the same name in the pre-specified output folder.
+If <code class="docutils literal notranslate"><span class="pre">load_from_hub</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code> and <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is also set
+to <code class="docutils literal notranslate"><span class="pre">False</span></code>, then the Recogniser will be prepared to first try to load the model
+and—if it does not exist—to train it. If <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">True</span></code>, it will prepare the Recogniser to train a model, even if a model with
+the same name already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_model</span></code>: the path to the model that will be used as base to train our NER
+model. This can be the path to a HuggingFace model (for example, we are using
+<a class="reference external" href="https://huggingface.co/Livingwithmachines/bert_1760_1900">Livingwithmachines/bert_1760_1900</a>,
+a BERT model trained on nineteenth-century texts) or the path to a pre-trained
+model from a local folder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">test_dataset</span></code>: the path to the train and test data sets
+necessary for training the NER model. You can find more information about the
+format of this data in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_path</span></code>: the path folder where the Recogniser will store the model (and
+try to load it from).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: the name of the NER model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_args</span></code>: the training arguments: the user can change the learning rate,
+batch size, number of training epochs, and weight decay.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">do_test</span></code>: it allows the user to train a mock model and then load it (note that
+the suffix <code class="docutils literal notranslate"><span class="pre">_test</span></code> will be added to the model name).</p></li>
 </ul>
-<p>This instantiation prepares a new model
-(<code class="docutils literal notranslate"><span class="pre">resources/models/blb_lwm-ner-fine.model</span></code>) to be trained, unless the model
-already exists (<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>), in which case it will
-just load it.</p>
 </section>
 <section id="train-the-ner-model">
-<h3>1. Train the NER model<a class="headerlink" href="#train-the-ner-model" title="Permalink to this headline"></a></h3>
-<p>After having instantiated the Recogniser, to train the model, run:</p>
+<h3>2. Train the NER model<a class="headerlink" href="#train-the-ner-model" title="Permalink to this headline"></a></h3>
+<p>Once the Recogniser has been initialised, you can train the model by running:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myner</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Note that if <code class="docutils literal notranslate"><span class="pre">load_to_hub</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or the model already exists
 (and <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>), the training will be skipped,
 even if you call the <code class="docutils literal notranslate"><span class="pre">train()</span></code> method.</p>
-</section>
-<section id="create-a-ner-pipeline">
-<h3>3. Create a NER pipeline<a class="headerlink" href="#create-a-ner-pipeline" title="Permalink to this headline"></a></h3>
-<p>In order to create a NER pipeline, run:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myner</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="n">myner</span><span class="o">.</span><span class="n">create_pipeline</span><span class="p">()</span>
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that this step is already taken care of if you use the T-Res <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code>.</p>
 </div>
-<p>This loads the NER model into a
-<a class="reference external" href="https://huggingface.co/docs/transformers/main_classes/pipelines">Transformers pipeline</a>,
-to use it for inference.</p>
-</section>
-<section id="use-the-ner-pipeline">
-<h3>1. Use the NER pipeline<a class="headerlink" href="#use-the-ner-pipeline" title="Permalink to this headline"></a></h3>
-<p>In order to run the NER pipeline on a sentence, use the <code class="docutils literal notranslate"><span class="pre">ner_predict()</span></code>
-method of the Recogniser as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;I ought to be at Dewsbury Moor.&quot;</span>
-<span class="n">predictions</span> <span class="o">=</span> <span class="n">myner</span><span class="o">.</span><span class="n">ner_predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This returns all words in the sentence, with their detected entity type,
-confidence score, and start and end characters in the sentence, as follows:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9997773766517639</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;I&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9997766613960266</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ought&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9997838139533997</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;to&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9997853636741638</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;be&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9997740387916565</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;at&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;B-LOC&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9603037536144257</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dewsbury&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;I-LOC&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9753544330596924</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Moor&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">26</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9997835755348206</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
-<span class="w">    </span><span class="mi">1</span><span class="p">}</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-<p>To return the named entities in a user-friendlier format, run:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">ner</span>
-
-<span class="c1"># Process predictions:</span>
-<span class="n">processed_predictions</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span>
-        <span class="n">x</span><span class="p">[</span><span class="s2">&quot;word&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">],</span> <span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span>
-    <span class="p">]</span>
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">predictions</span>
-<span class="p">]</span>
-
-<span class="c1"># Aggretate mentions:</span>
-<span class="n">mentions</span> <span class="o">=</span> <span class="n">ner</span><span class="o">.</span><span class="n">aggregate_mentions</span><span class="p">(</span><span class="n">processed_predictions</span><span class="p">,</span> <span class="s2">&quot;pred&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This returns only the named entities, aggregating multiple tokens together:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dewsbury Moor&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start_offset&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end_offset&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;start_char&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;end_char&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;ner_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.968</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;ner_label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;entity_link&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-<p><a class="reference external" href="#top">back to top</a></p>
+<p><a class="reference external" href="#top-tour">back to top</a></p>
 </section>
 </section>
 <section id="the-ranker">
-<h2>The Ranker<a class="headerlink" href="#the-ranker" title="Permalink to this headline"></a></h2>
-<p>The Ranker takes the named entities detected by the Recogniser as input. Given
-a knowledge base, it ranks the entities according to their string similarity to
-the named entity, and selects a subset of candidates that will be passed on to
-the next component, the Linker, to do the disambiguation and select the most
-likely entity.</p>
-<p>In order to use the Ranker and the Linker, we need a knowledge base, a
-gazetteer. T-Res uses a gazetteer which combines data from Wikipedia and
-Wikidata. The steps to create it are described in the
-<a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz">wiki2gaz</a> GitHub
-repository.</p>
-<p>The following files are needed to run the Ranker:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code>: dictionary of Wikidata entities
-(by their QID) mapped to the mentions used in Wikipedia to refer to them
-(obtained through Wikipedia anchor texts) and the normalised score. For
-example, the value of entity <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a>
-is the following:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire, England&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.005478851632697786</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wilton&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9767696690773614</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;College&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire Council&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0015340784571553803</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;West Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;North Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wilts&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0015340784571553803</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;County of Wilts&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0026298487836949377</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;County of Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.010081087004163929</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wilts.&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire county&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire, United Kingdom&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire plains&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Wiltshire England&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code>: the reverse dictionary to the one</p></li>
-<li><p>above, it maps a mention to all the Wikidata entities that are referred to</p></li>
-<li><p>by this mention in Wikipedia. For example, the value of <cite>“Wiltshire”</cite> is:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;Q23183&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9767696690773614</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Q55448990&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;Q8023421&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.03125</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>These scores don’t add up to one, as they are normalised per entity,
-therefore indicating how often an entity is referred to by this mention. For
-example, <code class="docutils literal notranslate"><span class="pre">Q55448990</span></code> is always referred to as <code class="docutils literal notranslate"><span class="pre">Wiltshire</span></code>.</p>
-</li>
-</ul>
-<p>We provide four different strategies for selecting candidates:</p>
+<span id="id3"></span><h2>The Ranker<a class="headerlink" href="#the-ranker" title="Permalink to this headline"></a></h2>
+<p>The Ranker takes the named entities detected by the Recogniser as input.
+Given a knowledge base, it ranks the entities names according to their string
+similarity to the target named entity, and selects a subset of candidates that
+will be passed on to the next component, the Linker, to do the disambiguation
+and select the most likely entity.</p>
+<p>In order to use the Ranker and the Linker, we need a knowledge base, a gazetteer.
+T-Res uses a gazetteer which combines data from Wikipedia and Wikidata. See how
+to obtain the Wikidata-based resources in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the
+documentation.</p>
+<p>T-Res provides four different strategies for selecting candidates:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code> retrieves candidates from the knowledge base if one of
-their alternate names is identical to the detected named entity. For example,
-given the mention “Wiltshire”, the following Wikidata entities will be
-retrieved: <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a>,
+<li><p><code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code> retrieves candidates from the knowledge base if one of their
+alternate names is identical to the detected named entity. For example, given
+the mention “Wiltshire”, the following Wikidata entities will be retrieved:
+<a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a>,
 <a class="reference external" href="https://www.wikidata.org/wiki/Q55448990">Q55448990</a>, and
 <a class="reference external" href="https://www.wikidata.org/wiki/Q8023421">Q8023421</a>, because all these
 entities are referred to as “Wiltshire” in Wikipedia anchor texts.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">partialmatch</span></code> retrieves candidates from the knowledge base if there is
-a (partial) match between the query and the candidate names, based on string
+<li><p><code class="docutils literal notranslate"><span class="pre">partialmatch</span></code> retrieves candidates from the knowledge base if there is a
+(partial) match between the query and the candidate names, based on string
 overlap. Therefore, the mention “Ashton-under” returns candidates for
 “Ashton-under-Lyne”.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> retrieves candidates from the knowledge base if there is
-a fuzzy match between the query and the candidate names, based on levenshtein
-distance. Therefore, if the mention “Wiltshrre” would still return the
-candidates for “Wiltshire”. This method is often quite accurate when it comes
-to OCR variations, but it is very slow.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> retrieves candidates from the knowledge base if there is a
+fuzzy match between the query and the candidate names, based on levenshtein
+distance. Therefore, mention “Wiltshrre” would still return the candidates
+for “Wiltshire”. This method is often quite accurate when it comes to OCR
+variations, but it is very slow.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">deezymatch</span></code> retrieves candidates from the knowledge base if there is a
-fuzzy match between the query and the candidate names, based on
-<a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch">DeezyMatch</a> embeddings.
-Significantly more complex than the other methods to set up from scratch, but
-the fastest approach.</p></li>
+fuzzy match between the query and the candidate names, based on similarity
+between <a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch">DeezyMatch</a>
+embeddings. It is significantly more complex than the other methods to set
+up from scratch, and you will need to train a DeezyMatch model (which takes
+about two hours), but once it is set up, it is the fastest approach (except
+for <code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code>).</p></li>
 </ul>
 <section id="instantiate-the-ranker">
 <h3>1. Instantiate the Ranker<a class="headerlink" href="#instantiate-the-ranker" title="Permalink to this headline"></a></h3>
+<section id="perfectmatch-partialmatch-and-levenshtein">
+<h4>1.1. Perfectmatch, partialmatch, and levenshtein<a class="headerlink" href="#perfectmatch-partialmatch-and-levenshtein" title="Permalink to this headline"></a></h4>
 <p>To use the Ranker for exact matching (<code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code>) or fuzzy string
-matching based either on overlap or Levenshtein distance (<code class="docutils literal notranslate"><span class="pre">partialmatch</span></code> and
-<code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> respectively), instantiate it as follows, changing the
+matching based either on overlap or Levenshtein distance (<code class="docutils literal notranslate"><span class="pre">partialmatch</span></code>
+and <code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> respectively), instantiate it as follows, changing the
 <code class="docutils literal notranslate"><span class="pre">method</span></code> argument accordingly:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">ranking</span>
 
 <span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;perfectmatch&quot;</span><span class="p">,</span> <span class="c1"># or &quot;partialmatch&quot; or &quot;levenshtein&quot;</span>
     <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/wikidata/&quot;</span><span class="p">,</span>
-    <span class="n">mentions_to_wikidata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
-    <span class="n">wikidata_to_mentions</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">resources_path</span></code> should contain the path to the directory
-where the resources are stored, namely <code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code>
-and <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code>. The <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata</span></code> and
-<code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions</span></code> dictionaries should be left empty, as they will be
-populated when the Ranker loads the resources.</p>
+where the Wikidata- and Wikipedia-based resources are stored, as described
+in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation.</p>
+</section>
+<section id="id4">
+<h4>1.2. DeezyMatch<a class="headerlink" href="#id4" title="Permalink to this headline"></a></h4>
 <p>DeezyMatch instantiation is trickier, as it requires training a model that,
 ideally, should capture the types of string variations that can be found in
 your data (such as OCR errrors). Using the Ranker, you can:</p>
-<ol class="arabic simple">
-<li><p>Train a DeezyMatch model from scratch, including generating a string pairs
-dataset.</p></li>
-<li><p>Train a DeezyMatch model, given an existing string pairs dataset.</p></li>
-<li><p>Use an existing DeezyMatch model.</p></li>
-</ol>
-<p>See below each of them in detail.</p>
-<section id="use-an-existing-deezymatch-model">
-<h4>1. Use an existing DeezyMatch model<a class="headerlink" href="#use-an-existing-deezymatch-model" title="Permalink to this headline"></a></h4>
-<p>To use an existing DeezyMatch model, you wil need to have the following
-<code class="docutils literal notranslate"><span class="pre">resources</span></code> file structure (where <code class="docutils literal notranslate"><span class="pre">wkdtalts</span></code> is the name given to the set
-of all Wikidata alternate names and <code class="docutils literal notranslate"><span class="pre">w2v_ocr</span></code> is the name given to the
-DeezyMatch model).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>toponym-resolution/
+<ul class="simple">
+<li><p><strong>Option 1:</strong> Train a DeezyMatch model from scratch, including generating
+a string pairs dataset.</p></li>
+<li><p><strong>Option 2:</strong> Train a DeezyMatch model, given an existing string pairs dataset.</p></li>
+</ul>
+<p>Once a DeezyMatch has been trained, you can load it and use it. The following
+notebooks provide examples of each case:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">examples</span><span class="o">/</span><span class="n">train_use_deezy_model_1</span><span class="o">.</span><span class="n">ipynb</span> <span class="c1"># Option 1</span>
+<span class="o">./</span><span class="n">examples</span><span class="o">/</span><span class="n">train_use_deezy_model_2</span><span class="o">.</span><span class="n">ipynb</span> <span class="c1"># Option 2</span>
+<span class="o">./</span><span class="n">examples</span><span class="o">/</span><span class="n">train_use_deezy_model_3</span><span class="o">.</span><span class="n">ipynb</span> <span class="c1"># Load an existing DeezyMatch model.</span>
+</pre></div>
+</div>
+<p>See below each option in detail.</p>
+<section id="option-1-train-a-deezymatch-model-from-scratch-given-an-existing-string-pairs-dataset">
+<h5>Option 1. Train a DeezyMatch model from scratch, given an existing string pairs dataset<a class="headerlink" href="#option-1-train-a-deezymatch-model-from-scratch-given-an-existing-string-pairs-dataset" title="Permalink to this headline"></a></h5>
+<p>To train a DeezyMatch model from scratch, using an existing string pairs dataset,
+you will need to have the following <cite>resources</cite> file structure (as described in
+the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-RES/
 ├── ...
 ├── resources/
 │   ├── deezymatch/
-│   │   ├── combined/
-│   │   │   └── wkdtalts_w2v_ocr/
-│   │   │       ├── bwd.pt
-│   │   │       ├── bwd_id.pt
-│   │   │       ├── bwd_items.npy
-│   │   │       ├── fwd.pt
-│   │   │       ├── fwd_id.pt
-│   │   │       ├── fwd_items.npy
-│   │   │       └── input_dfm.yaml
-│   │   └── models/
-│   │       └── w2v_ocr/
-│   │           ├── input_dfm.yaml
-│   │           ├── w2v_ocr.model
-│   │           ├── w2v_ocr.model_state_dict
-│   │           └── w2v_ocr.vocab
+│   │   ├── data/
+│   │   │   └── w2v_ocr_pairs.txt
+│   │   └── inputs/
+│   │       ├── characters_v001.vocab
+│   │       └── input_dfm.yaml
 │   ├── models/
 │   ├── news_datasets/
 │   ├── wikidata/
-│   │   ├── mentions_to_wikidata.json
-│   │   └── wikidata_to_mentions.json
+│   │   ├── mentions_to_wikidata_normalized.json
+│   │   └── wikidata_to_mentions_normalized.json
 │   └── wikipedia/
 └── ...
 </pre></div>
@@ -579,10 +698,100 @@ DeezyMatch model).</p>
     <span class="c1"># Generic Ranker parameters:</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;deezymatch&quot;</span><span class="p">,</span>
     <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/wikidata/&quot;</span><span class="p">,</span>
-    <span class="n">mentions_to_wikidata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
-    <span class="n">wikidata_to_mentions</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
+    <span class="c1"># Parameters to create the string pair dataset:</span>
+    <span class="n">strvar_parameters</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
+    <span class="c1"># Parameters to train, load and use a DeezyMatch model:</span>
+    <span class="n">deezy_parameters</span><span class="o">=</span><span class="p">{</span>
+        <span class="c1"># Paths and filenames of DeezyMatch models and data:</span>
+        <span class="s2">&quot;dm_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;resources/deezymatch/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span>
+        <span class="s2">&quot;dm_cands&quot;</span><span class="p">:</span> <span class="s2">&quot;wkdtalts&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dm_model&quot;</span><span class="p">:</span> <span class="s2">&quot;w2v_ocr&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dm_output&quot;</span><span class="p">:</span> <span class="s2">&quot;deezymatch_on_the_fly&quot;</span><span class="p">,</span>
+        <span class="c1"># Ranking measures:</span>
+        <span class="s2">&quot;ranking_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;faiss&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;selection_threshold&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s2">&quot;num_candidates&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="c1"># DeezyMatch training:</span>
+        <span class="s2">&quot;overwrite_training&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Description of the parameters (to learn more, refer to the <a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch/blob/master/README.md#candidate-ranking">DeezyMatch readme</a>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">strvar_parameters</span></code> contains the parameters needed to generate the
+DeezyMatch training set. It can be left empty, since the training set
+already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deezy_parameters</span></code>: contains the set of parameters to train or load a
+DeezyMatch model:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_path</span></code>: The path to the folder where the DeezyMatch model and data will
+be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_cands</span></code>: The name given to the set of alternate names from which DeezyMatch
+will try to find a match for a given mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_model</span></code>: Name of the DeezyMatch model to train (or load if the
+model already exists).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_output</span></code>: Name of the DeezyMatch output file (not really needed).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ranking_metric</span></code>: DeezyMatch parameter: the metric used to rank the string
+variations based on their vectors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">selection_threshold</span></code>: DeezyMatch parameter: selection threshold based on
+the ranking metric.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_candidates</span></code>: DeezyMatch parameter: maximum number of string variations
+that will be retrieved.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code>: DeezyMatch parameter: verbose output or not.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code>: Whether to overwrite the training of a DeezyMatch
+model provided it already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">do_test</span></code>: Whether to train a model in test mode.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="option-2-train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset">
+<h5>Option 2. Train a DeezyMatch model from scratch, including generating a string pairs dataset<a class="headerlink" href="#option-2-train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset" title="Permalink to this headline"></a></h5>
+<p>To train a DeezyMatch model from scratch, including generating a string pairs
+dataset, you will need to have the following <code class="docutils literal notranslate"><span class="pre">resources</span></code> file structure (as
+described in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-RES/
+├── ...
+├── resources/
+│   ├── deezymatch/
+│   ├── models/
+│   │   └── w2v/
+│   │       ├── w2v_1800s_news
+│   │       │   ├── w2v.model
+│   │       │   ├── w2v.model.syn1neg.npy
+│   │       │   └── w2v.model.wv.vectors.npy
+│   │       ├── ...
+│   │       └── w2v_1860s_news
+│   │           ├── w2v.model
+│   │           ├── w2v.model.syn1neg.npy
+│   │           └── w2v.model.wv.vectors.npy
+│   ├── news_datasets/
+│   ├── wikidata/
+│   │   ├── mentions_to_wikidata_normalized.json
+│   │   └── wikidata_to_mentions_normalized.json
+│   └── wikipedia/
+└── ...
+</pre></div>
+</div>
+<p>The Ranker can then be instantiated as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">ranking</span>
+
+<span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
+    <span class="c1"># Generic Ranker parameters:</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;deezymatch&quot;</span><span class="p">,</span>
+    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/wikidata/&quot;</span><span class="p">,</span>
     <span class="c1"># Parameters to create the string pair dataset:</span>
     <span class="n">strvar_parameters</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;ocr_threshold&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="s2">&quot;top_threshold&quot;</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
+        <span class="s2">&quot;min_len&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;max_len&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="s2">&quot;w2v_ocr_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;../resources/models/w2v/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span>
+        <span class="s2">&quot;w2v_ocr_model&quot;</span><span class="p">:</span> <span class="s2">&quot;w2v_*_news&quot;</span><span class="p">,</span>
         <span class="s2">&quot;overwrite_dataset&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># Parameters to train, load and use a DeezyMatch model:</span>
@@ -594,69 +803,8 @@ DeezyMatch model).</p>
         <span class="s2">&quot;dm_output&quot;</span><span class="p">:</span> <span class="s2">&quot;deezymatch_on_the_fly&quot;</span><span class="p">,</span>
         <span class="c1"># Ranking measures:</span>
         <span class="s2">&quot;ranking_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;faiss&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;selection_threshold&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
-        <span class="s2">&quot;num_candidates&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;search_size&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="c1"># DeezyMatch training:</span>
-        <span class="s2">&quot;overwrite_training&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">},</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Description of the arguments (to learn more, refer to the
-<a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch/blob/master/README.md">DeezyMatch readme</a>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">strvar_parameters</span></code> contains the parameters needed to generate the
-DeezyMatch training set. In this scenario, the DeezyMatch model is already
-trained and there is therefore no need to generate the training set.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">deezy_parameters</span></code> contains the set of parameters to train or load a
-DeezyMatch model:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">dm_path</span></code>: The path to the folder where the DeezyMatch model and
-data will be stored.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dm_cands</span></code>: The name given to the set of alternate names from which
-DeezyMatch will try to find a match for a given mention.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dm_model</span></code>: Name of the DeezyMatch model to train or load.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ranking_metric</span></code> Metric used to TODO</p></li>
-</ul>
-</li>
-</ul>
-<p>You can download these resources from:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">resources/deezymatch/combined/wkdtalts_w2v_ocr/</span></code>: <strong>[TODO]</strong></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">resources/deezymatch/models/w2v_ocr/</span></code>: <strong>[TODO]</strong></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">wikidata/mentions_to_wikidata.json</span></code>: <strong>[TODO]</strong></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">wikidata/wikidata_to_mentions.json</span></code>: <strong>[TODO]</strong></p></li>
-</ul>
-</section>
-<section id="train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset">
-<h4>1. Train a DeezyMatch model from scratch, including generating a string pairs dataset<a class="headerlink" href="#train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset" title="Permalink to this headline"></a></h4>
-<p>TODO</p>
-</section>
-<section id="train-a-deezymatch-model-given-an-existing-string-pairs-dataset">
-<h4>2. Train a DeezyMatch model, given an existing string pairs dataset<a class="headerlink" href="#train-a-deezymatch-model-given-an-existing-string-pairs-dataset" title="Permalink to this headline"></a></h4>
-<p>TODO</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;perfectmatch&quot;</span><span class="p">,</span>
-    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;../resources/wikidata/&quot;</span><span class="p">,</span>
-    <span class="n">mentions_to_wikidata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
-    <span class="n">wikidata_to_mentions</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
-    <span class="c1"># Parameters to create the string pair dataset:</span>
-    <span class="n">strvar_parameters</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;overwrite_dataset&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="n">deezy_parameters</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;dm_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;../resources/deezymatch/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span>
-        <span class="s2">&quot;dm_cands&quot;</span><span class="p">:</span> <span class="s2">&quot;wkdtalts&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;dm_model&quot;</span><span class="p">:</span> <span class="s2">&quot;w2v_ocr&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;dm_output&quot;</span><span class="p">:</span> <span class="s2">&quot;deezymatch_on_the_fly&quot;</span><span class="p">,</span>
-        <span class="c1"># Ranking measures:</span>
-        <span class="s2">&quot;ranking_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;faiss&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;selection_threshold&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
-        <span class="s2">&quot;num_candidates&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;search_size&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;selection_threshold&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s2">&quot;num_candidates&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="c1"># DeezyMatch training:</span>
         <span class="s2">&quot;overwrite_training&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -665,15 +813,61 @@ DeezyMatch will try to find a match for a given mention.</p></li>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>Description of the parameters (to learn more, refer to the <a class="reference external" href="https://github.com/Living-with-machines/DeezyMatch/blob/master/README.md#candidate-ranking">DeezyMatch readme</a>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">strvar_parameters</span></code> contains the parameters needed to generate the
+DeezyMatch training set:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ocr_threshold</span></code>: Maximum <a class="reference external" href="https://pypi.org/project/fuzzywuzzy/">FuzzyWuzzy</a>
+ratio for two strings to be considered negative variations of each other.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">top_threshold</span></code>: Minimum <a class="reference external" href="https://pypi.org/project/fuzzywuzzy/">FuzzyWuzzy</a>
+ratio for two strings to be considered positive variations of each other.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_len</span></code>: Minimum length for a word to be included in the dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_len</span></code>: Maximum length for a word to be included in the dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w2v_ocr_path</span></code>: The path to the word2vec embeddings folders.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w2v_ocr_model</span></code>: The folder name of the word2vec embeddings (it can be a
+regular expression).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overwrite_dataset</span></code>: Whether to overwrite the dataset if it already exists.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deezy_parameters</span></code>: contains the set of parameters to train or load a
+DeezyMatch model:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_path</span></code>: The path to the folder where the DeezyMatch model and data will
+be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_cands</span></code>: The name given to the set of alternate names from which DeezyMatch
+will try to find a match for a given mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_model</span></code>: Name of the DeezyMatch model to train or load.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm_output</span></code>: Name of the DeezyMatch output file (not really needed).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ranking_metric</span></code>: DeezyMatch parameter: the metric used to rank the string
+variations based on their vectors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">selection_threshold</span></code>: DeezyMatch parameter: selection threshold based on
+the ranking metric.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_candidates</span></code>: DeezyMatch parameter: maximum number of string variations
+that will be retrieved.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code>: DeezyMatch parameter: verbose output or not.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code>: Whether to overwrite the training of a DeezyMatch
+model provided it already exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">do_test</span></code>: Whether to train a model in test mode.</p></li>
+</ul>
+</li>
+</ul>
+</section>
 </section>
 </section>
 <section id="load-the-resources">
 <h3>2. Load the resources<a class="headerlink" href="#load-the-resources" title="Permalink to this headline"></a></h3>
-<p>The following line loads the resources (i.e. the <code class="docutils literal notranslate"><span class="pre">mentions-to-wikidata</span></code> and
-<code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions</span></code> dictionaries) required to perform candidate selection
-and ranking, regardless of the Ranker method.</p>
+<p>The following line of code loads the resources (i.e. the
+<code class="docutils literal notranslate"><span class="pre">mentions-to-wikidata_normalized.json</span></code> and
+<code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code> files into dictionaries). They are
+required in order to perform candidate selection and ranking, regardless of
+the Ranker method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">myranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that this step is already taken care of if you use the <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code>.</p>
 </div>
 </section>
 <section id="train-a-deezymatch-model">
@@ -683,29 +877,219 @@ when instantiating the Ranker.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myranker</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Note that if the model already exists and overwrite_training is set to
-<code class="docutils literal notranslate"><span class="pre">False</span></code>, the training will be skipped, even if you call the train() method.
-The training will also be skipped if the Ranker is not instantiated for
-DeezyMatch.</p>
+<p>Note that if the model already exists and <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, the training will be skipped, even if you call the <code class="docutils literal notranslate"><span class="pre">train()</span></code>
+method. The training will also be skipped if the Ranker is instantiated for
+a different method than DeezyMatch.</p>
+<p>The resulting model will be stored in the specified path. In this case, the
+resulting DeezyMatch model that the Ranker will use is called <code class="docutils literal notranslate"><span class="pre">w2v_ocr</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-RES/
+├── ...
+├── resources/
+│   ├── deezymatch/
+│   │   └── models/
+│   │       └── w2v_ocr/
+│   │           ├── input_dfm.yaml
+│   │           ├── w2v_ocr.model
+│   │           ├── w2v_ocr.model_state_dict
+│   │           └── w2v_ocr.vocab
+│   ├── models/
+│   ├── news_datasets/
+│   ├── wikidata/
+│   │   ├── mentions_to_wikidata_normalized.json
+│   │   └── wikidata_to_mentions_normalized.json
+│   └── wikipedia/
+└── ...
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that this step is already taken care of if you use the <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code>.</p>
+</div>
 </section>
 <section id="retrieve-candidates-for-a-given-mention">
 <h3>4. Retrieve candidates for a given mention<a class="headerlink" href="#retrieve-candidates-for-a-given-mention" title="Permalink to this headline"></a></h3>
+<p>In order to use the Ranker to retrieve candidates for a given mention, follow
+the example. The <code class="docutils literal notranslate"><span class="pre">find_candidates</span></code> Ranker method requires that the input is
+a list of dictionaries, where the key is always <code class="docutils literal notranslate"><span class="pre">&quot;mention&quot;</span></code> and the value
+is the toponym in question.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">toponym</span> <span class="o">=</span> <span class="s2">&quot;Manchefter&quot;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">myranker</span><span class="o">.</span><span class="n">find_candidates</span><span class="p">([{</span><span class="s2">&quot;mention&quot;</span><span class="p">:</span> <span class="n">toponym</span><span class="p">}])[</span><span class="mi">0</span><span class="p">][</span><span class="n">toponym</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><a class="reference external" href="#top">back to top</a></p>
+<p><a class="reference external" href="#top-tour">back to top</a></p>
 </section>
 </section>
 <section id="the-linker">
-<h2>The Linker<a class="headerlink" href="#the-linker" title="Permalink to this headline"></a></h2>
-<p>TODO</p>
-<p><a class="reference external" href="#top">back to top</a></p>
+<span id="id8"></span><h2>The Linker<a class="headerlink" href="#the-linker" title="Permalink to this headline"></a></h2>
+<p>The Linker takes as input the set of candidates selected by the Ranker and
+disambiguates them, selecting the best matching entity depending on the
+approach selected for disambiguation.</p>
+<p>We provide two different strategies for disambiguation:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">mostpopular</span></code>: Unsupervised method, which, given a set of candidates
+for a given mention, returns as a prediction the candidate that is most
+popular in terms of inlink structure in Wikipedia.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reldisamb</span></code>: Given a set of candidates, this approach uses the
+<a class="reference external" href="https://github.com/informagi/REL/">REL re-implementation</a> of the
+<a class="reference external" href="https://github.com/lephong/mulrel-nel">ment-norm algorithm</a> proposed
+by Le and Titov (2018) and partially based on Ganea and Hofmann (2017),
+and adapts it. To know more:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Koen</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="n">Balog</span><span class="p">,</span> <span class="ow">and</span>
+<span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span> <span class="n">de</span> <span class="n">Vries</span><span class="o">.</span> <span class="s2">&quot;Rel: An entity linker standing on the shoulders of giants.&quot;</span>
+<span class="n">In</span> <span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span>
+<span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">,</span> <span class="n">pp</span><span class="o">.</span> <span class="mi">2197</span><span class="o">-</span><span class="mf">2200.</span> <span class="mf">2020.</span>
+
+<span class="n">Le</span><span class="p">,</span> <span class="n">Phong</span><span class="p">,</span> <span class="ow">and</span> <span class="n">Ivan</span> <span class="n">Titov</span><span class="o">.</span> <span class="s2">&quot;Improving Entity Linking by Modeling Latent Relations</span>
+<span class="n">between</span> <span class="n">Mentions</span><span class="o">.</span><span class="s2">&quot; In Proceedings of the 56th Annual Meeting of the Association</span>
+<span class="k">for</span> <span class="n">Computational</span> <span class="n">Linguistics</span> <span class="p">(</span><span class="n">Volume</span> <span class="mi">1</span><span class="p">:</span> <span class="n">Long</span> <span class="n">Papers</span><span class="p">),</span> <span class="n">pp</span><span class="o">.</span> <span class="mi">1595</span><span class="o">-</span><span class="mf">1604.</span> <span class="mf">2018.</span>
+
+<span class="n">Ganea</span><span class="p">,</span> <span class="n">Octavian</span><span class="o">-</span><span class="n">Eugen</span><span class="p">,</span> <span class="ow">and</span> <span class="n">Thomas</span> <span class="n">Hofmann</span><span class="o">.</span> <span class="s2">&quot;Deep Joint Entity Disambiguation</span>
+<span class="k">with</span> <span class="n">Local</span> <span class="n">Neural</span> <span class="n">Attention</span><span class="o">.</span><span class="s2">&quot; In Proceedings of the 2017 Conference on</span>
+<span class="n">Empirical</span> <span class="n">Methods</span> <span class="ow">in</span> <span class="n">Natural</span> <span class="n">Language</span> <span class="n">Processing</span><span class="p">,</span> <span class="n">pp</span><span class="o">.</span> <span class="mi">2619</span><span class="o">-</span><span class="mf">2629.</span> <span class="mf">2017.</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<section id="instantiate-the-linker">
+<h3>1. Instantiate the Linker<a class="headerlink" href="#instantiate-the-linker" title="Permalink to this headline"></a></h3>
+<section id="mostpopular">
+<h4>1.1. <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code><a class="headerlink" href="#mostpopular" title="Permalink to this headline"></a></h4>
+<p>To use the Linker with the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> approach, instantiate it as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">linking</span>
+
+<span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mostpopular&quot;</span><span class="p">,</span>
+    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Description of the parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: name of the method, in this case <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resources_path</span></code>: path to the resources directory.</p></li>
+</ul>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">resources_path</span></code> should contain the path to the directory where
+the resources are stored.</p>
+<p>When using the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> linking approach, the resources folder should at
+least contain the following resources:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+  └── resources/
+      └── wikidata/
+          ├── entity2class.txt
+          ├── mentions_to_wikidata.json
+          └── wikidata_gazetteer.csv
+</pre></div>
+</div>
 </section>
-<section id="the-pipeline">
-<h2>The Pipeline<a class="headerlink" href="#the-pipeline" title="Permalink to this headline"></a></h2>
-<p>TODO</p>
-<p><a class="reference external" href="#top">back to top</a></p>
+<section id="reldisamb">
+<h4>1.2. <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code><a class="headerlink" href="#reldisamb" title="Permalink to this headline"></a></h4>
+<p>To use the Linker with the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code> approach, instantiate it as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">linking</span>
+
+<span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;resources/rel_db/embeddings_database.db&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+    <span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;reldisamb&quot;</span><span class="p">,</span>
+        <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/&quot;</span><span class="p">,</span>
+        <span class="n">rel_params</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="s2">&quot;resources/models/disambiguation/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;experiments/outputs/data/lwm/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;originalsplit&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="n">cursor</span><span class="p">,</span>
+            <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;London&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;Q84&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Description of the parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: name of the method, in this case <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resources_path</span></code>: path to the resources directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code>: whether to overwrite the training of the entity
+disambiguation model provided a model with the same path and name already
+exists.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rel_params</span></code>: set of parameters specific to the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code> method:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_path</span></code>: Path to the entity disambiguation model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_path</span></code>: Path to the dataset file <code class="docutils literal notranslate"><span class="pre">linking_df_split.tsv</span></code> used for
+training a model (see information about the dataset in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>”
+page in the documentation).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_split</span></code>: Column from the <code class="docutils literal notranslate"><span class="pre">linking_df_split.tsv</span></code> file that indicates
+which documents are used for training, development, and testing (see more
+information about this in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">db_embeddings</span></code>: cursor for the embeddings database (see more
+information about this in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">with_publication</span></code>: whether place of publication should be used as a feature
+when disambiguating (by adding it as an already disambiguated entity).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">without_microtoponyms</span></code>: whether to filter out microtoponyms or not (i.e.
+filter out all entities that are not <code class="docutils literal notranslate"><span class="pre">LOC</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">do_test</span></code>: Whether to train an entity disambiguation model in test mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_publname</span></code>: The default value for the place of publication of
+the texts. For example, “London”. This will be the default publication place
+name, but you will be able to override it when using the Linker to do predictions.
+This will be ignored if <code class="docutils literal notranslate"><span class="pre">with_publication</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_publwqid</span></code>: The wikidata ID of the place of publication. For example,
+<code class="docutils literal notranslate"><span class="pre">Q84</span></code> for London. As in <code class="docutils literal notranslate"><span class="pre">default_publname</span></code>, you will be able to override
+it at inference time, and it will be ignored if <code class="docutils literal notranslate"><span class="pre">with_publication</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+<p>In this way, an entity disambiguation model will be trained unless a model trained
+using the same characteristics already exists (i.e. same candidate ranker method,
+same <code class="docutils literal notranslate"><span class="pre">training_split</span></code> column name, and same values for <code class="docutils literal notranslate"><span class="pre">with_publication</span></code> and
+<code class="docutils literal notranslate"><span class="pre">without_microtoponyms</span></code>).</p>
+<p>When using the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code> linking approach, the resources folder should at
+least contain the following resources:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+  └── resources/
+      ├── wikidata/
+      |   ├── entity2class.txt
+      |   ├── mentions_to_wikidata.json
+      |   └── wikidata_gazetteer.csv
+      └── rel_db/
+          └── embeddings_database.db
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id9">
+<h3>2. Load the resources<a class="headerlink" href="#id9" title="Permalink to this headline"></a></h3>
+<p>The following line of code loads the resources required by the Linker, regardless
+of the Linker method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mylinker</span><span class="o">.</span><span class="n">linking_resources</span> <span class="o">=</span> <span class="n">mylinker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that this step is already taken care of if you use the <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code>.</p>
+</div>
+</section>
+<section id="train-an-entity-disambiguation-model">
+<h3>3. Train an entity disambiguation model<a class="headerlink" href="#train-an-entity-disambiguation-model" title="Permalink to this headline"></a></h3>
+<p>The following line will train an entity disambiguation model, given the arguments
+specified when instantiating the Linker.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mylinker</span><span class="o">.</span><span class="n">rel_params</span><span class="p">[</span><span class="s2">&quot;ed_model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mylinker</span><span class="o">.</span><span class="n">train_load_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myranker</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that if the model already exists and <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+the training will be skipped, even if you call the <code class="docutils literal notranslate"><span class="pre">train()</span></code> method. The training
+will also be skipped if the Linker is instantiated for <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code>.</p>
+<p>The resulting model will be stored in the location specified when instantiating the
+Linker (i.e. <code class="docutils literal notranslate"><span class="pre">resources/models/disambiguation/</span></code> in the example) in a new folder
+whose name combines information about the ranking and linking arguments used in
+training the method.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that this step is already taken care of if you use the <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code>.</p>
+</div>
+<p><a class="reference external" href="#top-tour">back to top</a></p>
+</section>
 </section>
 </section>
 
@@ -713,14 +1097,14 @@ DeezyMatch.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="installation.html" class="btn btn-neutral float-left" title="Installing T-Res" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resources.html" class="btn btn-neutral float-left" title="Resources and directory structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../reference/index.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023 Living with Machines.</p>
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

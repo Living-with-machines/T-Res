@@ -57,7 +57,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../other-files/index.html">Other files in repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
         </div>
@@ -172,7 +172,7 @@ sentence.</p></li>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1303.g577bb7239c)">pandas.DataFrame</a></p>
+<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1307.g0e8c730fd8)">pandas.DataFrame</a></p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -187,7 +187,7 @@ occurrence.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.preprocess_data.process_lwm_for_linking">
-<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_lwm_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsv_topres_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1303.g577bb7239c)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.process_lwm_for_linking" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_lwm_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsv_topres_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1307.g0e8c730fd8)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.process_lwm_for_linking" title="Permalink to this definition"></a></dt>
 <dd><p>Process LwM data for performing entity linking.</p>
 <p>The function reads annotated TSV files and generates a DataFrame with one toponym per row.
 Each row includes the annotation and resolution information of the toponym.</p>
@@ -219,7 +219,7 @@ information for each toponym.</p></li>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1303.g577bb7239c)">pandas.DataFrame</a></p>
+<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1307.g0e8c730fd8)">pandas.DataFrame</a></p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -297,7 +297,7 @@ helps to create complete and contiguous entities.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.preprocess_data.process_hipe_for_linking">
-<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_hipe_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipe_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1303.g577bb7239c)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.process_hipe_for_linking" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_hipe_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipe_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1307.g0e8c730fd8)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.process_hipe_for_linking" title="Permalink to this definition"></a></dt>
 <dd><p>Process LwM HIPE data for performing entity linking.</p>
 <p>The function reads HIPE data from a file and generates a DataFrame with
 one toponym per row. Each row includes the annotation and resolution
@@ -331,7 +331,7 @@ string).</p></li>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1303.g577bb7239c)">pandas.DataFrame</a></p>
+<dd class="field-odd"><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0.dev0+1307.g0e8c730fd8)">pandas.DataFrame</a></p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -415,7 +415,7 @@ equivalents.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023 Living with Machines.</p>
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

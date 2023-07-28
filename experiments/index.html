@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiments and evaluation &mdash; T-Res 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Installing T-Res as API" href="../t-res-api/installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> T-Res
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/index.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Experiments and evaluation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#obtain-the-external-resources">1. Obtain the external resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preparing-the-data">2. Preparing the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-experiments">3. Running the experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluate">4. Evaluate</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">T-Res</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Experiments and evaluation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/experiments/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="experiments-and-evaluation">
+<h1>Experiments and evaluation<a class="headerlink" href="#experiments-and-evaluation" title="Permalink to this headline"></a></h1>
+<p>Follow these steps to reproduce the experiments in our paper.</p>
+<section id="obtain-the-external-resources">
+<h2>1. Obtain the external resources<a class="headerlink" href="#obtain-the-external-resources" title="Permalink to this headline"></a></h2>
+<p>Follow the instructions in the “<span class="xref std std-doc">resources</span>” page in the documentation
+to obtain the resources required for running the experiments.</p>
+</section>
+<section id="preparing-the-data">
+<h2>2. Preparing the data<a class="headerlink" href="#preparing-the-data" title="Permalink to this headline"></a></h2>
+<p>To create the datasets that we use in the experiments presented in the paper,
+run the following command from the <code class="docutils literal notranslate"><span class="pre">./experiments/</span></code> folder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./prepare_data.py
+</pre></div>
+</div>
+<p>This script takes care of downloading the LwM and HIPE datasets and format them
+as needed in the experiments.</p>
+</section>
+<section id="running-the-experiments">
+<h2>3. Running the experiments<a class="headerlink" href="#running-the-experiments" title="Permalink to this headline"></a></h2>
+<p>To run the experiments, run the following script from the <code class="docutils literal notranslate"><span class="pre">./experiments/</span></code>
+folder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./toponym_resolution.py
+</pre></div>
+</div>
+<p>This script does runs for all different scenarios reported in the experiments in
+the paper.</p>
+</section>
+<section id="evaluate">
+<h2>4. Evaluate<a class="headerlink" href="#evaluate" title="Permalink to this headline"></a></h2>
+<p>To evaluate the different approaches and obtain a table with results such as the
+one provided in the paper, go to the <code class="docutils literal notranslate"><span class="pre">./evaluation/</span></code> directory. There, you
+should clone the <a class="reference external" href="https://github.com/hipe-eval/HIPE-scorer">HIPE scorer</a>. We
+are using the code version at commit <code class="docutils literal notranslate"><span class="pre">50dff4e</span></code>, and have added the line
+<code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">eval_stats</span></code> at the end of the <code class="docutils literal notranslate"><span class="pre">get_results()</span></code> function. From
+<code class="docutils literal notranslate"><span class="pre">./evaluation/</span></code>, run the following script to obtain the results in latex
+format:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>display_results.py
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../t-res-api/installation.html" class="btn btn-neutral float-left" title="Installing T-Res as API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

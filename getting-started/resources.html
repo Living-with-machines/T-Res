@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resources and directory structure &mdash; T-Res 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The complete tour" href="complete-tour.html" />
+    <link rel="prev" title="Installing T-Res" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> T-Res
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installing T-Res</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Resources and directory structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#toponym-recognition-and-disambiguation-training-data">Toponym recognition and disambiguation training data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#toponym-recognition-dataset">1. Toponym recognition dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#toponym-disambiguation-dataset">2. Toponym disambiguation dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#wikipedia-and-wikidata-based-resources">Wikipedia- and Wikidata-based resources</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mentions-to-wikidata-json"><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mentions-to-wikidata-normalized-json"><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wikidata-to-mentions-normalized-json"><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wikidata-gazetteer-csv"><code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#entity2class-txt"><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#entity-and-word-embeddings">Entity and word embeddings</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#generate-the-embeddings-database">Generate the embeddings database</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#deezymatch-training-set">DeezyMatch training set</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id6">1. DeezyMatch training set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#word2vec-embeddings-trained-on-noisy-data">2. Word2Vec embeddings trained on noisy data</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#summary-of-resources-and-directory-structure">Summary of resources and directory structure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="complete-tour.html">The complete tour</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../experiments/index.html">Experiments and evaluation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">T-Res</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Getting started</a> &raquo;</li>
+      <li>Resources and directory structure</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/getting-started/resources.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="resources-and-directory-structure">
+<span id="top-resources"></span><h1>Resources and directory structure<a class="headerlink" href="#resources-and-directory-structure" title="Permalink to this headline"></a></h1>
+<p>T-Res requires several resources to work. Some resources can be downloaded
+and loaded directly from the web. Others will need to be generated, following
+the instructions provided in this section.</p>
+<section id="toponym-recognition-and-disambiguation-training-data">
+<h2>Toponym recognition and disambiguation training data<a class="headerlink" href="#toponym-recognition-and-disambiguation-training-data" title="Permalink to this headline"></a></h2>
+<p>We provide the dataset we used to train T-Res for the tasks of toponym recognition
+(i.e. a named entity recognition task) and toponym disambiguation (i.e. an entity
+linking task focused on geographical entities). The dataset is based on the
+<a class="reference external" href="https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.56">TopRes19th dataset</a>.</p>
+<p>You can download the data (in the format required by T-Res) from the <a class="reference external" href="https://bl.iro.bl.uk/concern/datasets/ef537c70-87cb-495a-86c8-edffefa6bdc6">British
+Library research repository</a>.</p>
+<p>By default, T-Res assumes the files are stored in the following location:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+└── experiments/
+    └── outputs/
+        └── data/
+            └── lwm/
+                ├── ner_fine_dev.json
+                ├── ner_fine_test.json
+                └── linking_df_split.tsv
+</pre></div>
+</div>
+<p>Continue reading the sections below to learn more about the datasets, and for a
+description of the format expected by T-Res.</p>
+<section id="toponym-recognition-dataset">
+<h3>1. Toponym recognition dataset<a class="headerlink" href="#toponym-recognition-dataset" title="Permalink to this headline"></a></h3>
+<p>T-Res allows directly loading a pre-trained BERT-based NER model, either locally
+or from the HuggingFace models hub. If this is your option, you can skip this
+section. Otherwise, if you want to train your own NER model using either our
+dataset or a different dataset, you should continue reading.</p>
+<p>T-Res requires that the data for training a NER model is provided as two json files
+(one for training, one for testing) in the JSON Lines format, where each line
+corresponds to a sentence. Each sentence is a dictionary with three key-value
+pairs: <code class="docutils literal notranslate"><span class="pre">id</span></code> (an identifier of the sentence, a string), <code class="docutils literal notranslate"><span class="pre">tokens</span></code> (the list of
+tokens into which the sentence has been split), and <code class="docutils literal notranslate"><span class="pre">ner_tags</span></code> (the list of
+annotations per token, in the BIO format). The length of <code class="docutils literal notranslate"><span class="pre">tokens</span></code> and <code class="docutils literal notranslate"><span class="pre">ner_tags</span></code>
+is therefore always the same. See below an example of three lines from one of
+the JSON files, corresponding to three annotated sentences:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;3896239_29&quot;</span><span class="p">,</span><span class="nt">&quot;ner_tags&quot;</span><span class="p">:[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;B-STREET&quot;</span><span class="p">,</span><span class="s2">&quot;I-STREET&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;B-BUILDING&quot;</span><span class="p">,</span><span class="s2">&quot;I-BUILDING&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">],</span><span class="nt">&quot;tokens&quot;</span><span class="p">:[</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;Old&quot;</span><span class="p">,</span><span class="s2">&quot;Millgate&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;to&quot;</span><span class="p">,</span><span class="s2">&quot;the&quot;</span><span class="p">,</span><span class="s2">&quot;Collegiate&quot;</span><span class="p">,</span><span class="s2">&quot;Church&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;where&quot;</span><span class="p">,</span><span class="s2">&quot;they&quot;</span><span class="p">,</span><span class="s2">&quot;arrived&quot;</span><span class="p">,</span><span class="s2">&quot;a&quot;</span><span class="p">,</span><span class="s2">&quot;little&quot;</span><span class="p">,</span><span class="s2">&quot;after&quot;</span><span class="p">,</span><span class="s2">&quot;ten&quot;</span><span class="p">,</span><span class="s2">&quot;oclock&quot;</span><span class="p">,</span><span class="s2">&quot;.&quot;</span><span class="p">]}</span>
+<span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;8262498_11&quot;</span><span class="p">,</span><span class="nt">&quot;ner_tags&quot;</span><span class="p">:[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;B-LOC&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;B-LOC&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">],</span><span class="nt">&quot;tokens&quot;</span><span class="p">:[</span><span class="s2">&quot;On&quot;</span><span class="p">,</span><span class="s2">&quot;the&quot;</span><span class="p">,</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;JSth&quot;</span><span class="p">,</span><span class="s2">&quot;November&quot;</span><span class="p">,</span><span class="s2">&quot;the&quot;</span><span class="p">,</span><span class="s2">&quot;ship&quot;</span><span class="p">,</span><span class="s2">&quot;Santo&quot;</span><span class="p">,</span><span class="s2">&quot;Christo&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;from&quot;</span><span class="p">,</span><span class="s2">&quot;Monteveido&quot;</span><span class="p">,</span><span class="s2">&quot;to&quot;</span><span class="p">,</span><span class="s2">&quot;Cadiz&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;with&quot;</span><span class="p">,</span><span class="s2">&quot;hides&quot;</span><span class="p">,</span><span class="s2">&quot;and&quot;</span><span class="p">,</span><span class="s2">&quot;copper&quot;</span><span class="p">,</span><span class="s2">&quot;.&quot;</span><span class="p">]}</span>
+<span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;10715509_7&quot;</span><span class="p">,</span><span class="nt">&quot;ner_tags&quot;</span><span class="p">:[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;B-LOC&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">,</span><span class="s2">&quot;O&quot;</span><span class="p">],</span><span class="nt">&quot;tokens&quot;</span><span class="p">:[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span><span class="s2">&quot;COACH&quot;</span><span class="p">,</span><span class="s2">&quot;to&quot;</span><span class="p">,</span><span class="s2">&quot;SOUTHAMPTON&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;every&quot;</span><span class="p">,</span><span class="s2">&quot;morning&quot;</span><span class="p">,</span><span class="s2">&quot;at&quot;</span><span class="p">,</span><span class="s2">&quot;a&quot;</span><span class="p">,</span><span class="s2">&quot;quarter&quot;</span><span class="p">,</span><span class="s2">&quot;before&quot;</span><span class="p">,</span><span class="s2">&quot;6&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;Sundays&quot;</span><span class="p">,</span><span class="s2">&quot;excepted&quot;</span><span class="p">,</span><span class="s2">&quot;.&quot;</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>Note that the list of NER labels will be automatically detected from the training
+data.</p>
+</section>
+<section id="toponym-disambiguation-dataset">
+<h3>2. Toponym disambiguation dataset<a class="headerlink" href="#toponym-disambiguation-dataset" title="Permalink to this headline"></a></h3>
+<p>Train and test data examples are required for training a new entity
+disambiguation (ED) model. They should be provided in a single tsv file, named
+<code class="docutils literal notranslate"><span class="pre">linking_df_split.tsv</span></code>, one document per row, with the following required
+columns:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">article_id</span></code>: article identifier, which consists of the number in the
+document file in the original dataset (for example, the <code class="docutils literal notranslate"><span class="pre">article_id</span></code> of
+<code class="docutils literal notranslate"><span class="pre">1218_Poole1860.tsv</span></code> is <code class="docutils literal notranslate"><span class="pre">1218</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sentences</span></code>: list of dictionaries, each dictionary corresponding to a
+sentence in the article, with two fields: <code class="docutils literal notranslate"><span class="pre">sentence_pos</span></code> (the position
+of the sentence in the article) and <code class="docutils literal notranslate"><span class="pre">sentence_text</span></code> (the text of the
+sentence). For example:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;sentence_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;sentence_text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DUKINFIELD.  &quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;sentence_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;sentence_text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Knutsford Sessions.&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;sentence_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;sentence_text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;—The servant girl, Eliza Ann Byrom, who stole a quantity of clothes from the house where she lodged, in Dukiafield, was sentenced to two months’ imprisonment. &quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">annotations</span></code>: list of dictionaries containing the annotated place names.
+Each dictionary corresponds to a named entity mentioned in the text, with the
+following fields (at least): <code class="docutils literal notranslate"><span class="pre">mention_pos</span></code> (order of the mention in the article),
+<code class="docutils literal notranslate"><span class="pre">mention</span></code> (the actual mention), <code class="docutils literal notranslate"><span class="pre">entity_type</span></code> (the type of named entity),
+<code class="docutils literal notranslate"><span class="pre">wkdt_qid</span></code> (the Wikidata ID of the resolved entity), <code class="docutils literal notranslate"><span class="pre">mention_start</span></code>
+(the character start position of the mention in the sentence), <code class="docutils literal notranslate"><span class="pre">mention_end</span></code>
+(the character end position of the mention in the sentence), <code class="docutils literal notranslate"><span class="pre">sent_pos</span></code>
+(the sentence index in which the mention is found).</p>
+<p>For example:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mention_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DUKINFIELD&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;entity_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;wkdt_qid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q1976179&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention_start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;sent_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mention_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Knutsford&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;entity_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;wkdt_qid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q1470791&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention_start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;sent_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mention_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dukiafield&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;entity_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOC&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;wkdt_qid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q1976179&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention_start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mention_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">114</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;sent_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">place</span></code>: A string containing the place of publication of the newspaper to
+which the article belongs. For example, “Manchester” or “Ashton-under-Lyne”.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">place_wqid</span></code>: A string with the Wikidata ID of the place of publication.
+For example, if <code class="docutils literal notranslate"><span class="pre">place</span></code> is London UK, then <code class="docutils literal notranslate"><span class="pre">place_wqid</span></code> should be <code class="docutils literal notranslate"><span class="pre">Q84</span></code>.</p></li>
+</ul>
+<p>Finally, the TSV contains a set of columns which can be used to indicate how
+to split the dataset into training (<code class="docutils literal notranslate"><span class="pre">train</span></code>), development (<code class="docutils literal notranslate"><span class="pre">dev</span></code>), testing
+(<code class="docutils literal notranslate"><span class="pre">test</span></code>), or documents to leave out (<code class="docutils literal notranslate"><span class="pre">left_out</span></code>). The Linker requires that
+the user specifies which column should be used for training the ED model.
+The code assumes the following columns:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">originalsplit</span></code>: The articles maintain the <code class="docutils literal notranslate"><span class="pre">test</span></code> set of the original
+dataset. Train is split into <code class="docutils literal notranslate"><span class="pre">train</span></code> (0.66) and <code class="docutils literal notranslate"><span class="pre">dev</span></code> (0.33).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apply</span></code>: The articles are divided into <code class="docutils literal notranslate"><span class="pre">train</span></code> and <code class="docutils literal notranslate"><span class="pre">dev</span></code>, with no articles
+left for testing. This split can be used to train the final entity disambiguation
+model, after the experiments.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">withouttest</span></code>: This split can be used for development. The articles in the
+test set of the original dataset are left out. The training set is split into
+<code class="docutils literal notranslate"><span class="pre">train</span></code>, <code class="docutils literal notranslate"><span class="pre">dev</span></code> and <code class="docutils literal notranslate"><span class="pre">test</span></code>.</p></li>
+</ul>
+<p><a class="reference external" href="#top-resources">back to top</a></p>
+</section>
+</section>
+<section id="wikipedia-and-wikidata-based-resources">
+<h2>Wikipedia- and Wikidata-based resources<a class="headerlink" href="#wikipedia-and-wikidata-based-resources" title="Permalink to this headline"></a></h2>
+<p>T-Res requires a series of Wikipedia- and Wikidata-based resources:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code></p></li>
+</ul>
+<p>These files can be generated using the
+<a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz">wiki2gaz</a> GitHub
+repository (<strong>[coming soon]</strong>). For more information on how they are built,
+refer to the <code class="docutils literal notranslate"><span class="pre">wiki2gaz</span></code> documentation.</p>
+<p>T-Res assumes these files in the following default location:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+└── resources/
+    └── wikidata/
+        ├── entity2class.txt
+        ├── mentions_to_wikidata_normalized.json
+        ├── mentions_to_wikidata.json
+        ├── wikidata_gazetteer.csv
+        └── wikidata_to_mentions_normalized.json
+</pre></div>
+</div>
+<p>The sections below describe the contents of the files, as well as their
+format, in case you prefer to provide your own resources (which should be
+in the same format).</p>
+<section id="mentions-to-wikidata-json">
+<h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code><a class="headerlink" href="#mentions-to-wikidata-json" title="Permalink to this headline"></a></h3>
+<p>A JSON file consisting of a python dictionary in which the key is a mention
+of a place in Wikipedia (by means of an anchor text) and the value is an inner
+dictionary, where the inner keys are the QIDs of all Wikidata entities that
+can be referred to by the mention in question, and the inner values are the
+absolute counts (i.e. the number of times such mention is used in Wikipedia
+to refer to this particular entity).</p>
+<p>You can load the dictionary, and access it, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;mentions_to_wikidata.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mentions_to_wikidata</span><span class="p">[</span><span class="s2">&quot;Wiltshire&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>In the example, the value assigned to the key “Wiltshire” is:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Q23183&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4457</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q55448990&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q8023421&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the example, we see that the mention “Wiltshire” is assigned a mapping
+between key <code class="docutils literal notranslate"><span class="pre">Q23183</span></code> and value 4457. This means that, on Wikipedia,
+“Wiltshire” appears 4457 times to refer to entity <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a> (through the mapping between
+Wikidata entity <code class="docutils literal notranslate"><span class="pre">Q23183</span></code> and its <a class="reference external" href="https://en.wikipedia.org/wiki/Wiltshire">corresponding Wikipedia page</a>).</p>
+</section>
+<section id="mentions-to-wikidata-normalized-json">
+<h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code><a class="headerlink" href="#mentions-to-wikidata-normalized-json" title="Permalink to this headline"></a></h3>
+<p>A JSON file containing the normalised version of the <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code>
+dictionary. For example, the value of the mention “Wiltshire” is now:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Q23183&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9767696690773614</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q55448990&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Q8023421&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.03125</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that these scores do not add up to one, as they are normalised by entity,
+not by mention. They are a measure of how likely an entity is to be referred to
+by a mention. In the example, we see that entity <code class="docutils literal notranslate"><span class="pre">Q55448990</span></code> is always referred
+to as <code class="docutils literal notranslate"><span class="pre">Wiltshire</span></code>.</p>
+</section>
+<section id="wikidata-to-mentions-normalized-json">
+<h3><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code><a class="headerlink" href="#wikidata-to-mentions-normalized-json" title="Permalink to this headline"></a></h3>
+<p>A JSON file consisting of a python dictionary in which the key is a Wikidata QID
+and the value is an inner dictionary, in which the inner keys are the mentions
+used in Wikipedia to refer to such Wikidata entity, and the values are their
+relative frequencies.</p>
+<p>You can load the dictionary, and access it, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;wikidata_to_mentions_normalized.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">wikidata_to_mentions_normalized</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wikidata_to_mentions_normalized</span><span class="p">[</span><span class="s2">&quot;Q23183&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>In this example, the value of entity <a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a> is:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire, England&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.005478851632697786</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wilton&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9767696690773614</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;College&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire Council&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0015340784571553803</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;West Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;North Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wilts&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0015340784571553803</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;County of Wilts&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0026298487836949377</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;County of Wiltshire&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.010081087004163929</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wilts.&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire county&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire, United Kingdom&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire plains&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Wiltshire England&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00021915406530791147</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this example, we can see that entity <code class="docutils literal notranslate"><span class="pre">Q23183</span></code> is referred to as “Wiltshire,
+England” in Wikipedia 0.5% of the times and as “Wiltshire” 97.7% of the times.
+These values add up to one.</p>
+</section>
+<section id="wikidata-gazetteer-csv">
+<h3><code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code><a class="headerlink" href="#wikidata-gazetteer-csv" title="Permalink to this headline"></a></h3>
+<p>A csv file consisting of (at least) the following four columns:</p>
+<ul class="simple">
+<li><p>a Wikidata ID (QID) of a location,</p></li>
+<li><p>its English label,</p></li>
+<li><p>its latitude, and</p></li>
+<li><p>its longitude.</p></li>
+</ul>
+<p>You can load the csv, and show the first five rows, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;wikidata_gazetteer.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span> <span class="n">head</span><span class="p">()</span>
+<span class="go">  wikidata_id                     english_label  latitude  longitude</span>
+<span class="go">0    Q5059107                        Centennial  40.01140  -87.24330</span>
+<span class="go">1    Q5059144                Centennial Grounds  39.99270  -75.19380</span>
+<span class="go">2    Q5059153            Centennial High School  40.06170  -83.05780</span>
+<span class="go">3    Q5059162            Centennial High School  38.30440 -104.63800</span>
+<span class="go">4    Q5059178  Centennial Memorial Samsung Hall  37.58949  127.03434</span>
+</pre></div>
+</div>
+<p>Each row corresponds to a Wikidata geographic entity (i.e. a Wikidata entity
+with coordinates).</p>
+</section>
+<section id="entity2class-txt">
+<h3><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code><a class="headerlink" href="#entity2class-txt" title="Permalink to this headline"></a></h3>
+<p>A python dictionary in which each entity in Wikidata is mapped to its most
+common Wikidata class.</p>
+<p>You can load the dictionary, and access it, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;entity2class.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">entity2class</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entity2class</span><span class="p">[</span><span class="s2">&quot;Q23183&quot;</span><span class="p">]</span>
+<span class="go">&#39;Q180673&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entity2class</span><span class="p">[</span><span class="s2">&quot;Q84&quot;</span><span class="p">]</span>
+<span class="go">&#39;Q515&#39;</span>
+</pre></div>
+</div>
+<p>For example, Wiltshire (<a class="reference external" href="https://www.wikidata.org/wiki/Q23183">Q23183</a>) is
+mapped to <a class="reference external" href="https://www.wikidata.org/wiki/Q180673">Q180673</a>, i.e. “cerimonial
+county  of England”, whereas London (<a class="reference external" href="https://www.wikidata.org/wiki/Q84">Q84</a>)
+is mapped to <a class="reference external" href="https://www.wikidata.org/wiki/Q515">Q515</a>, i.e. “city”.</p>
+<p><a class="reference external" href="#top-resources">back to top</a></p>
+</section>
+</section>
+<section id="entity-and-word-embeddings">
+<h2>Entity and word embeddings<a class="headerlink" href="#entity-and-word-embeddings" title="Permalink to this headline"></a></h2>
+<p>In order to perform toponym linking and resolution using the REL-based approaches,
+T-Res requires a database of word2vec and wiki2vec embeddings. Note that you will
+not need this if you use the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> disambiguation approach.</p>
+<p>By default, T-Res expects a database file called <code class="docutils literal notranslate"><span class="pre">embeddings_database.db</span></code> with,
+at least, one table (<code class="docutils literal notranslate"><span class="pre">entity_embeddings</span></code>) with at least the following columns:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">word</span></code>: Either a lower-cased token (i.e. a word on Wikipedia) or a Wikidata QID
+preceded by <code class="docutils literal notranslate"><span class="pre">ENTITY/</span></code>. The database should also contain the following two wildcard
+tokens: <code class="docutils literal notranslate"><span class="pre">#ENTITY/UNK#</span></code> and <code class="docutils literal notranslate"><span class="pre">#WORD/UNK#</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">emb</span></code>: The corresponding word or entity embedding.</p></li>
+</ul>
+<section id="generate-the-embeddings-database">
+<h3>Generate the embeddings database<a class="headerlink" href="#generate-the-embeddings-database" title="Permalink to this headline"></a></h3>
+<p>In our experiments, we derived the embeddings database from REL’s shared resources.
+We are working towards improving this step in the pipeline. Meanwhile, to generate
+the <code class="docutils literal notranslate"><span class="pre">embeddings_database.db</span></code>, please follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Make sure you have <code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code> in <code class="docutils literal notranslate"><span class="pre">./resources/wikidata/</span></code> (see
+<a class="reference external" href="#wikipedia-and-wikidata-based-resources">above</a>).</p></li>
+<li><p>Generate a Wikipedia-to-Wikidata index, following <a class="reference external" href="https://github.com/jcklie/wikimapper#create-your-own-index">this instructions</a>, save it as: <code class="docutils literal notranslate"><span class="pre">./resources/wikipedia/index_enwiki-latest.db</span></code>.</p></li>
+<li><p>Run <a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py">this script</a>
+to create the embeddings database.</p></li>
+</ol>
+<p>You can load the file, and access a token embedding, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;embeddings_database.db&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT emb FROM entity_embeddings WHERE word=&#39;lerwick&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">array</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">[-0.3257000148296356, -0.00989999994635582, -0.13420000672340393, ...]</span>
+</pre></div>
+</div>
+<p>You can load the file, and access an entity embedding, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;embeddings_database.db&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT emb FROM entity_embeddings WHERE word=&#39;ENTITY/Q84&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">array</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">[-0.014700000174343586, 0.007899999618530273, -0.1808999925851822, ...]</span>
+</pre></div>
+</div>
+<p>T-Res expects the <code class="docutils literal notranslate"><span class="pre">embeddings_database.db</span></code> file to be stored as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+└── resources/
+    └── rel_db/
+        └── embeddings_database.db
+</pre></div>
+</div>
+<p><a class="reference external" href="#top-resources">back to top</a></p>
+</section>
+</section>
+<section id="deezymatch-training-set">
+<h2>DeezyMatch training set<a class="headerlink" href="#deezymatch-training-set" title="Permalink to this headline"></a></h2>
+<p>In order to train a DeezyMatch model, a training set consisting of positive and
+negative string pairs is required. We provide a dataset of positive and negative
+OCR variations, which can be used to train a DeezyMatch model, which can then be
+used to perform fuzzy string matching to find candidates for entity linking.</p>
+<p>The DeezyMatch training set can be downloaded from the <a class="reference external" href="https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63">British Library research
+repository</a>.</p>
+<p>T-Res assumes by default the DeezyMatch training set to be named <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code>
+and to be in the following location:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+└── resources/
+    └── deezymatch/
+        └── data/
+            └── w2v_ocr_pairs.txt
+</pre></div>
+</div>
+<p>Optionally, T-Res also provides the option to generate a DeezyMatch training set
+from word2vec embeddings trained on digitised texts. Continue reading the sections
+below for more information about both types of resources.</p>
+<section id="id6">
+<h3>1. DeezyMatch training set<a class="headerlink" href="#id6" title="Permalink to this headline"></a></h3>
+<p>T-Res can directly load the string pairs dataset required to train a new DeezyMatch
+model. By default, the code assumes the dataset to be called <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code>.
+The dataset consists of three columns: <code class="docutils literal notranslate"><span class="pre">word1</span></code>, <code class="docutils literal notranslate"><span class="pre">word2</span></code>, and a boolean describing
+whether <code class="docutils literal notranslate"><span class="pre">word2</span></code> is an OCR variation of <code class="docutils literal notranslate"><span class="pre">word1</span></code>. For example:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">could</span>   <span class="n">might</span>   <span class="n">FALSE</span>
+<span class="n">could</span>   <span class="n">wished</span>  <span class="n">FALSE</span>
+<span class="n">could</span>   <span class="n">hardly</span>  <span class="n">FALSE</span>
+<span class="n">could</span>   <span class="n">didnot</span>  <span class="n">FALSE</span>
+<span class="n">could</span>   <span class="n">never</span>   <span class="n">FALSE</span>
+<span class="n">could</span>   <span class="n">reusing</span> <span class="n">FALSE</span>
+<span class="n">could</span>   <span class="n">could</span>   <span class="n">TRUE</span>
+<span class="n">could</span>   <span class="n">coeld</span>   <span class="n">TRUE</span>
+<span class="n">could</span>   <span class="n">could</span>   <span class="n">TRUE</span>
+<span class="n">could</span>   <span class="n">conld</span>   <span class="n">TRUE</span>
+<span class="n">could</span>   <span class="n">could</span>   <span class="n">TRUE</span>
+<span class="n">could</span>   <span class="n">couid</span>   <span class="n">TRUE</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>This dataset has been automatically generated from word2vec embeddings trained on
+digitised historical news texts (i.e. with OCR noise), and has been expanded with
+toponym alternate names extracted from Wikipedia.</p>
+<p>The dataset we provide consists of 1,085,514 string pairs.</p>
+</section>
+<section id="word2vec-embeddings-trained-on-noisy-data">
+<h3>2. Word2Vec embeddings trained on noisy data<a class="headerlink" href="#word2vec-embeddings-trained-on-noisy-data" title="Permalink to this headline"></a></h3>
+<p>The 19thC word2vec embeddings <strong>are not needed</strong> if you already have the DeezyMatch
+training set <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code> (described in the <a class="reference external" href="#deezymatch-training-set">section above</a>).</p>
+<p>To create a new DeezyMatch training set using T-Res, you need to provide Word2Vec
+models that have been trained on digitised historical news texts. In our experiments,
+we used the embeddings trained on a 4.2-billion-word corpus of 19th-century British
+newspapers using Word2Vec (you can download them from <a class="reference external" href="https://doi.org/10.5281/zenodo.7887305">Zenodo</a>), but you can also do this with your
+own word2vec embeddings. The embeddings are divided into periods of ten years each.
+By default, T-Res assumes that the word2vec models are stored in
+<code class="docutils literal notranslate"><span class="pre">./resources/models/w2v/</span></code>, in directories named <code class="docutils literal notranslate"><span class="pre">w2v_xxxxs_news/</span></code>, where
+<code class="docutils literal notranslate"><span class="pre">xxxx</span></code> corresponds to the decade (e.g. 1800 or 1810) of the models.</p>
+<p>See the expected directory structure below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+└── resources/
+    └── models/
+        └── w2v/
+            ├── w2v_1800_news/
+            │     ├── w2v.model
+            │     ├── w2v.model.syn1neg.npy
+            │     └── w2v.model.wv.vectors.npy
+            ├── w2v_1810_news/
+            │     ├── w2v.model
+            │     ├── w2v.model.syn1neg.npy
+            │     └── w2v.model.wv.vectors.npy
+            └── .../
+</pre></div>
+</div>
+</section>
+</section>
+<section id="summary-of-resources-and-directory-structure">
+<h2>Summary of resources and directory structure<a class="headerlink" href="#summary-of-resources-and-directory-structure" title="Permalink to this headline"></a></h2>
+<p>In the code and our tutorials, we assume the following directory structure
+for the mentioned resources that are required in order to run the pipeline.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
+├── app/
+├── evaluation/
+├── examples/
+├── experiments/
+│   └── outputs/
+│       └── data/
+│           └── lwm/
+│               ├── linking_df_split.tsv [*]
+│               ├── ner_fine_dev.json [*+]
+│               └── ner_fine_train.json [*+]
+├── geoparser/
+├── resources/
+│   ├── deezymatch/
+│   │   └── data/
+│   │       └── w2v_ocr_pairs.txt
+│   ├── models/
+│   ├── news_datasets/
+│   ├── rel_db/
+│   │   └── embeddings_database.db [*+]
+│   └── wikidata/
+│       ├── entity2class.txt [*]
+│       ├── mentions_to_wikidata_normalized.json [*]
+│       ├── mentions_to_wikidata.json [*]
+│       ├── wikidta_gazetteer.csv [*]
+│       └── wikidata_to_mentions_normalized.json [*]
+├── tests/
+└── utils/
+</pre></div>
+</div>
+<p>Note that an asterisk (<code class="docutils literal notranslate"><span class="pre">*</span></code>) next to the resource means that the path can
+be changed when instantiating the T-Res objects, and a plus sign (<code class="docutils literal notranslate"><span class="pre">+</span></code>) if
+the name of the file can be changed in the instantiation.</p>
+<p><a class="reference external" href="#top-resources">back to top</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installing T-Res" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="complete-tour.html" class="btn btn-neutral float-right" title="The complete tour" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -57,7 +57,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../other-files/index.html">Other files in repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
         </div>
@@ -205,13 +205,13 @@ retokenized as in the gold standard.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.rel_e2e.store_rel">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">store_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../other-files/experiments/experiment.html#experiments.experiment.Experiment" title="experiments.experiment.Experiment"><span class="pre">experiments.experiment.Experiment</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dREL</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">approach</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.store_rel" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">store_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">experiments.experiment.Experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dREL</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">approach</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.store_rel" title="Permalink to this definition"></a></dt>
 <dd><p>Store the REL results for a specific experiment, approach, and split, in
 the format required by the HIPE scorer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experiment</strong> (<a class="reference internal" href="../../other-files/experiments/experiment.html#experiments.experiment.Experiment" title="experiments.experiment.Experiment"><em>Experiment</em></a>) – The experiment object containing the results
+<li><p><strong>experiment</strong> (<em>Experiment</em>) – The experiment object containing the results
 path and dataset.</p></li>
 <li><p><strong>dREL</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary mapping sentence IDs to REL predictions.</p></li>
 <li><p><strong>approach</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The approach used for REL.</p></li>
@@ -254,7 +254,7 @@ required by the scorer.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023 Living with Machines.</p>
+    <p>&#169; Copyright 2023 The Alan Turing Institute, British Library Board, Queen Mary University of London, King&#39;s College London, University of East Anglia, The University of Exeter and the Chancellor, Masters and Scholars of the University of Cambridge.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
