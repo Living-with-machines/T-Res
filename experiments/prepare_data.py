@@ -14,19 +14,6 @@ from sklearn.model_selection import train_test_split
 from utils import get_data, preprocess_data
 
 RANDOM_SEED = 42
-"""Constant representing the random seed used for generating pseudo-random
-numbers.
-
-The `RANDOM_SEED` is a value that initializes the random number generator
-algorithm, ensuring that the sequence of random numbers generated remains the
-same across different runs of the program. This is useful for achieving
-reproducibility in experiments or when consistent random behavior is
-desired.
-
-..
-    If this docstring is changed, also make sure to edit linking.py,
-    rel_utils.py, entity_disambiguation.py.
-"""
 random.seed(RANDOM_SEED)
 
 resources = "../resources/"  # path to resources

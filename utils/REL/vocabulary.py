@@ -21,8 +21,8 @@ class Vocabulary:
     Credit:
         The code for this class and its methods is taken from the `REL: Radboud
         Entity Linker <https://github.com/informagi/REL/>`_ Github repository. See
-        `https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py`_ for more
-        information.
+        `the original script <https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py>`_
+        for more information.
 
         ::
 
