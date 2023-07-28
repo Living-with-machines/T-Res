@@ -9,11 +9,15 @@ class PreRank(torch.nn.Module):
     PreRank class is used for preranking entities for a given mention
     by multiplying entity vectors with word vectors.
 
-    Credit:
+    .. note::
+
+        **Credit:**
+
         This class and its methods are taken (minimally
         adapted when necessary) from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github
-        repository.
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
 
         ::
 
@@ -27,6 +31,7 @@ class PreRank(torch.nn.Module):
             year =      {2020},
             publisher = {ACM}
             }
+
     """
 
     def __init__(self, config, embeddings=None):
@@ -64,15 +69,20 @@ class MulRelRanker(torch.nn.Module):
     """
     The MulRelRanker class implements a neural network model for entity disambiguation.
 
-    Credit:
+    .. note::
+
+        **Credit:**
+
         This class and its methods are taken (minimally
         adapted when necessary) from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github
-        repository, which is based on the ``mulrel-nel``
-        approach developed by Le and Titov (2018), whose original
-        code is available in the `mulrel-nel: Multi-relational Named
-        Entity Linking <https://github.com/lephong/mulrel-nel>`_ Github
-        repository, and on Ganea and Hofmann (2017).
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
+        This is based on the ``mulrel-nel`` approach developed by Le and
+        Titov (2018), whose original code is available in the
+        `mulrel-nel: Multi-relational Named Entity Linking
+        <https://github.com/lephong/mulrel-nel>`_ Github repository, and
+        on Ganea and Hofmann (2017).
 
         ::
 
@@ -102,6 +112,7 @@ class MulRelRanker(torch.nn.Module):
             pages={1595--1604},
             year={2018}
             }
+
     """
 
     def __init__(self, config, device):
@@ -243,10 +254,11 @@ class MulRelRanker(torch.nn.Module):
     ):
         """
         Responsible for the forward pass of the entity disambiguation model
-        and produces a ranking of candidates for a given set of mentions.
-         - ctx_layer refers to function f. See Figure 3 in Le and Titov (2018).
-         - ent_scores refers to function q.
-         - score_combine refers to function g.
+        and produces a ranking of candidates for a given set of mentions:
+
+        * ctx_layer refers to function f. See Figure 3 in Le and Titov (2018).
+        * ent_scores refers to function q.
+        * score_combine refers to function g.
 
         Returns:
             Ranking of entities per mention.

@@ -18,11 +18,16 @@ class Vocabulary:
     """
     A class representing a vocabulary object used for storing references to embeddings.
 
-    Credit:
-        The code for this class and its methods is taken from the `REL: Radboud
-        Entity Linker <https://github.com/informagi/REL/>`_ Github repository. See
-        `the original script <https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py>`_
-        for more information.
+    .. note::
+
+        **Credit:**
+
+        The code for this class and its methods is taken from the `REL: Radboud Entity
+        Linker <https://github.com/informagi/REL/>`_ Github repository: Copyright (c)
+        2020 Johannes Michael van Hulst. See the `permission notice
+        <https://github.com/informagi/REL/blob/main/LICENSE>`_. See `the original script
+        <https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py>`_ for more
+        information.
 
         ::
 

@@ -36,9 +36,14 @@ class EntityDisambiguation:
     :py:class:`~utils.REL.mulrel_ranker.MulRelRanker` model, for entity
     disambiguation.
 
-    Credit:
+    .. note::
+
+        **Credit:**
+
         This class and its methods are adapted from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github repository.
+        Linker <https://github.com/informagi/REL/>`_ Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
 
         ::
 
@@ -52,6 +57,7 @@ class EntityDisambiguation:
             year =      {2020},
             publisher = {ACM}
             }
+
     """
 
     def __init__(self, db_embs, user_config, reset_embeddings=False):
