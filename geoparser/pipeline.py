@@ -257,7 +257,15 @@ class Pipeline:
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
         for m in mentions:
-            prediction = self.format_prediction(m, sentence, wk_cands=wk_cands, context=context, sent_idx=sent_idx, place=place, place_wqid=place_wqid)
+            prediction = self.format_prediction(
+                m,
+                sentence,
+                wk_cands=wk_cands,
+                context=context,
+                sent_idx=sent_idx,
+                place=place,
+                place_wqid=place_wqid,
+            )
             mentions_dataset["linking"].append(prediction)
 
         # If the linking method is "reldisamb", rank and format candidates,
@@ -273,6 +281,12 @@ class Pipeline:
                 if place_wqid == "" or place == "":
                     place_wqid = self.mylinker.rel_params["default_publwqid"]
                     place = self.mylinker.rel_params["default_publname"]
+
+                # If "publ", add the place of publication to the context:
+                mentions_dataset = rel_utils.add_publication_in_context(
+                    mentions_dataset,
+                    place,
+                )
 
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(
@@ -508,11 +522,7 @@ class Pipeline:
 
         return document_dataset
 
-
-    def run_sentence_recognition(
-            self,
-            sentence
-    ) -> List[dict]:
+    def run_sentence_recognition(self, sentence) -> List[dict]:
         # Get predictions:
         predictions = self.myner.ner_predict(sentence)
 
@@ -525,15 +535,16 @@ class Pipeline:
         # Aggregate mentions:
         mentions = ner.aggregate_mentions(procpreds, "pred")
         return mentions
-    
 
-    def format_prediction(self, mention,
-                          sentence: str, 
-                          wk_cands: Optional[dict] = None,
-                          context: Optional[Tuple[str, str]] = ("", ""), 
-                          sent_idx: Optional[int] = 0,
-                          place: Optional[str] = "",
-                          place_wqid: Optional[str] = ""
+    def format_prediction(
+        self,
+        mention,
+        sentence: str,
+        wk_cands: Optional[dict] = None,
+        context: Optional[Tuple[str, str]] = ("", ""),
+        sent_idx: Optional[int] = 0,
+        place: Optional[str] = "",
+        place_wqid: Optional[str] = "",
     ) -> dict:
         prediction = dict()
         prediction["mention"] = mention["mention"]
@@ -551,11 +562,11 @@ class Pipeline:
         prediction["place"] = place
         prediction["place_wqid"] = place_wqid
         if wk_cands:
-            prediction["string_match_candidates"] = wk_cands.get(mention["mention"], dict())
+            prediction["string_match_candidates"] = wk_cands.get(
+                mention["mention"], dict()
+            )
             prediction["candidates"] = wk_cands.get(mention["mention"], dict())
         return prediction
-
-
 
     def run_text_recognition(
         self,
@@ -627,7 +638,15 @@ class Pipeline:
 
             mentions_dataset = []
             for m in mentions:
-                prediction = self.format_prediction(m, sentence, wk_cands=None, context=context, sent_idx=idx, place=place, place_wqid=place_wqid)
+                prediction = self.format_prediction(
+                    m,
+                    sentence,
+                    wk_cands=None,
+                    context=context,
+                    sent_idx=idx,
+                    place=place,
+                    place_wqid=place_wqid,
+                )
                 # mentions_dataset["linking"].append(prediction)
                 if not len(m["mention"]) == 1 and not m["mention"].islower():
                     mentions_dataset.append(prediction)
@@ -776,6 +795,12 @@ class Pipeline:
                 if place_wqid == "" or place == "":
                     place_wqid = self.mylinker.rel_params["default_publwqid"]
                     place = self.mylinker.rel_params["default_publname"]
+
+                # If "publ", add the place of publication to the context:
+                mentions_dataset = rel_utils.add_publication_in_context(
+                    mentions_dataset,
+                    place,
+                )
 
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(
