@@ -17,7 +17,14 @@ sys.path.insert(0, str(root_path))
 sys.path.insert(0, str(experiments_path))
 os.chdir(experiments_path)
 
-from config import CONFIG as pipeline_config
+os.environ["APP_CONFIG_NAME"] = "t-res_deezy_reldisamb-wpubl-wmtops"
+import importlib
+
+config_mod = importlib.import_module(
+    ".t-res_deezy_reldisamb-wpubl-wmtops", "app.configs"
+)
+pipeline_config = config_mod.CONFIG
+
 
 from geoparser import pipeline
 
@@ -47,7 +54,15 @@ app = FastAPI(title=f"Toponym Resolution Pipeline API ({app_config_name})")
 
 @app.get("/")
 async def read_root(request: Request):
-    return {"Welcome to T-Res!": request.app.title}
+    return {
+        "Title": request.app.title,
+        "request.url": request.url,
+        "request.query_params": request.query_params,
+        "root_path": request.scope.get("root_path"),
+        "request.client": request.client,
+        "hostname": os.uname()[1],
+        "worker_id": os.getpid(),
+    }
 
 
 @app.get("/test")
@@ -117,4 +132,5 @@ async def healthcheck():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # poetry run uvicorn app.run_local_app:app --port 8123
+    uvicorn.run(app, host="0.0.0.0", port=8123)

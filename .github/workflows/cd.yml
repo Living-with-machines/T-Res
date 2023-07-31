@@ -1,0 +1,29 @@
+name: Continuous deployment
+
+on: 
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 228-redeploy-api
+
+jobs:
+
+  docker-deploy-api:
+    name: build and deploy api docker container
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: execute build and deploy commands on azure vm via ssh
+        uses: appleboy/ssh-action@v0.1.10
+        with: 
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.DEPLOY_PK }}
+          username: ${{ secrets.USER }}
+          script: |
+            cd toponym-resolution
+            export CONTAINER_NAME=t-res_deezy_reldisamb-wpubl-wmtops
+            sudo -E docker-compose down --remove-orphans
+            sudo -E docker rmi $(sudo docker images --filter=reference='*:latest' --format {{.ID}})
+            sudo -E docker build -f app/template.Dockerfile --no-cache --build-arg APP_NAME=${CONTAINER_NAME} -t ${CONTAINER_NAME}_image .
+            HOST_URL=${{ secrets.HOST }} sudo -E docker-compose up -d
