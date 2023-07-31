@@ -20,7 +20,7 @@ The repository contains the code for the experiments described in our paper.
 
 ## Documentation
 
-The T-Res documentation can be found at **[TODO]**.
+The T-Res documentation can be found at https://living-with-machines.github.io/T-Res/.
 
 ## Resources and directory structure
 
