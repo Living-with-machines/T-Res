@@ -7,7 +7,7 @@ The complete tour
 The T-Res has three main classes: the **Recogniser** class (which performs
 toponym recognition, which is a named entity recognition task), the **Ranker**
 class (which performs candidate selection and ranking for the named entities
-identified by the Recogniser), and the **Linker** class (which selectes the
+identified by the Recogniser), and the **Linker** class (which selects the
 most likely candidate from those provided by the Ranker).
 
 An additional class, the **Pipeline**, wraps these three components into one,
@@ -55,7 +55,7 @@ each of them: :ref:`Recogniser <The Recogniser>`, :ref:`Ranker <The Ranker>`
 and :ref:`Linker <The Linker>`.
 
 In order to instantiate a pipeline using a customised Recogniser, Ranker and
-Linker, just instantiate them beforehand, and then pass them as arguments To
+Linker, just instantiate them beforehand, and then pass them as arguments to
 the Pipeline, as follows:
 
 .. code-block:: python
@@ -412,10 +412,12 @@ The Recogniser
 --------------
 
 The Recogniser performs toponym recognition (i.e. geographic named entity
-recognition). Users can either:
+recognition), using HuggingFace's ``transformers`` library. Users can either:
 
-#. Load an existing model (either directly downloading a model from the HuggingFace hub or loading a locally stored NER model), or
-#. Fine-tune a new model on top of a base model and loading it, or directly load it if it is already pre-trained.
+#. Load an existing model (either directly downloading a model from the
+   HuggingFace hub or loading a locally stored NER model), or
+#. Fine-tune a new model on top of a base model and loading it, or directly
+   load it if it is already pre-trained.
 
 The following notebooks provide examples of both training or loading a
 NER model using the Recogniser, and using it for detecting entities:

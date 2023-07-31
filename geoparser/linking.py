@@ -39,7 +39,8 @@ class Linker:
             training. Defaults to ``False``.
         rel_params (dict, optional): Dictionary containing the parameters
             for performing entity disambiguation using the ``reldisamb``
-            approach. For the default settings, see Notes below.
+            approach (adapted from the Radboud Entityt Linker, REL).
+            For the default settings, see Notes below.
 
     Example:
 
@@ -227,7 +228,8 @@ class Linker:
                 predicted link as a float, and a dictionary of all candidates
                 and their confidence scores.
 
-        Note:
+        .. note::
+
             Applying the "most popular" disambiguation method for linking
             entities. Given a set of candidates for a given mention, the
             function returns as a prediction the more relevant Wikidata
@@ -281,7 +283,8 @@ class Linker:
                 to 3 decimals), and a dictionary of all candidates and their
                 confidence scores.
 
-        Note:
+        .. note::
+
             Applying the "by distance" disambiguation method for linking
             entities, based on geographical distance. It undertakes an
             unsupervised disambiguation, which returns a prediction of a
@@ -348,13 +351,36 @@ class Linker:
             entity_disambiguation.EntityDisambiguation:
                 A trained Entity Disambiguation model.
 
-        Note:
+        .. note::
+
             The training will be skipped if the model already exists and
             ``overwrite_training`` was set to False when initiating the Linker
             object, or if the disambiguation method is unsupervised. The
             training will be run on test mode if ``rel_params`` had a
             ``do_test`` key's value set to True when initiating the Linker
             object.
+
+        .. note::
+
+            **Credit:**
+
+            This method is adapted from the `REL: Radboud Entity Linker
+            <https://github.com/informagi/REL/>`_ Github repository:
+            Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+            notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
+
+            ::
+
+                Reference:
+
+                @inproceedings{vanHulst:2020:REL,
+                author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+                title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+                booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+                series =    {SIGIR '20},
+                year =      {2020},
+                publisher = {ACM}
+                }
         """
         if self.method == "reldisamb":
             # Generate ED model name:
