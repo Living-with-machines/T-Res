@@ -23,11 +23,11 @@ services:
     expose:
       - 80
     volumes:
-      - ${HOME}/toponym-resolution/resources/:/app/resources/
-      - ${HOME}/toponym-resolution/geoparser/:/app/geoparser/
-      - ${HOME}/toponym-resolution/utils/:/app/utils/
-      - /${HOME}/toponym-resolution/preprocessing/:/app/preprocessing/
-      - ${HOME}/toponym-resolution/experiments/:/app/experiments/
+      - ${HOME}/T-Res/resources/:/app/resources/
+      - ${HOME}/T-Res/geoparser/:/app/geoparser/
+      - ${HOME}/T-Res/utils/:/app/utils/
+      - /${HOME}/T-Res/preprocessing/:/app/preprocessing/
+      - ${HOME}/T-Res/experiments/:/app/experiments/
       - ${HOME}/nltk_data:/root/nltk_data/
     labels:
       - traefik.enable=true
