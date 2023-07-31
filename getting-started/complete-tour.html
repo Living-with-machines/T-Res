@@ -105,7 +105,7 @@
 <p>The T-Res has three main classes: the <strong>Recogniser</strong> class (which performs
 toponym recognition, which is a named entity recognition task), the <strong>Ranker</strong>
 class (which performs candidate selection and ranking for the named entities
-identified by the Recogniser), and the <strong>Linker</strong> class (which selectes the
+identified by the Recogniser), and the <strong>Linker</strong> class (which selects the
 most likely candidate from those provided by the Ranker).</p>
 <p>An additional class, the <strong>Pipeline</strong>, wraps these three components into one,
 therefore making it easier for the user to perform end-to-end entity linking.</p>
@@ -144,7 +144,7 @@ Linker. To see the different options, refer to the sections on instantiating
 each of them: <a class="reference internal" href="#the-recogniser"><span class="std std-ref">Recogniser</span></a>, <a class="reference internal" href="#the-ranker"><span class="std std-ref">Ranker</span></a>
 and <a class="reference internal" href="#the-linker"><span class="std std-ref">Linker</span></a>.</p>
 <p>In order to instantiate a pipeline using a customised Recogniser, Ranker and
-Linker, just instantiate them beforehand, and then pass them as arguments To
+Linker, just instantiate them beforehand, and then pass them as arguments to
 the Pipeline, as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">recogniser</span><span class="p">,</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">linking</span>
 
@@ -476,10 +476,12 @@ per row:</p>
 <section id="the-recogniser">
 <span id="id1"></span><h2>The Recogniser<a class="headerlink" href="#the-recogniser" title="Permalink to this headline"></a></h2>
 <p>The Recogniser performs toponym recognition (i.e. geographic named entity
-recognition). Users can either:</p>
+recognition), using HuggingFace’s <code class="docutils literal notranslate"><span class="pre">transformers</span></code> library. Users can either:</p>
 <ol class="arabic simple">
-<li><p>Load an existing model (either directly downloading a model from the HuggingFace hub or loading a locally stored NER model), or</p></li>
-<li><p>Fine-tune a new model on top of a base model and loading it, or directly load it if it is already pre-trained.</p></li>
+<li><p>Load an existing model (either directly downloading a model from the
+HuggingFace hub or loading a locally stored NER model), or</p></li>
+<li><p>Fine-tune a new model on top of a base model and loading it, or directly
+load it if it is already pre-trained.</p></li>
 </ol>
 <p>The following notebooks provide examples of both training or loading a
 NER model using the Recogniser, and using it for detecting entities:</p>

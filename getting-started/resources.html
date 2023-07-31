@@ -55,10 +55,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#entity2class-txt"><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#entity-and-word-embeddings">Entity and word embeddings</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#generate-the-embeddings-database">Generate the embeddings database</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#entity-and-word-embeddings">Entity and word embeddings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deezymatch-training-set">DeezyMatch training set</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id6">1. DeezyMatch training set</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#word2vec-embeddings-trained-on-noisy-data">2. Word2Vec embeddings trained on noisy data</a></li>
@@ -104,12 +101,14 @@
 <span id="top-resources"></span><h1>Resources and directory structure<a class="headerlink" href="#resources-and-directory-structure" title="Permalink to this headline"></a></h1>
 <p>T-Res requires several resources to work. Some resources can be downloaded
 and loaded directly from the web. Others will need to be generated, following
-the instructions provided in this section.</p>
+the instructions provided in this section. In this page, we describe the format
+of the files that are required by T-Res, therefore also giving the user the
+option to use their own resources (adapted to T-Res).</p>
 <section id="toponym-recognition-and-disambiguation-training-data">
 <h2>Toponym recognition and disambiguation training data<a class="headerlink" href="#toponym-recognition-and-disambiguation-training-data" title="Permalink to this headline"></a></h2>
 <p>We provide the dataset we used to train T-Res for the tasks of toponym recognition
 (i.e. a named entity recognition task) and toponym disambiguation (i.e. an entity
-linking task focused on geographical entities). The dataset is based on the
+linking task focused on geographical entities) in English. The dataset is based on the
 <a class="reference external" href="https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.56">TopRes19th dataset</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -131,6 +130,12 @@ Library research repository</a>.</p>
 description of the format expected by T-Res.</p>
 <section id="toponym-recognition-dataset">
 <h3>1. Toponym recognition dataset<a class="headerlink" href="#toponym-recognition-dataset" title="Permalink to this headline"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You don’t need a toponym recognition dataset if you load a NER model directly
+from the HuggingFace hub, or from a local folder. In that case, you can skip
+this section.</p>
+</div>
 <p>T-Res allows directly loading a pre-trained BERT-based NER model, either locally
 or from the HuggingFace models hub. If this is your option, you can skip this
 section. Otherwise, if you want to train your own NER model using either our
@@ -153,6 +158,12 @@ data.</p>
 </section>
 <section id="toponym-disambiguation-dataset">
 <h3>2. Toponym disambiguation dataset<a class="headerlink" href="#toponym-disambiguation-dataset" title="Permalink to this headline"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You won’t need a toponym disambiguation dataset if you use the unsupervised
+approach for linking (i.e <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code>). You will need a toponym disambiguation
+dataset if you want to use one of the REL-based approaches.</p>
+</div>
 <p>Train and test data examples are required for training a new entity
 disambiguation (ED) model. They should be provided in a single tsv file, named
 <code class="docutils literal notranslate"><span class="pre">linking_df_split.tsv</span></code>, one document per row, with the following required
@@ -183,8 +194,8 @@ sentence). For example:</p>
 </div>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">annotations</span></code>: list of dictionaries containing the annotated place names.
-Each dictionary corresponds to a named entity mentioned in the text, with the
-following fields (at least): <code class="docutils literal notranslate"><span class="pre">mention_pos</span></code> (order of the mention in the article),
+Each dictionary corresponds to a named entity mentioned in the text, with (at
+least) the following fields: <code class="docutils literal notranslate"><span class="pre">mention_pos</span></code> (order of the mention in the article),
 <code class="docutils literal notranslate"><span class="pre">mention</span></code> (the actual mention), <code class="docutils literal notranslate"><span class="pre">entity_type</span></code> (the type of named entity),
 <code class="docutils literal notranslate"><span class="pre">wkdt_qid</span></code> (the Wikidata ID of the resolved entity), <code class="docutils literal notranslate"><span class="pre">mention_start</span></code>
 (the character start position of the mention in the sentence), <code class="docutils literal notranslate"><span class="pre">mention_end</span></code>
@@ -275,8 +286,8 @@ refer to the <code class="docutils literal notranslate"><span class="pre">wiki2g
 </pre></div>
 </div>
 <p>The sections below describe the contents of the files, as well as their
-format, in case you prefer to provide your own resources (which should be
-in the same format).</p>
+format, in case you prefer to provide your own resources (which should
+have the same format).</p>
 <section id="mentions-to-wikidata-json">
 <h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code><a class="headerlink" href="#mentions-to-wikidata-json" title="Permalink to this headline"></a></h3>
 <p>A JSON file consisting of a python dictionary in which the key is a mention
@@ -383,6 +394,15 @@ These values add up to one.</p>
 </div>
 <p>Each row corresponds to a Wikidata geographic entity (i.e. a Wikidata entity
 with coordinates).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that the latitude and longitude are not used by the disambiguation
+method: they are only provided as a post-processing step when rendering
+the output of the linking. Therefore, the columns can have dummy values
+(of type <code class="docutils literal notranslate"><span class="pre">float</span></code>) if the user is not interested in obtaining the
+coordinates: the linking to Wikidata will not be affected. Column
+<code class="docutils literal notranslate"><span class="pre">english_label</span></code> can likewise be left empty.</p>
+</div>
 </section>
 <section id="entity2class-txt">
 <h3><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code><a class="headerlink" href="#entity2class-txt" title="Permalink to this headline"></a></h3>
@@ -402,14 +422,27 @@ common Wikidata class.</p>
 mapped to <a class="reference external" href="https://www.wikidata.org/wiki/Q180673">Q180673</a>, i.e. “cerimonial
 county  of England”, whereas London (<a class="reference external" href="https://www.wikidata.org/wiki/Q84">Q84</a>)
 is mapped to <a class="reference external" href="https://www.wikidata.org/wiki/Q515">Q515</a>, i.e. “city”.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that the entity2class mapping is not used by the disambiguation
+method: the Wikidata class is only provided as a post-processing step
+when rendering the output of the linking. T-Res will complain if the
+file is not there, but values can be left empty if the user is not
+interested in obtaining the wikidata class of the predicted entity.
+The linking to Wikidata will not be affected.</p>
+</div>
 <p><a class="reference external" href="#top-resources">back to top</a></p>
 </section>
 </section>
 <section id="entity-and-word-embeddings">
 <h2>Entity and word embeddings<a class="headerlink" href="#entity-and-word-embeddings" title="Permalink to this headline"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that you will not need this if you use the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> disambiguation
+approach.</p>
+</div>
 <p>In order to perform toponym linking and resolution using the REL-based approaches,
-T-Res requires a database of word2vec and wiki2vec embeddings. Note that you will
-not need this if you use the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> disambiguation approach.</p>
+T-Res requires a database of word2vec and wiki2vec embeddings.</p>
 <p>By default, T-Res expects a database file called <code class="docutils literal notranslate"><span class="pre">embeddings_database.db</span></code> with,
 at least, one table (<code class="docutils literal notranslate"><span class="pre">entity_embeddings</span></code>) with at least the following columns:</p>
 <ul class="simple">
@@ -418,8 +451,6 @@ preceded by <code class="docutils literal notranslate"><span class="pre">ENTITY/
 tokens: <code class="docutils literal notranslate"><span class="pre">#ENTITY/UNK#</span></code> and <code class="docutils literal notranslate"><span class="pre">#WORD/UNK#</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">emb</span></code>: The corresponding word or entity embedding.</p></li>
 </ul>
-<section id="generate-the-embeddings-database">
-<h3>Generate the embeddings database<a class="headerlink" href="#generate-the-embeddings-database" title="Permalink to this headline"></a></h3>
 <p>In our experiments, we derived the embeddings database from REL’s shared resources.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -429,7 +460,7 @@ the <code class="docutils literal notranslate"><span class="pre">embeddings_data
 <a class="reference external" href="#wikipedia-and-wikidata-based-resources">above</a>).
 #. Generate a Wikipedia-to-Wikidata index, following <a class="reference external" href="https://github.com/jcklie/wikimapper#create-your-own-index">this instructions</a>, save it as: <code class="docutils literal notranslate"><span class="pre">./resources/wikipedia/index_enwiki-latest.db</span></code>.
 #. Run <a class="reference external" href="https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py">this script</a>
-to create the embeddings database.</p>
+to create the embeddings database (<strong>[coming soon]</strong>).</p>
 </div>
 <p>You can load the file, and access a token embedding, as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">array</span>
@@ -464,7 +495,6 @@ to create the embeddings database.</p>
 </div>
 <p><a class="reference external" href="#top-resources">back to top</a></p>
 </section>
-</section>
 <section id="deezymatch-training-set">
 <h2>DeezyMatch training set<a class="headerlink" href="#deezymatch-training-set" title="Permalink to this headline"></a></h2>
 <p>In order to train a DeezyMatch model, a training set consisting of positive and
@@ -474,7 +504,9 @@ used to perform fuzzy string matching to find candidates for entity linking.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The DeezyMatch training set can be downloaded from the <a class="reference external" href="https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63">British Library research
-repository</a>.</p>
+repository</a>.
+This dataset is only necessary if you want to use the DeezyMatch approach to perform
+candidate selection. This is not needed if you use <code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code>.</p>
 </div>
 <p>T-Res assumes by default the DeezyMatch training set to be named <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code>
 and to be in the following location:</p>
@@ -517,8 +549,11 @@ toponym alternate names extracted from Wikipedia.</p>
 </section>
 <section id="word2vec-embeddings-trained-on-noisy-data">
 <h3>2. Word2Vec embeddings trained on noisy data<a class="headerlink" href="#word2vec-embeddings-trained-on-noisy-data" title="Permalink to this headline"></a></h3>
-<p>The 19thC word2vec embeddings <strong>are not needed</strong> if you already have the DeezyMatch
-training set <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code> (described in the <a class="reference external" href="#deezymatch-training-set">section above</a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The 19thC word2vec embeddings <strong>are not needed</strong> if you already have the
+DeezyMatch training set <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code> (described in the <a class="reference external" href="#deezymatch-training-set">section above</a>).</p>
+</div>
 <p>To create a new DeezyMatch training set using T-Res, you need to provide Word2Vec
 models that have been trained on digitised historical news texts. In our experiments,
 we used the embeddings trained on a 4.2-billion-word corpus of 19th-century British
@@ -557,18 +592,18 @@ for the mentioned resources that are required in order to run the pipeline.</p>
 │   └── outputs/
 │       └── data/
 │           └── lwm/
-│               ├── linking_df_split.tsv [*]
-│               ├── ner_fine_dev.json [*+]
-│               └── ner_fine_train.json [*+]
+│               ├── linking_df_split.tsv [*?]
+│               ├── ner_fine_dev.json [*+?]
+│               └── ner_fine_train.json [*+?]
 ├── geoparser/
 ├── resources/
 │   ├── deezymatch/
 │   │   └── data/
-│   │       └── w2v_ocr_pairs.txt
+│   │       └── w2v_ocr_pairs.txt [?]
 │   ├── models/
 │   ├── news_datasets/
 │   ├── rel_db/
-│   │   └── embeddings_database.db [*+]
+│   │   └── embeddings_database.db [*+?]
 │   └── wikidata/
 │       ├── entity2class.txt [*]
 │       ├── mentions_to_wikidata_normalized.json [*]
@@ -579,9 +614,12 @@ for the mentioned resources that are required in order to run the pipeline.</p>
 └── utils/
 </pre></div>
 </div>
-<p>Note that an asterisk (<code class="docutils literal notranslate"><span class="pre">*</span></code>) next to the resource means that the path can
-be changed when instantiating the T-Res objects, and a plus sign (<code class="docutils literal notranslate"><span class="pre">+</span></code>) if
-the name of the file can be changed in the instantiation.</p>
+<p>A question mark (<code class="docutils literal notranslate"><span class="pre">?</span></code>) is used to indicate resources which are only required
+for some approaches (for example, the <code class="docutils literal notranslate"><span class="pre">rel_db/embeddings_database.db</span></code> file
+is only required by the REL-based disambiguation approaches). Note that an
+asterisk (<code class="docutils literal notranslate"><span class="pre">*</span></code>) next to the resource means that the path can be changed when
+instantiating the T-Res objects, and a plus sign (<code class="docutils literal notranslate"><span class="pre">+</span></code>) if the name of the
+file can be changed in the instantiation.</p>
 <p><a class="reference external" href="#top-resources">back to top</a></p>
 </section>
 </section>

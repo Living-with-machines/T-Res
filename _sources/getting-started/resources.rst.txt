@@ -6,14 +6,16 @@ Resources and directory structure
 
 T-Res requires several resources to work. Some resources can be downloaded
 and loaded directly from the web. Others will need to be generated, following
-the instructions provided in this section.
+the instructions provided in this section. In this page, we describe the format
+of the files that are required by T-Res, therefore also giving the user the
+option to use their own resources (adapted to T-Res).
 
 Toponym recognition and disambiguation training data
 ----------------------------------------------------
 
 We provide the dataset we used to train T-Res for the tasks of toponym recognition
 (i.e. a named entity recognition task) and toponym disambiguation (i.e. an entity
-linking task focused on geographical entities). The dataset is based on the
+linking task focused on geographical entities) in English. The dataset is based on the
 `TopRes19th dataset <https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.56>`_.
 
 .. note::
@@ -40,6 +42,12 @@ description of the format expected by T-Res.
 1. Toponym recognition dataset
 ##############################
 
+.. note::
+
+    You don't need a toponym recognition dataset if you load a NER model directly
+    from the HuggingFace hub, or from a local folder. In that case, you can skip
+    this section.
+
 T-Res allows directly loading a pre-trained BERT-based NER model, either locally
 or from the HuggingFace models hub. If this is your option, you can skip this
 section. Otherwise, if you want to train your own NER model using either our
@@ -65,6 +73,12 @@ data.
 
 2. Toponym disambiguation dataset
 #################################
+
+.. note::
+
+    You won't need a toponym disambiguation dataset if you use the unsupervised
+    approach for linking (i.e ``mostpopular``). You will need a toponym disambiguation
+    dataset if you want to use one of the REL-based approaches.
 
 Train and test data examples are required for training a new entity
 disambiguation (ED) model. They should be provided in a single tsv file, named
@@ -97,8 +111,8 @@ columns:
     ]
 
 * ``annotations``: list of dictionaries containing the annotated place names.
-  Each dictionary corresponds to a named entity mentioned in the text, with the
-  following fields (at least): ``mention_pos`` (order of the mention in the article),
+  Each dictionary corresponds to a named entity mentioned in the text, with (at
+  least) the following fields: ``mention_pos`` (order of the mention in the article),
   ``mention`` (the actual mention), ``entity_type`` (the type of named entity),
   ``wkdt_qid`` (the Wikidata ID of the resolved entity), ``mention_start``
   (the character start position of the mention in the sentence), ``mention_end``
@@ -196,8 +210,8 @@ T-Res assumes these files in the following default location:
             └── wikidata_to_mentions_normalized.json
 
 The sections below describe the contents of the files, as well as their
-format, in case you prefer to provide your own resources (which should be
-in the same format).
+format, in case you prefer to provide your own resources (which should
+have the same format).
 
 ``mentions_to_wikidata.json``
 #############################
@@ -327,6 +341,15 @@ You can load the csv, and show the first five rows, as follows:
 Each row corresponds to a Wikidata geographic entity (i.e. a Wikidata entity
 with coordinates).
 
+.. note::
+
+    Note that the latitude and longitude are not used by the disambiguation
+    method: they are only provided as a post-processing step when rendering
+    the output of the linking. Therefore, the columns can have dummy values
+    (of type ``float``) if the user is not interested in obtaining the
+    coordinates: the linking to Wikidata will not be affected. Column
+    ``english_label`` can likewise be left empty.
+
 ``entity2class.txt``
 ####################
 
@@ -350,14 +373,27 @@ mapped to `Q180673 <https://www.wikidata.org/wiki/Q180673>`_, i.e. "cerimonial
 county  of England", whereas London (`Q84 <https://www.wikidata.org/wiki/Q84>`_)
 is mapped to `Q515 <https://www.wikidata.org/wiki/Q515>`_, i.e. "city".
 
+.. note::
+
+    Note that the entity2class mapping is not used by the disambiguation
+    method: the Wikidata class is only provided as a post-processing step
+    when rendering the output of the linking. T-Res will complain if the
+    file is not there, but values can be left empty if the user is not
+    interested in obtaining the wikidata class of the predicted entity.
+    The linking to Wikidata will not be affected.
+
 `back to top <#top-resources>`_
 
 Entity and word embeddings
 --------------------------
 
+.. note::
+
+    Note that you will not need this if you use the ``mostpopular`` disambiguation
+    approach.
+
 In order to perform toponym linking and resolution using the REL-based approaches,
-T-Res requires a database of word2vec and wiki2vec embeddings. Note that you will
-not need this if you use the ``mostpopular`` disambiguation approach.
+T-Res requires a database of word2vec and wiki2vec embeddings.
 
 By default, T-Res expects a database file called ``embeddings_database.db`` with,
 at least, one table (``entity_embeddings``) with at least the following columns:
@@ -366,9 +402,6 @@ at least, one table (``entity_embeddings``) with at least the following columns:
   preceded by ``ENTITY/``. The database should also contain the following two wildcard
   tokens: ``#ENTITY/UNK#`` and ``#WORD/UNK#``.
 * ``emb``: The corresponding word or entity embedding.
-
-Generate the embeddings database
-################################
 
 In our experiments, we derived the embeddings database from REL's shared resources.
 
@@ -382,7 +415,7 @@ In our experiments, we derived the embeddings database from REL's shared resourc
     #. Generate a Wikipedia-to-Wikidata index, following `this instructions
     <https://github.com/jcklie/wikimapper#create-your-own-index>`_, save it as: ``./resources/wikipedia/index_enwiki-latest.db``.
     #. Run `this script <https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py>`_
-    to create the embeddings database.
+    to create the embeddings database (**[coming soon]**).
 
 You can load the file, and access a token embedding, as follows:
 
@@ -435,6 +468,8 @@ used to perform fuzzy string matching to find candidates for entity linking.
 
     The DeezyMatch training set can be downloaded from the `British Library research
     repository <https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63>`_.
+    This dataset is only necessary if you want to use the DeezyMatch approach to perform
+    candidate selection. This is not needed if you use ``perfectmatch``.
 
 T-Res assumes by default the DeezyMatch training set to be named ``w2v_ocr_pairs.txt``
 and to be in the following location:
@@ -483,9 +518,11 @@ The dataset we provide consists of 1,085,514 string pairs.
 2. Word2Vec embeddings trained on noisy data
 ############################################
 
-The 19thC word2vec embeddings **are not needed** if you already have the DeezyMatch
-training set ``w2v_ocr_pairs.txt`` (described in the `section above
-<#deezymatch-training-set>`_).
+.. note::
+
+    The 19thC word2vec embeddings **are not needed** if you already have the
+    DeezyMatch training set ``w2v_ocr_pairs.txt`` (described in the `section above
+    <#deezymatch-training-set>`_).
 
 To create a new DeezyMatch training set using T-Res, you need to provide Word2Vec
 models that have been trained on digitised historical news texts. In our experiments,
@@ -531,18 +568,18 @@ for the mentioned resources that are required in order to run the pipeline.
     │   └── outputs/
     │       └── data/
     │           └── lwm/
-    │               ├── linking_df_split.tsv [*]
-    │               ├── ner_fine_dev.json [*+]
-    │               └── ner_fine_train.json [*+]
+    │               ├── linking_df_split.tsv [*?]
+    │               ├── ner_fine_dev.json [*+?]
+    │               └── ner_fine_train.json [*+?]
     ├── geoparser/
     ├── resources/
     │   ├── deezymatch/
     │   │   └── data/
-    │   │       └── w2v_ocr_pairs.txt
+    │   │       └── w2v_ocr_pairs.txt [?]
     │   ├── models/
     │   ├── news_datasets/
     │   ├── rel_db/
-    │   │   └── embeddings_database.db [*+]
+    │   │   └── embeddings_database.db [*+?]
     │   └── wikidata/
     │       ├── entity2class.txt [*]
     │       ├── mentions_to_wikidata_normalized.json [*]
@@ -552,8 +589,11 @@ for the mentioned resources that are required in order to run the pipeline.
     ├── tests/
     └── utils/
 
-Note that an asterisk (``*``) next to the resource means that the path can
-be changed when instantiating the T-Res objects, and a plus sign (``+``) if
-the name of the file can be changed in the instantiation.
+A question mark (``?``) is used to indicate resources which are only required
+for some approaches (for example, the ``rel_db/embeddings_database.db`` file
+is only required by the REL-based disambiguation approaches). Note that an
+asterisk (``*``) next to the resource means that the path can be changed when
+instantiating the T-Res objects, and a plus sign (``+``) if the name of the
+file can be changed in the instantiation.
 
 `back to top <#top-resources>`_
