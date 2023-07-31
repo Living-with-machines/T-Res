@@ -75,7 +75,7 @@ output = geoparser.run_text("She was on a visit at Chippenham.")
 
 This returns:
 
-```json
+```python
 [{'mention': 'Chippenham',
   'ner_score': 1.0,
   'pos': 22,
