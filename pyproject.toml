@@ -34,19 +34,25 @@ fastapi = "^0.87.0"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
 ipykernel = "^6.21.3"
 python-levenshtein = "^0.20.9"
-Sphinx = { version = "4.2.0", optional = true }
-sphinx-rtd-theme = { version = "1.0.0", optional = true }
-sphinxcontrib-napoleon = { version = "0.7", optional = true }
 torch = "1.13.1"
 accelerate = "^0.21.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^5.2"
 jupyter = "^1.0.0"
 black = "^22.3.0"
 flake8 = "^6.0.0"
 isort = "^5.12.0"
 pre-commit = "^3.3.1"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+Sphinx = "4.2.0"
+sphinx-rtd-theme = "1.0.0"
+sphinxcontrib-napoleon = "0.7"
+sphinx-copybutton = "^0.5.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -58,6 +64,3 @@ include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
-
-[tool.poetry.extras]
-docs = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-napoleon"]
