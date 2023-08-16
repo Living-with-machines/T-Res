@@ -9,7 +9,7 @@ from typing import Any, List, Literal, Optional
 import numpy as np
 import pandas as pd
 
-#sys.path.insert(0, os.path.abspath(os.path.pardir))
+
 from ..geoparser import ranking
 
 RANDOM_SEED = 42

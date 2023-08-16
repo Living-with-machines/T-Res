@@ -9,8 +9,6 @@ from DeezyMatch import candidate_ranker
 from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
-# Add "../" to path to import utils
-#sys.path.insert(0, os.path.abspath(os.path.pardir))
 from ..utils import deezy_processing
 
 

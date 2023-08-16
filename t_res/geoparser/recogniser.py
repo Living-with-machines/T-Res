@@ -16,8 +16,6 @@ from transformers import (
     pipeline,
 )
 
-# Add "../" to path to import utils
-#sys.path.insert(0, os.path.abspath(os.path.pardir))
 from ..utils import ner
 
 

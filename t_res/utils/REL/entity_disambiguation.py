@@ -14,7 +14,6 @@ import torch.optim as optim
 from sklearn.linear_model import LogisticRegression
 from torch.autograd import Variable
 
-#sys.path.insert(0, os.path.abspath(os.path.pardir))
 from . import utils
 from .. import rel_utils
 from .mulrel_ranker import MulRelRanker, PreRank

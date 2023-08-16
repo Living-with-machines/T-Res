@@ -6,8 +6,6 @@ from pathlib import Path
 import requests
 from tqdm import tqdm
 
-# Import utils
-#sys.path.insert(0, os.path.abspath(os.path.pardir))
 from . import process_data, process_wikipedia
 from ..experiments import experiment
 

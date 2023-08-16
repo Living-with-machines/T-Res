@@ -1,8 +1,6 @@
 import os
 import sys
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
 import json
 import os
 import random
@@ -11,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from utils import get_data, preprocess_data
+from ..utils import get_data, preprocess_data
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)

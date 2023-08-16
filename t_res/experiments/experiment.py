@@ -7,9 +7,8 @@ from typing import Literal, Optional
 import pandas as pd
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, ranking, recogniser
-from utils import process_data, rel_utils
+from ..geoparser import linking, ranking, recogniser
+from ..utils import process_data, rel_utils
 
 
 class Experiment:

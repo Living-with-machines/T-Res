@@ -5,10 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from experiments import experiment
-from geoparser import linking, ranking, recogniser
+from . import experiment
+from ..geoparser import linking, ranking, recogniser
 
 # Choose test scenario:
 # * "dev" while developing and experimenting,
