@@ -6,7 +6,7 @@ Follow these steps to reproduce the experiments in our paper.
 1. Obtain the external resources
 --------------------------------
 
-Follow the instructions in the ":doc:`resources`" page in the documentation
+Follow the instructions in the ":doc:`/getting-started/resources`" page in the documentation
 to obtain the resources required for running the experiments.
 
 2. Preparing the data
