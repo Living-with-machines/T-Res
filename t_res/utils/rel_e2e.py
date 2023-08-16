@@ -7,9 +7,9 @@ import requests
 from tqdm import tqdm
 
 # Import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, process_wikipedia
-from experiments import experiment
+#sys.path.insert(0, os.path.abspath(os.path.pardir))
+from . import process_data, process_wikipedia
+from ..experiments import experiment
 
 
 def rel_end_to_end(sent: str) -> dict:

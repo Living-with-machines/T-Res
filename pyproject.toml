@@ -1,8 +1,9 @@
 [tool.poetry]
-name = "lwm_t_res"
+name = "t_res"
 version = "0.1.0"
 description = ""
 authors = ["Federico Nanni <nanni.federico@gmail.com>"]
+packages = [{include = "t_res"}]
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.11"

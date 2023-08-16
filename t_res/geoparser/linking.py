@@ -15,11 +15,11 @@ RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 
 # Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
+#sys.path.insert(0, os.path.abspath(os.path.pardir))
 
-from geoparser import ranking
-from utils import rel_utils
-from utils.REL import entity_disambiguation
+from . import ranking
+from ..utils import rel_utils
+from ..utils.REL import entity_disambiguation
 
 
 class Linker:

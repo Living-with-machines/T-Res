@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 import pandas as pd
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import ner
+#sys.path.insert(0, os.path.abspath(os.path.pardir))
+from . import ner
 
 if TYPE_CHECKING:
     from geoparser import recogniser

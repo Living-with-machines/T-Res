@@ -14,11 +14,11 @@ import torch.optim as optim
 from sklearn.linear_model import LogisticRegression
 from torch.autograd import Variable
 
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-import utils.REL.utils as utils
-from utils import rel_utils
-from utils.REL.mulrel_ranker import MulRelRanker, PreRank
-from utils.REL.vocabulary import Vocabulary
+#sys.path.insert(0, os.path.abspath(os.path.pardir))
+from . import utils
+from .. import rel_utils
+from .mulrel_ranker import MulRelRanker, PreRank
+from .vocabulary import Vocabulary
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)

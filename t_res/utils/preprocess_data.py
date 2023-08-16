@@ -12,8 +12,8 @@ from typing import List, Optional, Tuple
 import pandas as pd
 
 # Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_wikipedia
+#sys.path.insert(0, os.path.abspath(os.path.pardir))
+from . import process_wikipedia
 
 # Path to Wikipedia resources (where the wiki2wiki mapper is located):
 path_to_wikipedia = "../resources/wikipedia/"

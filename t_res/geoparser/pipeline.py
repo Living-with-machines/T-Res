@@ -6,9 +6,9 @@ from typing import List, Optional, Tuple
 from sentence_splitter import split_text_into_sentences
 
 # Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, ranking, recogniser
-from utils import ner, rel_utils
+#sys.path.insert(0, os.path.abspath(os.path.pardir))
+from . import linking, ranking, recogniser
+from ..utils import ner, rel_utils
 
 
 class Pipeline:
