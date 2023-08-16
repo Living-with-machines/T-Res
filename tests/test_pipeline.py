@@ -3,8 +3,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, pipeline, ranking, recogniser
+from t_res.geoparser import linking, pipeline, ranking, recogniser
 
 
 def test_deezy_mostpopular():

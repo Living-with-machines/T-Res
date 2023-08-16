@@ -4,9 +4,7 @@ import sys
 
 import numpy as np
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking
+from t_res.geoparser import linking
 
 
 def test_initialise_method():

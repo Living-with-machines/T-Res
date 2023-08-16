@@ -2,13 +2,10 @@ import os
 import shutil
 import sys
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
 import transformers
 
-from geoparser import recogniser
-from utils import ner
-
+from t_res.geoparser import recogniser
+from t_res.utils import ner
 
 def test_training():
     """

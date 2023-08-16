@@ -5,11 +5,9 @@ from pathlib import Path
 
 import pandas as pd
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, pipeline, ranking, recogniser
-from utils import rel_utils
-from utils.REL import entity_disambiguation
+from t_res.geoparser import linking, pipeline, ranking, recogniser
+from t_res.utils import rel_utils
+from t_res.utils.REL import entity_disambiguation
 
 
 def test_embeddings():

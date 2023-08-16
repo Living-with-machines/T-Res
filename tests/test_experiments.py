@@ -5,10 +5,9 @@ from ast import literal_eval
 import pandas as pd
 import pytest
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from experiments import experiment
-from geoparser import linking, ranking, recogniser
+
+from t_res.experiments import experiment
+from t_res.geoparser import linking, ranking, recogniser
 
 
 def test_wrong_dataset_path():

@@ -6,8 +6,7 @@ from pathlib import Path
 import pytest
 from DeezyMatch import candidate_ranker
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
+from t_res.geoparser import ranking
 
 from geoparser import ranking
 
