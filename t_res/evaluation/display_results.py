@@ -9,8 +9,8 @@ warnings.filterwarnings(
     "ignore", category=FutureWarning
 )  # To fix properly in the future
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath("HIPE-scorer/"))
+# Add "./HIPE-scorer" to path to import HIPE-scorer
+sys.path.insert(0, os.path.abspath("./HIPE-scorer/"))
 import clef_evaluation
 
 dApprNames = dict()
@@ -78,7 +78,7 @@ for dataset in datasets:
         for ner_model in ner_models:
             for rel_approach in dApprNames.keys():
                 pred_file = (
-                    "../experiments/outputs/results/"
+                    "../experiments/otputs/results/"
                     + end_to_end_suffix
                     + dataset
                     + "/"

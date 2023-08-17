@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 
 # sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import pipeline, ranking, linking
+from ...geoparser import pipeline, ranking, linking
 
 # --------------------------------------
 # Instantiate the ranker:

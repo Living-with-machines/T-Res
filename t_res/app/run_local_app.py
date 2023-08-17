@@ -26,7 +26,7 @@ config_mod = importlib.import_module(
 pipeline_config = config_mod.CONFIG
 
 
-from geoparser import pipeline
+from t_res.geoparser import pipeline
 
 geoparser = pipeline.Pipeline(**pipeline_config)
 
