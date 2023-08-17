@@ -7,8 +7,8 @@ from typing import Literal, Optional
 import pandas as pd
 from tqdm import tqdm
 
-from ..geoparser import linking, ranking, recogniser
-from ..utils import process_data, rel_utils
+from t_res.geoparser import linking, ranking, recogniser
+from t_res.utils import process_data, rel_utils
 
 
 class Experiment:

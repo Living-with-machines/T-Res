@@ -6,12 +6,12 @@ Follow these steps to reproduce the experiments in our paper.
 
 You will need the following resources, which are created using the code in the [wiki2gaz](https://github.com/Living-with-machines/wiki2gaz) or can be downloaded from [TODO: add link]:
 ```
-../resources/wikidata/wikidata_gazetteer.csv
-../resources/wikidata/entity2class.txt
-../resources/wikidata/mentions_to_wikidata.json
-../resources/wikidata/mentions_to_wikidata_normalized.json
-../resources/wikidata/wikidata_to_mentions_normalized.json
-../resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db
+../../resources/wikidata/wikidata_gazetteer.csv
+../../resources/wikidata/entity2class.txt
+../../resources/wikidata/mentions_to_wikidata.json
+../../resources/wikidata/mentions_to_wikidata_normalized.json
+../../resources/wikidata/wikidata_to_mentions_normalized.json
+../../resources/wikipedia/wikidata2wikipedia/index_enwiki-latest.db
 ```
 
 You will also need the [word2vec embeddings](TODO: add link) trained from 19th Century data. These embeddings have been created by Nilo Pedrazzini. For more information, check https://github.com/Living-with-machines/DiachronicEmb-BigHistData.
