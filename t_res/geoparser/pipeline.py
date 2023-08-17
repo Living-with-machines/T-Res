@@ -93,14 +93,14 @@ class Pipeline:
         if not self.myranker:
             self.myranker = ranking.Ranker(
                 method="perfectmatch",
-                resources_path="../resources/wikidata/",
+                resources_path="../../resources/wikidata/",
             )
 
         # If mylinker is None, instantiate the default Linker.
         if not self.mylinker:
             self.mylinker = linking.Linker(
                 method="mostpopular",
-                resources_path="../resources/",
+                resources_path="../../resources/",
             )
 
         # -----------------------------------------

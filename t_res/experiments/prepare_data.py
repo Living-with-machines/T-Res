@@ -9,14 +9,15 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from ..utils import get_data, preprocess_data
+from t_res.utils import get_data, preprocess_data
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
-resources = "../resources/"  # path to resources
-output_path_lwm = "../experiments/outputs/data/lwm/"
-output_path_hipe = "../experiments/outputs/data/hipe/"
+resources = "../../resources/" # path to resources
+output_path_lwm = "../../experiments/outputs/data/lwm/"
+output_path_hipe = "../../experiments/outputs/data/hipe/"
+
 # Create output folders for processed data if they do not exist:
 Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
 Path(output_path_hipe).mkdir(parents=True, exist_ok=True)

@@ -161,7 +161,7 @@ class EntityDisambiguation:
         }
 
         config = default_config
-        print("Model path:", config["model_path"], config["mode"])
+        print("Model path:", os.path.abspath(config["model_path"]), config["mode"])
 
         return config
 

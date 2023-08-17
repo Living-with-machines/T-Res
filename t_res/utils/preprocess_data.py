@@ -14,8 +14,7 @@ import pandas as pd
 from . import process_wikipedia
 
 # Path to Wikipedia resources (where the wiki2wiki mapper is located):
-path_to_wikipedia = "../resources/wikipedia/"
-
+path_to_wikipedia = "../../resources/wikipedia/"
 
 def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
     """
