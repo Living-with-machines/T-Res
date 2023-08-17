@@ -133,14 +133,14 @@ outputs/
 resources/
 poetry.lock
 .vscode/*
-evaluation/results/*
-evaluation/CLEF-HIPE-2020-scorer/
-experiments/tmp_*
+t_res/evaluation/results/*
+t_res/evaluation/CLEF-HIPE-2020-scorer/
+t_res/experiments/tmp_*
 preprocessing/toponymmatching/experiments/
-experiments/REL/
-evaluation/results_table.pkl
-experiments/explore_data.ipynb
-experiments/examine_res.py
+t_res/experiments/REL/
+t_res/evaluation/results_table.pkl
+t_res/experiments/explore_data.ipynb
+t_res/experiments/examine_res.py
 
 # Docs
 _build
