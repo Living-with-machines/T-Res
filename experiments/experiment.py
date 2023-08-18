@@ -807,6 +807,6 @@ class Experiment:
         # -----------------------------------------------
         # Run end-to-end REL experiments:
         if self.rel_experiments == True:
-            from utils import rel_e2e
+            from t_res.utils import rel_e2e
 
             rel_e2e.run_rel_experiments(self)

@@ -14,9 +14,9 @@ from t_res.utils import get_data, preprocess_data
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
-resources = "../../resources/" # path to resources
-output_path_lwm = "../../experiments/outputs/data/lwm/"
-output_path_hipe = "../../experiments/outputs/data/hipe/"
+resources = "../resources/" # path to resources
+output_path_lwm = "./outputs/data/lwm/"
+output_path_hipe = "./outputs/data/hipe/"
 
 # Create output folders for processed data if they do not exist:
 Path(output_path_lwm).mkdir(parents=True, exist_ok=True)

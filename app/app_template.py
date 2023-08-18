@@ -19,7 +19,7 @@ os.chdir(experiments_path)
 
 from config import CONFIG as pipeline_config
 
-from geoparser import pipeline
+from t_res.geoparser import pipeline
 
 geoparser = pipeline.Pipeline(**pipeline_config)
 
