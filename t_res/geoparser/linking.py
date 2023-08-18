@@ -106,17 +106,7 @@ class Linker:
         resources_path: str,
         linking_resources: Optional[dict] = dict(),
         overwrite_training: Optional[bool] = False,
-        rel_params: Optional[dict] = {
-            "model_path": "../resources/models/disambiguation/",
-            "data_path": "../experiments/outputs/data/lwm/",
-            "training_split": "originalsplit",
-            "db_embeddings": None,  # The cursor to the embeddings database.
-            "with_publication": True,
-            "without_microtoponyms": True,
-            "do_test": False,
-            "default_publname": "United Kingdom",
-            "default_publwqid": "Q145",
-        },
+        rel_params: Optional[dict] = None,
     ):
         """
         Initialises a Linker object.
@@ -125,6 +115,21 @@ class Linker:
         self.resources_path = resources_path
         self.linking_resources = linking_resources
         self.overwrite_training = overwrite_training
+        
+        if rel_params is None:
+            current_dir = Path(__file__).parent.resolve()
+            rel_params = {
+                "model_path": os.path.join(resources_path, "models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"../experiments/outputs/data/lwm/"),
+                "training_split": "originalsplit",
+                "db_embeddings": None,  # The cursor to the embeddings database.
+                "with_publication": True,
+                "without_microtoponyms": True,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+            }
+        
         self.rel_params = rel_params
 
     def __str__(self) -> str:
@@ -153,12 +158,12 @@ class Linker:
 
         # Load Wikidata mentions-to-QID with absolute counts:
         print("  > Loading mentions to wikidata mapping.")
-        with open(self.resources_path + "wikidata/mentions_to_wikidata.json", "r") as f:
+        with open(os.path.join(self.resources_path,"wikidata/mentions_to_wikidata.json"), "r") as f:
             self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
         print("  > Loading gazetteer.")
         gaz = pd.read_csv(
-            f"{self.resources_path}wikidata/wikidata_gazetteer.csv",
+            os.path.join(self.resources_path,"wikidata/wikidata_gazetteer.csv"),
             usecols=["wikidata_id", "latitude", "longitude"],
         )
         gaz["latitude"] = gaz["latitude"].astype(float)
@@ -174,11 +179,10 @@ class Linker:
 
         # The entity2class.txt file is created as the last step in
         # wikipedia processing:
-        with open(f"{self.resources_path}wikidata/entity2class.txt", "r") as f:
+        with open(os.path.join(self.resources_path,"wikidata/entity2class.txt"), "r") as f:
             self.linking_resources["entity2class"] = json.load(f)
 
         print("*** Linking resources loaded!\n")
-        return self.linking_resources
 
     def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
         """

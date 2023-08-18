@@ -26,6 +26,7 @@ class Pipeline:
         mylinker (linking.Linker, optional): The ``Linker`` object to use in
             the pipeline. If None, the default ``Linker`` will be instantiated.
             For the default settings, see Notes below.
+        resources_path (str, optional): The path to your resources directory.
 
     Example:
         >>> # Instantiate the Pipeline object with a default setup
@@ -55,7 +56,7 @@ class Pipeline:
 
             ranking.Ranker(
                 method="perfectmatch",
-                resources_path="../resources/wikidata/",
+                resources_path=resources_path,
             )
 
         * The default settings for the ``Linker``:
@@ -64,7 +65,7 @@ class Pipeline:
 
             linking.Linker(
                 method="mostpopular",
-                resources_path="../resources/",
+                resources_path=resources_path,
             )
     """
 
@@ -73,6 +74,7 @@ class Pipeline:
         myner: Optional[recogniser.Recogniser] = None,
         myranker: Optional[ranking.Ranker] = None,
         mylinker: Optional[linking.Linker] = None,
+        resources_path: Optional[str] = None,
     ):
         """
         Instantiates a Pipeline object.
@@ -91,16 +93,20 @@ class Pipeline:
 
         # If myranker is None, instantiate the default Ranker.
         if not self.myranker:
+            if not resources_path:
+                raise ValueError("[ERROR] Please specify path to resources directory.")
             self.myranker = ranking.Ranker(
                 method="perfectmatch",
-                resources_path="../../resources/wikidata/",
+                resources_path=resources_path,
             )
 
         # If mylinker is None, instantiate the default Linker.
         if not self.mylinker:
+            if not resources_path:
+                raise ValueError("[ERROR] Please specify path to resources directory.")
             self.mylinker = linking.Linker(
                 method="mostpopular",
-                resources_path="../../resources/",
+                resources_path=resources_path,
             )
 
         # -----------------------------------------

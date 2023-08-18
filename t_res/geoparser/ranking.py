@@ -48,7 +48,7 @@ class Ranker:
             )
 
         >>> # Load resources
-        >>> ranker.mentions_to_wikidata = ranker.load_resources()
+        >>> ranker.load_resources()
 
         >>> # Train the ranker (if applicable)
         >>> ranker.train()
@@ -109,31 +109,8 @@ class Ranker:
         resources_path: str,
         mentions_to_wikidata: Optional[dict] = dict(),
         wikidata_to_mentions: Optional[dict] = dict(),
-        strvar_parameters: Optional[dict] = {
-            # Parameters to create the string pair dataset:
-            "ocr_threshold": 60,
-            "top_threshold": 85,
-            "min_len": 5,
-            "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
-            "overwrite_dataset": False,
-        },
-        deezy_parameters: Optional[dict] = {
-            # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
-            "dm_cands": "wkdtalts",
-            "dm_model": "w2v_ocr",
-            "dm_output": "deezymatch_on_the_fly",
-            # Ranking measures:
-            "ranking_metric": "faiss",
-            "selection_threshold": 50,
-            "num_candidates": 1,
-            "verbose": False,
-            # DeezyMatch training:
-            "overwrite_training": False,
-            "do_test": False,
-        },
+        strvar_parameters: Optional[dict] = None,
+        deezy_parameters: Optional[dict] = None,
         already_collected_cands: Optional[dict] = dict(),
     ):
         """
@@ -143,9 +120,39 @@ class Ranker:
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
+        self.already_collected_cands = already_collected_cands
+
+        #set paths based on resources path
+        if strvar_parameters is None:
+            strvar_parameters = {
+                # Parameters to create the string pair dataset:
+                "ocr_threshold": 60,
+                "top_threshold": 85,
+                "min_len": 5,
+                "max_len": 15,
+                "w2v_ocr_path": os.path.join(resources_path,"models/w2v/"),
+                "w2v_ocr_model": "w2v_*_news",
+                "overwrite_dataset": False,
+            },
+        if deezy_parameters is None:
+            deezy_parameters = {
+                # Paths and filenames of DeezyMatch models and data:
+                "dm_path": os.path.join(resources_path,"deezymatch/"),
+                "dm_cands": "wkdtalts",
+                "dm_model": "w2v_ocr",
+                "dm_output": "deezymatch_on_the_fly",
+                # Ranking measures:
+                "ranking_metric": "faiss",
+                "selection_threshold": 50,
+                "num_candidates": 1,
+                "verbose": False,
+                # DeezyMatch training:
+                "overwrite_training": False,
+                "do_test": False,
+            },
+
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
-        self.already_collected_cands = already_collected_cands
 
     def __str__(self) -> str:
         """
@@ -201,8 +208,8 @@ class Ranker:
 
         # Load files
         files = {
-            "mentions_to_wikidata": f"{self.resources_path}mentions_to_wikidata_normalized.json",
-            "wikidata_to_mentions": f"{self.resources_path}wikidata_to_mentions_normalized.json",
+            "mentions_to_wikidata": os.path.join(self.resources_path,"wikidata/mentions_to_wikidata_normalized.json"),
+            "wikidata_to_mentions": os.path.join(self.resources_path,"wikidata/wikidata_to_mentions_normalized.json"),
         }
 
         with open(files["mentions_to_wikidata"], "r") as f:
@@ -251,8 +258,6 @@ class Ranker:
         if self.method in ["partialmatch", "levenshtein"]:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
-        return self.mentions_to_wikidata
 
     def train(self) -> None:
         """
@@ -320,7 +325,7 @@ class Ranker:
                     candidates[query] = {}
                     self.already_collected_cands[query] = {}
 
-        return candidates, self.already_collected_cands
+        return candidates
 
     def damlev_dist(self, query: str, row: pd.Series) -> float:
         """
@@ -434,7 +439,7 @@ class Ranker:
 
         """
 
-        candidates, self.already_collected_cands = self.perfect_match(queries)
+        candidates = self.perfect_match(queries)
 
         # the rest go through
         remainers = [x for x, y in candidates.items() if len(y) == 0]
@@ -464,7 +469,7 @@ class Ranker:
 
             self.already_collected_cands[query] = mention_df
 
-        return candidates, self.already_collected_cands
+        return candidates
 
     def deezy_on_the_fly(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -513,7 +518,7 @@ class Ranker:
         dm_output = self.deezy_parameters["dm_output"]
 
         # first we fill in the perfect matches and already collected queries
-        cands_dict, self.already_collected_cands = self.perfect_match(queries)
+        cands_dict = self.perfect_match(queries)
 
         # the rest go through
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]
@@ -563,7 +568,7 @@ class Ranker:
 
                 self.already_collected_cands[row["query"]] = returned_cands
 
-        return cands_dict, self.already_collected_cands
+        return cands_dict 
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -672,7 +677,7 @@ class Ranker:
         queries = list(set([mention["mention"] for mention in mentions]))
 
         # Pass the mentions to :py:meth:`geoparser.ranking.Ranker.run`
-        cands, self.already_collected_cands = self.run(queries)
+        cands = self.run(queries)
 
         # Get Wikidata candidates
         wk_cands = dict()
@@ -700,4 +705,4 @@ class Ranker:
                             "Candidates": found_cands,
                         }
 
-        return wk_cands, self.already_collected_cands
+        return wk_cands
