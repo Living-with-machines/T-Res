@@ -13,26 +13,27 @@ import pandas as pd
 
 from . import process_wikipedia
 
-# Path to Wikipedia resources (where the wiki2wiki mapper is located):
-path_to_wikipedia = "../../resources/wikipedia/"
-
-def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
+def turn_wikipedia2wikidata(
+    wikipedia_title: str, 
+    wikipedia_path: str,
+) -> Optional[str]:
     """
     Convert a Wikipedia title to its corresponding Wikidata ID.
 
     Arguments:
         wikipedia_title (str): The title of the Wikipedia page.
+        wikipedia_path (str): The path to your wikipedia directory.
 
     Returns:
         Optional[str]:
             The corresponding Wikidata ID if available, or None if not.
 
     Example:
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum")
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum", "../resources")
         'Q10285'
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt")
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt", "../resources")
         'Q11768'
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location")
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location", "../resources")
         Warning: invalid_location is not in wikipedia2wikidata, the wkdt_qid will be None.
     """
     if not wikipedia_title == "NIL" and not wikipedia_title == "*":
@@ -43,7 +44,7 @@ def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
         )
         linked_wqid = process_wikipedia.title_to_id(
             processed_wikipedia_title,
-            path_to_db=os.path.join(path_to_wikipedia, "index_enwiki-latest.db"),
+            path_to_db=os.path.join(wikipedia_path, "index_enwiki-latest.db"),
             lower=True,
         )
         if not linked_wqid:
