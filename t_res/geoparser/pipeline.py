@@ -122,7 +122,7 @@ class Pipeline:
         # Ranker loading resources and training a model:
 
         # Load the resources:
-        self.myranker.mentions_to_wikidata = self.myranker.load_resources()
+        self.myranker.load_resources()
 
         # Train a DeezyMatch model if needed:
         self.myranker.train()
@@ -131,7 +131,7 @@ class Pipeline:
         # Linker loading resources:
 
         # Load linking resources:
-        self.mylinker.linking_resources = self.mylinker.load_resources()
+        self.mylinker.load_resources()
 
         # Train a linking model if needed (it requires myranker to generate
         # potential candidates to the training set):
@@ -227,9 +227,7 @@ class Pipeline:
             rmentions = [{"mention": y["mention"]} for y in mentions]
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            rmentions
-        )
+        wk_cands = self.myranker.find_candidates(rmentions)
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -689,9 +687,7 @@ class Pipeline:
         mentions = [{"mention": m} for m in mentions]
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
-            mentions
-        )
+        wk_cands = self.myranker.find_candidates(mentions)
         return wk_cands
 
     def run_disambiguation(
