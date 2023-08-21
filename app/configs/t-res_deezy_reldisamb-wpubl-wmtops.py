@@ -1,16 +1,16 @@
 import os
-import sys
 import sqlite3
+import sys
 from pathlib import Path
 
 # sys.path.insert(0, os.path.abspath(os.path.pardir))
-from t_res.geoparser import pipeline, ranking, linking
+from t_res.geoparser import linking, pipeline, ranking
 
 # --------------------------------------
 # Instantiate the ranker:
 myranker = ranking.Ranker(
     method="deezymatch",
-    resources_path="../resources/wikidata/",
+    resources_path="../resources/",
     strvar_parameters={
         # Parameters to create the string pair dataset:
         "ocr_threshold": 60,
