@@ -7,6 +7,7 @@ import transformers
 from t_res.geoparser import recogniser
 from t_res.utils import ner
 
+
 def test_training():
     """
     Test that running train() generates a model folder

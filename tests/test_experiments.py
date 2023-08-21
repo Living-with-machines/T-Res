@@ -5,8 +5,9 @@ from ast import literal_eval
 import pandas as pd
 import pytest
 
-
-from t_res.experiments import experiment
+# Add "../" to path to import experiment
+sys.path.insert(0, os.path.abspath("../"))
+from experiments import experiment
 from t_res.geoparser import linking, ranking, recogniser
 
 
@@ -55,7 +56,7 @@ def test_load_data():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
     # --------------------------------------
@@ -68,10 +69,10 @@ def test_load_data():
     myner.train()
     myner.pipe = myner.create_pipeline()
 
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.load_resources()
     myranker.train()
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -124,7 +125,7 @@ def test_wrong_ranker_method():
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
         method="perfect_match",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
     exp = experiment.Experiment(
@@ -158,7 +159,7 @@ def test_apply():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
     # --------------------------------------
@@ -171,10 +172,10 @@ def test_apply():
     myner.train()
     myner.pipe = myner.create_pipeline()
 
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.load_resources()
     myranker.train()
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:

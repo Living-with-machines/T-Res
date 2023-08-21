@@ -111,7 +111,7 @@ class Ranker:
         wikidata_to_mentions: Optional[dict] = dict(),
         strvar_parameters: Optional[dict] = None,
         deezy_parameters: Optional[dict] = None,
-        already_collected_cands: Optional[dict] = dict(),
+        already_collected_cands: Optional[dict] = None,
     ):
         """
         Initialize a Ranker object.
@@ -120,9 +120,13 @@ class Ranker:
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
-        self.already_collected_cands = already_collected_cands
 
-        #set paths based on resources path
+        if already_collected_cands:
+            self.already_collected_cands = already_collected_cands
+        else:
+            self.already_collected_cands = dict()
+
+        # set paths based on resources path
         if strvar_parameters is None:
             strvar_parameters = {
                 # Parameters to create the string pair dataset:
@@ -130,14 +134,15 @@ class Ranker:
                 "top_threshold": 85,
                 "min_len": 5,
                 "max_len": 15,
-                "w2v_ocr_path": os.path.join(resources_path,"models/w2v/"),
+                "w2v_ocr_path": os.path.join(resources_path, "models/w2v/"),
                 "w2v_ocr_model": "w2v_*_news",
                 "overwrite_dataset": False,
-            },
+            }
+
         if deezy_parameters is None:
             deezy_parameters = {
                 # Paths and filenames of DeezyMatch models and data:
-                "dm_path": os.path.join(resources_path,"deezymatch/"),
+                "dm_path": os.path.join(resources_path, "deezymatch/"),
                 "dm_cands": "wkdtalts",
                 "dm_model": "w2v_ocr",
                 "dm_output": "deezymatch_on_the_fly",
@@ -149,7 +154,7 @@ class Ranker:
                 # DeezyMatch training:
                 "overwrite_training": False,
                 "do_test": False,
-            },
+            }
 
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
@@ -208,8 +213,12 @@ class Ranker:
 
         # Load files
         files = {
-            "mentions_to_wikidata": os.path.join(self.resources_path,"wikidata/mentions_to_wikidata_normalized.json"),
-            "wikidata_to_mentions": os.path.join(self.resources_path,"wikidata/wikidata_to_mentions_normalized.json"),
+            "mentions_to_wikidata": os.path.join(
+                self.resources_path, "wikidata/mentions_to_wikidata_normalized.json"
+            ),
+            "wikidata_to_mentions": os.path.join(
+                self.resources_path, "wikidata/wikidata_to_mentions_normalized.json"
+            ),
         }
 
         with open(files["mentions_to_wikidata"], "r") as f:
@@ -278,7 +287,9 @@ class Ranker:
             if self.deezy_parameters["do_test"] == True:
                 self.deezy_parameters["dm_model"] += "_test"
                 self.deezy_parameters["dm_cands"] += "_test"
-            deezy_processing.train_deezy_model(self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions)
+            deezy_processing.train_deezy_model(
+                self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions
+            )
             deezy_processing.generate_candidates(
                 self.deezy_parameters, self.mentions_to_wikidata
             )
@@ -493,7 +504,7 @@ class Ranker:
 
         Example:
             >>> ranker = Ranker(...)
-            >>> ranker.mentions_to_wikidata = ranker.load_resources()
+            >>> ranker.load_resources()
             >>> queries = ['London', 'Shefrield']
             >>> candidates, already_collected = ranker.deezy_on_the_fly(queries)
             >>> print(candidates)
@@ -568,7 +579,7 @@ class Ranker:
 
                 self.already_collected_cands[row["query"]] = returned_cands
 
-        return cands_dict 
+        return cands_dict
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -586,7 +597,7 @@ class Ranker:
 
         Example:
             >>> myranker = Ranker(method="perfectmatch", ...)
-            >>> myranker.mentions_to_wikidata = myranker.load_resources()
+            >>> myranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
             >>> candidates, already_collected = myranker.run(queries)
             >>> print(candidates)

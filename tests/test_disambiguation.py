@@ -74,7 +74,7 @@ def test_train():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -132,14 +132,14 @@ def test_train():
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources:
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.load_resources()
     # Train a DeezyMatch model if needed:
     myranker.train()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
     # Train a linking model if needed (it requires myranker to generate potential
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
@@ -174,7 +174,7 @@ def test_load_eval_model():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -234,14 +234,14 @@ def test_load_eval_model():
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources:
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.load_resources()
     # Train a DeezyMatch model if needed:
     myranker.train()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
     # Train a linking model if needed (it requires myranker to generate potential
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
@@ -273,7 +273,7 @@ def test_predict():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={

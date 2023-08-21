@@ -27,7 +27,7 @@ def test_deezy_mostpopular():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -112,7 +112,7 @@ def test_deezy_rel_wpubl_wmtops():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -201,7 +201,7 @@ def test_perfect_rel_wpubl_wmtops():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -288,7 +288,7 @@ def test_modular_deezy_rel():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="./resources/wikidata/",
+        resources_path="./resources/",
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
