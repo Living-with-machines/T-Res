@@ -561,6 +561,9 @@ for the mentioned resources that are required in order to run the pipeline.
 ::
 
     T-Res/
+    ├── t-res/
+    │   ├── geoparser/
+    │   └── utils/
     ├── app/
     ├── evaluation/
     ├── examples/
@@ -571,7 +574,6 @@ for the mentioned resources that are required in order to run the pipeline.
     │               ├── linking_df_split.tsv [*?]
     │               ├── ner_fine_dev.json [*+?]
     │               └── ner_fine_train.json [*+?]
-    ├── geoparser/
     ├── resources/
     │   ├── deezymatch/
     │   │   └── data/
@@ -586,8 +588,7 @@ for the mentioned resources that are required in order to run the pipeline.
     │       ├── mentions_to_wikidata.json [*]
     │       ├── wikidta_gazetteer.csv [*]
     │       └── wikidata_to_mentions_normalized.json [*]
-    ├── tests/
-    └── utils/
+    └── tests/
 
 A question mark (``?``) is used to indicate resources which are only required
 for some approaches (for example, the ``rel_db/embeddings_database.db`` file

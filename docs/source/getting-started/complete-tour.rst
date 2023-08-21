@@ -47,7 +47,9 @@ To instantiate the default T-Res pipeline, do:
 
     from geoparser import pipeline
 
-    geoparser = pipeline.Pipeline()
+    geoparser = pipeline.Pipeline(resources_path="../resources/")
+
+.. note:: You should update the resources path argument to reflect your set up.
 
 You can also instantiate a pipeline using a customised Recogniser, Ranker and
 Linker. To see the different options, refer to the sections on instantiating
@@ -603,7 +605,7 @@ and ``levenshtein`` respectively), instantiate it as follows, changing the
 
     myranker = ranking.Ranker(
         method="perfectmatch", # or "partialmatch" or "levenshtein"
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
 Note that ``resources_path`` should contain the path to the directory
@@ -668,7 +670,7 @@ The Ranker can then be instantiated as follows:
     myranker = ranking.Ranker(
         # Generic Ranker parameters:
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         # Parameters to create the string pair dataset:
         strvar_parameters=dict(),
         # Parameters to train, load and use a DeezyMatch model:
@@ -757,7 +759,7 @@ The Ranker can then be instantiated as follows:
     myranker = ranking.Ranker(
         # Generic Ranker parameters:
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         # Parameters to create the string pair dataset:
         strvar_parameters={
             "ocr_threshold": 60,
@@ -1056,7 +1058,7 @@ of the Linker method.
 
 .. code-block:: python
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
 .. note::
 
