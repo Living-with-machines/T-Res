@@ -13,8 +13,9 @@ import pandas as pd
 
 from . import process_wikipedia
 
+
 def turn_wikipedia2wikidata(
-    wikipedia_title: str, 
+    wikipedia_title: str,
     wikipedia_path: str,
 ) -> Optional[str]:
     """
@@ -232,7 +233,7 @@ def process_lwm_for_ner(tsv_topres_path: str):
 
 
 def process_lwm_for_linking(
-    tsv_topres_path: str, gazetteer_ids: List[str]
+    resources_dir: str, tsv_topres_path: str, gazetteer_ids: List[str]
 ) -> pd.DataFrame:
     """
     Process LwM data for performing entity linking.
@@ -241,6 +242,7 @@ def process_lwm_for_linking(
     Each row includes the annotation and resolution information of the toponym.
 
     Arguments:
+        resources_dir (str): The path to the resources directory
         tsv_topres_path (str): The path to the top-level directory containing the annotated TSV files.
         gazetteer_ids (list): The set of Wikidata IDs in the gazetteer.
 
@@ -325,8 +327,9 @@ def process_lwm_for_linking(
                 # Clean Wikidata URL:
                 wkpd = wkpd.replace("\\", "")
 
+                wikipedia_path = os.path.join(resources_dir, "wikipedia/")
                 # Get Wikidata ID:
-                wkdt = turn_wikipedia2wikidata(wkpd)
+                wkdt = turn_wikipedia2wikidata(wkpd, wikipedia_path)
 
                 # In mentions attached to next token through a dash,
                 # keep only the true mention (this has to do with

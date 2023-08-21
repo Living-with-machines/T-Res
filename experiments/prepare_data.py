@@ -1,9 +1,8 @@
-import os
-import sys
-
 import json
 import os
 import random
+import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
@@ -14,9 +13,23 @@ from t_res.utils import get_data, preprocess_data
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
-resources = "../resources/" # path to resources
-output_path_lwm = "./outputs/data/lwm/"
-output_path_hipe = "./outputs/data/hipe/"
+parser = ArgumentParser()
+parser.add_argument(
+    "-p",
+    "--path",
+    dest="path",
+    help="path to resources directory",
+    action="store",
+    type=str,
+)
+
+args = parser.parse_args()
+
+resources_dir = args.path
+
+current_dir = Path(__file__).parent.resolve()
+output_path_lwm = os.path.join(current_dir, "outputs/data/lwm/")
+output_path_hipe = os.path.join(current_dir, "outputs/data/hipe/")
 
 # Create output folders for processed data if they do not exist:
 Path(output_path_lwm).mkdir(parents=True, exist_ok=True)
@@ -31,7 +44,7 @@ Path(output_path_hipe).mkdir(parents=True, exist_ok=True)
 gazetteer_ids = set(
     list(
         pd.read_csv(
-            os.path.join(resources, "wikidata", "wikidata_gazetteer.csv"),
+            os.path.join(resources_dir, "wikidata", "wikidata_gazetteer.csv"),
             low_memory=False,
         )["wikidata_id"].unique()
     )
@@ -43,7 +56,7 @@ gazetteer_ids = set(
 # ------------------------------------------------------
 
 # Load publication metadata
-with open(os.path.join(f"{resources}", "publication_metadata.json")) as jsonfile:
+with open(os.path.join(resources_dir, "publication_metadata.json")) as jsonfile:
     df_metadata = json.load(jsonfile)
 
 dict_titles = {k: df_metadata[k]["publication_title"] for k in df_metadata}
@@ -56,20 +69,18 @@ dict_placewqid = {k: df_metadata[k]["wikidata_qid"] for k in df_metadata}
 # ------------------------------------------------------
 
 # Path of the manually annotated data:
-news_path = os.path.join(f"{resources}", "news_datasets")
+news_path = os.path.join(resources_dir, "news_datasets")
 
 # Download the annotated data from the BL repository:
 get_data.download_lwm_data(news_path)
 
 # Training data from the manually annotated data:
 topres_path_train = os.path.join(
-    f"{resources}", "news_datasets", "topRes19th_v2", "train"
+    resources_dir, "news_datasets", "topRes19th_v2", "train"
 )
 
 # Test data from the manually annotated data:
-topres_path_test = os.path.join(
-    f"{resources}", "news_datasets", "topRes19th_v2", "test"
-)
+topres_path_test = os.path.join(resources_dir, "news_datasets", "topRes19th_v2", "test")
 
 # Process data for training a named entity recognition model:
 lwm_df = preprocess_data.process_lwm_for_ner(topres_path_train)
@@ -103,8 +114,12 @@ lwm_dev_ner.to_json(
 )
 
 # Process data for the resolution experiments:
-lwm_train_df = preprocess_data.process_lwm_for_linking(topres_path_train, gazetteer_ids)
-lwm_test_df = preprocess_data.process_lwm_for_linking(topres_path_test, gazetteer_ids)
+lwm_train_df = preprocess_data.process_lwm_for_linking(
+    resources_dir, topres_path_train, gazetteer_ids
+)
+lwm_test_df = preprocess_data.process_lwm_for_linking(
+    resources_dir, topres_path_test, gazetteer_ids
+)
 
 # Split train set into train and dev set, by article:
 lwm_train_df, lwm_dev_df = train_test_split(
