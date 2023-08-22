@@ -43,6 +43,7 @@ with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
     mylinker = linking.Linker(
         method="reldisamb",
         resources_path="../resources/",
+        experiments_path="../experiments/",
         linking_resources=dict(),
         rel_params={
             "model_path": "../resources/models/disambiguation/",
