@@ -5,8 +5,8 @@ from typing import List, Optional, Tuple
 
 from sentence_splitter import split_text_into_sentences
 
-from . import linking, ranking, recogniser
 from ..utils import ner, rel_utils
+from . import linking, ranking, recogniser
 
 
 class Pipeline:
@@ -27,6 +27,8 @@ class Pipeline:
             the pipeline. If None, the default ``Linker`` will be instantiated.
             For the default settings, see Notes below.
         resources_path (str, optional): The path to your resources directory.
+        experiments_path (str, optional): The path to the experiments directory.
+            Default is "../experiments".
 
     Example:
         >>> # Instantiate the Pipeline object with a default setup
@@ -75,6 +77,7 @@ class Pipeline:
         myranker: Optional[ranking.Ranker] = None,
         mylinker: Optional[linking.Linker] = None,
         resources_path: Optional[str] = None,
+        experiments_path: Optional[str] = None,
     ):
         """
         Instantiates a Pipeline object.
@@ -104,10 +107,18 @@ class Pipeline:
         if not self.mylinker:
             if not resources_path:
                 raise ValueError("[ERROR] Please specify path to resources directory.")
-            self.mylinker = linking.Linker(
-                method="mostpopular",
-                resources_path=resources_path,
-            )
+
+            if experiments_path:
+                self.mylinker = linking.Linker(
+                    method="mostpopular",
+                    resources_path=resources_path,
+                    experiments_path=experiments_path,
+                )
+            else:
+                self.mylinker = linking.Linker(
+                    method="mostpopular",
+                    resources_path=resources_path,
+                )
 
         # -----------------------------------------
         # NER training and creating pipeline:
