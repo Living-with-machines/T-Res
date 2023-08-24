@@ -3,6 +3,7 @@ import sqlite3
 import sys
 
 import numpy as np
+import pytest
 
 from t_res.geoparser import linking
 

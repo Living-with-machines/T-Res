@@ -65,3 +65,8 @@ include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = 
+    experiment: tests which use experiment dir

@@ -36,7 +36,7 @@ def test_eval_with_exception():
 
     assert check == True
 
-
+@pytest.mark.experiment
 def test_prepare_sents():
     dataset_df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv",
@@ -66,7 +66,7 @@ def test_prepare_sents():
     # this assert that there are no cases where we were missing metadata
     assert len([x for x, y in dMetadata.items() if len(y) == 0]) == 0
 
-
+@pytest.mark.experiment
 def test_align_gold():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here
@@ -121,7 +121,7 @@ def test_align_gold():
 
     assert len(empty_list) == 0
 
-
+@pytest.mark.experiment
 def test_ner_and_process():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here

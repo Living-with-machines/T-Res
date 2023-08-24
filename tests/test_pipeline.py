@@ -3,9 +3,11 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import pytest 
+
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 
-
+@pytest.mark.experiment
 def test_deezy_mostpopular():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here
@@ -88,7 +90,7 @@ def test_deezy_mostpopular():
 
     assert resolved == []
 
-
+@pytest.mark.experiment
 def test_deezy_rel_wpubl_wmtops():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here
@@ -177,7 +179,7 @@ def test_deezy_rel_wpubl_wmtops():
     assert resolved[0]["ed_score"] == 0.039
     assert resolved[0]["ner_score"] == 1.0
 
-
+@pytest.mark.experiment
 def test_perfect_rel_wpubl_wmtops():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here
@@ -266,7 +268,7 @@ def test_perfect_rel_wpubl_wmtops():
     assert resolved[0]["ed_score"] == 0.0
     assert resolved[0]["ner_score"] == 1.0
 
-
+@pytest.mark.experiment
 def test_modular_deezy_rel():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # We'll store the NER model here

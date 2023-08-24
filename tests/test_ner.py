@@ -2,12 +2,13 @@ import os
 import shutil
 import sys
 
+import pytest
 import transformers
 
 from t_res.geoparser import recogniser
 from t_res.utils import ner
 
-
+@pytest.mark.experiment
 def test_training():
     """
     Test that running train() generates a model folder
@@ -38,7 +39,7 @@ def test_training():
     myner.train()
     assert os.path.isdir(test_folder_path) == True
 
-
+@pytest.mark.experiment
 def test_create_pipeline():
     """
     Test that create_pipeline returns a model folder path that exists and an Pipeline object
@@ -65,7 +66,7 @@ def test_create_pipeline():
         == transformers.pipelines.token_classification.TokenClassificationPipeline
     )
 
-
+@pytest.mark.experiment
 def test_ner_predict():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -111,7 +112,7 @@ def test_ner_load_from_hub():
         == transformers.pipelines.token_classification.TokenClassificationPipeline
     )
 
-
+@pytest.mark.experiment
 def test_aggregate_mentions():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)

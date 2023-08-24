@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
+import pytest
+
 large_resources = "/resources/"  # path to large resources
 small_resources = "./resources/"  # path to small resources
 processed_path_lwm = "./experiments/outputs/data/lwm/"  # path to processed LwM data
@@ -80,7 +82,7 @@ def test_original_lwm_data():
         == train_metadata.shape[0]
     )
 
-
+@pytest.mark.experiment
 def test_lwm_ner_conversion_fine():
     """
     Test process_lwm_for_ner is not missing articles.
@@ -113,7 +115,7 @@ def test_lwm_ner_conversion_fine():
     dev_articles = [x.split("_")[0] for x in list(df_ner_dev["id"])]
     assert len(set(train_articles + dev_articles)) == 343
 
-
+@pytest.mark.experiment
 def test_lwm_ner_conversion_coarse():
     """
     Test process_lwm_for_ner is not missing articles.
@@ -146,7 +148,7 @@ def test_lwm_ner_conversion_coarse():
     dev_articles = [x.split("_")[0] for x in list(df_ner_dev["id"])]
     assert len(set(train_articles + dev_articles)) == 343
 
-
+@pytest.mark.experiment
 def test_lwm_linking_conversion():
     """
     Test process_lwm_for_linking is not missing articles.
@@ -185,7 +187,7 @@ def test_lwm_linking_conversion():
     # Test articles of the original split and without test should not overlap:
     assert not (test_withouttest & test_originalsplit)
 
-
+@pytest.mark.experiment
 def test_hipe_linking_conversion():
     """
     Test process_hipe_for_linking is not missing articles.

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath("../"))
 from experiments import experiment
 from t_res.geoparser import linking, ranking, recogniser
 
-
+@pytest.mark.experiment
 def test_wrong_dataset_path():
     with pytest.raises(SystemExit) as cm:
         experiment.Experiment(
@@ -29,7 +29,7 @@ def test_wrong_dataset_path():
         == "\nError: The dataset has not been created, you should first run the prepare_data.py script.\n"
     )
 
-
+@pytest.mark.experiment
 def test_load_data():
     data = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t")
     ids = set()
@@ -120,7 +120,7 @@ def test_load_data():
 
         assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
-
+@pytest.mark.experiment
 def test_wrong_ranker_method():
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
@@ -141,7 +141,7 @@ def test_wrong_ranker_method():
         exp.prepare_data()
     assert cm.value.code == 0
 
-
+@pytest.mark.experiment
 def test_apply():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)

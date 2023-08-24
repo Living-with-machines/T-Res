@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 from t_res.utils import rel_utils
@@ -41,7 +42,7 @@ def test_embeddings():
         embs = rel_utils.get_db_emb(cursor, mentions, "entity")
         assert embs == [None]
 
-
+@pytest.mark.experiment
 def test_prepare_initial_data():
     df = pd.read_csv(
         "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
@@ -52,7 +53,7 @@ def test_prepare_initial_data():
     assert parsed_doc["4939308_6"][1]["mention"] == "Market-street"
     assert parsed_doc["4939308_6"][1]["gold"] == "NIL"
 
-
+@pytest.mark.experiment
 def test_train():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -152,7 +153,7 @@ def test_train():
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
 
-
+@pytest.mark.experiment
 def test_load_eval_model():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -251,7 +252,7 @@ def test_load_eval_model():
         == entity_disambiguation.EntityDisambiguation
     )
 
-
+@pytest.mark.experiment
 def test_predict():
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)

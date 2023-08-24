@@ -1,5 +1,7 @@
 import urllib
 
+import pytest
+
 from t_res.utils import process_wikipedia
 
 
