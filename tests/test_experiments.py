@@ -148,7 +148,7 @@ def test_wrong_ranker_method(tmp_path):
         exp.prepare_data()
     assert cm.value.code == 0
 
-@pytest.mark.skip
+
 def test_apply(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
