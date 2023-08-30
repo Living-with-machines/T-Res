@@ -7,6 +7,7 @@
   <title>utils.deezy_processing module &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,6 +16,8 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -88,133 +91,6 @@
              
   <section id="utils-deezy-processing-module">
 <h1><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module<a class="headerlink" href="#utils-deezy-processing-module" title="Permalink to this headline"></a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.deezy_processing.obtain_matches">
-<span class="sig-prename descclassname"><span class="pre">utils.deezy_processing.</span></span><span class="sig-name descname"><span class="pre">obtain_matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">word</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">english_words</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sims</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuzz_ratio_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">70</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.deezy_processing.obtain_matches" title="Permalink to this definition"></a></dt>
-<dd><p>Classifies the top 100 nearest neighbors of the given word into positive
-and negative matches (or discards them).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>word</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The input word.</p></li>
-<li><p><strong>english_words</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of English words as strings.</p></li>
-<li><p><strong>sims</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of 100 nearest neighbors from the OCR word2vec
-model.</p></li>
-<li><p><strong>fuzz_ratio_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The threshold used for
-<cite>thefuzz.fuzz.ratio &lt;https://github.com/seatgeek/thefuzz#simple-ratio&gt;</cite>.
-If the nearest neighbor word is an existing English word and the
-string similarity is below <code class="docutils literal notranslate"><span class="pre">fuzz_ratio_threshold</span></code>, it is considered
-a negative match, i.e. not an OCR variation. Defaults to <code class="docutils literal notranslate"><span class="pre">70</span></code>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A tuple that contains two lists:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>The first list consists of <em>positive</em> matches for the input
-word.</p></li>
-<li><p>The second list consists of <em>negative</em> matches, a list of
-negative matches for the input word.</p></li>
-</ol>
-</div></blockquote>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Tuple[List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a>], List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a>]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.deezy_processing.create_training_set">
-<span class="sig-prename descclassname"><span class="pre">utils.deezy_processing.</span></span><span class="sig-name descname"><span class="pre">create_training_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deezy_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">strvar_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikidata_to_mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.deezy_processing.create_training_set" title="Permalink to this definition"></a></dt>
-<dd><p>Create a training set for DeezyMatch consisting of positive and negative
-string matches.</p>
-<p>Given a word2vec model trained on OCR data and a list of words in the
-English language, this function creates a training set for DeezyMatch.
-The training set contains pairs of strings, where a positive match is an
-English word and its OCR variation (obtained from the top N word2vec
-neighbours and filtered by string similarity), and a negative
-match is an English word and a randomly selected OCR token.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>deezy_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Dictionary of DeezyMatch parameters
-for model training.</p></li>
-<li><p><strong>strvar_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Dictionary of string variation
-parameters required to create a DeezyMatch training dataset.</p></li>
-<li><p><strong>wikidata_to_mentions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Mapping between Wikidata IDs and mentions.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function creates a new file with the string pairs dataset called
-<code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code> inside the folder path defined as <code class="docutils literal notranslate"><span class="pre">dm_path</span></code> in
-the DeezyMatch parameters passed in setting up the ranker passed to
-this function as <code class="docutils literal notranslate"><span class="pre">myranker</span></code>.</p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.deezy_processing.train_deezy_model">
-<span class="sig-prename descclassname"><span class="pre">utils.deezy_processing.</span></span><span class="sig-name descname"><span class="pre">train_deezy_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deezy_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">strvar_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikidata_to_mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.deezy_processing.train_deezy_model" title="Permalink to this definition"></a></dt>
-<dd><p>Train a DeezyMatch model using the provided <code class="docutils literal notranslate"><span class="pre">myranker</span></code> parameters and
-input files.</p>
-<p>This function trains a DeezyMatch model based on the specified parameters
-in the myranker object and the required input files. If the
-<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> parameter is set to True or the model does not
-exist, the function will train a new DeezyMatch model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>deezy_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Dictionary of DeezyMatch parameters
-for model training.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function returns a DeezyMatch model, stored in the location
-specified in the DeezyMatch <code class="docutils literal notranslate"><span class="pre">input_dfm.yaml</span></code> file.</p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.deezy_processing.generate_candidates">
-<span class="sig-prename descclassname"><span class="pre">utils.deezy_processing.</span></span><span class="sig-name descname"><span class="pre">generate_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deezy_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.deezy_processing.generate_candidates" title="Permalink to this definition"></a></dt>
-<dd><p>Obtain Wikidata candidates (Wikipedia mentions to Wikidata entities) and
-generate their corresponding vectors.</p>
-<p>This function retrieves Wikidata candidates based on the mentions stored
-in the <code class="docutils literal notranslate"><span class="pre">myranker</span></code> object and generates their corresponding vectors using
-the DeezyMatch model. It writes the candidates to a file and generates
-embeddings with the DeezyMatch model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>deezy_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Dictionary of DeezyMatch parameters
-for model training.</p></li>
-<li><p><strong>mentions_to_wikidata</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Mapping between mentions and Wikidata IDs.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The function saves the candidates to a file and generates embeddings
-using the DeezyMatch model. The resulting vectors are stored in the
-output directories specified in the DeezyMatch parameters passed to
-the ranker passed to this function in the <code class="docutils literal notranslate"><span class="pre">myranker</span></code> keyword
-argument.</p>
-</div>
-</dd></dl>
-
 </section>
 
 

@@ -7,6 +7,7 @@
   <title>utils.rel_e2e module &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,6 +16,8 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -88,159 +91,6 @@
              
   <section id="utils-rel-e2e-module">
 <h1><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module<a class="headerlink" href="#utils-rel-e2e-module" title="Permalink to this headline"></a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.rel_end_to_end">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">rel_end_to_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sent</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.rel_end_to_end" title="Permalink to this definition"></a></dt>
-<dd><p>Perform REL end-to-end entity linking using the API.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>sent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – A sentence in plain text.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The output from the REL end-to-end API for the input sentence.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.get_rel_from_api">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">get_rel_from_api</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dSentences</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_end2end_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.get_rel_from_api" title="Permalink to this definition"></a></dt>
-<dd><p>Use the REL API to perform end-to-end entity linking.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dSentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of sentences, where the key is the
-article-sent identifier and the value is the full text of the
-sentence.</p></li>
-<li><p><strong>rel_end2end_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The path of the file where the REL results
-will be stored.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.match_wikipedia_to_wikidata">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">match_wikipedia_to_wikidata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wiki_title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.match_wikipedia_to_wikidata" title="Permalink to this definition"></a></dt>
-<dd><p>Retrieve the Wikidata ID corresponding to a Wikipedia title.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>wiki_title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – A Wikipedia title in underscore-separated format.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The corresponding Wikidata QID for the entity, or <code class="docutils literal notranslate"><span class="pre">&quot;NIL&quot;</span></code> if not
-found.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.match_ent">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">match_ent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred_ents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_ann</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.match_ent" title="Permalink to this definition"></a></dt>
-<dd><p>Find the corresponding string and prediction information returned by REL
-for a specific gold standard token position in a sentence.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pred_ents</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of lists, where each inner list corresponds
-to a token.</p></li>
-<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The start character offset of the token in the gold
-standard.</p></li>
-<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The end character offset of the token in the gold standard.</p></li>
-<li><p><strong>prev_ann</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The entity type of the previous token.</p></li>
-<li><p><strong>gazetteer_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><em>set</em></a>) – A set of entity IDs in the knowledge base.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A tuple with three elements:</dt><dd><ol class="arabic simple">
-<li><p>The entity type.</p></li>
-<li><p>The entity link.</p></li>
-<li><p>The entity type of the previous token.</p></li>
-</ol>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)">tuple</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.postprocess_rel">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">postprocess_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dSentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_tokenization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikigaz_ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.rel_e2e.postprocess_rel" title="Permalink to this definition"></a></dt>
-<dd><p>Retokenize the REL output for each sentence to match the gold standard
-tokenization.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>rel_preds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary containing the predictions using REL.</p></li>
-<li><p><strong>dSentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary that maps a sentence ID to the text.</p></li>
-<li><p><strong>gold_tokenization</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary that contains the tokenized
-sentence with gold standard annotations of entity type and link
-per sentence.</p></li>
-<li><p><strong>wikigaz_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><em>set</em></a>) – A set of Wikidata IDs of entities in the gazetteer.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A dictionary that maps a sentence ID to the REL predictions,
-retokenized as in the gold standard.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.store_rel">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">store_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">experiments.experiment.Experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dREL</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">approach</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.store_rel" title="Permalink to this definition"></a></dt>
-<dd><p>Store the REL results for a specific experiment, approach, and split, in
-the format required by the HIPE scorer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>experiment</strong> (<em>Experiment</em>) – The experiment object containing the results
-path and dataset.</p></li>
-<li><p><strong>dREL</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary mapping sentence IDs to REL predictions.</p></li>
-<li><p><strong>approach</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The approach used for REL.</p></li>
-<li><p><strong>how_split</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The type of split for which to store the results
-(e.g., <code class="docutils literal notranslate"><span class="pre">originalsplit</span></code>, <code class="docutils literal notranslate"><span class="pre">Ashton1860</span></code>).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function saves a TSV file with the results in the Conll format
-required by the scorer.</p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.rel_e2e.run_rel_experiments">
-<span class="sig-prename descclassname"><span class="pre">utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">run_rel_experiments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#utils.rel_e2e.run_rel_experiments" title="Permalink to this definition"></a></dt>
-<dd><p>Run the end-to-end REL experiments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 
 

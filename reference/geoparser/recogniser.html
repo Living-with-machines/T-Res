@@ -7,6 +7,7 @@
   <title>geoparser.recogniser.Recogniser &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,6 +16,8 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -83,165 +86,6 @@
              
   <section id="geoparser-recogniser-recogniser">
 <h1><code class="docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser</span></code><a class="headerlink" href="#geoparser-recogniser-recogniser" title="Permalink to this headline"></a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="geoparser.recogniser.Recogniser">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">geoparser.recogniser.</span></span><span class="sig-name descname"><span class="pre">Recogniser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipe</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.pipelines.base.Pipeline</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_model</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_args</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{'batch_size':</span> <span class="pre">8,</span> <span class="pre">'learning_rate':</span> <span class="pre">5e-05,</span> <span class="pre">'num_train_epochs':</span> <span class="pre">10,</span> <span class="pre">'weight_decay':</span> <span class="pre">0.0}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_training</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_test</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_from_hub</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geoparser.recogniser.Recogniser" title="Permalink to this definition"></a></dt>
-<dd><p>A class for training and using a toponym recogniser with the specified
-parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The name of the NER model.</p></li>
-<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Path to the training dataset
-(default: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>).</p></li>
-<li><p><strong>test_dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Path to the testing dataset
-(default: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>).</p></li>
-<li><p><strong>pipe</strong> (<em>transformers.Pipeline</em><em>, </em><em>optional</em>) – A pre-loaded NER pipeline
-(default: <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p></li>
-<li><p><strong>base_model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the base model, for
-fine-tuning (default: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p></li>
-<li><p><strong>model_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Path to store the trained model
-(default: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>).</p></li>
-<li><p><strong>training_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional fine-tuning training
-arguments (default: {“batch_size”: 8, “num_train_epochs”: 10,
-“learning_rate”: 0.00005, “weight_decay”: 0.0}``, a dictionary).</p></li>
-<li><p><strong>overwrite_training</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to overwrite an existing
-trained model (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
-<li><p><strong>do_test</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to train in test mode
-(default: <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
-<li><p><strong>load_from_hub</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to load the model from
-HuggingFace model hub or locally (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create an instance of the Recogniser class</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">recogniser</span> <span class="o">=</span> <span class="n">Recogniser</span><span class="p">(</span>
-<span class="go">        model=&quot;ner-model&quot;,</span>
-<span class="go">        train_dataset=&quot;train.json&quot;,</span>
-<span class="go">        test_dataset=&quot;test.json&quot;,</span>
-<span class="go">        base_model=&quot;bert-base-uncased&quot;,</span>
-<span class="go">        model_path=&quot;/path/to/model/&quot;,</span>
-<span class="go">        training_args={</span>
-<span class="go">            &quot;batch_size&quot;: 8,</span>
-<span class="go">            &quot;num_train_epochs&quot;: 10,</span>
-<span class="go">            &quot;learning_rate&quot;: 0.00005,</span>
-<span class="go">            &quot;weight_decay&quot;: 0.0,</span>
-<span class="go">            },</span>
-<span class="go">        overwrite_training=False,</span>
-<span class="go">        do_test=False,</span>
-<span class="go">        load_from_hub=False</span>
-<span class="go">    )</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create and load the NER pipeline</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">create_pipeline</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Train the model</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">recogniser</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Predict named entities in a sentence</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;I live in London.&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">recogniser</span><span class="o">.</span><span class="n">ner_predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="geoparser.recogniser.Recogniser.create_pipeline">
-<span class="sig-name descname"><span class="pre">create_pipeline</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">transformers.pipelines.base.Pipeline</span></span></span><a class="headerlink" href="#geoparser.recogniser.Recogniser.create_pipeline" title="Permalink to this definition"></a></dt>
-<dd><p>Creates and loads a Named Entity Recognition (NER) pipeline.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The created NER pipeline.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="pipeline.html#geoparser.pipeline.Pipeline" title="geoparser.pipeline.Pipeline">geoparser.pipeline.Pipeline</a></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method creates and loads a NER pipeline for performing named
-entity recognition tasks. It uses the specified model name and
-model path (if the model is not obtained from the HuggingFace
-model hub or from a local path) to initialise the pipeline.
-The created pipeline is stored in the <code class="docutils literal notranslate"><span class="pre">pipe</span></code> attribute of the
-<code class="docutils literal notranslate"><span class="pre">Recogniser</span></code> object. It is also returned by the method.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="geoparser.recogniser.Recogniser.ner_predict">
-<span class="sig-name descname"><span class="pre">ner_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.recogniser.Recogniser.ner_predict" title="Permalink to this definition"></a></dt>
-<dd><p>Predicts named entities in a given sentence using the NER pipeline.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The input sentence.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A list of dictionaries representing the predicted named
-entities. Each dictionary contains the keys <code class="docutils literal notranslate"><span class="pre">&quot;word&quot;</span></code>,
-<code class="docutils literal notranslate"><span class="pre">&quot;entity&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;score&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;start&quot;</span></code> , and <code class="docutils literal notranslate"><span class="pre">&quot;end&quot;</span></code>
-representing the entity text, entity label, confidence
-score and start and end character position of the text
-respectively. For example:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;word&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;From&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.99975187</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a>]</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method takes a sentence as input and uses the NER pipeline to
-predict named entities in the sentence.</p>
-<p>Any n-dash characters (<code class="docutils literal notranslate"><span class="pre">—</span></code>) in the provided sentence are
-replaced with a comma (<code class="docutils literal notranslate"><span class="pre">,</span></code>) to handle parsing issues related to
-the n-dash in OCR from historical newspapers.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="geoparser.recogniser.Recogniser.train">
-<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#geoparser.recogniser.Recogniser.train" title="Permalink to this definition"></a></dt>
-<dd><p>Trains a NER model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If the model is obtained from the HuggingFace model hub
-(<code class="docutils literal notranslate"><span class="pre">load_from_hub=True</span></code>) or if the model already exists at the
-specified model path and <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> is False,
-training is skipped.</p>
-<p>Otherwise, the training process is executed, including the
-loading of datasets, model, and tokenizer, tokenization and
-alignment of labels, computation of evaluation metrics,
-training using the Trainer object, evaluation, and saving the
-trained model.</p>
-<p>The training will be run on test mode if <code class="docutils literal notranslate"><span class="pre">do_test</span></code> was set to
-True when the Recogniser object was initiated.</p>
-</div>
-<dl class="simple">
-<dt>Credit:</dt><dd><p>This function is adapted from <a class="reference external" href="https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb">a HuggingFace tutorial</a>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 
 
