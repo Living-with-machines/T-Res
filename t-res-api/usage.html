@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deploying the T-Res API &mdash; T-Res 0.1.0 documentation</title>
+  <title>Using the T-Res API &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Deploying the T-Res API" href="installation.html" />
-    <link rel="prev" title="utils.REL.vocabulary module" href="../reference/utils/rel/vocabulary.html" /> 
+    <link rel="next" title="Experiments and evaluation" href="../experiments/index.html" />
+    <link rel="prev" title="Deploying the T-Res API" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,9 +41,9 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/index.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploying the T-Res API</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Deploying the T-Res API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Deploying the T-Res API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html">Using the T-Res API</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using the T-Res API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../experiments/index.html">Experiments and evaluation</a></li>
@@ -63,9 +63,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Deploying the T-Res API</li>
+          <li><a href="index.html">Deploying the T-Res API</a> &raquo;</li>
+      <li>Using the T-Res API</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/t-res-api/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/t-res-api/usage.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -73,39 +74,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="deploying-the-t-res-api">
-<h1>Deploying the T-Res API<a class="headerlink" href="#deploying-the-t-res-api" title="Permalink to this headline"></a></h1>
-<p>T-Res can also be deployed as a <a class="reference external" href="https://fastapi.tiangolo.com">FastAPI</a> via <a class="reference external" href="https://www.docker.com">Docker</a>,
-allowing remote users to access your T-Res pipeline instead of their own local installation.</p>
-<p>The API consists of the following files:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">app/app_template.py</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">app/configs/&lt;CONFIG_NAME&gt;.py</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">app/template.Dockerfile</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code></p></li>
-</ul>
-<p>Example configuration files are provided in this repository, which can be adapted to fit your needs.</p>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Deploying the T-Res API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#building-the-container">1. Building the container</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#deploying-the-container">2. Deploying the container</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#deploying-multiple-containers-via-docker-compose">3. Deploying multiple containers via Docker Compose</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#configuring-your-deployment">4. Configuring your deployment</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Using the T-Res API</a></li>
-</ul>
+  <section id="using-the-t-res-api">
+<h1>Using the T-Res API<a class="headerlink" href="#using-the-t-res-api" title="Permalink to this headline"></a></h1>
+<p>If you deploy the T-Res API according to the steps in the previous section,
+it should now be available on your server as a HTTP API
+(be sure to expose the correct ports - by default, the app is deployed to port 8000).
+Automatically generated, interactive documentation (created by <cite>Swagger</cite>) is available at the <code class="docutils literal notranslate"><span class="pre">/docs</span></code> endpoint.</p>
+<p>The following example shows how to query the API via curl to resolve the toponyms in a single sentence:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>http://20.0.184.45:8000/v2/t-res_deezy_reldisamb-wpubl-wmtops/toponym_resolution<span class="w"> </span><span class="se">\</span>
+-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+-d<span class="w"> </span><span class="s1">&#39;{&quot;text&quot;: &quot;Harvey, from London;Thomas and Elizabeth, Barnett.&quot;, &quot;place&quot;: &quot;Manchester&quot;, &quot;place_wqid&quot;: &quot;Q18125&quot;}&#39;</span>
+</pre></div>
 </div>
+<p>See the <code class="docutils literal notranslate"><span class="pre">app/api_usage.ipynb</span></code> notebook for more examples of how to use the API’s various endpoints via Python.</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../reference/utils/rel/vocabulary.html" class="btn btn-neutral float-left" title="utils.REL.vocabulary module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="installation.html" class="btn btn-neutral float-right" title="Deploying the T-Res API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="installation.html" class="btn btn-neutral float-left" title="Deploying the T-Res API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../experiments/index.html" class="btn btn-neutral float-right" title="Experiments and evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

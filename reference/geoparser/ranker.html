@@ -4,10 +4,9 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>t_res.geoparser.ranking. Ranker &mdash; T-Res 0.1.0 documentation</title>
+  <title>geoparser.ranking. Ranker &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,13 +15,11 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/clipboard.min.js"></script>
-        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="t_res.geoparser.recogniser.Recogniser" href="recogniser.html" />
-    <link rel="prev" title="t_res.geoparser.linking.Linker" href="linker.html" /> 
+    <link rel="next" title="geoparser.recogniser.Recogniser" href="recogniser.html" />
+    <link rel="prev" title="geoparser.linking.Linker" href="linker.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,16 +42,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../getting-started/index.html">Getting started</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="linker.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.linking.Linker</span></code></a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.ranking.</span> <span class="pre">Ranker</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="recogniser.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.recogniser.Recogniser</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.pipeline.Pipeline</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="linker.html"><code class="docutils literal notranslate"><span class="pre">geoparser.linking.Linker</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">geoparser.ranking.</span> <span class="pre">Ranker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="recogniser.html"><code class="docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">geoparser.pipeline.Pipeline</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../utils/index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Deploying the T-Res API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
@@ -74,7 +71,7 @@
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Reference</a> &raquo;</li>
           <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.ranking.</span> <span class="pre">Ranker</span></code></li>
+      <li><code class="docutils literal notranslate"><span class="pre">geoparser.ranking.</span> <span class="pre">Ranker</span></code></li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/geoparser/ranker.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,11 +81,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="t-res-geoparser-ranking-ranker">
-<h1><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.ranking.</span> <span class="pre">Ranker</span></code><a class="headerlink" href="#t-res-geoparser-ranking-ranker" title="Permalink to this headline"></a></h1>
+  <section id="geoparser-ranking-ranker">
+<h1><code class="docutils literal notranslate"><span class="pre">geoparser.ranking.</span> <span class="pre">Ranker</span></code><a class="headerlink" href="#geoparser-ranking-ranker" title="Permalink to this headline"></a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">t_res.geoparser.ranking.</span></span><span class="sig-name descname"><span class="pre">Ranker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'perfectmatch'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'partialmatch'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'levenshtein'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'deezymatch'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikidata_to_mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strvar_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deezy_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">already_collected_cands</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">geoparser.ranking.</span></span><span class="sig-name descname"><span class="pre">Ranker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'perfectmatch'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'partialmatch'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'levenshtein'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'deezymatch'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikidata_to_mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strvar_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{'max_len':</span> <span class="pre">15,</span> <span class="pre">'min_len':</span> <span class="pre">5,</span> <span class="pre">'ocr_threshold':</span> <span class="pre">60,</span> <span class="pre">'overwrite_dataset':</span> <span class="pre">False,</span> <span class="pre">'top_threshold':</span> <span class="pre">85,</span> <span class="pre">'w2v_ocr_model':</span> <span class="pre">'w2v_*_news',</span> <span class="pre">'w2v_ocr_path':</span> <span class="pre">'/home/runner/work/T-Res/T-Res/docs/resources/models/w2v'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deezy_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{'dm_cands':</span> <span class="pre">'wkdtalts',</span> <span class="pre">'dm_model':</span> <span class="pre">'w2v_ocr',</span> <span class="pre">'dm_output':</span> <span class="pre">'deezymatch_on_the_fly',</span> <span class="pre">'dm_path':</span> <span class="pre">'/home/runner/work/T-Res/T-Res/docs/resources/deezymatch',</span> <span class="pre">'do_test':</span> <span class="pre">False,</span> <span class="pre">'num_candidates':</span> <span class="pre">1,</span> <span class="pre">'overwrite_training':</span> <span class="pre">False,</span> <span class="pre">'ranking_metric':</span> <span class="pre">'faiss',</span> <span class="pre">'selection_threshold':</span> <span class="pre">50,</span> <span class="pre">'verbose':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">already_collected_cands</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geoparser.ranking.Ranker" title="Permalink to this definition"></a></dt>
 <dd><p>The Ranker class implements a system for candidate selection through string
 variation ranking. It provides methods to select candidates based on different
 matching approaches, such as perfect match, partial match, Levenshtein distance,
@@ -103,11 +100,11 @@ related to candidate selection.</p>
 <li><p><strong>mentions_to_wikidata</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – An empty dictionary which
 will store the mapping between mentions and Wikidata IDs,
 which will be loaded through the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">load_resources()</span></code> method.</p></li>
+<a class="reference internal" href="#geoparser.ranking.Ranker.load_resources" title="geoparser.ranking.Ranker.load_resources"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_resources()</span></code></a> method.</p></li>
 <li><p><strong>wikidata_to_mentions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – An empty dictionary which
 will store the mapping between Wikidata IDs and mentions,
 which will be loaded through the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">load_resources()</span></code> method.</p></li>
+<a class="reference internal" href="#geoparser.ranking.Ranker.load_resources" title="geoparser.ranking.Ranker.load_resources"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_resources()</span></code></a> method.</p></li>
 <li><p><strong>strvar_parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Dictionary of string variation
 parameters required to create a DeezyMatch training dataset.
 For the default settings, see Notes below.</p></li>
@@ -127,7 +124,7 @@ collected candidates. Defaults to <code class="docutils literal notranslate"><sp
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load resources</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">ranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Train the ranker (if applicable)</span>
@@ -189,8 +186,8 @@ collected candidates. Defaults to <code class="docutils literal notranslate"><sp
 </ul>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.check_if_contained">
-<span class="sig-name descname"><span class="pre">check_if_contained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.check_if_contained" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.check_if_contained">
+<span class="sig-name descname"><span class="pre">check_if_contained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.check_if_contained" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the amount of overlap, if a mention is contained within a row
 in the dataset.</p>
 <dl class="field-list simple">
@@ -222,8 +219,8 @@ ranging from <code class="docutils literal notranslate"><span class="pre">0.0</s
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.damlev_dist">
-<span class="sig-name descname"><span class="pre">damlev_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.damlev_dist" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.damlev_dist">
+<span class="sig-name descname"><span class="pre">damlev_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.damlev_dist" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the Damerau-Levenshtein distance between a mention and a row
 in the dataset.</p>
 <dl class="field-list simple">
@@ -263,8 +260,8 @@ subtracting it from <code class="docutils literal notranslate"><span class="pre"
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.deezy_on_the_fly">
-<span class="sig-name descname"><span class="pre">deezy_on_the_fly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.deezy_on_the_fly" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.deezy_on_the_fly">
+<span class="sig-name descname"><span class="pre">deezy_on_the_fly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.deezy_on_the_fly" title="Permalink to this definition"></a></dt>
 <dd><p>Perform DeezyMatch (a deep neural network approach to fuzzy string
 matching) on-the-fly for a list of given mentions (<code class="docutils literal notranslate"><span class="pre">queries</span></code>).</p>
 <dl class="field-list simple">
@@ -292,7 +289,7 @@ Ranker’s <code class="docutils literal notranslate"><span class="pre">already_
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span> <span class="o">=</span> <span class="n">Ranker</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">ranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;London&#39;</span><span class="p">,</span> <span class="s1">&#39;Shefrield&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">candidates</span><span class="p">,</span> <span class="n">already_collected</span> <span class="o">=</span> <span class="n">ranker</span><span class="o">.</span><span class="n">deezy_on_the_fly</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
@@ -309,14 +306,14 @@ already been matched perfectly, it skips the fuzzy matching
 process for that query. For the remaining queries,
 it uses the DeezyMatch model to generate candidates and ranks them
 based on the specified ranking metric and selection threshold,
-provided when initialising the <code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code>
+provided when initialising the <a class="reference internal" href="#geoparser.ranking.Ranker" title="geoparser.ranking.Ranker"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code></a>
 object.</p>
 </div>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.find_candidates">
-<span class="sig-name descname"><span class="pre">find_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.find_candidates" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.find_candidates">
+<span class="sig-name descname"><span class="pre">find_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.find_candidates" title="Permalink to this definition"></a></dt>
 <dd><p>Find candidates for the given mentions using the selected ranking
 method.</p>
 <dl class="field-list simple">
@@ -365,7 +362,7 @@ candidates will show as follows:</p>
 mention using the selected ranking method. It first extracts the
 queries from the mentions and then calls the appropriate method
 based on the ranking method chosen when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code> object.</p>
+<a class="reference internal" href="#geoparser.ranking.Ranker" title="geoparser.ranking.Ranker"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code></a> object.</p>
 <p>The method returns a dictionary that maps each original mention to
 a sub-dictionary containing the mention variations as keys and
 their corresponding Wikidata match scores as values.</p>
@@ -376,8 +373,8 @@ attribute).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.load_resources">
-<span class="sig-name descname"><span class="pre">load_resources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.load_resources" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.load_resources">
+<span class="sig-name descname"><span class="pre">load_resources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.load_resources" title="Permalink to this definition"></a></dt>
 <dd><p>Load the ranker resources.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -396,7 +393,7 @@ normalized “relevance”, i.e. number of in-links across Wikipedia.</p>
 <p>This method loads the mentions-to-wikidata and
 wikidata-to-mentions dictionaries from the resources directory,
 specified when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code>. They are required for
+<a class="reference internal" href="#geoparser.ranking.Ranker" title="geoparser.ranking.Ranker"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code></a>. They are required for
 performing candidate selection and ranking.</p>
 <p>It filters the dictionaries to remove noise and updates the class
 attributes accordingly.</p>
@@ -407,8 +404,8 @@ of the <code class="docutils literal notranslate"><span class="pre">Ranker</span
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.partial_match">
-<span class="sig-name descname"><span class="pre">partial_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damlev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.partial_match" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.partial_match">
+<span class="sig-name descname"><span class="pre">partial_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damlev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.partial_match" title="Permalink to this definition"></a></dt>
 <dd><p>Perform partial matching for a list of given mentions (<code class="docutils literal notranslate"><span class="pre">queries</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -459,8 +456,8 @@ partial matching method: Levenshtein distance or containment.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.perfect_match">
-<span class="sig-name descname"><span class="pre">perfect_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.perfect_match" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.perfect_match">
+<span class="sig-name descname"><span class="pre">perfect_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.perfect_match" title="Permalink to this definition"></a></dt>
 <dd><p>Perform perfect matching between a provided list of mentions
 (<code class="docutils literal notranslate"><span class="pre">queries</span></code>) and the altnames in the knowledge base.</p>
 <dl class="field-list simple">
@@ -497,8 +494,8 @@ dictionary is assigned as the candidate list for the mention.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.run" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the appropriate ranking method based on the specified method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -516,7 +513,7 @@ See Notes below for further information.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">myranker</span> <span class="o">=</span> <span class="n">Ranker</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;perfectmatch&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">myranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">myranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;London&#39;</span><span class="p">,</span> <span class="s1">&#39;Barcelona&#39;</span><span class="p">,</span> <span class="s1">&#39;Bologna&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">candidates</span><span class="p">,</span> <span class="n">already_collected</span> <span class="o">=</span> <span class="n">myranker</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
@@ -529,13 +526,13 @@ See Notes below for further information.</p>
 <p class="admonition-title">Note</p>
 <p>This method executes the appropriate ranking method based on the
 <code class="docutils literal notranslate"><span class="pre">method</span></code> parameter, selected when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code> object.</p>
+<a class="reference internal" href="#geoparser.ranking.Ranker" title="geoparser.ranking.Ranker"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code></a> object.</p>
 <p>It delegates the execution to the corresponding method:</p>
 <ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">perfect_match()</span></code></p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">partial_match()</span></code></p></li>
+<li><p><a class="reference internal" href="#geoparser.ranking.Ranker.perfect_match" title="geoparser.ranking.Ranker.perfect_match"><code class="xref py py-meth docutils literal notranslate"><span class="pre">perfect_match()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#geoparser.ranking.Ranker.partial_match" title="geoparser.ranking.Ranker.partial_match"><code class="xref py py-meth docutils literal notranslate"><span class="pre">partial_match()</span></code></a></p></li>
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">levenshtein()</span></code></p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">deezy_on_the_fly()</span></code></p></li>
+<li><p><a class="reference internal" href="#geoparser.ranking.Ranker.deezy_on_the_fly" title="geoparser.ranking.Ranker.deezy_on_the_fly"><code class="xref py py-meth docutils literal notranslate"><span class="pre">deezy_on_the_fly()</span></code></a></p></li>
 </ul>
 <p>See the documentation of those methods for more details about
 their processing if the provided mentions (<code class="docutils literal notranslate"><span class="pre">queries</span></code>).</p>
@@ -543,15 +540,15 @@ their processing if the provided mentions (<code class="docutils literal notrans
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.ranking.Ranker.train">
-<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.geoparser.ranking.Ranker.train" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="geoparser.ranking.Ranker.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#geoparser.ranking.Ranker.train" title="Permalink to this definition"></a></dt>
 <dd><p>Training a DeezyMatch model. The training will be skipped if the model
 already exists and the <code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> key in the
 <code class="docutils literal notranslate"><span class="pre">deezy_parameters</span></code> passed when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code> object is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>. The
+<a class="reference internal" href="#geoparser.ranking.Ranker" title="geoparser.ranking.Ranker"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code></a> object is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>. The
 training will be run on test mode if the <code class="docutils literal notranslate"><span class="pre">do_test</span></code> key in the
 <code class="docutils literal notranslate"><span class="pre">deezy_parameters</span></code> passed when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code> object is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<a class="reference internal" href="#geoparser.ranking.Ranker" title="geoparser.ranking.Ranker"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Ranker()</span></code></a> object is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>None.</p>
@@ -567,8 +564,8 @@ training will be run on test mode if the <code class="docutils literal notransla
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="linker.html" class="btn btn-neutral float-left" title="t_res.geoparser.linking.Linker" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="recogniser.html" class="btn btn-neutral float-right" title="t_res.geoparser.recogniser.Recogniser" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="linker.html" class="btn btn-neutral float-left" title="geoparser.linking.Linker" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="recogniser.html" class="btn btn-neutral float-right" title="geoparser.recogniser.Recogniser" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

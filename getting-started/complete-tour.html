@@ -7,7 +7,6 @@
   <title>The complete tour &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,8 +15,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -74,7 +71,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../t-res-api/index.html">Deploying the T-Res API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
@@ -139,12 +136,8 @@ to make it easier to use T-Res for end-to-end entity linking.</p>
 <p>To instantiate the default T-Res pipeline, do:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">pipeline</span>
 
-<span class="n">geoparser</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;../resources/&quot;</span><span class="p">)</span>
+<span class="n">geoparser</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">()</span>
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>You should update the resources path argument to reflect your set up.</p>
 </div>
 <p>You can also instantiate a pipeline using a customised Recogniser, Ranker and
 Linker. To see the different options, refer to the sections on instantiating
@@ -650,7 +643,7 @@ and <code class="docutils literal notranslate"><span class="pre">levenshtein</sp
 
 <span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;perfectmatch&quot;</span><span class="p">,</span> <span class="c1"># or &quot;partialmatch&quot; or &quot;levenshtein&quot;</span>
-    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/&quot;</span><span class="p">,</span>
+    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/wikidata/&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -706,7 +699,7 @@ the “<a class="reference internal" href="resources.html"><span class="doc">Res
 <span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
     <span class="c1"># Generic Ranker parameters:</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;deezymatch&quot;</span><span class="p">,</span>
-    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/&quot;</span><span class="p">,</span>
+    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/wikidata/&quot;</span><span class="p">,</span>
     <span class="c1"># Parameters to create the string pair dataset:</span>
     <span class="n">strvar_parameters</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
     <span class="c1"># Parameters to train, load and use a DeezyMatch model:</span>
@@ -792,7 +785,7 @@ described in the “<a class="reference internal" href="resources.html"><span cl
 <span class="n">myranker</span> <span class="o">=</span> <span class="n">ranking</span><span class="o">.</span><span class="n">Ranker</span><span class="p">(</span>
     <span class="c1"># Generic Ranker parameters:</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;deezymatch&quot;</span><span class="p">,</span>
-    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/&quot;</span><span class="p">,</span>
+    <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;resources/wikidata/&quot;</span><span class="p">,</span>
     <span class="c1"># Parameters to create the string pair dataset:</span>
     <span class="n">strvar_parameters</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;ocr_threshold&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
@@ -1071,7 +1064,7 @@ least contain the following resources:</p>
 <h3>2. Load the resources<a class="headerlink" href="#id9" title="Permalink to this headline"></a></h3>
 <p>The following line of code loads the resources required by the Linker, regardless
 of the Linker method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mylinker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mylinker</span><span class="o">.</span><span class="n">linking_resources</span> <span class="o">=</span> <span class="n">mylinker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition note">

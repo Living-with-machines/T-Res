@@ -7,7 +7,6 @@
   <title>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,8 +15,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/clipboard.min.js"></script>
-        <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -43,7 +40,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/index.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Deploying the T-Res API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
@@ -120,28 +117,35 @@ Each of these elements are described in this documentation.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/linker.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.linking.Linker</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/ranker.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.ranking.</span> <span class="pre">Ranker</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/recogniser.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.recogniser.Recogniser</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/pipeline.html"><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.pipeline.Pipeline</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/linker.html"><code class="docutils literal notranslate"><span class="pre">geoparser.linking.Linker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/ranker.html"><code class="docutils literal notranslate"><span class="pre">geoparser.ranking.</span> <span class="pre">Ranker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/recogniser.html"><code class="docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/geoparser/pipeline.html"><code class="docutils literal notranslate"><span class="pre">geoparser.pipeline.Pipeline</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/utils/index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.deezy_processing</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/ner.html"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/utils/rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/utils/rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Running T-Res as API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="t-res-api/installation.html">Installing T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="t-res-api/index.html">Deploying the T-Res API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="t-res-api/installation.html">Deploying the T-Res API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="t-res-api/installation.html#building-the-container">1. Building the container</a></li>
+<li class="toctree-l3"><a class="reference internal" href="t-res-api/installation.html#deploying-the-container">2. Deploying the container</a></li>
+<li class="toctree-l3"><a class="reference internal" href="t-res-api/installation.html#deploying-multiple-containers-via-docker-compose">3. Deploying multiple containers via Docker Compose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="t-res-api/installation.html#configuring-your-deployment">4. Configuring your deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="t-res-api/usage.html">Using the T-Res API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="experiments/index.html">Experiments and evaluation</a><ul>

@@ -4,10 +4,9 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>t_res.utils.preprocess_data module &mdash; T-Res 0.1.0 documentation</title>
+  <title>utils.preprocess_data module &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,13 +15,11 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/clipboard.min.js"></script>
-        <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="t_res.utils.process_data module" href="process_data.html" />
-    <link rel="prev" title="t_res.utils.ner module" href="ner.html" /> 
+    <link rel="next" title="utils.process_data module" href="process_data.html" />
+    <link rel="prev" title="utils.ner module" href="ner.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,20 +43,20 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.deezy_processing</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Running T-Res as API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../t-res-api/index.html">Deploying the T-Res API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
@@ -79,7 +76,7 @@
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Reference</a> &raquo;</li>
           <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</li>
+      <li><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/preprocess_data.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,20 +86,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="t-res-utils-preprocess-data-module">
-<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module<a class="headerlink" href="#t-res-utils-preprocess-data-module" title="Permalink to this headline"></a></h1>
-<span class="target" id="module-t_res.utils.preprocess_data"></span><p>This script reads the original data sources and formats them for our
+  <section id="module-utils.preprocess_data">
+<span id="utils-preprocess-data-module"></span><h1><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module<a class="headerlink" href="#module-utils.preprocess_data" title="Permalink to this headline"></a></h1>
+<p>This script reads the original data sources and formats them for our
 experiments.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.turn_wikipedia2wikidata">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">turn_wikipedia2wikidata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wikipedia_title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">wikipedia_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.turn_wikipedia2wikidata" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.turn_wikipedia2wikidata">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">turn_wikipedia2wikidata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wikipedia_title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.preprocess_data.turn_wikipedia2wikidata" title="Permalink to this definition"></a></dt>
 <dd><p>Convert a Wikipedia title to its corresponding Wikidata ID.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>wikipedia_title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The title of the Wikipedia page.</p></li>
-<li><p><strong>wikipedia_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The path to your wikipedia directory.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>wikipedia_title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The title of the Wikipedia page.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The corresponding Wikidata ID if available, or None if not.</p>
@@ -112,19 +106,19 @@ experiments.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">turn_wikipedia2wikidata</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Colosseum&quot;</span><span class="p">,</span> <span class="s2">&quot;../resources&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">turn_wikipedia2wikidata</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Colosseum&quot;</span><span class="p">)</span>
 <span class="go">&#39;Q10285&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">turn_wikipedia2wikidata</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Ancient_Egypt&quot;</span><span class="p">,</span> <span class="s2">&quot;../resources&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">turn_wikipedia2wikidata</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Ancient_Egypt&quot;</span><span class="p">)</span>
 <span class="go">&#39;Q11768&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">turn_wikipedia2wikidata</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Invalid_Location&quot;</span><span class="p">,</span> <span class="s2">&quot;../resources&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">turn_wikipedia2wikidata</span><span class="p">(</span><span class="s2">&quot;https://en.wikipedia.org/wiki/Invalid_Location&quot;</span><span class="p">)</span>
 <span class="go">Warning: invalid_location is not in wikipedia2wikidata, the wkdt_qid will be None.</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.reconstruct_sentences">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">reconstruct_sentences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dTokens</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.reconstruct_sentences" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.reconstruct_sentences">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">reconstruct_sentences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dTokens</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.reconstruct_sentences" title="Permalink to this definition"></a></dt>
 <dd><p>Reconstructs all sentences in the document based on the given dictionary
 of tokens (with their positional information in the document and
 associated annotations).</p>
@@ -149,8 +143,8 @@ positions match.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.process_lwm_for_ner">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_lwm_for_ner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsv_topres_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#t_res.utils.preprocess_data.process_lwm_for_ner" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.process_lwm_for_ner">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_lwm_for_ner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsv_topres_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.preprocess_data.process_lwm_for_ner" title="Permalink to this definition"></a></dt>
 <dd><p>Process LwM data for training a Named Entity Recognition (NER) model.</p>
 <p>Each sentence in the LwM data is assigned a unique identifier, and
 consists of a list of tokens along with their associated NER tags using
@@ -192,15 +186,14 @@ occurrence.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.process_lwm_for_linking">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_lwm_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resources_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tsv_topres_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.process_lwm_for_linking" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.process_lwm_for_linking">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_lwm_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsv_topres_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.process_lwm_for_linking" title="Permalink to this definition"></a></dt>
 <dd><p>Process LwM data for performing entity linking.</p>
 <p>The function reads annotated TSV files and generates a DataFrame with one toponym per row.
 Each row includes the annotation and resolution information of the toponym.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resources_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The path to the resources directory</p></li>
 <li><p><strong>tsv_topres_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The path to the top-level directory containing the annotated TSV files.</p></li>
 <li><p><strong>gazetteer_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The set of Wikidata IDs in the gazetteer.</p></li>
 </ul>
@@ -240,8 +233,8 @@ exist in the passed <code class="docutils literal notranslate"><span class="pre"
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.aggregate_hipe_entities">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">aggregate_hipe_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.aggregate_hipe_entities" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.aggregate_hipe_entities">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">aggregate_hipe_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.preprocess_data.aggregate_hipe_entities" title="Permalink to this definition"></a></dt>
 <dd><p>Aggregate HIPE entities by joining consecutive tokens belonging to the
 same entity.</p>
 <dl class="field-list simple">
@@ -303,8 +296,8 @@ helps to create complete and contiguous entities.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.process_hipe_for_linking">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_hipe_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipe_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.process_hipe_for_linking" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.process_hipe_for_linking">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_hipe_for_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipe_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gazetteer_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.0rc0+136.g3c041bc14b)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></span><a class="headerlink" href="#utils.preprocess_data.process_hipe_for_linking" title="Permalink to this definition"></a></dt>
 <dd><p>Process LwM HIPE data for performing entity linking.</p>
 <p>The function reads HIPE data from a file and generates a DataFrame with
 one toponym per row. Each row includes the annotation and resolution
@@ -349,8 +342,8 @@ file.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.process_tsv">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_tsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.process_tsv" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.process_tsv">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">process_tsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.preprocess_data.process_tsv" title="Permalink to this definition"></a></dt>
 <dd><p>Process a TSV file in WebAnno 3.0 format containing token-level
 annotations.</p>
 <dl class="field-list simple">
@@ -392,8 +385,8 @@ are tuples of six elements:</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="t_res.utils.preprocess_data.fine_to_coarse">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">fine_to_coarse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.preprocess_data.fine_to_coarse" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="utils.preprocess_data.fine_to_coarse">
+<span class="sig-prename descclassname"><span class="pre">utils.preprocess_data.</span></span><span class="sig-name descname"><span class="pre">fine_to_coarse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#utils.preprocess_data.fine_to_coarse" title="Permalink to this definition"></a></dt>
 <dd><p>Convert a list of fine-grained tags to their corresponding coarse-grained
 equivalents.</p>
 <dl class="field-list simple">
@@ -415,8 +408,8 @@ equivalents.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="ner.html" class="btn btn-neutral float-left" title="t_res.utils.ner module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="process_data.html" class="btn btn-neutral float-right" title="t_res.utils.process_data module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ner.html" class="btn btn-neutral float-left" title="utils.ner module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="process_data.html" class="btn btn-neutral float-right" title="utils.process_data module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
