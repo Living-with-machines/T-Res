@@ -13,6 +13,7 @@ from t_res.utils.REL import entity_disambiguation
 
 current_dir = Path(__file__).parent.resolve()
 
+@pytest.mark.skip(reason="Needs embeddings db")
 def test_embeddings():
     """
     Test embeddings are loaded correctly.
