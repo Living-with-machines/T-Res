@@ -35,6 +35,7 @@ def test_ranking_damlev():
         method="partialmatch",
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
+
     score = myranker.damlev_dist("Lvndon", {"mentions": "London"})
     assert score == 0.8333333283662796
 
@@ -75,6 +76,7 @@ def test_ranking_partial_match():
         method="partialmatch",
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
+    myranker.load_resources()
 
     # Test that perfect_match acts before partial match
     myranker.mentions_to_wikidata = {"London": "Q84"}
