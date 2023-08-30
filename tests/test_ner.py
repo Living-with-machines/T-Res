@@ -33,7 +33,7 @@ def test_ner_local_train(tmp_path):
     print(os.listdir(tmp_path))
     assert os.path.exists(model_path) is True
 
-
+@pytest.mark.experiment
 def test_ner_predict():
     model_path = os.path.join(current_dir,"sample_files/resources/models/ner_test.model")
     assert os.path.isdir(model_path) is True

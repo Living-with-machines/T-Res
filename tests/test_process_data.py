@@ -34,7 +34,7 @@ def test_eval_with_exception():
         process_data.eval_with_exception(str_list_of_dict)
 
 
-
+@pytest.mark.experiment
 def test_prepare_sents():
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),

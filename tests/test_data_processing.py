@@ -82,7 +82,7 @@ def test_original_lwm_data():
         == train_metadata.shape[0]
     )
 
-
+@pytest.mark.experiment
 def test_lwm_ner_conversion_fine():
     """
     Test process_lwm_for_ner is not missing articles.

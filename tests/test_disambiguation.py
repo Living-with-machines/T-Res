@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
+import pytest
 
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 from t_res.utils import rel_utils
