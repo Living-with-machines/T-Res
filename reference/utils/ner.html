@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>utils.ner module &mdash; T-Res 0.1.0 documentation</title>
+  <title>t_res.utils.ner module &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
@@ -21,8 +21,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="utils.preprocess_data module" href="preprocess_data.html" />
-    <link rel="prev" title="utils.get_data module" href="get_data.html" /> 
+    <link rel="next" title="t_res.utils.preprocess_data module" href="preprocess_data.html" />
+    <link rel="prev" title="t_res.utils.get_data module" href="get_data.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,14 +46,14 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
 </ul>
 </li>
@@ -79,7 +79,7 @@
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Reference</a> &raquo;</li>
           <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</li>
+      <li><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/ner.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,16 +89,299 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="utils-ner-module">
-<h1><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module<a class="headerlink" href="#utils-ner-module" title="Permalink to this headline"></a></h1>
+  <section id="t-res-utils-ner-module">
+<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module<a class="headerlink" href="#t-res-utils-ner-module" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.training_tokenize_and_align_labels">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">training_tokenize_and_align_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.tokenization_utils.PreTrainedTokenizer</span><span class="p"><span class="pre">,</span> </span><span class="pre">transformers.tokenization_utils_fast.PreTrainedTokenizerFast</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_encoding_dict</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#t_res.utils.ner.training_tokenize_and_align_labels" title="Permalink to this definition"></a></dt>
+<dd><p>Tokenize and align labels during training.</p>
+<p>This function takes a training instance, consisting of tokens and named
+entity recognition (NER) tags, and aligns the tokens with their
+corresponding labels. It uses a transformers tokenizer object to tokenize
+the input tokens and then maps the NER tags to label IDs based on the
+provided label encoding dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>examples</strong> (<em>Dict</em>) – A dictionary representing a single training instance
+with three keys: <code class="docutils literal notranslate"><span class="pre">id</span></code> (instance ID), <code class="docutils literal notranslate"><span class="pre">tokens</span></code> (list of tokens),
+and <code class="docutils literal notranslate"><span class="pre">ner_tags</span></code> (list of NER tags).</p></li>
+<li><p><strong>tokenizer</strong> (<em>Union</em><em>[</em><em>PreTrainedTokenizer</em><em>, </em><em>PreTrainedTokenizerFast</em><em>]</em>) – A
+transformers tokenizer object, which is the tokenizer of the base
+model.</p></li>
+<li><p><strong>label_encoding_dict</strong> (<em>Dict</em>) – A dictionary mapping NER labels to label
+IDs, from <code class="docutils literal notranslate"><span class="pre">label2id</span></code> in
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">train()</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The tokenized inputs with aligned labels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>transformers.tokenization_utils_base.BatchEncoding</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Credit:</dt><dd><p>This function is adapted from <a class="reference external" href="https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py">HuggingFace</a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.collect_named_entities">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">collect_named_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">NamedTuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.ner.collect_named_entities" title="Permalink to this definition"></a></dt>
+<dd><p>Collect named entities from a list of tokens and return a list of named
+tuples representing the entities.</p>
+<p>This function iterates over the tokens and identifies named entities based
+on their entity type (<code class="docutils literal notranslate"><span class="pre">entity_type</span></code>), keeping the tokens that are not
+tagged as <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>. Each token is represented as a tuple with the following
+format: <code class="docutils literal notranslate"><span class="pre">(token,</span> <span class="pre">entity_type,</span> <span class="pre">link,</span> <span class="pre">start_char,</span> <span class="pre">end_char)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>]</em>) – <p>A list of tokens, where each token is
+represented as a tuple containing the following elements:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">token</span></code> (str): The token text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entity_type</span></code> (str): The entity type (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;B-LOC&quot;</span></code>,</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;I-LOC&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>).
+- <code class="docutils literal notranslate"><span class="pre">link</span></code> (str): Empty string reserved for the entity link.
+- <code class="docutils literal notranslate"><span class="pre">start_char</span></code> (int): The start character offset of the token.
+- <code class="docutils literal notranslate"><span class="pre">end_char</span></code> (int): The end character offset of the token.</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A list of named tuples (called <code class="docutils literal notranslate"><span class="pre">Entity</span></code>) representing the named
+entities. Each named tuple contains the following fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">e_type</span></code> (str): The entity type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> (str): Empty string reserved for the entity link.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code> (int): The start offset of the entity (token
+position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code> (int): The end offset of the entity (token
+position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code> (int): The start character offset of the entity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code> (int): The end character offset of the entity.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[NamedTuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.aggregate_mentions">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">aggregate_mentions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setting</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'pred'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'gold'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.ner.aggregate_mentions" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregate predicted or gold mentions into a consolidated format.</p>
+<p>This function takes a list of predicted or gold mentions and aggregates
+them into a consolidated format. It reconstructs the text of each mention
+by combining the tokens and their corresponding white spaces. It also
+consolidates the NER label, NER score, and entity link for each mention.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictions</strong> (<em>List</em><em>[</em><em>List</em><em>]</em>) – A list of token predictions, where each
+token prediction is represented as a list of values. For details
+on each of those tuples, see
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">collect_named_entities()</span></code>.</p></li>
+<li><p><strong>setting</strong> (<em>Literal</em><em>[</em><em>&quot;pred&quot;</em><em>, </em><em>&quot;gold&quot;</em><em>]</em>) – <p>The setting for aggregation:</p>
+<ul>
+<li><p>If set to <code class="docutils literal notranslate"><span class="pre">&quot;pred&quot;</span></code>, the function aggregates predicted mentions.
+Entity links will be set to <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> (because we haven’t performed
+linking yet).</p></li>
+<li><p>If set to <code class="docutils literal notranslate"><span class="pre">&quot;gold&quot;</span></code>, the function aggregates gold mentions. NER
+score will be set to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> as it is manually detected.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A list of dictionaries representing the aggregated mentions, where
+each dictionary contains the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mention</span></code>: The text of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_offset</span></code>: The start offset of the mention (token position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_offset</span></code>: The end offset of the mention (token position).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_char</span></code>: The start character index of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end_char</span></code>: The end character index of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner_score</span></code>: The consolidated NER score of the mention (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>
+for predicted mentions, <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for gold mentions).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner_label</span></code>: The consolidated NER label of the mention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entity_link</span></code>: The consolidated entity link of the mention
+(empty string <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> for predicted mentions, entity label for
+gold mentions).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.fix_capitalization">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_capitalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.ner.fix_capitalization" title="Permalink to this definition"></a></dt>
+<dd><p>Correct capitalization errors in entities.</p>
+<p>This function corrects capitalization errors in entities that occur as a
+result of the NER prediction. The NER prediction may return processed
+words with incorrect capitalization. This function replaces the processed
+word in the entity with the true surface form from the original dataset,
+using the character position information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary containing the prediction of one token.</p></li>
+<li><p><strong>sentence</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The original sentence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The corrected entity dictionary with the appropriate
+capitalization.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.fix_hyphens">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_hyphens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.ner.fix_hyphens" title="Permalink to this definition"></a></dt>
+<dd><p>Fix prefix assignment errors in hyphenated entities.</p>
+<p>This function corrects prefix assignment errors that occur in some
+hyphenated entities, where multiple tokens connected by hyphens form a
+single entity but are incorrectly assigned different prefixes (i.e.
+<code class="docutils literal notranslate"><span class="pre">B-</span></code> and <code class="docutils literal notranslate"><span class="pre">I-</span></code>). It specifically addresses the issue of grouping
+in hyphenated entities, where a sequence of tokens connected by hyphens
+should be grouped as a single entity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
+tokens.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of dictionaries with corrected predictions regarding
+hyphenation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Description</strong>: There is a problem with grouping when there are
+hyphens in words. For example, the phrase “Ashton-under-Lyne”
+(<code class="docutils literal notranslate"><span class="pre">[&quot;Ashton&quot;,</span> <span class="pre">&quot;-&quot;,</span> <span class="pre">&quot;under&quot;,</span> <span class="pre">&quot;-&quot;,</span> <span class="pre">&quot;Lyne&quot;]</span></code>) is incorrectly grouped
+as <code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;]</span></code>, when it should be
+grouped as <code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;]</span></code>.</p>
+<p><strong>Solution</strong>: If the current token or the previous token is a hyphen,
+and the entity type of both the previous and current tokens is the
+same and not <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, the current entity’s prefix is changed to
+<code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code> to maintain the correct grouping.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.fix_nested">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_nested</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.ner.fix_nested" title="Permalink to this definition"></a></dt>
+<dd><p>Fix prefix assignment errors in nested entities.</p>
+<p>This function corrects prefix assignment errors that occur in nested
+entities, where multiple tokens are part of the same entity but are
+incorrectly assigned different prefixes. It specifically addresses the
+issue of grouping in nested entities, where a sequence of tokens that form
+a single entity are assigned incorrect prefixes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
+tokens.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of dictionaries with corrected predictions regarding nested
+entities.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Description</strong>: There is a problem with grouping in some nested
+entities. For example, the phrase “Island of Terceira”
+(<code class="docutils literal notranslate"><span class="pre">[&quot;Island&quot;,</span> <span class="pre">&quot;of&quot;,</span> <span class="pre">&quot;Terceira&quot;]</span></code>) is incorrectly grouped as
+<code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;B-LOC&quot;]</span></code>, when it should be
+<code class="docutils literal notranslate"><span class="pre">[&quot;B-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;,</span> <span class="pre">&quot;I-LOC&quot;]</span></code> as we consider it as one entity.</p>
+<p><strong>Solution</strong>: If the current token is preposition <code class="docutils literal notranslate"><span class="pre">&quot;of&quot;</span></code> and
+the previous and current entity types are not <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>, the current
+entity’s prefix is changed to <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code> to maintain the correct grouping.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.fix_startEntity">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">fix_startEntity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.ner.fix_startEntity" title="Permalink to this definition"></a></dt>
+<dd><p>Fix prefix assignment errors in entity labeling.</p>
+<p>This function corrects two different cases of prefix assignment errors in
+entity labeling:</p>
+<ol class="arabic simple">
+<li><p>The first token of a sentence can only be either <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> (not an entity)
+or <code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code> (beginning of an entity). If it is incorrectly assigned the
+prefix <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code>, this case is fixed by changing it to <code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code>.</p></li>
+<li><p>If the first token of a grouped entity is assigned the prefix <code class="docutils literal notranslate"><span class="pre">&quot;I-&quot;</span></code>,
+but the entity type of the previous token is different, it should be
+<code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code> instead. This case is fixed by changing the prefix to <code class="docutils literal notranslate"><span class="pre">&quot;B-&quot;</span></code>.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of dictionaries corresponding to predicted
+tokens.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of dictionaries with corrected predictions regarding the
+grouping of labels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="t_res.utils.ner.aggregate_entities">
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.ner.</span></span><span class="sig-name descname"><span class="pre">aggregate_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lEntities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.ner.aggregate_entities" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregates entities by joining split tokens.</p>
+<p>This function aggregates entities by joining split tokens that start with
+<code class="docutils literal notranslate"><span class="pre">&quot;##&quot;</span></code> with the previous detected entity. It takes the current entity
+and the list of all predicted entities as input and returns a new list of
+dictionaries with corrected predictions regarding split tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – The current entity (predicted token) as a dictionary.</p></li>
+<li><p><strong>lEntities</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of dictionaries corresponding to all
+predicted tokens.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of dictionaries with the corrected predictions regarding
+split tokens.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="get_data.html" class="btn btn-neutral float-left" title="utils.get_data module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="preprocess_data.html" class="btn btn-neutral float-right" title="utils.preprocess_data module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="get_data.html" class="btn btn-neutral float-left" title="t_res.utils.get_data module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="preprocess_data.html" class="btn btn-neutral float-right" title="t_res.utils.preprocess_data module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
