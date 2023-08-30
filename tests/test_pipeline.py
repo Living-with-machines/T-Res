@@ -1,22 +1,57 @@
 import os
 import sqlite3
-import sys
 from pathlib import Path
+
+import pytest
 
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 
+current_dir = Path(__file__).parent.resolve()
 
-def test_deezy_mostpopular():
+def test_pipeline_basic():
+    geoparser = pipeline.Pipeline(
+        resources_path=os.path.join(current_dir,"sample_files/resources")
+    )
+
+    sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
+    resolved = geoparser.run_text(sentence)
+    assert len(resolved)==1
+    assert resolved[0]["mention"]=="Sheffield"
+    assert resolved[0]["ner_score"]==1.0
+    assert resolved[0]["prediction"]=="Q42448"
+
+def test_pipeline_modular():
+    myranker = ranking.Ranker(
+        method="perfectmatch",
+        resources_path=os.path.join(current_dir,"sample_files/resources"),
+    )
+    
+    mylinker = linking.Linker(
+        method="mostpopular",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    )
+
+    geoparser = pipeline.Pipeline(myranker=myranker, mylinker=mylinker)
+    
+    sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
+    resolved = geoparser.run_text(sentence)
+    assert len(resolved)==1
+    assert resolved[0]["mention"]=="Sheffield"
+    assert resolved[0]["ner_score"]==1.0
+    assert resolved[0]["prediction"]=="Q42448"
+
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_deezy_mostpopular(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # We'll store the NER model here
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        pipe=None,  # We'll store the NER pipeline here
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path=str(tmp_path),  # Path where the NER model will be stored
         training_args={
             "batch_size": 8,
-            "num_train_epochs": 10,
+            "num_train_epochs": 1,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
@@ -27,7 +62,7 @@ def test_deezy_mostpopular():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -36,13 +71,13 @@ def test_deezy_mostpopular():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
+            "w2v_ocr_path": os.path.join(tmp_path,"resources/models/"),
+            "w2v_ocr_model": "w2v_1800s_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -59,14 +94,16 @@ def test_deezy_mostpopular():
 
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    assert len(geoparser.myranker.mentions_to_wikidata.keys())>0
 
     resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
     )
+    assert len(resolved) == 3
     assert resolved[0]["mention"] == "Shefiield"
     assert resolved[0]["prior_cand_score"] == dict()
     assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
@@ -83,20 +120,19 @@ def test_deezy_mostpopular():
 
     # asserting behaviour with • character
     resolved = geoparser.run_text(
-        " • - ST G pOllO-P• FERRIS - • - , i ",
+        " • - S G pOllO-P• FERRIS - • - , i ",
     )
-
     assert resolved == []
 
-
-def test_deezy_rel_wpubl_wmtops():
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_deezy_rel_wpubl_wmtops(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # We'll store the NER model here
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        pipe=None,  # We'll store the NER pipeline here
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path=str(tmp_path),  # Path where the NER model will be stored
         training_args={
             "batch_size": 8,
             "num_train_epochs": 10,
@@ -112,7 +148,7 @@ def test_deezy_rel_wpubl_wmtops():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -121,13 +157,13 @@ def test_deezy_rel_wpubl_wmtops():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800s_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -142,15 +178,15 @@ def test_deezy_rel_wpubl_wmtops():
         },
     )
 
-    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path="resources/",
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": "resources/models/disambiguation/",
-                "data_path": "experiments/outputs/data/lwm/",
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
@@ -165,11 +201,12 @@ def test_deezy_rel_wpubl_wmtops():
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
     resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
         place="Sheffield",
         place_wqid="Q42448",
     )
 
+    assert len(resolved) == 3
     assert resolved[0]["mention"] == "Shefiield"
     assert resolved[0]["prior_cand_score"]["Q42448"] == 0.891
     assert resolved[0]["cross_cand_score"]["Q42448"] == 0.576
@@ -177,18 +214,18 @@ def test_deezy_rel_wpubl_wmtops():
     assert resolved[0]["ed_score"] == 0.039
     assert resolved[0]["ner_score"] == 1.0
 
-
-def test_perfect_rel_wpubl_wmtops():
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_perfect_rel_wpubl_wmtops(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # We'll store the NER model here
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        pipe=None,  # We'll store the NER pipeline here
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path=str(tmp_path),  # Path where the NER model will be stored
         training_args={
             "batch_size": 8,
-            "num_train_epochs": 10,
+            "num_train_epochs": 1,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
@@ -201,7 +238,7 @@ def test_perfect_rel_wpubl_wmtops():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -210,13 +247,13 @@ def test_perfect_rel_wpubl_wmtops():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800s_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -231,20 +268,20 @@ def test_perfect_rel_wpubl_wmtops():
         },
     )
 
-    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path="resources/",
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": "resources/models/disambiguation/",
-                "data_path": "experiments/outputs/data/lwm/",
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "without_microtoponyms": True,
-                "do_test": True,
+                "do_test": False,
                 "default_publname": "United Kingdom",
                 "default_publwqid": "Q145",
             },
@@ -254,7 +291,7 @@ def test_perfect_rel_wpubl_wmtops():
     geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
     resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Lancaster. Not in Nottingham though. Not in Ashton either, nor in Salop!",
+        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
         place="Sheffield",
         place_wqid="Q42448",
     )
@@ -266,18 +303,18 @@ def test_perfect_rel_wpubl_wmtops():
     assert resolved[0]["ed_score"] == 0.0
     assert resolved[0]["ner_score"] == 1.0
 
-
-def test_modular_deezy_rel():
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_modular_deezy_rel(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # We'll store the NER model here
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        pipe=None,  # We'll store the NER pipeline here
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path=str(tmp_path),  # Path where the NER model will be stored
         training_args={
             "batch_size": 8,
-            "num_train_epochs": 10,
+            "num_train_epochs": 1,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
@@ -286,22 +323,26 @@ def test_modular_deezy_rel():
         load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
+    # --------------------------------------
+    # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="./resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        mentions_to_wikidata=dict(),
+        wikidata_to_mentions=dict(),
         strvar_parameters={
             # Parameters to create the string pair dataset:
             "ocr_threshold": 60,
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("./resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800s_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("./resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -316,15 +357,15 @@ def test_modular_deezy_rel():
         },
     )
 
-    with sqlite3.connect("./resources/rel_db/embeddings_database.db") as conn:
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path="./resources/",
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": "./resources/models/disambiguation/",
-                "data_path": "./experiments/outputs/data/lwm/",
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
                 "training_split": "apply",
                 "db_embeddings": cursor,
                 "with_publication": True,

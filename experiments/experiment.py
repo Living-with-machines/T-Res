@@ -223,10 +223,7 @@ class Experiment:
         # Obtain candidates per sentence:
         for sentence_id in tqdm(dMentionsPred):
             pred_mentions_sent = dMentionsPred[sentence_id]
-            (
-                wk_cands,
-                self.myranker.already_collected_cands,
-            ) = self.myranker.find_candidates(pred_mentions_sent)
+            wk_cands = self.myranker.find_candidates(pred_mentions_sent)
             dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
@@ -466,9 +463,11 @@ class Experiment:
             data=rows,
         )
 
+        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.myner.model}_{cand_approach}')}")
         output_path = (
-            self.data_path + self.dataset + "/" + self.myner.model + "_" + cand_approach
+            os.path.join(self.data_path,self.dataset,f"{self.myner.model}_{cand_approach}")
         )
+
 
         # List of columns to merge (i.e. columns where we have indicated
         # out data splits), and "article_id", the columns on which we

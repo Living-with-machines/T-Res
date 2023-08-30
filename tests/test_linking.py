@@ -1,31 +1,18 @@
 import os
 import sqlite3
 import sys
+from pathlib import Path
 
 import numpy as np
 
 from t_res.geoparser import linking
 
+current_dir = Path(__file__).parent.resolve()
 
-def test_initialise_method():
-    """
-    Test initialisation works fine
-    """
+def test_linking_most_popular():
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="resources/",
-        linking_resources=dict(),
-        rel_params=dict(),
-        overwrite_training=False,
-    )
-
-    assert type(mylinker.__str__()) == str
-
-
-def test_most_popular():
-    mylinker = linking.Linker(
-        method="mostpopular",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"../resources/"),
         linking_resources=dict(),
         rel_params=dict(),
         overwrite_training=False,
@@ -50,7 +37,7 @@ def test_most_popular():
 def test_by_distance():
     mylinker = linking.Linker(
         method="bydistance",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"../resources/"),
         linking_resources=dict(),
         rel_params=dict(),
         overwrite_training=False,

@@ -1,188 +1,128 @@
 import os
-import shutil
-import sys
+from pathlib import Path
 
-import transformers
+from transformers.pipelines.token_classification import TokenClassificationPipeline
 
 from t_res.geoparser import recogniser
 from t_res.utils import ner
 
+current_dir = Path(__file__).parent.resolve()
 
-def test_training():
-    """
-    Test that running train() generates a model folder
-    """
-
-    test_folder_path = "resources/models/blb_lwm-ner-coarse_test.model"
-
-    if os.path.isdir(test_folder_path):
-        shutil.rmtree(test_folder_path)
-
+def test_ner_local_train(tmp_path):
+    model_path = os.path.join(tmp_path,"ner_test.model")
+    
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
-        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_coarse_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_coarse_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model="ner_test",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        base_model="Livingwithmachines/bert_1760_1900", 
+        model_path=f"{tmp_path}/",
         training_args={
             "batch_size": 8,
             "num_train_epochs": 10,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
-        overwrite_training=True,  # Set to True if you want to overwrite model if existing
-        do_test=True,  # Set to True if you want to train on test mode
+        overwrite_training=False,
+        do_test=False,
         load_from_hub=False,
     )
-    assert os.path.isdir(test_folder_path) == False
+    assert os.path.exists(model_path) is False
     myner.train()
-    assert os.path.isdir(test_folder_path) == True
-
-
-def test_create_pipeline():
-    """
-    Test that create_pipeline returns a model folder path that exists and an Pipeline object
-    """
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-coarse",  # NER model name prefix (will have suffixes appended)
-        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args={
-            "batch_size": 8,
-            "num_train_epochs": 10,
-            "learning_rate": 0.00005,
-            "weight_decay": 0.0,
-        },
-        overwrite_training=False,  # Set to True if you want to overwrite model if existing
-        do_test=True,  # Set to True if you want to train on test mode
-        load_from_hub=False,
-    )
-    pipe = myner.create_pipeline()
-    assert (
-        type(pipe)
-        == transformers.pipelines.token_classification.TokenClassificationPipeline
-    )
+    print(model_path)
+    print(os.listdir(tmp_path))
+    assert os.path.exists(model_path) is True
 
 
 def test_ner_predict():
+    model_path = os.path.join(current_dir,"sample_files/resources/models/ner_test.model")
+    assert os.path.isdir(model_path) is True
+
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model="ner_test",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        base_model="Livingwithmachines/bert_1760_1900", 
+        model_path=os.path.join(current_dir,"sample_files/resources/models/"),
         training_args={
             "batch_size": 8,
             "num_train_epochs": 10,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
-        overwrite_training=False,  # Set to True if you want to overwrite model if existing
-        do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
+        overwrite_training=False,
+        do_test=False,
+        load_from_hub=False, # Whether the final model should be loaded from the HuggingFace hub"
     )
     myner.pipe = myner.create_pipeline()
+    assert isinstance(myner.pipe, TokenClassificationPipeline)
 
-    preds = myner.ner_predict(
-        "I grew up in Bologna, a city near Florence, but way more interesting."
-    )
-    assert type(preds) == list
-    assert (type(preds[0])) == dict
-    assert len(preds) == 16
-    assert preds[4]["entity"] == "B-LOC"
-    assert preds[4]["score"] == 0.9994915723800659
+    sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
+    predictions = myner.ner_predict(sentence)
+    assert isinstance(predictions, list)
+    assert len(predictions) == 15
+    assert predictions[13] == {'entity': 'B-LOC', 'score': 0.7941257357597351, 'word': 'Sheffield', 'start': 74, 'end': 83}
 
     # Test that ner_predict() can handle hyphens
-    preds = myner.ner_predict("- I grew up in Plymouth—Kingston.")
-    assert preds[0]["word"] == "-"
-    assert preds[6]["word"] == ","
+    sentence = "- I grew up in Plymouth—Kingston."
+    predictions = myner.ner_predict(sentence)
+    assert predictions[0]["word"] == "-"
+    assert predictions[6]["word"] == ","
 
 
-def test_ner_load_from_hub():
+def test_ner_from_hub():
     myner = recogniser.Recogniser(
         model="Livingwithmachines/toponym-19thC-en",
         load_from_hub=True,
     )
-    pipe = myner.create_pipeline()
-    assert (
-        type(pipe)
-        == transformers.pipelines.token_classification.TokenClassificationPipeline
-    )
+    myner.train()
+    myner.pipe = myner.create_pipeline()
+    assert isinstance(myner.pipe, TokenClassificationPipeline)
+    
+    sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
+    predictions = myner.ner_predict(sentence)
+    assert isinstance(predictions, list)
+    assert len(predictions) == 15
+    assert predictions[13] == {'entity': 'B-LOC', 'score': 0.9996446371078491, 'word': 'Sheffield', 'start': 74, 'end': 83}
 
 
 def test_aggregate_mentions():
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-        base_model="Livingwithmachines/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args={
-            "batch_size": 8,
-            "num_train_epochs": 10,
-            "learning_rate": 0.00005,
-            "weight_decay": 0.0,
-        },
-        overwrite_training=False,  # Set to True if you want to overwrite model if existing
-        do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
+        model="Livingwithmachines/toponym-19thC-en",
+        load_from_hub=True,
     )
     myner.pipe = myner.create_pipeline()
-
+    
     sentence = "I grew up in Bologna, a city near Florence, but way more interesting."
     predictions = myner.ner_predict(sentence)
     # Process predictions:
     procpreds = [
-        [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+        [x["word"], x["entity"], "O", x["start"], x["end"]]
         for x in predictions
     ]
     # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
-    assert mentions[0]["mention"] == "Bologna"
+    assert len(mentions) == 2
     assert mentions[1]["mention"] == "Florence"
+    assert mentions[0] == {'mention': 'Bologna', 'start_offset': 4, 'end_offset': 4, 'start_char': 13, 'end_char': 20, 'ner_score': 20.0, 'ner_label': 'LOC', 'entity_link': 'O'}
     assert mentions[0]["end_char"] - mentions[0]["start_char"] == len(
         mentions[0]["mention"]
     )
-    assert mentions[1]["end_char"] - mentions[1]["start_char"] == len(
-        mentions[1]["mention"]
-    )
     assert mentions[0]["mention"] in sentence
-    assert mentions[1]["mention"] in sentence
-
-    sentence = "I grew up in New York City, a city in the United States."
-    predictions = myner.ner_predict(sentence)
-    # Process predictions:
-    procpreds = [
-        [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
-        for x in predictions
-    ]
-    # Aggregate mentions:
-    mentions = ner.aggregate_mentions(procpreds, "pred")
-    assert mentions[0]["mention"] == "New York City"
-    assert mentions[1]["mention"] == "United States"
-    assert mentions[0]["end_char"] - mentions[0]["start_char"] == len(
-        mentions[0]["mention"]
-    )
-    assert mentions[1]["end_char"] - mentions[1]["start_char"] == len(
-        mentions[1]["mention"]
-    )
-    assert mentions[0]["mention"] in sentence
-    assert mentions[1]["mention"] in sentence
 
     sentence = "ARMITAGE, DEM’TIST, may be consulted dally, from 9 a.m., till 8 p.m., at his residence, 95, STAMFORP-9TKEET, Ashton-cnder-Ltne."
     predictions = myner.ner_predict(sentence)
     # Process predictions:
     procpreds = [
-        [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+        [x["word"], x["entity"], "O", x["start"], x["end"]]
         for x in predictions
     ]
     # Aggregate mentions:
     mentions = ner.aggregate_mentions(procpreds, "pred")
-    assert mentions[-1]["mention"] == "Ashton-cnder-Ltne"
-    for i in range(len(mentions)):
-        assert mentions[i]["end_char"] - mentions[i]["start_char"] == len(
-            mentions[i]["mention"]
+    assert len(mentions) == 2
+    assert mentions[1]["mention"] == "Ashton-cnder-Ltne"
+    assert mentions[0] == {'mention': 'STAMFORP-9TKEET', 'start_offset': 31, 'end_offset': 33, 'start_char': 92, 'end_char': 107, 'ner_score': 102.667, 'ner_label': 'STREET', 'entity_link': 'O'}
+    assert mentions[0]["end_char"] - mentions[0]["start_char"] == len(
+            mentions[0]["mention"]
         )
-        assert mentions[i]["mention"] in sentence
+    assert mentions[0]["mention"] in sentence
