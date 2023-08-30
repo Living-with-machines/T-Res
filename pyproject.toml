@@ -34,7 +34,7 @@ fastapi = "^0.87.0"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
 ipykernel = "^6.21.3"
 python-levenshtein = "^0.20.9"
-torch = [{markers = "sys_platform == 'darwin'", url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl"}, {markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/torch-1.13.1-cp39-cp39-manylinux2014_aarch64.whl"}]
+torch = "^1.13.1"
 accelerate = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
