@@ -7,6 +7,7 @@
   <title>utils.REL module &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,11 +16,13 @@
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/clipboard.min.js"></script>
+        <script src="../../../_static/copybutton.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="utils.REL.entity_disambiguation module" href="entity_disambiguation.html" />
-    <link rel="prev" title="utils.rel_utils module" href="../rel_utils.html" /> 
+    <link rel="next" title="t_res.utils.REL.entity_disambiguation module" href="entity_disambiguation.html" />
+    <link rel="prev" title="t_res.utils.rel_utils module" href="../rel_utils.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,26 +46,26 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../geoparser/index.html"><code class="docutils literal notranslate"><span class="pre">geoparser</span></code> module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="../deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">utils.deezy_processing</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../get_data.html"><code class="docutils literal notranslate"><span class="pre">utils.get_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ner.html"><code class="docutils literal notranslate"><span class="pre">utils.ner</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">utils.preprocess_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../process_data.html"><code class="docutils literal notranslate"><span class="pre">utils.process_data</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">utils.process_wikipedia</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_e2e</span></code> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../rel_utils.html"><code class="docutils literal notranslate"><span class="pre">utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.deezy_processing</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="entity_disambiguation.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.entity_disambiguation</span></code> module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="mulrel_ranker.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.mulrel_ranker</span></code> module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="utils.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.utils</span></code> module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="vocabulary.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.vocabulary</span></code> module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="entity_disambiguation.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.entity_disambiguation</span></code> module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mulrel_ranker.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.mulrel_ranker</span></code> module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.t_res.utils</span></code> module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vocabulary.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.vocabulary</span></code> module</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../t-res-api/index.html">Deploying the T-Res API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../t-res-api/index.html">Running T-Res as API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../experiments/index.html">Experiments and evaluation</a></li>
 </ul>
 
@@ -113,10 +116,10 @@ See the <a class="reference external" href="https://github.com/informagi/REL/blo
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="entity_disambiguation.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.entity_disambiguation</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mulrel_ranker.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.mulrel_ranker</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.utils</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vocabulary.html"><code class="docutils literal notranslate"><span class="pre">utils.REL.vocabulary</span></code> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="entity_disambiguation.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.entity_disambiguation</span></code> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mulrel_ranker.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.mulrel_ranker</span></code> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.t_res.utils</span></code> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vocabulary.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.vocabulary</span></code> module</a></li>
 </ul>
 </div>
 </section>
@@ -125,8 +128,8 @@ See the <a class="reference external" href="https://github.com/informagi/REL/blo
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../rel_utils.html" class="btn btn-neutral float-left" title="utils.rel_utils module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="entity_disambiguation.html" class="btn btn-neutral float-right" title="utils.REL.entity_disambiguation module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../rel_utils.html" class="btn btn-neutral float-left" title="t_res.utils.rel_utils module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="entity_disambiguation.html" class="btn btn-neutral float-right" title="t_res.utils.REL.entity_disambiguation module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
