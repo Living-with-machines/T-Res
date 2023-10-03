@@ -17,6 +17,7 @@ def test_ranking_perfect_match():
     )
     
     myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.already_collected_cands = {}
     candidates, already_collected_cands = myranker.perfect_match(["London"])
     assert candidates["London"]["London"] == 1.0
 
@@ -81,6 +82,7 @@ def test_ranking_partial_match():
 
     # Test that perfect_match acts before partial match
     myranker.mentions_to_wikidata = {"London": "Q84"}
+    myranker.already_collected_cands = {}
     candidates, already_collected_cands = myranker.partial_match(["London"], damlev=False)
     assert candidates["London"]["London"] == 1.0
 
