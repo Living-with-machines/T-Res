@@ -834,13 +834,13 @@ the Ranker method.
 
 .. code-block:: python
 
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.load_resources()
 
 .. note::
 
     Note that this step is already taken care of if you use the ``Pipeline``.
 
-3. Train a DeezyMatch model
+1. Train a DeezyMatch model
 ###########################
 
 The following line will train a DeezyMatch model, given the arguments specified
@@ -1056,13 +1056,13 @@ of the Linker method.
 
 .. code-block:: python
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
 .. note::
 
     Note that this step is already taken care of if you use the ``Pipeline``.
 
-3. Train an entity disambiguation model
+1. Train an entity disambiguation model
 #######################################
 
 The following line will train an entity disambiguation model, given the arguments
