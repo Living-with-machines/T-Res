@@ -124,7 +124,7 @@ collected candidates. Defaults to <code class="docutils literal notranslate"><sp
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load resources</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">ranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Train the ranker (if applicable)</span>
@@ -513,7 +513,7 @@ See Notes below for further information.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">myranker</span> <span class="o">=</span> <span class="n">Ranker</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;perfectmatch&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">myranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ranker</span><span class="o">.</span><span class="n">mentions_to_wikidata</span> <span class="o">=</span> <span class="n">myranker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">queries</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;London&#39;</span><span class="p">,</span> <span class="s1">&#39;Barcelona&#39;</span><span class="p">,</span> <span class="s1">&#39;Bologna&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">candidates</span><span class="p">,</span> <span class="n">already_collected</span> <span class="o">=</span> <span class="n">myranker</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
