@@ -238,7 +238,9 @@ class Pipeline:
             rmentions = [{"mention": y["mention"]} for y in mentions]
 
         # Perform candidate ranking:
-        wk_cands = self.myranker.find_candidates(rmentions)
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
+            rmentions
+        )
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -698,7 +700,9 @@ class Pipeline:
         mentions = [{"mention": m} for m in mentions]
 
         # Perform candidate ranking:
-        wk_cands = self.myranker.find_candidates(mentions)
+        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
+            mentions
+        )
         return wk_cands
 
     def run_disambiguation(
