@@ -30,7 +30,7 @@ def test_perfect_match():
         method="perfectmatch",
         resources_path="resources/",
     )
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     candidates = myranker.perfect_match(["London"])
     assert candidates["London"]["London"] == 1.0
 
@@ -96,7 +96,7 @@ def test_partial_match():
         wikidata_to_mentions=dict(),
     )
 
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     # Test that perfect_match acts before partial match
     myranker.mentions_to_wikidata = {"London": "Q84"}
@@ -163,7 +163,7 @@ def test_deezy_on_the_fly():
     )
 
     # Test that perfect_match acts before deezy
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     candidates = myranker.deezy_on_the_fly(["London"])
     assert candidates["London"]["London"] == 1.0
 
@@ -212,7 +212,7 @@ def test_find_candidates():
     )
 
     # Test that perfect_match acts before deezy
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     candidates = myranker.find_candidates([{"mention": "London"}])
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
@@ -231,7 +231,7 @@ def test_find_candidates():
     myranker.method = "perfectmatch"
 
     # Test that perfect_match acts before deezy
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     candidates = myranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
@@ -245,7 +245,7 @@ def test_find_candidates():
     myranker.method = "partialmatch"
 
     # Test that perfect_match acts before partialmatch
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     candidates = myranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
@@ -260,7 +260,7 @@ def test_find_candidates():
     myranker.method = "levenshtein"
 
     # Test that perfect_match acts before partialmatch
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     candidates = myranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0

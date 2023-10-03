@@ -132,14 +132,14 @@ def test_train():
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources:
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     # Train a DeezyMatch model if needed:
     myranker.train()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.load_resources()
+    mylinker.linking_resources = mylinker.load_resources()
     # Train a linking model if needed (it requires myranker to generate potential
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
@@ -234,14 +234,14 @@ def test_load_eval_model():
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources:
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     # Train a DeezyMatch model if needed:
     myranker.train()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.load_resources()
+    mylinker.linking_resources = mylinker.load_resources()
     # Train a linking model if needed (it requires myranker to generate potential
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)

@@ -48,7 +48,7 @@ class Ranker:
             )
 
         >>> # Load resources
-        >>> ranker.load_resources()
+        >>> ranker.mentions_to_wikidata = ranker.load_resources()
 
         >>> # Train the ranker (if applicable)
         >>> ranker.train()
@@ -267,6 +267,8 @@ class Ranker:
         if self.method in ["partialmatch", "levenshtein"]:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
+        return self.mentions_to_wikidata
 
     def train(self) -> None:
         """
@@ -597,7 +599,7 @@ class Ranker:
 
         Example:
             >>> myranker = Ranker(method="perfectmatch", ...)
-            >>> myranker.load_resources()
+            >>> ranker.mentions_to_wikidata = myranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
             >>> candidates, already_collected = myranker.run(queries)
             >>> print(candidates)
