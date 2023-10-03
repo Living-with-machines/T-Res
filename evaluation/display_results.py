@@ -78,7 +78,7 @@ for dataset in datasets:
         for ner_model in ner_models:
             for rel_approach in dApprNames.keys():
                 pred_file = (
-                    "../experiments/otputs/results/"
+                    "../experiments/outputs/results/"
                     + end_to_end_suffix
                     + dataset
                     + "/"

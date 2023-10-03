@@ -15,15 +15,15 @@ def test_ranking_perfect_match():
         method="perfectmatch",
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    myranker.load_resources()
+    
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    candidates, already_collected_cands = myranker.perfect_match(["London"])
+    assert candidates["London"]["London"] == 1.0
 
-    candidates = myranker.perfect_match(["London"])
-    assert candidates["London"] == {'London': 1.0}
-
-    candidates = myranker.perfect_match(["Lvndon"])
+    candidates, already_collected_cands = myranker.perfect_match(["Lvndon"])
     assert candidates["Lvndon"] == {}
 
-    candidates = myranker.perfect_match(["Paperopoli"])
+    candidates, already_collected_cands = myranker.perfect_match(["Paperopoli"])
     assert candidates["Paperopoli"] == {}
 
 
@@ -76,30 +76,35 @@ def test_ranking_partial_match():
         method="partialmatch",
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    myranker.load_resources()
+
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     # Test that perfect_match acts before partial match
     myranker.mentions_to_wikidata = {"London": "Q84"}
-    candidates = myranker.partial_match(["London"], damlev=False)
+    candidates, already_collected_cands = myranker.partial_match(["London"], damlev=False)
     assert candidates["London"]["London"] == 1.0
 
     # Test that damlev works
     myranker.already_collected_cands = {}
-    candidates = myranker.partial_match(["Lvndvn"], damlev=True)
+
+    candidates, already_collected_cands = myranker.partial_match(["Lvndvn"], damlev=True)
     assert candidates["Lvndvn"]["London"] == 0.6666666567325592
 
     # Test that overlap works properly
     myranker.mentions_to_wikidata = {"New York City": "Q60"}
     myranker.already_collected_cands = {}
-    candidates = myranker.partial_match(["New York"], damlev=False)
+
+    candidates, already_collected_cands = myranker.partial_match(["New York"], damlev=False)
     assert candidates["New York"]["New York City"] == 0.6153846153846154
 
     myranker.already_collected_cands = {}
-    candidates = myranker.partial_match(["Lvndvn"], damlev=False)
+
+    candidates, already_collected_cands = myranker.partial_match(["Lvndvn"], damlev=False)
     assert candidates["Lvndvn"] == {}
 
     myranker.already_collected_cands = {}
-    candidates = myranker.partial_match(["asdasd"], damlev=True)
+
+    candidates, already_collected_cands = myranker.partial_match(["asdasd"], damlev=True)
     assert candidates["asdasd"] == {"New York City": 0.0}
 
 @pytest.mark.deezy(reason="Needs deezy model")
@@ -138,13 +143,13 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     )
 
     # Test that perfect_match acts before deezy
-    myranker.load_resources()
-    candidates = myranker.deezy_on_the_fly(["London"])
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    candidates, already_collected_cands = myranker.deezy_on_the_fly(["London"])
     assert candidates["London"]["London"] == 1.0
 
     # Test that deezy works
     myranker.already_collected_cands = {}
-    candidates = myranker.deezy_on_the_fly(["Ashton-cnderLyne"])
+    candidates, already_collected_cands = myranker.deezy_on_the_fly(["Ashton-cnderLyne"])
     assert (0.0 < candidates["Ashton-cnderLyne"]["Ashton-under-Lyne"] < 1.0)
 
 @pytest.mark.deezy(reason="Needs deezy model")
@@ -183,14 +188,14 @@ def test_ranking_find_candidates(tmp_path):
     )
 
     # Test that perfect_match acts before deezy
-    myranker.load_resources()
-    candidates = myranker.find_candidates([{"mention": "London"}])
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "London"}])
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
 
     # Test that deezy works
     myranker.already_collected_cands = {}
-    candidates = myranker.find_candidates([{"mention": "Sheftield"}])
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheftield"}])
     assert (0.0 < candidates["Sheftield"]["Sheffield"]["Score"] < 1.0)
     assert "Q42448" in candidates["Sheftield"]["Sheffield"]["Candidates"]
 
@@ -198,38 +203,41 @@ def test_ranking_find_candidates(tmp_path):
     myranker.method = "perfectmatch"
 
     # Test that perfect_match acts before deezy
-    myranker.load_resources()
-    candidates = myranker.find_candidates([{"mention": "Sheffield"}])
+    myranker.mentions_to_wikidata = myranker.load_resources()
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
 
     myranker.already_collected_cands = {}
-    candidates = myranker.find_candidates([{"mention": "Sheftield"}])
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheftield"}])
     assert candidates["Sheftield"] == {}
 
     # Test that check if contained works
     myranker.method = "partialmatch"
 
     # Test that perfect_match acts before partialmatch
-    myranker.load_resources()
-    candidates = myranker.find_candidates([{"mention": "Sheffield"}])
+    myranker.mentions_to_wikidata = myranker.load_resources()
+
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
 
     myranker.already_collected_cands = {}
-    candidates = myranker.find_candidates([{"mention": "Sheftield"}])
+
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheftield"}])
     assert "Sheffield" not in candidates["Sheftield"]
 
     # Test that levenshtein works
     myranker.method = "levenshtein"
 
     # Test that perfect_match acts before partialmatch
-    myranker.load_resources()
-    candidates = myranker.find_candidates([{"mention": "Sheffield"}])
+    myranker.mentions_to_wikidata = myranker.load_resources()
+
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
 
     myranker.already_collected_cands = {}
-    candidates = myranker.find_candidates([{"mention": "Sheftield"}])
+    candidates, already_collected_cands = myranker.find_candidates([{"mention": "Sheftield"}])
     assert (0.0 < candidates["Sheftield"]["Sheffield"]["Score"] < 1.0)
     assert "Q42448" in candidates["Sheftield"]["Sheffield"]["Candidates"]

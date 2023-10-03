@@ -1,32 +1,22 @@
+import importlib
 import os
 import sys
 import time
 from pathlib import Path
-from typing import Union, Optional, List
+from typing import List, Optional, Union
 
 import uvicorn
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
-if "toponym-resolution" in __file__:
-    root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-else:
-    root_path = os.path.dirname(os.path.abspath(__file__))
-experiments_path = Path(root_path, "experiments")
-sys.path.insert(0, str(root_path))
-sys.path.insert(0, str(experiments_path))
-os.chdir(experiments_path)
+from t_res.geoparser import pipeline
 
 os.environ["APP_CONFIG_NAME"] = "t-res_deezy_reldisamb-wpubl-wmtops"
-import importlib
 
 config_mod = importlib.import_module(
     ".t-res_deezy_reldisamb-wpubl-wmtops", "app.configs"
 )
 pipeline_config = config_mod.CONFIG
-
-
-from t_res.geoparser import pipeline
 
 geoparser = pipeline.Pipeline(**pipeline_config)
 

@@ -48,7 +48,7 @@ class Ranker:
             )
 
         >>> # Load resources
-        >>> ranker.load_resources()
+        >>> ranker.mentions_to_wikidata = ranker.load_resources()
 
         >>> # Train the ranker (if applicable)
         >>> ranker.train()
@@ -111,7 +111,7 @@ class Ranker:
         wikidata_to_mentions: Optional[dict] = dict(),
         strvar_parameters: Optional[dict] = None,
         deezy_parameters: Optional[dict] = None,
-        already_collected_cands: Optional[dict] = None,
+        already_collected_cands: Optional[dict] = dict(),
     ):
         """
         Initialize a Ranker object.
@@ -120,11 +120,6 @@ class Ranker:
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
-
-        if already_collected_cands:
-            self.already_collected_cands = already_collected_cands
-        else:
-            self.already_collected_cands = dict()
 
         # set paths based on resources path
         if strvar_parameters is None:
@@ -158,6 +153,7 @@ class Ranker:
 
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
+        self.already_collected_cands = already_collected_cands
 
     def __str__(self) -> str:
         """
@@ -268,6 +264,8 @@ class Ranker:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+        return self.mentions_to_wikidata
+
     def train(self) -> None:
         """
         Training a DeezyMatch model. The training will be skipped if the model
@@ -336,7 +334,7 @@ class Ranker:
                     candidates[query] = {}
                     self.already_collected_cands[query] = {}
 
-        return candidates
+        return candidates, self.already_collected_cands
 
     def damlev_dist(self, query: str, row: pd.Series) -> float:
         """
@@ -450,7 +448,7 @@ class Ranker:
 
         """
 
-        candidates = self.perfect_match(queries)
+        candidates, self.already_collected_cands = self.perfect_match(queries)
 
         # the rest go through
         remainers = [x for x, y in candidates.items() if len(y) == 0]
@@ -480,7 +478,7 @@ class Ranker:
 
             self.already_collected_cands[query] = mention_df
 
-        return candidates
+        return candidates, self.already_collected_cands
 
     def deezy_on_the_fly(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -529,7 +527,7 @@ class Ranker:
         dm_output = self.deezy_parameters["dm_output"]
 
         # first we fill in the perfect matches and already collected queries
-        cands_dict = self.perfect_match(queries)
+        cands_dict, self.already_collected_cands = self.perfect_match(queries)
 
         # the rest go through
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]
@@ -579,7 +577,7 @@ class Ranker:
 
                 self.already_collected_cands[row["query"]] = returned_cands
 
-        return cands_dict
+        return cands_dict, self.already_collected_cands
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -597,7 +595,7 @@ class Ranker:
 
         Example:
             >>> myranker = Ranker(method="perfectmatch", ...)
-            >>> myranker.load_resources()
+            >>> ranker.mentions_to_wikidata = myranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
             >>> candidates, already_collected = myranker.run(queries)
             >>> print(candidates)
@@ -688,7 +686,7 @@ class Ranker:
         queries = list(set([mention["mention"] for mention in mentions]))
 
         # Pass the mentions to :py:meth:`geoparser.ranking.Ranker.run`
-        cands = self.run(queries)
+        cands, self.already_collected_cands = self.run(queries)
 
         # Get Wikidata candidates
         wk_cands = dict()
@@ -716,4 +714,4 @@ class Ranker:
                             "Candidates": found_cands,
                         }
 
-        return wk_cands
+        return wk_cands, self.already_collected_cands

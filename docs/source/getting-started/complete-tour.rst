@@ -1058,7 +1058,7 @@ of the Linker method.
 
 .. code-block:: python
 
-    mylinker.load_resources()
+    mylinker.linking_resources = mylinker.load_resources()
 
 .. note::
 

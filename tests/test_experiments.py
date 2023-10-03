@@ -76,10 +76,10 @@ def test_load_data(tmp_path):
     myner.train()
     myner.pipe = myner.create_pipeline()
 
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     myranker.train()
 
-    mylinker.load_resources()
+    mylinker.linking_resources = mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -184,10 +184,10 @@ def test_apply(tmp_path):
     myner.train()
     myner.pipe = myner.create_pipeline()
 
-    myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources()
     myranker.train()
 
-    mylinker.load_resources()
+    mylinker.linking_resources = mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
