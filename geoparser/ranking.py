@@ -57,11 +57,11 @@ class Ranker:
 
         >>> # Perform candidate selection
         >>> queries = ['London', 'Paraguay']
-        >>> candidates, already_collected = ranker.run(queries)
+        >>> candidates = ranker.run(queries)
 
         >>> # Find candidates for mentions
         >>> mentions = [{'mention': 'London'}, {'mention': 'Paraguay'}]
-        >>> mention_candidates, mention_already_collected = ranker.find_candidates(mentions)
+        >>> mention_candidates = ranker.find_candidates(mentions)
 
         >>> # Print the results
         >>> print("Candidate Selection Results:")
@@ -136,7 +136,7 @@ class Ranker:
             "overwrite_training": False,
             "do_test": False,
         },
-        already_collected_cands: Optional[dict] = dict(),
+        already_collected_cands: Optional[dict] = None,
     ):
         """
         Initialize a Ranker object.
@@ -147,7 +147,11 @@ class Ranker:
         self.wikidata_to_mentions = wikidata_to_mentions
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
-        self.already_collected_cands = already_collected_cands
+        
+        if already_collected_cands:
+            self.already_collected_cands = already_collected_cands
+        else:
+            self.already_collected_cands = dict()
 
     def __str__(self) -> str:
         """
@@ -462,7 +466,7 @@ class Ranker:
 
             self.already_collected_cands[query] = mention_df
 
-        return candidates, self.already_collected_cands
+        return candidates
 
     def deezy_on_the_fly(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -511,7 +515,7 @@ class Ranker:
         dm_output = self.deezy_parameters["dm_output"]
 
         # first we fill in the perfect matches and already collected queries
-        cands_dict, self.already_collected_cands = self.perfect_match(queries)
+        cands_dict = self.perfect_match(queries)
 
         # the rest go through
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]
@@ -561,7 +565,7 @@ class Ranker:
 
                 self.already_collected_cands[row["query"]] = returned_cands
 
-        return cands_dict, self.already_collected_cands
+        return cands_dict
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -581,7 +585,7 @@ class Ranker:
             >>> myranker = Ranker(method="perfectmatch", ...)
             >>> myranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> candidates, already_collected = myranker.run(queries)
+            >>> candidates = myranker.run(queries)
             >>> print(candidates)
             {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
             >>> print(already_collected)
@@ -670,7 +674,7 @@ class Ranker:
         queries = list(set([mention["mention"] for mention in mentions]))
 
         # Pass the mentions to :py:meth:`geoparser.ranking.Ranker.run`
-        cands, self.already_collected_cands = self.run(queries)
+        cands = self.run(queries)
 
         # Get Wikidata candidates
         wk_cands = dict()
@@ -698,4 +702,4 @@ class Ranker:
                             "Candidates": found_cands,
                         }
 
-        return wk_cands, self.already_collected_cands
+        return wk_cands

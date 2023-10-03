@@ -224,10 +224,7 @@ class Experiment:
         # Obtain candidates per sentence:
         for sentence_id in tqdm(dMentionsPred):
             pred_mentions_sent = dMentionsPred[sentence_id]
-            (
-                wk_cands,
-                self.myranker.already_collected_cands,
-            ) = self.myranker.find_candidates(pred_mentions_sent)
+            wk_cands = self.myranker.find_candidates(pred_mentions_sent)
             dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
