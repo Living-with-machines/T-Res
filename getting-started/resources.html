@@ -585,9 +585,6 @@ By default, T-Res assumes that the word2vec models are stored in
 <p>In the code and our tutorials, we assume the following directory structure
 for the mentioned resources that are required in order to run the pipeline.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/
-├── t-res/
-│   ├── geoparser/
-│   └── utils/
 ├── app/
 ├── evaluation/
 ├── examples/
@@ -598,6 +595,7 @@ for the mentioned resources that are required in order to run the pipeline.</p>
 │               ├── linking_df_split.tsv [*?]
 │               ├── ner_fine_dev.json [*+?]
 │               └── ner_fine_train.json [*+?]
+├── geoparser/
 ├── resources/
 │   ├── deezymatch/
 │   │   └── data/
@@ -612,7 +610,8 @@ for the mentioned resources that are required in order to run the pipeline.</p>
 │       ├── mentions_to_wikidata.json [*]
 │       ├── wikidta_gazetteer.csv [*]
 │       └── wikidata_to_mentions_normalized.json [*]
-└── tests/
+├── tests/
+└── utils/
 </pre></div>
 </div>
 <p>A question mark (<code class="docutils literal notranslate"><span class="pre">?</span></code>) is used to indicate resources which are only required

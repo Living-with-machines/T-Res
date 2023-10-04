@@ -1,6 +1,6 @@
-``t_res.geoparser.pipeline.Pipeline``
+``geoparser.pipeline.Pipeline``
 ===============================
 
-.. autoclass:: t_res.geoparser.pipeline.Pipeline
+.. autoclass:: geoparser.pipeline.Pipeline
     :members:
     :undoc-members:

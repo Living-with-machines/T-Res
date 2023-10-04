@@ -79,14 +79,14 @@
 <p>Follow these steps to reproduce the experiments in our paper.</p>
 <section id="obtain-the-external-resources">
 <h2>1. Obtain the external resources<a class="headerlink" href="#obtain-the-external-resources" title="Permalink to this headline"></a></h2>
-<p>Follow the instructions in the “<a class="reference internal" href="../getting-started/resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation
+<p>Follow the instructions in the “<span class="xref std std-doc">resources</span>” page in the documentation
 to obtain the resources required for running the experiments.</p>
 </section>
 <section id="preparing-the-data">
 <h2>2. Preparing the data<a class="headerlink" href="#preparing-the-data" title="Permalink to this headline"></a></h2>
 <p>To create the datasets that we use in the experiments presented in the paper,
 run the following command from the <code class="docutils literal notranslate"><span class="pre">./experiments/</span></code> folder:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./prepare_data.py<span class="w"> </span>-p<span class="w"> </span>../resources
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./prepare_data.py
 </pre></div>
 </div>
 <p>This script takes care of downloading the LwM and HIPE datasets and format them
@@ -96,7 +96,7 @@ as needed in the experiments.</p>
 <h2>3. Running the experiments<a class="headerlink" href="#running-the-experiments" title="Permalink to this headline"></a></h2>
 <p>To run the experiments, run the following script from the <code class="docutils literal notranslate"><span class="pre">./experiments/</span></code>
 folder:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./toponym_resolution.py<span class="w"> </span>-p<span class="w"> </span>../resources
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./toponym_resolution.py
 </pre></div>
 </div>
 <p>This script does runs for all different scenarios reported in the experiments in
