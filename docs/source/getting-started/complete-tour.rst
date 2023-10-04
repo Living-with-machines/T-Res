@@ -840,7 +840,7 @@ the Ranker method.
 
     Note that this step is already taken care of if you use the ``Pipeline``.
 
-1. Train a DeezyMatch model
+3. Train a DeezyMatch model
 ###########################
 
 The following line will train a DeezyMatch model, given the arguments specified
@@ -1062,7 +1062,7 @@ of the Linker method.
 
     Note that this step is already taken care of if you use the ``Pipeline``.
 
-1. Train an entity disambiguation model
+3. Train an entity disambiguation model
 #######################################
 
 The following line will train an entity disambiguation model, given the arguments
