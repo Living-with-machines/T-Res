@@ -5,10 +5,10 @@ from ast import literal_eval
 import pandas as pd
 import pytest
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
+# Add "../" to path to import experiment
+sys.path.insert(0, os.path.abspath("../"))
 from experiments import experiment
-from geoparser import linking, ranking, recogniser
+from t_res.geoparser import linking, ranking, recogniser
 
 
 def test_wrong_dataset_path():
@@ -56,7 +56,7 @@ def test_load_data():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
     # --------------------------------------
@@ -125,7 +125,7 @@ def test_wrong_ranker_method():
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
         method="perfect_match",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
     exp = experiment.Experiment(
@@ -159,7 +159,7 @@ def test_apply():
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
     )
 
     # --------------------------------------

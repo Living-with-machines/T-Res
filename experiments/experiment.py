@@ -7,9 +7,8 @@ from typing import Literal, Optional
 import pandas as pd
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, ranking, recogniser
-from utils import process_data, rel_utils
+from t_res.geoparser import linking, ranking, recogniser
+from t_res.utils import process_data, rel_utils
 
 
 class Experiment:
@@ -808,6 +807,6 @@ class Experiment:
         # -----------------------------------------------
         # Run end-to-end REL experiments:
         if self.rel_experiments == True:
-            from utils import rel_e2e
+            from t_res.utils import rel_e2e
 
             rel_e2e.run_rel_experiments(self)

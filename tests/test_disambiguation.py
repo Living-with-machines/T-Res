@@ -5,11 +5,9 @@ from pathlib import Path
 
 import pandas as pd
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import linking, pipeline, ranking, recogniser
-from utils import rel_utils
-from utils.REL import entity_disambiguation
+from t_res.geoparser import linking, pipeline, ranking, recogniser
+from t_res.utils import rel_utils
+from t_res.utils.REL import entity_disambiguation
 
 
 def test_embeddings():
@@ -76,7 +74,7 @@ def test_train():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -176,7 +174,7 @@ def test_load_eval_model():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -275,7 +273,7 @@ def test_predict():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/wikidata/",
+        resources_path="resources/",
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={

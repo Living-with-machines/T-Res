@@ -8,9 +8,9 @@ from pathlib import Path
 import pandas as pd
 
 large_resources = "/resources/"  # path to large resources
-small_resources = "resources/"  # path to small resources
-processed_path_lwm = "experiments/outputs/data/lwm/"  # path to processed LwM data
-processed_path_hipe = "experiments/outputs/data/hipe/"  # path to processed LwM data
+small_resources = "./resources/"  # path to small resources
+processed_path_lwm = "./experiments/outputs/data/lwm/"  # path to processed LwM data
+processed_path_hipe = "./experiments/outputs/data/hipe/"  # path to processed LwM data
 
 
 def test_publication_metadata_exists():

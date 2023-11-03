@@ -6,7 +6,7 @@ Follow these steps to reproduce the experiments in our paper.
 1. Obtain the external resources
 --------------------------------
 
-Follow the instructions in the ":doc:`resources`" page in the documentation
+Follow the instructions in the ":doc:`/getting-started/resources`" page in the documentation
 to obtain the resources required for running the experiments.
 
 2. Preparing the data
@@ -17,7 +17,7 @@ run the following command from the ``./experiments/`` folder:
 
 .. code-block:: bash
 
-    $ python ./prepare_data.py
+    $ python ./prepare_data.py -p ../resources
 
 This script takes care of downloading the LwM and HIPE datasets and format them
 as needed in the experiments.
@@ -30,7 +30,7 @@ folder:
 
 .. code-block:: bash
 
-    $ python ./toponym_resolution.py
+    $ python ./toponym_resolution.py -p ../resources
 
 This script does runs for all different scenarios reported in the experiments in
 the paper.

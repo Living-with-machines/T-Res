@@ -1,6 +1,6 @@
-``utils.REL.vocabulary`` module
+``t_res.utils.REL.vocabulary`` module
 ===============================
 
-.. autoclass:: utils.REL.vocabulary.Vocabulary
+.. autoclass:: t_res.utils.REL.vocabulary.Vocabulary
     :members:
     :undoc-members:

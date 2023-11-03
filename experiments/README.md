@@ -20,16 +20,22 @@ You will also need the [word2vec embeddings](TODO: add link) trained from 19th C
 
 To create the datasets that we use in the experiments presented in the paper, run the following command:
 ```bash
-python prepare_data.py
+python prepare_data.py -p ../resources
 ```
+
+> **_NOTE:_** Use the ``-p`` flag to indicate the path to your resources directory.
+
 This script takes care of downloading the LwM and HIPE datasets and format them as needed in the experiments.
 
 ### 3. Running the experiments
 
 To run the experiments, run the following script:
 ```bash
-python toponym_resolution.py
+python toponym_resolution.py -p ../resources
 ```
+
+> **_NOTE:_** Use the ``-p`` flag to indicate the path to your resources directory.
+
 This script does runs for all different scenarios reported in the experiments in the paper.
 
 ### 4. Evaluate

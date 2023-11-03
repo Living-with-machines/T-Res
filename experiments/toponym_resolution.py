@@ -1,14 +1,28 @@
 import os
 import sqlite3
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
+import experiment
 import pandas as pd
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from experiments import experiment
-from geoparser import linking, ranking, recogniser
+from t_res.geoparser import linking, ranking, recogniser
+
+parser = ArgumentParser()
+parser.add_argument(
+    "-p",
+    "--path",
+    dest="path",
+    help="path to resources directory",
+    action="store",
+    type=str,
+)
+
+args = parser.parse_args()
+
+resources_dir = args.path
+current_dir = Path(__file__).parent.resolve()
 
 # Choose test scenario:
 # * "dev" while developing and experimenting,
@@ -52,10 +66,12 @@ for exp_param in experiments:
     # Instantiate the recogniser:
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-" + granularity,
-        train_dataset="../experiments/outputs/data/lwm/ner_"
+        train_dataset=str(current_dir)
+        + "/outputs/data/lwm/ner_"
         + granularity
         + "_train.json",  # Path to the json file containing the training set (see note above).
-        test_dataset="../experiments/outputs/data/lwm/ner_"
+        test_dataset=str(current_dir)
+        + "/outputs/data/lwm/ner_"
         + granularity
         + "_dev.json",  # Path to the json file containing the test set (see note above).
         pipe=None,  # We'll store the NER pipeline here, leave this empty.
@@ -65,7 +81,9 @@ for exp_param in experiments:
         # https://huggingface.co/Livingwithmachines/bert_1760_1900). You can
         # chose any other model from the HuggingFace hub, as long as it's
         # trained on the "Fill-Mask" objective (filter by task).
-        model_path="../resources/models/",  # Path where the NER model will be stored.
+        model_path=os.path.join(
+            resources_dir, "models/"
+        ),  # Path where the NER model will be stored.
         training_args={
             "batch_size": 8,
             "num_train_epochs": 10,
@@ -81,7 +99,7 @@ for exp_param in experiments:
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method=cand_select_method,
-        resources_path="../resources/wikidata/",
+        resources_path=resources_dir,
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -90,13 +108,13 @@ for exp_param in experiments:
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("../resources/models/w2v/").resolve()),
+            "w2v_ocr_path": os.path.join(resources_dir, "models/w2v/"),
             "w2v_ocr_model": "w2v_*_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("../resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(resources_dir, "deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -113,15 +131,17 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the linker:
-    with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
+    with sqlite3.connect(
+        os.path.join(resources_dir, "rel_db/embeddings_database.db")
+    ) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method=top_res_method,
-            resources_path="../resources/",
+            resources_path=resources_dir,
             linking_resources=dict(),
             rel_params={
-                "model_path": "../resources/models/disambiguation/",
-                "data_path": "../experiments/outputs/data/lwm/",
+                "model_path": os.path.join(resources_dir, "models/disambiguation/"),
+                "data_path": os.path.join(current_dir, "outputs/data/lwm/"),
                 "training_split": "",
                 "db_embeddings": cursor,
                 "with_publication": wpubl,
@@ -137,9 +157,9 @@ for exp_param in experiments:
     # Instantiate the experiment:
     myexperiment = experiment.Experiment(
         dataset=dataset,
-        data_path="outputs/data/",
+        data_path=os.path.join(current_dir, "outputs/data/"),
         dataset_df=pd.DataFrame(),
-        results_path="outputs/results/",
+        results_path=os.path.join(current_dir, "outputs/results/"),
         myner=myner,
         myranker=myranker,
         mylinker=mylinker,

@@ -4,11 +4,8 @@ import sys
 import pandas as pd
 import pytest
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-
-from geoparser import recogniser
-from utils import process_data
+from t_res.geoparser import recogniser
+from t_res.utils import process_data
 
 
 def test_eval_with_exception():

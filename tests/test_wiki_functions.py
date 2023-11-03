@@ -1,6 +1,6 @@
 import urllib
 
-from utils import process_wikipedia
+from t_res.utils import process_wikipedia
 
 
 def test_make_links_consistent():

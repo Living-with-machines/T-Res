@@ -9,9 +9,7 @@ from DeezyMatch import candidate_ranker
 from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import deezy_processing
+from ..utils import deezy_processing
 
 
 class Ranker:
@@ -111,31 +109,8 @@ class Ranker:
         resources_path: str,
         mentions_to_wikidata: Optional[dict] = dict(),
         wikidata_to_mentions: Optional[dict] = dict(),
-        strvar_parameters: Optional[dict] = {
-            # Parameters to create the string pair dataset:
-            "ocr_threshold": 60,
-            "top_threshold": 85,
-            "min_len": 5,
-            "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
-            "overwrite_dataset": False,
-        },
-        deezy_parameters: Optional[dict] = {
-            # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
-            "dm_cands": "wkdtalts",
-            "dm_model": "w2v_ocr",
-            "dm_output": "deezymatch_on_the_fly",
-            # Ranking measures:
-            "ranking_metric": "faiss",
-            "selection_threshold": 50,
-            "num_candidates": 1,
-            "verbose": False,
-            # DeezyMatch training:
-            "overwrite_training": False,
-            "do_test": False,
-        },
+        strvar_parameters: Optional[dict] = None,
+        deezy_parameters: Optional[dict] = None,
         already_collected_cands: Optional[dict] = dict(),
     ):
         """
@@ -145,6 +120,37 @@ class Ranker:
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
+
+        # set paths based on resources path
+        if strvar_parameters is None:
+            strvar_parameters = {
+                # Parameters to create the string pair dataset:
+                "ocr_threshold": 60,
+                "top_threshold": 85,
+                "min_len": 5,
+                "max_len": 15,
+                "w2v_ocr_path": os.path.join(resources_path, "models/w2v/"),
+                "w2v_ocr_model": "w2v_*_news",
+                "overwrite_dataset": False,
+            }
+
+        if deezy_parameters is None:
+            deezy_parameters = {
+                # Paths and filenames of DeezyMatch models and data:
+                "dm_path": os.path.join(resources_path, "deezymatch/"),
+                "dm_cands": "wkdtalts",
+                "dm_model": "w2v_ocr",
+                "dm_output": "deezymatch_on_the_fly",
+                # Ranking measures:
+                "ranking_metric": "faiss",
+                "selection_threshold": 50,
+                "num_candidates": 1,
+                "verbose": False,
+                # DeezyMatch training:
+                "overwrite_training": False,
+                "do_test": False,
+            }
+
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
         self.already_collected_cands = already_collected_cands
@@ -203,8 +209,12 @@ class Ranker:
 
         # Load files
         files = {
-            "mentions_to_wikidata": f"{self.resources_path}mentions_to_wikidata_normalized.json",
-            "wikidata_to_mentions": f"{self.resources_path}wikidata_to_mentions_normalized.json",
+            "mentions_to_wikidata": os.path.join(
+                self.resources_path, "wikidata/mentions_to_wikidata_normalized.json"
+            ),
+            "wikidata_to_mentions": os.path.join(
+                self.resources_path, "wikidata/wikidata_to_mentions_normalized.json"
+            ),
         }
 
         with open(files["mentions_to_wikidata"], "r") as f:
@@ -275,7 +285,9 @@ class Ranker:
             if self.deezy_parameters["do_test"] == True:
                 self.deezy_parameters["dm_model"] += "_test"
                 self.deezy_parameters["dm_cands"] += "_test"
-            deezy_processing.train_deezy_model(self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions)
+            deezy_processing.train_deezy_model(
+                self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions
+            )
             deezy_processing.generate_candidates(
                 self.deezy_parameters, self.mentions_to_wikidata
             )
@@ -490,7 +502,7 @@ class Ranker:
 
         Example:
             >>> ranker = Ranker(...)
-            >>> ranker.mentions_to_wikidata = ranker.load_resources()
+            >>> ranker.load_resources()
             >>> queries = ['London', 'Shefrield']
             >>> candidates, already_collected = ranker.deezy_on_the_fly(queries)
             >>> print(candidates)
@@ -583,7 +595,7 @@ class Ranker:
 
         Example:
             >>> myranker = Ranker(method="perfectmatch", ...)
-            >>> myranker.mentions_to_wikidata = myranker.load_resources()
+            >>> ranker.mentions_to_wikidata = myranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
             >>> candidates, already_collected = myranker.run(queries)
             >>> print(candidates)

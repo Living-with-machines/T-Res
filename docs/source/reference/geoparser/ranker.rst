@@ -1,6 +1,6 @@
-``geoparser.ranking. Ranker``
+``t_res.geoparser.ranking. Ranker``
 =============================
 
-.. autoclass:: geoparser.ranking.Ranker
+.. autoclass:: t_res.geoparser.ranking.Ranker
     :members:
     :undoc-members:
