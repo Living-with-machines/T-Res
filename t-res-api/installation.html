@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installing T-Res as API &mdash; T-Res 0.1.0 documentation</title>
+  <title>Deploying the T-Res API &mdash; T-Res 0.1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Experiments and evaluation" href="../experiments/index.html" />
-    <link rel="prev" title="Running T-Res as API" href="index.html" /> 
+    <link rel="next" title="Using the T-Res API" href="usage.html" />
+    <link rel="prev" title="Deploying the T-Res API" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,8 +41,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/index.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Running T-Res as API</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Installing T-Res as API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Deploying the T-Res API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Deploying the T-Res API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#building-the-container">1. Building the container</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deploying-the-container">2. Deploying the container</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deploying-multiple-containers-via-docker-compose">3. Deploying multiple containers via Docker Compose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-your-deployment">4. Configuring your deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html">Using the T-Res API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../experiments/index.html">Experiments and evaluation</a></li>
@@ -62,8 +69,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Running T-Res as API</a> &raquo;</li>
-      <li>Installing T-Res as API</li>
+          <li><a href="index.html">Deploying the T-Res API</a> &raquo;</li>
+      <li>Deploying the T-Res API</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/t-res-api/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,17 +80,86 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="installing-t-res-as-api">
-<h1>Installing T-Res as API<a class="headerlink" href="#installing-t-res-as-api" title="Permalink to this headline"></a></h1>
-<p>TODO</p>
+  <section id="deploying-the-t-res-api">
+<h1>Deploying the T-Res API<a class="headerlink" href="#deploying-the-t-res-api" title="Permalink to this headline"></a></h1>
+<p>The T-Res API can be deployed either as a standalone docker container,
+or via docker compose to deploy multiple configurations of the pipeline simultaneously behind
+a reverse-proxy (<a class="reference external" href="https://traefik.io/traefik/">traefik</a>).</p>
+<p>Docker and Docker Compose should be installed on your server according to
+the <a class="reference external" href="https://docs.docker.com/engine/install/ubuntu/">official installation guide</a>
+before proceeding with the following steps to build and deploy the containers.</p>
+<section id="building-the-container">
+<h2>1. Building the container<a class="headerlink" href="#building-the-container" title="Permalink to this headline"></a></h2>
+<p>To build a docker image for the app using the default configuration provided (<code class="docutils literal notranslate"><span class="pre">t-res_deezy_reldisamb-wpubl-wmtops.py</span></code>),
+run the following bash commands from the root of the repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CONTAINER_NAME</span><span class="o">=</span>t-res_deezy_reldisamb-wpubl-wmtops
+sudo<span class="w"> </span>-E<span class="w"> </span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>app/template.Dockerfile<span class="w"> </span>--no-cache<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">APP_NAME</span><span class="o">=</span><span class="si">${</span><span class="nv">CONTAINER_NAME</span><span class="si">}</span><span class="w"> </span>-t<span class="w"> </span><span class="si">${</span><span class="nv">CONTAINER_NAME</span><span class="si">}</span>_image<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="deploying-the-container">
+<h2>2. Deploying the container<a class="headerlink" href="#deploying-the-container" title="Permalink to this headline"></a></h2>
+<p>The docker image built in step 1 can then be deployed by running the following command, providing the required
+resources are available according to the :ref: <a class="reference external" href="../getting-started/resources.html">Resources and directory structure</a> section.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">80</span>:80<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/T-Res/resources/:/app/resources/<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/T-Res/geoparser/:/app/geoparser/<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/T-Res/utils/:/app/utils/<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/T-Res/preprocessing/:/app/preprocessing/<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/T-Res/experiments/:/app/experiments/<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/T-Res/app/configs/:/app/configs/<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span><span class="si">${</span><span class="nv">CONTAINER_NAME</span><span class="si">}</span>_image:latest
+</pre></div>
+</div>
+</section>
+<section id="deploying-multiple-containers-via-docker-compose">
+<h2>3. Deploying multiple containers via Docker Compose<a class="headerlink" href="#deploying-multiple-containers-via-docker-compose" title="Permalink to this headline"></a></h2>
+<p>To deploy the example configuration behind a traefik load-balancing server:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">HOST_URL</span><span class="o">=</span>&lt;YOUR_HOST_URL&gt;<span class="w"> </span>sudo<span class="w"> </span>-E<span class="w"> </span>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+</section>
+<section id="configuring-your-deployment">
+<h2>4. Configuring your deployment<a class="headerlink" href="#configuring-your-deployment" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>Add your T-Res pipeline configuration file to the <code class="docutils literal notranslate"><span class="pre">app/config</span></code> directory. This file should instantiate the <code class="docutils literal notranslate"><span class="pre">Recogniser</span></code>, <code class="docutils literal notranslate"><span class="pre">Linker</span></code>, and <code class="docutils literal notranslate"><span class="pre">Ranker</span></code> to be used in your pipeline and store them in a dictionary called <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code>, which is then imported and used by the app.</p></li>
+<li><p>Optionally, you can add or edit endpoints or app behaviour in the <code class="docutils literal notranslate"><span class="pre">app/app_template.py</span></code> file</p></li>
+<li><p>Build your docker container as in step 1, setting the <code class="docutils literal notranslate"><span class="pre">CONTAINER_NAME</span></code> environment variable to your new configuration’s name</p></li>
+<li><p>Add a section to the docker-compose.yml, updating the service name, image and labels as follows:</p>
+<blockquote>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;YOUR_CONFIG_NAME&gt;</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;YOUR_CONFIG_NAME&gt;_image:latest</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">expose</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${HOME}/T-Res/resources/:/app/resources/</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${HOME}/T-Res/geoparser/:/app/geoparser/</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${HOME}/T-Res/utils/:/app/utils/</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${HOME}/T-Res/preprocessing/:/app/preprocessing/</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${HOME}/T-Res/experiments/:/app/experiments/</span>
+<span class="w">    </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.enable=true</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.http.services.&lt;YOUR_CONFIG_NAME&gt;.loadbalancer.server.port=80</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.http.routers.&lt;YOUR_CONFIG_NAME&gt;_router.service=&lt;YOUR_CONFIG_NAME&gt;</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.http.routers.&lt;YOUR_CONFIG_NAME&gt;_router.rule=Host(`&lt;YOUR_HOST_URL&gt;`, `0.0.0.0`) &amp;&amp; PathPrefix(`/v2/t-res_&lt;YOUR_CONFIG_NAME&gt;`)</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.http.middlewares.test-stripprefix-rwop.stripprefix.prefixes=/v2/t-res_&lt;YOUR_CONFIG_NAME&gt;</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik.http.routers.&lt;YOUR_CONFIG_NAME&gt;_router.middlewares=test-stripprefix-rwop</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;poetry&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;run&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;uvicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;app:app&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--proxy-headers&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--host&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--port&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;80&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--root-path&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;/v2/t-res_deezy_reldisamb-wpubl-wmtops&quot;</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Running T-Res as API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../experiments/index.html" class="btn btn-neutral float-right" title="Experiments and evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Deploying the T-Res API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usage.html" class="btn btn-neutral float-right" title="Using the T-Res API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
