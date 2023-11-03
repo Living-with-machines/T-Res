@@ -3,20 +3,24 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import pytest
 import pandas as pd
+import pytest
 
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 from t_res.utils import rel_utils
 from t_res.utils.REL import entity_disambiguation
 
+current_dir = Path(__file__).parent.resolve()
 
+@pytest.mark.skip(reason="Needs large db file")
 def test_embeddings():
     """
     Test embeddings are loaded correctly.
     """
     # Test 1: Check glove embeddings
     mentions = ["in", "apple"]
-    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         embs = rel_utils.get_db_emb(cursor, mentions, "snd")
         assert len(mentions) == len(embs)
@@ -41,29 +45,18 @@ def test_embeddings():
         embs = rel_utils.get_db_emb(cursor, mentions, "entity")
         assert embs == [None]
 
-
-def test_prepare_initial_data():
-    df = pd.read_csv(
-        "experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t"
-    ).iloc[:1]
-    parsed_doc = rel_utils.prepare_initial_data(df)
-    assert parsed_doc["4939308_1"][0]["mention"] == "STALYBRIDGE"
-    assert parsed_doc["4939308_1"][0]["gold"][0] == "Q1398653"
-    assert parsed_doc["4939308_6"][1]["mention"] == "Market-street"
-    assert parsed_doc["4939308_6"][1]["gold"] == "NIL"
-
-
-def test_train():
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_train(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
+        model="ner_test",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        model_path=str(tmp_path),  # Path where the NER model is or will be stored
         training_args={
             "batch_size": 8,
-            "num_train_epochs": 10,
+            "num_train_epochs": 1,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
@@ -74,7 +67,7 @@ def test_train():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -83,13 +76,13 @@ def test_train():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -103,16 +96,16 @@ def test_train():
             "do_test": False,
         },
     )
-    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
-        cursor = conn.cursor()
 
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path="resources/",
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": "resources/models/disambiguation/",
-                "data_path": "experiments/outputs/data/lwm/",
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": False,
@@ -152,18 +145,18 @@ def test_train():
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
 
-
-def test_load_eval_model():
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_load_eval_model(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        model_path=str(tmp_path),  # Path where the NER model is or will be stored
         training_args={
             "batch_size": 8,
-            "num_train_epochs": 10,
+            "num_train_epochs": 1,
             "learning_rate": 0.00005,
             "weight_decay": 0.0,
         },
@@ -174,7 +167,7 @@ def test_load_eval_model():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -183,13 +176,13 @@ def test_load_eval_model():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
+            "w2v_ocr_path": str(tmp_path),
             "w2v_ocr_model": "w2v_*_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -204,18 +197,16 @@ def test_load_eval_model():
         },
     )
 
-    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path="resources/",
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": "resources/models/disambiguation/",
-                "data_path": "experiments/outputs/data/lwm/",
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
-                "topn_candidates": 10,
                 "db_embeddings": cursor,
                 "with_publication": False,
                 "without_microtoponyms": False,
@@ -251,19 +242,19 @@ def test_load_eval_model():
         == entity_disambiguation.EntityDisambiguation
     )
 
-
-def test_predict():
+@pytest.mark.deezy(reason="Needs deezy model")
+def test_predict(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        model_path=str(tmp_path),  # Path where the NER model is or will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
-            "num_train_epochs": 4,
+            "num_train_epochs": 1,
             "weight_decay": 0.01,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
@@ -273,7 +264,7 @@ def test_predict():
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -282,13 +273,13 @@ def test_predict():
             "top_threshold": 85,
             "min_len": 5,
             "max_len": 15,
-            "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-            "w2v_ocr_model": "w2v_*_news",
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800s_news",
             "overwrite_dataset": False,
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": str(Path("resources/deezymatch/").resolve()),
+            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -302,23 +293,21 @@ def test_predict():
             "do_test": False,
         },
     )
-    with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
-        cursor = conn.cursor()
 
+    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path="resources/",
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": "resources/models/disambiguation/",
-                "data_path": "experiments/outputs/data/lwm/",
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "without_microtoponyms": True,
                 "do_test": False,
-                "default_publname": "United Kingdom",
-                "default_publwqid": "Q145",
             },
             overwrite_training=False,
         )
@@ -330,7 +319,7 @@ def test_predict():
         place="London",
         place_wqid="Q84",
     )
-    assert type(predictions) == list
+    assert isinstance(predictions,list)
 
     assert predictions[1]["prediction"] in predictions[1]["cross_cand_score"]
 

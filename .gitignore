@@ -129,18 +129,18 @@ dmypy.json
 .pyre/
 
 
-outputs/
-resources/
+/experiments/outputs/
+/resources/
 poetry.lock
 .vscode/*
-evaluation/results/*
-evaluation/HIPE-scorer/
-experiments/tmp_*
+/evaluation/results/*
+/evaluation/HIPE-scorer/
+/experiments/tmp_*
 preprocessing/toponymmatching/experiments/
-experiments/REL/
-evaluation/results_table.pkl
-experiments/explore_data.ipynb
-experiments/examine_res.py
+/experiments/REL/
+/evaluation/results_table.pkl
+/experiments/explore_data.ipynb
+/experiments/examine_res.py
 
 # Docs
 _build

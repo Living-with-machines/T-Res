@@ -38,7 +38,7 @@ torch = "^1.13.1"
 accelerate = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^5.2"
+pytest = "^7"
 jupyter = "^1.0.0"
 black = "^22.3.0"
 flake8 = "^6.0.0"
@@ -61,3 +61,8 @@ include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+markers = [
+    "deezy: tests which need a deezy model",
+]

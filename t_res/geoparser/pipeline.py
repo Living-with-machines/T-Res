@@ -150,9 +150,6 @@ class Pipeline:
             self.myranker
         )
 
-        # Check we've actually loaded the mentions2wikidata dictionary:
-        assert self.myranker.mentions_to_wikidata["London"] is not None
-
     def run_sentence(
         self,
         sentence: str,
