@@ -255,6 +255,12 @@ class Pipeline:
                     place_wqid = self.mylinker.rel_params["default_publwqid"]
                     place = self.mylinker.rel_params["default_publname"]
 
+                # If "publ", add the place of publication to the context:
+                mentions_dataset = rel_utils.add_publication_in_context(
+                    mentions_dataset,
+                    place,
+                )
+
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(
                     mentions_dataset,
@@ -762,6 +768,12 @@ class Pipeline:
                 if place_wqid == "" or place == "":
                     place_wqid = self.mylinker.rel_params["default_publwqid"]
                     place = self.mylinker.rel_params["default_publname"]
+
+                # If "publ", add the place of publication to the context:
+                mentions_dataset = rel_utils.add_publication_in_context(
+                    mentions_dataset,
+                    place,
+                )
 
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(

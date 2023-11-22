@@ -743,7 +743,10 @@ class Experiment:
                         self.mylinker.linking_resources["mentions_to_wikidata"],
                     )
                     if self.mylinker.rel_params["with_publication"]:
-                        # If "publ", add an artificial publication entry:
+                        # If "publ", add publication info to context and as new entry:
+                        article_dataset = rel_utils.add_publication_in_context(
+                            article_dataset
+                        )
                         article_dataset = rel_utils.add_publication(article_dataset)
                     predicted = linking_model.predict(article_dataset)
                     if self.mylinker.rel_params["with_publication"]:
