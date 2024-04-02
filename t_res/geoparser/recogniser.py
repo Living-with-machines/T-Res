@@ -270,7 +270,7 @@ class Recogniser:
         training_args = TrainingArguments(
             output_dir=self.model_path,
             evaluation_strategy="epoch",
-            logging_dir=self.model_path + "runs/" + self.model,
+            logging_dir=os.path.join(self.model_path,"runs/",self.model),
             learning_rate=self.training_args["learning_rate"],
             per_device_train_batch_size=self.training_args["batch_size"],
             per_device_eval_batch_size=self.training_args["batch_size"],
@@ -295,7 +295,7 @@ class Recogniser:
         trainer.evaluate()
 
         # Save the model:
-        trainer.save_model(self.model_path + self.model + ".model")
+        trainer.save_model(os.path.join(self.model_path,f"{self.model}.model"))
 
     # -------------------------------------------------------------
     def create_pipeline(self) -> Pipeline:

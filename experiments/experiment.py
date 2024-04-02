@@ -466,9 +466,11 @@ class Experiment:
             data=rows,
         )
 
+        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.myner.model}_{cand_approach}')}")
         output_path = (
-            self.data_path + self.dataset + "/" + self.myner.model + "_" + cand_approach
+            os.path.join(self.data_path,self.dataset,f"{self.myner.model}_{cand_approach}")
         )
+
 
         # List of columns to merge (i.e. columns where we have indicated
         # out data splits), and "article_id", the columns on which we
