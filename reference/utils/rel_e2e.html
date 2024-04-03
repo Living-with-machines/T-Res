@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>t_res.utils.rel_e2e module &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -49,7 +55,16 @@
 <li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.rel_end_to_end"><code class="docutils literal notranslate"><span class="pre">rel_end_to_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.get_rel_from_api"><code class="docutils literal notranslate"><span class="pre">get_rel_from_api()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.match_wikipedia_to_wikidata"><code class="docutils literal notranslate"><span class="pre">match_wikipedia_to_wikidata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.match_ent"><code class="docutils literal notranslate"><span class="pre">match_ent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.postprocess_rel"><code class="docutils literal notranslate"><span class="pre">postprocess_rel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.store_rel"><code class="docutils literal notranslate"><span class="pre">store_rel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_e2e.run_rel_experiments"><code class="docutils literal notranslate"><span class="pre">run_rel_experiments()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
 </ul>
@@ -73,10 +88,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Reference</a> &raquo;</li>
-          <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/rel_e2e.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,19 +102,19 @@
            <div itemprop="articleBody">
              
   <section id="t-res-utils-rel-e2e-module">
-<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module<a class="headerlink" href="#t-res-utils-rel-e2e-module" title="Permalink to this headline"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module<a class="headerlink" href="#t-res-utils-rel-e2e-module" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_e2e.rel_end_to_end">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">rel_end_to_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sent</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.rel_end_to_end" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">rel_end_to_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.rel_end_to_end" title="Permalink to this definition"></a></dt>
 <dd><p>Perform REL end-to-end entity linking using the API.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>sent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – A sentence in plain text.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The output from the REL end-to-end API for the input sentence.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -107,10 +122,10 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_e2e.get_rel_from_api">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">get_rel_from_api</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dSentences</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_end2end_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.get_rel_from_api" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">get_rel_from_api</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dSentences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_end2end_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.get_rel_from_api" title="Permalink to this definition"></a></dt>
 <dd><p>Use the REL API to perform end-to-end entity linking.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dSentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary of sentences, where the key is the
 article-sent identifier and the value is the full text of the
@@ -119,7 +134,7 @@ sentence.</p></li>
 will be stored.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None.</p>
 </dd>
 </dl>
@@ -127,20 +142,20 @@ will be stored.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_e2e.match_wikipedia_to_wikidata">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">match_wikipedia_to_wikidata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wiki_title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.match_wikipedia_to_wikidata" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">match_wikipedia_to_wikidata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wiki_title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.match_wikipedia_to_wikidata" title="Permalink to this definition"></a></dt>
 <dd><p>Retrieve the Wikidata ID corresponding to a Wikipedia title.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>wiki_title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – A Wikipedia title in underscore-separated format.</p></li>
 <li><p><strong>path_to_db</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The path to your wikipedia database (e.g. “../resources/wikipedia/index_enwiki-latest.db”).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The corresponding Wikidata QID for the entity, or <code class="docutils literal notranslate"><span class="pre">&quot;NIL&quot;</span></code> if not
 found.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
 </dd>
 </dl>
@@ -152,7 +167,7 @@ found.</p>
 <dd><p>Find the corresponding string and prediction information returned by REL
 for a specific gold standard token position in a sentence.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>pred_ents</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – A list of lists, where each inner list corresponds
 to a token.</p></li>
@@ -163,7 +178,7 @@ standard.</p></li>
 <li><p><strong>gazetteer_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.12)"><em>set</em></a>) – A set of entity IDs in the knowledge base.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A tuple with three elements:</dt><dd><ol class="arabic simple">
 <li><p>The entity type.</p></li>
@@ -174,7 +189,7 @@ standard.</p></li>
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)">tuple</a></p>
 </dd>
 </dl>
@@ -186,7 +201,7 @@ standard.</p></li>
 <dd><p>Retokenize the REL output for each sentence to match the gold standard
 tokenization.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>rel_preds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary containing the predictions using REL.</p></li>
 <li><p><strong>dSentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary that maps a sentence ID to the text.</p></li>
@@ -196,11 +211,11 @@ per sentence.</p></li>
 <li><p><strong>wikigaz_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.12)"><em>set</em></a>) – A set of Wikidata IDs of entities in the gazetteer.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary that maps a sentence ID to the REL predictions,
 retokenized as in the gold standard.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -208,11 +223,11 @@ retokenized as in the gold standard.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_e2e.store_rel">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">store_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">experiments.experiment.Experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dREL</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">approach</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.store_rel" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">store_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Experiment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dREL</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">approach</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.store_rel" title="Permalink to this definition"></a></dt>
 <dd><p>Store the REL results for a specific experiment, approach, and split, in
 the format required by the HIPE scorer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>experiment</strong> (<em>Experiment</em>) – The experiment object containing the results
 path and dataset.</p></li>
@@ -222,7 +237,7 @@ path and dataset.</p></li>
 (e.g., <code class="docutils literal notranslate"><span class="pre">originalsplit</span></code>, <code class="docutils literal notranslate"><span class="pre">Ashton1860</span></code>).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None.</p>
 </dd>
 </dl>
@@ -238,7 +253,7 @@ required by the scorer.</p>
 <span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_e2e.</span></span><span class="sig-name descname"><span class="pre">run_rel_experiments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_e2e.run_rel_experiments" title="Permalink to this definition"></a></dt>
 <dd><p>Run the end-to-end REL experiments.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None.</p>
 </dd>
 </dl>

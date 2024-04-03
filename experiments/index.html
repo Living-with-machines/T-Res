@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Experiments and evaluation &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -26,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -63,8 +69,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Experiments and evaluation</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Experiments and evaluation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/experiments/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -75,15 +81,15 @@
            <div itemprop="articleBody">
              
   <section id="experiments-and-evaluation">
-<h1>Experiments and evaluation<a class="headerlink" href="#experiments-and-evaluation" title="Permalink to this headline"></a></h1>
+<h1>Experiments and evaluation<a class="headerlink" href="#experiments-and-evaluation" title="Permalink to this heading"></a></h1>
 <p>Follow these steps to reproduce the experiments in our paper.</p>
 <section id="obtain-the-external-resources">
-<h2>1. Obtain the external resources<a class="headerlink" href="#obtain-the-external-resources" title="Permalink to this headline"></a></h2>
+<h2>1. Obtain the external resources<a class="headerlink" href="#obtain-the-external-resources" title="Permalink to this heading"></a></h2>
 <p>Follow the instructions in the “<a class="reference internal" href="../getting-started/resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation
 to obtain the resources required for running the experiments.</p>
 </section>
 <section id="preparing-the-data">
-<h2>2. Preparing the data<a class="headerlink" href="#preparing-the-data" title="Permalink to this headline"></a></h2>
+<h2>2. Preparing the data<a class="headerlink" href="#preparing-the-data" title="Permalink to this heading"></a></h2>
 <p>To create the datasets that we use in the experiments presented in the paper,
 run the following command from the <code class="docutils literal notranslate"><span class="pre">./experiments/</span></code> folder:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./prepare_data.py<span class="w"> </span>-p<span class="w"> </span>../resources
@@ -93,7 +99,7 @@ run the following command from the <code class="docutils literal notranslate"><s
 as needed in the experiments.</p>
 </section>
 <section id="running-the-experiments">
-<h2>3. Running the experiments<a class="headerlink" href="#running-the-experiments" title="Permalink to this headline"></a></h2>
+<h2>3. Running the experiments<a class="headerlink" href="#running-the-experiments" title="Permalink to this heading"></a></h2>
 <p>To run the experiments, run the following script from the <code class="docutils literal notranslate"><span class="pre">./experiments/</span></code>
 folder:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>./toponym_resolution.py<span class="w"> </span>-p<span class="w"> </span>../resources
@@ -103,7 +109,7 @@ folder:</p>
 the paper.</p>
 </section>
 <section id="evaluate">
-<h2>4. Evaluate<a class="headerlink" href="#evaluate" title="Permalink to this headline"></a></h2>
+<h2>4. Evaluate<a class="headerlink" href="#evaluate" title="Permalink to this heading"></a></h2>
 <p>To evaluate the different approaches and obtain a table with results such as the
 one provided in the paper, go to the <code class="docutils literal notranslate"><span class="pre">./evaluation/</span></code> directory. There, you
 should clone the <a class="reference external" href="https://github.com/hipe-eval/HIPE-scorer">HIPE scorer</a>. We

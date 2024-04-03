@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installing T-Res &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -71,9 +77,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Getting started</a> &raquo;</li>
-      <li>Installing T-Res</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Getting started</a></li>
+      <li class="breadcrumb-item active">Installing T-Res</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/getting-started/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,11 +90,11 @@
            <div itemprop="articleBody">
              
   <section id="installing-t-res">
-<h1>Installing T-Res<a class="headerlink" href="#installing-t-res" title="Permalink to this headline"></a></h1>
+<h1>Installing T-Res<a class="headerlink" href="#installing-t-res" title="Permalink to this heading"></a></h1>
 <p>If you want to work directly on the codebase, we suggest to install T-Res
 following these instructions (which have been tested Linux (ubuntu 20.04)).</p>
 <section id="update-the-system">
-<h2>Update the system<a class="headerlink" href="#update-the-system" title="Permalink to this headline"></a></h2>
+<h2>Update the system<a class="headerlink" href="#update-the-system" title="Permalink to this heading"></a></h2>
 <p>First, you need to make sure the system is up to date and all essential
 libraries are installed.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>update
@@ -100,7 +106,7 @@ $<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>
 </div>
 </section>
 <section id="install-pyenv">
-<h2>Install pyenv<a class="headerlink" href="#install-pyenv" title="Permalink to this headline"></a></h2>
+<h2>Install pyenv<a class="headerlink" href="#install-pyenv" title="Permalink to this heading"></a></h2>
 <p>Then you need to install pyenv, which we use to manage virtual environments:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>curl<span class="w"> </span>https://pyenv.run<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 </pre></div>
@@ -125,7 +131,7 @@ $<span class="w"> </span>pyenv<span class="w"> </span>global<span class="w"> </s
 </div>
 </section>
 <section id="install-poetry">
-<h2>Install poetry<a class="headerlink" href="#install-poetry" title="Permalink to this headline"></a></h2>
+<h2>Install poetry<a class="headerlink" href="#install-poetry" title="Permalink to this heading"></a></h2>
 <p>To manage dipendencies across libraries, we use Poetry. To install it, do the
 following:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://install.python-poetry.org<span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-
@@ -134,7 +140,7 @@ $<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><sp
 </div>
 </section>
 <section id="project-installation">
-<h2>Project Installation<a class="headerlink" href="#project-installation" title="Permalink to this headline"></a></h2>
+<h2>Project Installation<a class="headerlink" href="#project-installation" title="Permalink to this heading"></a></h2>
 <p>You can now clone the repo and <cite>cd</cite> into it:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:Living-with-machines/T-Res.git
 $<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>T-Res
@@ -155,7 +161,7 @@ $<span class="w"> </span>poetry<span class="w"> </span>install
 </div>
 </section>
 <section id="how-to-use-poetry">
-<h2>How to use poetry<a class="headerlink" href="#how-to-use-poetry" title="Permalink to this headline"></a></h2>
+<h2>How to use poetry<a class="headerlink" href="#how-to-use-poetry" title="Permalink to this heading"></a></h2>
 <p>To activate the environment:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>shell
 </pre></div>
@@ -179,7 +185,7 @@ created kernel in “Kernel” &gt; “Change kernel”.</p>
 </div>
 </section>
 <section id="pre-commit-hoooks">
-<h2>Pre-commit hoooks<a class="headerlink" href="#pre-commit-hoooks" title="Permalink to this headline"></a></h2>
+<h2>Pre-commit hoooks<a class="headerlink" href="#pre-commit-hoooks" title="Permalink to this heading"></a></h2>
 <p>In order to guarantee style consistency across our codebase we use a few basic
 pre-commit hooks.</p>
 <p>To use them, first run:</p>

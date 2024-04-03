@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>utils module &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -73,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Reference</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Reference</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -86,18 +92,81 @@
            <div itemprop="articleBody">
              
   <section id="utils-module">
-<h1><code class="docutils literal notranslate"><span class="pre">utils</span></code> module<a class="headerlink" href="#utils-module" title="Permalink to this headline"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">utils</span></code> module<a class="headerlink" href="#utils-module" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Table of contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.deezy_processing</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deezy_processing.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.deezy_processing</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deezy_processing.html#t_res.utils.deezy_processing.obtain_matches"><code class="docutils literal notranslate"><span class="pre">obtain_matches()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="deezy_processing.html#t_res.utils.deezy_processing.create_training_set"><code class="docutils literal notranslate"><span class="pre">create_training_set()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="deezy_processing.html#t_res.utils.deezy_processing.train_deezy_model"><code class="docutils literal notranslate"><span class="pre">train_deezy_model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="deezy_processing.html#t_res.utils.deezy_processing.generate_candidates"><code class="docutils literal notranslate"><span class="pre">generate_candidates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="get_data.html#t_res.utils.get_data.download_lwm_data"><code class="docutils literal notranslate"><span class="pre">download_lwm_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_data.html#t_res.utils.get_data.download_hipe_data"><code class="docutils literal notranslate"><span class="pre">download_hipe_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.training_tokenize_and_align_labels"><code class="docutils literal notranslate"><span class="pre">training_tokenize_and_align_labels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.collect_named_entities"><code class="docutils literal notranslate"><span class="pre">collect_named_entities()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.aggregate_mentions"><code class="docutils literal notranslate"><span class="pre">aggregate_mentions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.fix_capitalization"><code class="docutils literal notranslate"><span class="pre">fix_capitalization()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.fix_hyphens"><code class="docutils literal notranslate"><span class="pre">fix_hyphens()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.fix_nested"><code class="docutils literal notranslate"><span class="pre">fix_nested()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.fix_startEntity"><code class="docutils literal notranslate"><span class="pre">fix_startEntity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ner.html#t_res.utils.ner.aggregate_entities"><code class="docutils literal notranslate"><span class="pre">aggregate_entities()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.turn_wikipedia2wikidata"><code class="docutils literal notranslate"><span class="pre">turn_wikipedia2wikidata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.reconstruct_sentences"><code class="docutils literal notranslate"><span class="pre">reconstruct_sentences()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.process_lwm_for_ner"><code class="docutils literal notranslate"><span class="pre">process_lwm_for_ner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.process_lwm_for_linking"><code class="docutils literal notranslate"><span class="pre">process_lwm_for_linking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.aggregate_hipe_entities"><code class="docutils literal notranslate"><span class="pre">aggregate_hipe_entities()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.process_hipe_for_linking"><code class="docutils literal notranslate"><span class="pre">process_hipe_for_linking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.process_tsv"><code class="docutils literal notranslate"><span class="pre">process_tsv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocess_data.html#t_res.utils.preprocess_data.fine_to_coarse"><code class="docutils literal notranslate"><span class="pre">fine_to_coarse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.eval_with_exception"><code class="docutils literal notranslate"><span class="pre">eval_with_exception()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.prepare_sents"><code class="docutils literal notranslate"><span class="pre">prepare_sents()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.align_gold"><code class="docutils literal notranslate"><span class="pre">align_gold()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.postprocess_predictions"><code class="docutils literal notranslate"><span class="pre">postprocess_predictions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.ner_and_process"><code class="docutils literal notranslate"><span class="pre">ner_and_process()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.update_with_linking"><code class="docutils literal notranslate"><span class="pre">update_with_linking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.update_with_skyline"><code class="docutils literal notranslate"><span class="pre">update_with_skyline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.prepare_storing_links"><code class="docutils literal notranslate"><span class="pre">prepare_storing_links()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_data.html#t_res.utils.process_data.store_for_scorer"><code class="docutils literal notranslate"><span class="pre">store_for_scorer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="process_wikipedia.html#t_res.utils.process_wikipedia.make_wikilinks_consistent"><code class="docutils literal notranslate"><span class="pre">make_wikilinks_consistent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_wikipedia.html#t_res.utils.process_wikipedia.make_wikipedia2wikidata_consisent"><code class="docutils literal notranslate"><span class="pre">make_wikipedia2wikidata_consisent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="process_wikipedia.html#t_res.utils.process_wikipedia.title_to_id"><code class="docutils literal notranslate"><span class="pre">title_to_id()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.rel_end_to_end"><code class="docutils literal notranslate"><span class="pre">rel_end_to_end()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.get_rel_from_api"><code class="docutils literal notranslate"><span class="pre">get_rel_from_api()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.match_wikipedia_to_wikidata"><code class="docutils literal notranslate"><span class="pre">match_wikipedia_to_wikidata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.match_ent"><code class="docutils literal notranslate"><span class="pre">match_ent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.postprocess_rel"><code class="docutils literal notranslate"><span class="pre">postprocess_rel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.store_rel"><code class="docutils literal notranslate"><span class="pre">store_rel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_e2e.html#t_res.utils.rel_e2e.run_rel_experiments"><code class="docutils literal notranslate"><span class="pre">run_rel_experiments()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rel_utils.html#t_res.utils.rel_utils.get_db_emb"><code class="docutils literal notranslate"><span class="pre">get_db_emb()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_utils.html#t_res.utils.rel_utils.eval_with_exception"><code class="docutils literal notranslate"><span class="pre">eval_with_exception()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_utils.html#t_res.utils.rel_utils.prepare_initial_data"><code class="docutils literal notranslate"><span class="pre">prepare_initial_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_utils.html#t_res.utils.rel_utils.rank_candidates"><code class="docutils literal notranslate"><span class="pre">rank_candidates()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_utils.html#t_res.utils.rel_utils.add_publication"><code class="docutils literal notranslate"><span class="pre">add_publication()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rel_utils.html#t_res.utils.rel_utils.prepare_rel_trainset"><code class="docutils literal notranslate"><span class="pre">prepare_rel_trainset()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rel/entity_disambiguation.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.entity_disambiguation</span></code> module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rel/mulrel_ranker.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.REL.mulrel_ranker</span></code> module</a></li>

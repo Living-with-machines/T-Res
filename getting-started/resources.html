@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Resources and directory structure &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -85,9 +91,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Getting started</a> &raquo;</li>
-      <li>Resources and directory structure</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Getting started</a></li>
+      <li class="breadcrumb-item active">Resources and directory structure</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/getting-started/resources.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -98,14 +104,14 @@
            <div itemprop="articleBody">
              
   <section id="resources-and-directory-structure">
-<span id="top-resources"></span><h1>Resources and directory structure<a class="headerlink" href="#resources-and-directory-structure" title="Permalink to this headline"></a></h1>
+<span id="top-resources"></span><h1>Resources and directory structure<a class="headerlink" href="#resources-and-directory-structure" title="Permalink to this heading"></a></h1>
 <p>T-Res requires several resources to work. Some resources can be downloaded
 and loaded directly from the web. Others will need to be generated, following
 the instructions provided in this section. In this page, we describe the format
 of the files that are required by T-Res, therefore also giving the user the
 option to use their own resources (adapted to T-Res).</p>
 <section id="toponym-recognition-and-disambiguation-training-data">
-<h2>Toponym recognition and disambiguation training data<a class="headerlink" href="#toponym-recognition-and-disambiguation-training-data" title="Permalink to this headline"></a></h2>
+<h2>Toponym recognition and disambiguation training data<a class="headerlink" href="#toponym-recognition-and-disambiguation-training-data" title="Permalink to this heading"></a></h2>
 <p>We provide the dataset we used to train T-Res for the tasks of toponym recognition
 (i.e. a named entity recognition task) and toponym disambiguation (i.e. an entity
 linking task focused on geographical entities) in English. The dataset is based on the
@@ -129,7 +135,7 @@ Library research repository</a>.</p>
 <p>Continue reading the sections below to learn more about the datasets, and for a
 description of the format expected by T-Res.</p>
 <section id="toponym-recognition-dataset">
-<h3>1. Toponym recognition dataset<a class="headerlink" href="#toponym-recognition-dataset" title="Permalink to this headline"></a></h3>
+<h3>1. Toponym recognition dataset<a class="headerlink" href="#toponym-recognition-dataset" title="Permalink to this heading"></a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You don’t need a toponym recognition dataset if you load a NER model directly
@@ -157,7 +163,7 @@ the JSON files, corresponding to three annotated sentences:</p>
 data.</p>
 </section>
 <section id="toponym-disambiguation-dataset">
-<h3>2. Toponym disambiguation dataset<a class="headerlink" href="#toponym-disambiguation-dataset" title="Permalink to this headline"></a></h3>
+<h3>2. Toponym disambiguation dataset<a class="headerlink" href="#toponym-disambiguation-dataset" title="Permalink to this heading"></a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You won’t need a toponym disambiguation dataset if you use the unsupervised
@@ -258,7 +264,7 @@ test set of the original dataset are left out. The training set is split into
 </section>
 </section>
 <section id="wikipedia-and-wikidata-based-resources">
-<h2>Wikipedia- and Wikidata-based resources<a class="headerlink" href="#wikipedia-and-wikidata-based-resources" title="Permalink to this headline"></a></h2>
+<h2>Wikipedia- and Wikidata-based resources<a class="headerlink" href="#wikipedia-and-wikidata-based-resources" title="Permalink to this heading"></a></h2>
 <p>T-Res requires a series of Wikipedia- and Wikidata-based resources:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code></p></li>
@@ -289,7 +295,7 @@ refer to the <code class="docutils literal notranslate"><span class="pre">wiki2g
 format, in case you prefer to provide your own resources (which should
 have the same format).</p>
 <section id="mentions-to-wikidata-json">
-<h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code><a class="headerlink" href="#mentions-to-wikidata-json" title="Permalink to this headline"></a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code><a class="headerlink" href="#mentions-to-wikidata-json" title="Permalink to this heading"></a></h3>
 <p>A JSON file consisting of a python dictionary in which the key is a mention
 of a place in Wikipedia (by means of an anchor text) and the value is an inner
 dictionary, where the inner keys are the QIDs of all Wikidata entities that
@@ -318,7 +324,7 @@ between key <code class="docutils literal notranslate"><span class="pre">Q23183<
 Wikidata entity <code class="docutils literal notranslate"><span class="pre">Q23183</span></code> and its <a class="reference external" href="https://en.wikipedia.org/wiki/Wiltshire">corresponding Wikipedia page</a>).</p>
 </section>
 <section id="mentions-to-wikidata-normalized-json">
-<h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code><a class="headerlink" href="#mentions-to-wikidata-normalized-json" title="Permalink to this headline"></a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata_normalized.json</span></code><a class="headerlink" href="#mentions-to-wikidata-normalized-json" title="Permalink to this heading"></a></h3>
 <p>A JSON file containing the normalised version of the <code class="docutils literal notranslate"><span class="pre">mentions_to_wikidata.json</span></code>
 dictionary. For example, the value of the mention “Wiltshire” is now:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -334,7 +340,7 @@ by a mention. In the example, we see that entity <code class="docutils literal n
 to as <code class="docutils literal notranslate"><span class="pre">Wiltshire</span></code>.</p>
 </section>
 <section id="wikidata-to-mentions-normalized-json">
-<h3><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code><a class="headerlink" href="#wikidata-to-mentions-normalized-json" title="Permalink to this headline"></a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code><a class="headerlink" href="#wikidata-to-mentions-normalized-json" title="Permalink to this heading"></a></h3>
 <p>A JSON file consisting of a python dictionary in which the key is a Wikidata QID
 and the value is an inner dictionary, in which the inner keys are the mentions
 used in Wikipedia to refer to such Wikidata entity, and the values are their
@@ -372,7 +378,7 @@ England” in Wikipedia 0.5% of the times and as “Wiltshire” 97.7% of the ti
 These values add up to one.</p>
 </section>
 <section id="wikidata-gazetteer-csv">
-<h3><code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code><a class="headerlink" href="#wikidata-gazetteer-csv" title="Permalink to this headline"></a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">wikidata_gazetteer.csv</span></code><a class="headerlink" href="#wikidata-gazetteer-csv" title="Permalink to this heading"></a></h3>
 <p>A csv file consisting of (at least) the following four columns:</p>
 <ul class="simple">
 <li><p>a Wikidata ID (QID) of a location,</p></li>
@@ -405,7 +411,7 @@ coordinates: the linking to Wikidata will not be affected. Column
 </div>
 </section>
 <section id="entity2class-txt">
-<h3><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code><a class="headerlink" href="#entity2class-txt" title="Permalink to this headline"></a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">entity2class.txt</span></code><a class="headerlink" href="#entity2class-txt" title="Permalink to this heading"></a></h3>
 <p>A python dictionary in which each entity in Wikidata is mapped to its most
 common Wikidata class.</p>
 <p>You can load the dictionary, and access it, as follows:</p>
@@ -435,7 +441,7 @@ The linking to Wikidata will not be affected.</p>
 </section>
 </section>
 <section id="entity-and-word-embeddings">
-<h2>Entity and word embeddings<a class="headerlink" href="#entity-and-word-embeddings" title="Permalink to this headline"></a></h2>
+<h2>Entity and word embeddings<a class="headerlink" href="#entity-and-word-embeddings" title="Permalink to this heading"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Note that you will not need this if you use the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> disambiguation
@@ -496,7 +502,7 @@ to create the embeddings database (<strong>[coming soon]</strong>).</p>
 <p><a class="reference external" href="#top-resources">back to top</a></p>
 </section>
 <section id="deezymatch-training-set">
-<h2>DeezyMatch training set<a class="headerlink" href="#deezymatch-training-set" title="Permalink to this headline"></a></h2>
+<h2>DeezyMatch training set<a class="headerlink" href="#deezymatch-training-set" title="Permalink to this heading"></a></h2>
 <p>In order to train a DeezyMatch model, a training set consisting of positive and
 negative string pairs is required. We provide a dataset of positive and negative
 OCR variations, which can be used to train a DeezyMatch model, which can then be
@@ -521,7 +527,7 @@ and to be in the following location:</p>
 from word2vec embeddings trained on digitised texts. Continue reading the sections
 below for more information about both types of resources.</p>
 <section id="id6">
-<h3>1. DeezyMatch training set<a class="headerlink" href="#id6" title="Permalink to this headline"></a></h3>
+<h3>1. DeezyMatch training set<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
 <p>T-Res can directly load the string pairs dataset required to train a new DeezyMatch
 model. By default, the code assumes the dataset to be called <code class="docutils literal notranslate"><span class="pre">w2v_ocr_pairs.txt</span></code>.
 The dataset consists of three columns: <code class="docutils literal notranslate"><span class="pre">word1</span></code>, <code class="docutils literal notranslate"><span class="pre">word2</span></code>, and a boolean describing
@@ -548,7 +554,7 @@ toponym alternate names extracted from Wikipedia.</p>
 <p>The dataset we provide consists of 1,085,514 string pairs.</p>
 </section>
 <section id="word2vec-embeddings-trained-on-noisy-data">
-<h3>2. Word2Vec embeddings trained on noisy data<a class="headerlink" href="#word2vec-embeddings-trained-on-noisy-data" title="Permalink to this headline"></a></h3>
+<h3>2. Word2Vec embeddings trained on noisy data<a class="headerlink" href="#word2vec-embeddings-trained-on-noisy-data" title="Permalink to this heading"></a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The 19thC word2vec embeddings <strong>are not needed</strong> if you already have the
@@ -581,7 +587,7 @@ By default, T-Res assumes that the word2vec models are stored in
 </section>
 </section>
 <section id="summary-of-resources-and-directory-structure">
-<h2>Summary of resources and directory structure<a class="headerlink" href="#summary-of-resources-and-directory-structure" title="Permalink to this headline"></a></h2>
+<h2>Summary of resources and directory structure<a class="headerlink" href="#summary-of-resources-and-directory-structure" title="Permalink to this heading"></a></h2>
 <p>In the code and our tutorials, we assume the following directory structure
 for the mentioned resources that are required in order to run the pipeline.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>T-Res/

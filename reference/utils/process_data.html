@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>t_res.utils.process_data module &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -47,7 +53,18 @@
 <li class="toctree-l3"><a class="reference internal" href="get_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.get_data</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.eval_with_exception"><code class="docutils literal notranslate"><span class="pre">eval_with_exception()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.prepare_sents"><code class="docutils literal notranslate"><span class="pre">prepare_sents()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.align_gold"><code class="docutils literal notranslate"><span class="pre">align_gold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.postprocess_predictions"><code class="docutils literal notranslate"><span class="pre">postprocess_predictions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.ner_and_process"><code class="docutils literal notranslate"><span class="pre">ner_and_process()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.update_with_linking"><code class="docutils literal notranslate"><span class="pre">update_with_linking()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.update_with_skyline"><code class="docutils literal notranslate"><span class="pre">update_with_skyline()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.prepare_storing_links"><code class="docutils literal notranslate"><span class="pre">prepare_storing_links()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_data.store_for_scorer"><code class="docutils literal notranslate"><span class="pre">store_for_scorer()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
@@ -73,10 +90,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Reference</a> &raquo;</li>
-          <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/process_data.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,27 +104,27 @@
            <div itemprop="articleBody">
              
   <section id="t-res-utils-process-data-module">
-<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module<a class="headerlink" href="#t-res-utils-process-data-module" title="Permalink to this headline"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module<a class="headerlink" href="#t-res-utils-process-data-module" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.eval_with_exception">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">eval_with_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str2parse</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_case</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#t_res.utils.process_data.eval_with_exception" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">eval_with_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str2parse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_case</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.eval_with_exception" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluate a string expression using <a class="reference external" href="https://docs.python.org/3/library/ast.html#ast.literal_eval" title="(in Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">ast.literal_eval()</span></code></a>. If
 the evaluation succeeds, the result is returned. If a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>
 occurs during evaluation, the provided <code class="docutils literal notranslate"><span class="pre">in_case</span></code> value is returned
 instead.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>str2parse</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The string expression to be evaluated.</p></li>
 <li><p><strong>in_case</strong> (<em>Any</em><em>, </em><em>optional</em>) – The value to return in case of a
 <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The evaluated result if successful, or the <code class="docutils literal notranslate"><span class="pre">in_case</span></code> value if an
 error occurs.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
@@ -122,10 +139,10 @@ error occurs.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.prepare_sents">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_sents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_data.prepare_sents" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_sents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_data.prepare_sents" title="Permalink to this definition"></a></dt>
 <dd><p>Prepares annotated data and metadata on a sentence basis.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><p>A tuple consisting of three dictionaries:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -150,7 +167,7 @@ place of publication).</p></li>
 </div></blockquote>
 </p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>]</p>
 </dd>
 </dl>
@@ -158,7 +175,7 @@ place of publication).</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.align_gold">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">align_gold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotations</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_data.align_gold" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">align_gold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_data.align_gold" title="Permalink to this definition"></a></dt>
 <dd><p>Aligns the predictions of a BERT NER model with the gold standard labels
 by aligning their tokenization.</p>
 <p>The gold standard tokenization is not aligned with the tokenization
@@ -169,7 +186,7 @@ positions of each predicted token.</p>
 position overlaps with an annotated entity, in which case they are
 relabeled according to the corresponding gold standard label.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>predictions</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – <p>A list of dictionaries representing the
 predicted mentions. Each dictionary contains the following keys:</p>
@@ -190,7 +207,7 @@ link of the corresponding gold standard entity (e.g.
 <code class="docutils literal notranslate"><span class="pre">&quot;Q335322&quot;</span></code>).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A list of dictionaries representing the aligned gold standard
 labels. Each dictionary contains the same keys as the predictions:</p>
 <ul class="simple">
@@ -203,7 +220,7 @@ labels. Each dictionary contains the same keys as the predictions:</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>]</p>
 </dd>
 </dl>
@@ -211,10 +228,10 @@ labels. Each dictionary contains the same keys as the predictions:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.postprocess_predictions">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">postprocess_predictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_positions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.postprocess_predictions" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">postprocess_predictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_positions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.postprocess_predictions" title="Permalink to this definition"></a></dt>
 <dd><p>Postprocess predictions to be used later in the pipeline.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>predictions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – <p>the output of the
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">geoparser.recogniser.Recogniser.ner_predict()</span></code> method,
@@ -237,7 +254,7 @@ named entity recogniser, to enable assessing the performance of
 the NER and linking steps.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A dictionary with three key-value pairs:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -251,7 +268,7 @@ empty link.</p></li>
 </div></blockquote>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -259,11 +276,11 @@ empty link.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.ner_and_process">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">ner_and_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dSentences</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dAnnotated</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">myner</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_data.ner_and_process" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">ner_and_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dSentences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dAnnotated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">myner</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_data.ner_and_process" title="Permalink to this definition"></a></dt>
 <dd><p>Perform named entity recognition in the LwM way, and postprocess the
 output to prepare it for the experiments.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dSentences</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – dictionary in which we keep, for each article/
 sentence (expressed as e.g. <code class="docutils literal notranslate"><span class="pre">&quot;10732214_1&quot;</span></code>, where <code class="docutils literal notranslate"><span class="pre">&quot;10732214&quot;</span></code>
@@ -278,7 +295,7 @@ its annotated link), all extracted from the gold standard.</p></li>
 <li><p><strong>myner</strong> (<a class="reference internal" href="../geoparser/recogniser.html#t_res.geoparser.recogniser.Recogniser" title="t_res.geoparser.recogniser.Recogniser"><em>recogniser.Recogniser</em></a>) – a Recogniser object, for NER.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple consisting of five dictionaries:</p>
 <ol class="arabic">
 <li><p><strong>dPreds</strong>: A dictionary where the NER predictions are stored,
@@ -359,7 +376,7 @@ with the gold standard <code class="docutils literal notranslate"><span class="p
 </ol>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a>]</p>
 </dd>
 </dl>
@@ -367,10 +384,10 @@ with the gold standard <code class="docutils literal notranslate"><span class="p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.update_with_linking">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.update_with_linking" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_linking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.0.dev0+668.g9cd5e5546c)"><span class="pre">Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.update_with_linking" title="Permalink to this definition"></a></dt>
 <dd><p>Updates the NER predictions by incorporating linking results.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ner_predictions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary containing NER predictions
 (token-per-token) for a given sentence.</p></li>
@@ -378,11 +395,11 @@ with the gold standard <code class="docutils literal notranslate"><span class="p
 of the test_df, representing one mention.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary similar to <cite>ner_predictions</cite>, but with the added
 Wikidata link for each predicted entity.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -390,10 +407,10 @@ Wikidata link for each predicted entity.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.update_with_skyline">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_skyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><span class="pre">pandas.core.series.Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.update_with_skyline" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">update_with_skyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ner_predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.0.dev0+668.g9cd5e5546c)"><span class="pre">Series</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.update_with_skyline" title="Permalink to this definition"></a></dt>
 <dd><p>Updates the NER predictions with the skyline link from entity linking.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ner_predictions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary containing NER predictions
 (token-per-token) for a given sentence.</p></li>
@@ -401,13 +418,13 @@ Wikidata link for each predicted entity.</p>
 of the test_df, representing one mention.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary similar to <code class="docutils literal notranslate"><span class="pre">ner_predictions</span></code>, but with the added
 skyline link to Wikidata. The skyline link represents the gold
 standard candidate if it has been retrieved through candidate
 ranking, otherwise it is set to <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -415,12 +432,12 @@ ranking, otherwise it is set to <code class="docutils literal notranslate"><span
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.prepare_storing_links">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_storing_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_test</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_to_end_eval</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.prepare_storing_links" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">prepare_storing_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processed_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_to_end_eval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.prepare_storing_links" title="Permalink to this definition"></a></dt>
 <dd><p>Updates the processed data dictionaries with predicted links for “preds”
 and the skyline for “skys”. The skyline represents the maximum achievable
 result by choosing the gold standard entity among the candidates.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>processed_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary containing all processed data.</p></li>
 <li><p><strong>all_test</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – A list of article IDs in the current data split
@@ -432,7 +449,7 @@ by the gold standard (for end-to-end and entity-linking only
 evaluation settings respectively).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>dict</dt><dd><p>The updated processed data dictionary with “preds” and “skys”
 incorporating the predicted links and skyline information.</p>
@@ -445,10 +462,10 @@ incorporating the predicted links and skyline information.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_data.store_for_scorer">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">store_for_scorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipe_scorer_results_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dresults</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">articles_test</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.store_for_scorer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_data.</span></span><span class="sig-name descname"><span class="pre">store_for_scorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipe_scorer_results_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dresults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">articles_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#t_res.utils.process_data.store_for_scorer" title="Permalink to this definition"></a></dt>
 <dd><p>Stores the results in the required format for evaluation using the CLEF-HIPE scorer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hipe_scorer_results_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The first part of the output file path.</p></li>
 <li><p><strong>scenario_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The second part of the output file path.</p></li>
@@ -457,7 +474,7 @@ incorporating the predicted links and skyline information.</p>
 for evaluating the performance in the provided experiment.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None.</p>
 </dd>
 </dl>

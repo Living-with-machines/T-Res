@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>t_res.utils.rel_utils module &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -50,7 +56,15 @@
 <li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="process_wikipedia.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_utils.get_db_emb"><code class="docutils literal notranslate"><span class="pre">get_db_emb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_utils.eval_with_exception"><code class="docutils literal notranslate"><span class="pre">eval_with_exception()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_utils.prepare_initial_data"><code class="docutils literal notranslate"><span class="pre">prepare_initial_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_utils.rank_candidates"><code class="docutils literal notranslate"><span class="pre">rank_candidates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_utils.add_publication"><code class="docutils literal notranslate"><span class="pre">add_publication()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.rel_utils.prepare_rel_trainset"><code class="docutils literal notranslate"><span class="pre">prepare_rel_trainset()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
 </ul>
 </li>
@@ -73,10 +87,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Reference</a> &raquo;</li>
-          <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/rel_utils.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,13 +101,13 @@
            <div itemprop="articleBody">
              
   <section id="t-res-utils-rel-utils-module">
-<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module<a class="headerlink" href="#t-res-utils-rel-utils-module" title="Permalink to this headline"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module<a class="headerlink" href="#t-res-utils-rel-utils-module" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_utils.get_db_emb">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">get_db_emb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#sqlite3.Cursor" title="(in Python v3.12)"><span class="pre">sqlite3.Cursor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embtype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'word'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'entity'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'snd'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.rel_utils.get_db_emb" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">get_db_emb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#sqlite3.Cursor" title="(in Python v3.12)"><span class="pre">Cursor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.12)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'word'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'entity'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'snd'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.rel_utils.get_db_emb" title="Permalink to this definition"></a></dt>
 <dd><p>Retrieve Wikipedia2Vec embeddings for a given list of words or entities.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cursor</strong> – The cursor with the open connection to the Wikipedia2Vec
 database.</p></li>
@@ -106,11 +120,11 @@ Wikipedia2Vec word embeddings, if it is set to <code class="docutils literal not
 use Wikipedia2Vec entity embeddings.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A list of arrays (or <code class="docutils literal notranslate"><span class="pre">None</span></code>) representing the embeddings for the
 given mentions.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List[Optional[np.ndarray]]</p>
 </dd>
 </dl>
@@ -133,17 +147,17 @@ embeddings both for <code class="docutils literal notranslate"><span class="pre"
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_utils.eval_with_exception">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">eval_with_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str2parse</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_case</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#t_res.utils.rel_utils.eval_with_exception" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">eval_with_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str2parse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_case</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.eval_with_exception" title="Permalink to this definition"></a></dt>
 <dd><p>Parse a string in the form of a list or dictionary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>str2parse</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The string to parse.</p></li>
 <li><p><strong>in_case</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – The value to return in case of an error.
 Default is <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>Any</dt><dd><p>The parsed value if successful, or the specified value in case of
 an error.</p>
@@ -156,20 +170,20 @@ an error.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_utils.prepare_initial_data">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.prepare_initial_data" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.prepare_initial_data" title="Permalink to this definition"></a></dt>
 <dd><p>Generate the initial JSON data needed to train a REL model from a
 DataFrame.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>df</strong> – The dataframe containing the linking training data.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary with article IDs as keys and a list of mention
 dictionaries as values. Each mention dictionary contains
 information about a mention, excluding the “gold” field and
 candidates (at this point).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -182,10 +196,10 @@ candidates (at this point).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_utils.rank_candidates">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">rank_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_json</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">wk_cands</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.rank_candidates" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">rank_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">wk_cands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.rank_candidates" title="Permalink to this definition"></a></dt>
 <dd><p>Rank the candidates for each mention in the provided JSON data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>rel_json</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – The JSON data containing articles and mention
 information.</p></li>
@@ -194,10 +208,10 @@ information.</p></li>
 entities.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new JSON dictionary with ranked candidates for each mention.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -205,10 +219,10 @@ entities.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_utils.add_publication">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">add_publication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_json</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">publname</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publwqid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.add_publication" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">add_publication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">publname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publwqid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.add_publication" title="Permalink to this definition"></a></dt>
 <dd><p>Add publication information to the provided JSON data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>rel_json</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – The JSON data containing articles and mention
 information.</p></li>
@@ -218,10 +232,10 @@ empty string.</p></li>
 to an empty string.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new JSON dictionary with the added publication information.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
@@ -229,7 +243,7 @@ to an empty string.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.rel_utils.prepare_rel_trainset">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_rel_trainset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><span class="pre">pandas.core.frame.DataFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myranker</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../geoparser/ranker.html#t_res.geoparser.ranking.Ranker" title="t_res.geoparser.ranking.Ranker"><span class="pre">t_res.geoparser.ranking.Ranker</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dsplit</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.prepare_rel_trainset" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.rel_utils.</span></span><span class="sig-name descname"><span class="pre">prepare_rel_trainset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mentions_to_wikidata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myranker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../geoparser/ranker.html#t_res.geoparser.ranking.Ranker" title="t_res.geoparser.ranking.Ranker"><span class="pre">Ranker</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dsplit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.utils.rel_utils.prepare_rel_trainset" title="Permalink to this definition"></a></dt>
 <dd><p>Prepare the data for training and testing a REL disambiguation model.</p>
 <p>This function takes as input a pandas DataFrame (<cite>df</cite>) containing the
 dataset generated in the <code class="docutils literal notranslate"><span class="pre">experiments/prepare_data.py</span></code> script, along
@@ -237,9 +251,9 @@ with a Linking object (<code class="docutils literal notranslate"><span class="p
 It prepares the data in the format required to train and test a REL
 disambiguation model, using the candidates from the ranker.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>df</strong> (<a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.2.0.dev0+504.g0cdb37c445)"><em>pandas.DataFrame</em></a>) – The pandas DataFrame containing the prepared
+<li><p><strong>df</strong> (<a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.0.dev0+668.g9cd5e5546c)"><em>pandas.DataFrame</em></a>) – The pandas DataFrame containing the prepared
 dataset.</p></li>
 <li><p><strong>rel_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Dictionary containing the parameters for performing
 entity disambiguation using the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code> approach.</p></li>
@@ -250,10 +264,10 @@ entities, with counts.</p></li>
 <code class="docutils literal notranslate"><span class="pre">&quot;test&quot;</span></code>).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The prepared data in the format of a JSON dictionary.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>

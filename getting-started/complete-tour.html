@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The complete tour &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -88,9 +94,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Getting started</a> &raquo;</li>
-      <li>The complete tour</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Getting started</a></li>
+      <li class="breadcrumb-item active">The complete tour</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/getting-started/complete-tour.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,7 +107,7 @@
            <div itemprop="articleBody">
              
   <section id="the-complete-tour">
-<span id="top-tour"></span><h1>The complete tour<a class="headerlink" href="#the-complete-tour" title="Permalink to this headline"></a></h1>
+<span id="top-tour"></span><h1>The complete tour<a class="headerlink" href="#the-complete-tour" title="Permalink to this heading"></a></h1>
 <p>The T-Res has three main classes: the <strong>Recogniser</strong> class (which performs
 toponym recognition, which is a named entity recognition task), the <strong>Ranker</strong>
 class (which performs candidate selection and ranking for the named entities
@@ -122,11 +128,11 @@ you have all the required resources. Refer to the “<a class="reference interna
 in the documentation.</p>
 </div>
 <section id="the-pipeline">
-<h2>The Pipeline<a class="headerlink" href="#the-pipeline" title="Permalink to this headline"></a></h2>
+<h2>The Pipeline<a class="headerlink" href="#the-pipeline" title="Permalink to this heading"></a></h2>
 <p>The Pipeline wraps the Recogniser, the Ranker and the Linker into one object,
 to make it easier to use T-Res for end-to-end entity linking.</p>
 <section id="instantiate-the-pipeline">
-<h3>1. Instantiate the Pipeline<a class="headerlink" href="#instantiate-the-pipeline" title="Permalink to this headline"></a></h3>
+<h3>1. Instantiate the Pipeline<a class="headerlink" href="#instantiate-the-pipeline" title="Permalink to this heading"></a></h3>
 <p>By default, the Pipeline instantiates:</p>
 <ul class="simple">
 <li><p>a Recogniser (from a HuggingFace model),</p></li>
@@ -176,7 +182,7 @@ require so.</p>
 </div>
 </section>
 <section id="use-the-pipeline">
-<h3>2. Use the Pipeline<a class="headerlink" href="#use-the-pipeline" title="Permalink to this headline"></a></h3>
+<h3>2. Use the Pipeline<a class="headerlink" href="#use-the-pipeline" title="Permalink to this heading"></a></h3>
 <p>Once instantiated (and once all the models have been trained or loaded, if needed),
 the Pipeline can be used to perform end-to-end toponym recognition and linking
 (given an input text) or to perform each of the three steps individually: (1)
@@ -184,7 +190,7 @@ toponym recognition given an input text, (2) candidate selection given a toponym
 or list of toponyms, and (3) toponym disambiguation given the output from the
 first two steps.</p>
 <section id="end-to-end-pipeline">
-<h4>End-to-end pipeline<a class="headerlink" href="#end-to-end-pipeline" title="Permalink to this headline"></a></h4>
+<h4>End-to-end pipeline<a class="headerlink" href="#end-to-end-pipeline" title="Permalink to this heading"></a></h4>
 <p>The Pipeline can be used to perform end-to-end toponym recognition and linking
 given an input text, using the <code class="docutils literal notranslate"><span class="pre">run_sentence()</span></code> method (which applies the
 T-Res pipeline to the input text) or the <code class="docutils literal notranslate"><span class="pre">run_text()</span></code> method (which takes
@@ -246,7 +252,7 @@ human-legible string (e.g. <code class="docutils literal notranslate"><span clas
 </div>
 </section>
 <section id="step-by-step-pipeline">
-<h4>Step-by-step pipeline<a class="headerlink" href="#step-by-step-pipeline" title="Permalink to this headline"></a></h4>
+<h4>Step-by-step pipeline<a class="headerlink" href="#step-by-step-pipeline" title="Permalink to this heading"></a></h4>
 <p>See how to perform toponym recognition with the Pipeline, with an example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">geoparser</span><span class="o">.</span><span class="n">run_text_recognition</span><span class="p">(</span>
     <span class="s2">&quot;Inspector Liddle said: I am an inspector of police, living in the city of Durham.&quot;</span><span class="p">,</span>
@@ -348,7 +354,7 @@ the two previous steps, with an example:</p>
 <p>This will return the exact same output as running the pipeline end-to-end.</p>
 </section>
 <section id="description-of-the-output">
-<h4>Description of the output<a class="headerlink" href="#description-of-the-output" title="Permalink to this headline"></a></h4>
+<h4>Description of the output<a class="headerlink" href="#description-of-the-output" title="Permalink to this heading"></a></h4>
 <p>The output of running the pipeline (both using the end-to-end method or
 in a step-wise manner, regardless of the methods used for each of the
 three components), will have the following format:</p>
@@ -406,7 +412,7 @@ cross-candidate confidence scores.</p></li>
 </ul>
 </section>
 <section id="pipeline-recommendations">
-<h4>Pipeline recommendations<a class="headerlink" href="#pipeline-recommendations" title="Permalink to this headline"></a></h4>
+<h4>Pipeline recommendations<a class="headerlink" href="#pipeline-recommendations" title="Permalink to this heading"></a></h4>
 <ul>
 <li><p>To get started with T-Res, we recommend to start using the default pipeline,
 as its significantly less complex than the better performing approaches.</p></li>
@@ -478,7 +484,7 @@ per row:</p>
 </section>
 </section>
 <section id="the-recogniser">
-<span id="id1"></span><h2>The Recogniser<a class="headerlink" href="#the-recogniser" title="Permalink to this headline"></a></h2>
+<span id="id1"></span><h2>The Recogniser<a class="headerlink" href="#the-recogniser" title="Permalink to this heading"></a></h2>
 <p>The Recogniser performs toponym recognition (i.e. geographic named entity
 recognition), using HuggingFace’s <code class="docutils literal notranslate"><span class="pre">transformers</span></code> library. Users can either:</p>
 <ol class="arabic simple">
@@ -494,7 +500,7 @@ NER model using the Recogniser, and using it for detecting entities:</p>
 </pre></div>
 </div>
 <section id="instantiate-the-recogniser">
-<h3>1. Instantiate the Recogniser<a class="headerlink" href="#instantiate-the-recogniser" title="Permalink to this headline"></a></h3>
+<h3>1. Instantiate the Recogniser<a class="headerlink" href="#instantiate-the-recogniser" title="Permalink to this heading"></a></h3>
 <p>To load an already trained model (both from HuggingFace or a locally stored
 pre-trained model), you can just instantiate the recogniser as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">recogniser</span>
@@ -583,7 +589,7 @@ the suffix <code class="docutils literal notranslate"><span class="pre">_test</s
 </ul>
 </section>
 <section id="train-the-ner-model">
-<h3>2. Train the NER model<a class="headerlink" href="#train-the-ner-model" title="Permalink to this headline"></a></h3>
+<h3>2. Train the NER model<a class="headerlink" href="#train-the-ner-model" title="Permalink to this heading"></a></h3>
 <p>Once the Recogniser has been initialised, you can train the model by running:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myner</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
@@ -599,7 +605,7 @@ even if you call the <code class="docutils literal notranslate"><span class="pre
 </section>
 </section>
 <section id="the-ranker">
-<span id="id3"></span><h2>The Ranker<a class="headerlink" href="#the-ranker" title="Permalink to this headline"></a></h2>
+<span id="id3"></span><h2>The Ranker<a class="headerlink" href="#the-ranker" title="Permalink to this heading"></a></h2>
 <p>The Ranker takes the named entities detected by the Recogniser as input.
 Given a knowledge base, it ranks the entities names according to their string
 similarity to the target named entity, and selects a subset of candidates that
@@ -636,9 +642,9 @@ about two hours), but once it is set up, it is the fastest approach (except
 for <code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code>).</p></li>
 </ul>
 <section id="instantiate-the-ranker">
-<h3>1. Instantiate the Ranker<a class="headerlink" href="#instantiate-the-ranker" title="Permalink to this headline"></a></h3>
+<h3>1. Instantiate the Ranker<a class="headerlink" href="#instantiate-the-ranker" title="Permalink to this heading"></a></h3>
 <section id="perfectmatch-partialmatch-and-levenshtein">
-<h4>1.1. Perfectmatch, partialmatch, and levenshtein<a class="headerlink" href="#perfectmatch-partialmatch-and-levenshtein" title="Permalink to this headline"></a></h4>
+<h4>1.1. Perfectmatch, partialmatch, and levenshtein<a class="headerlink" href="#perfectmatch-partialmatch-and-levenshtein" title="Permalink to this heading"></a></h4>
 <p>To use the Ranker for exact matching (<code class="docutils literal notranslate"><span class="pre">perfectmatch</span></code>) or fuzzy string
 matching based either on overlap or Levenshtein distance (<code class="docutils literal notranslate"><span class="pre">partialmatch</span></code>
 and <code class="docutils literal notranslate"><span class="pre">levenshtein</span></code> respectively), instantiate it as follows, changing the
@@ -656,7 +662,7 @@ where the Wikidata- and Wikipedia-based resources are stored, as described
 in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation.</p>
 </section>
 <section id="id4">
-<h4>1.2. DeezyMatch<a class="headerlink" href="#id4" title="Permalink to this headline"></a></h4>
+<h4>1.2. DeezyMatch<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h4>
 <p>DeezyMatch instantiation is trickier, as it requires training a model that,
 ideally, should capture the types of string variations that can be found in
 your data (such as OCR errrors). Using the Ranker, you can:</p>
@@ -674,7 +680,7 @@ notebooks provide examples of each case:</p>
 </div>
 <p>See below each option in detail.</p>
 <section id="option-1-train-a-deezymatch-model-from-scratch-given-an-existing-string-pairs-dataset">
-<h5>Option 1. Train a DeezyMatch model from scratch, given an existing string pairs dataset<a class="headerlink" href="#option-1-train-a-deezymatch-model-from-scratch-given-an-existing-string-pairs-dataset" title="Permalink to this headline"></a></h5>
+<h5>Option 1. Train a DeezyMatch model from scratch, given an existing string pairs dataset<a class="headerlink" href="#option-1-train-a-deezymatch-model-from-scratch-given-an-existing-string-pairs-dataset" title="Permalink to this heading"></a></h5>
 <p>To train a DeezyMatch model from scratch, using an existing string pairs dataset,
 you will need to have the following <cite>resources</cite> file structure (as described in
 the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation):</p>
@@ -755,7 +761,7 @@ model provided it already exists.</p></li>
 </ul>
 </section>
 <section id="option-2-train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset">
-<h5>Option 2. Train a DeezyMatch model from scratch, including generating a string pairs dataset<a class="headerlink" href="#option-2-train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset" title="Permalink to this headline"></a></h5>
+<h5>Option 2. Train a DeezyMatch model from scratch, including generating a string pairs dataset<a class="headerlink" href="#option-2-train-a-deezymatch-model-from-scratch-including-generating-a-string-pairs-dataset" title="Permalink to this heading"></a></h5>
 <p>To train a DeezyMatch model from scratch, including generating a string pairs
 dataset, you will need to have the following <code class="docutils literal notranslate"><span class="pre">resources</span></code> file structure (as
 described in the “<a class="reference internal" href="resources.html"><span class="doc">Resources and directory structure</span></a>” page in the documentation):</p>
@@ -862,7 +868,7 @@ model provided it already exists.</p></li>
 </section>
 </section>
 <section id="load-the-resources">
-<h3>2. Load the resources<a class="headerlink" href="#load-the-resources" title="Permalink to this headline"></a></h3>
+<h3>2. Load the resources<a class="headerlink" href="#load-the-resources" title="Permalink to this heading"></a></h3>
 <p>The following line of code loads the resources (i.e. the
 <code class="docutils literal notranslate"><span class="pre">mentions-to-wikidata_normalized.json</span></code> and
 <code class="docutils literal notranslate"><span class="pre">wikidata_to_mentions_normalized.json</span></code> files into dictionaries). They are
@@ -877,7 +883,7 @@ the Ranker method.</p>
 </div>
 </section>
 <section id="train-a-deezymatch-model">
-<h3>3. Train a DeezyMatch model<a class="headerlink" href="#train-a-deezymatch-model" title="Permalink to this headline"></a></h3>
+<h3>3. Train a DeezyMatch model<a class="headerlink" href="#train-a-deezymatch-model" title="Permalink to this heading"></a></h3>
 <p>The following line will train a DeezyMatch model, given the arguments specified
 when instantiating the Ranker.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">myranker</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -914,7 +920,7 @@ resulting DeezyMatch model that the Ranker will use is called <code class="docut
 </div>
 </section>
 <section id="retrieve-candidates-for-a-given-mention">
-<h3>4. Retrieve candidates for a given mention<a class="headerlink" href="#retrieve-candidates-for-a-given-mention" title="Permalink to this headline"></a></h3>
+<h3>4. Retrieve candidates for a given mention<a class="headerlink" href="#retrieve-candidates-for-a-given-mention" title="Permalink to this heading"></a></h3>
 <p>In order to use the Ranker to retrieve candidates for a given mention, follow
 the example. The <code class="docutils literal notranslate"><span class="pre">find_candidates</span></code> Ranker method requires that the input is
 a list of dictionaries, where the key is always <code class="docutils literal notranslate"><span class="pre">&quot;mention&quot;</span></code> and the value
@@ -927,7 +933,7 @@ is the toponym in question.</p>
 </section>
 </section>
 <section id="the-linker">
-<span id="id8"></span><h2>The Linker<a class="headerlink" href="#the-linker" title="Permalink to this headline"></a></h2>
+<span id="id8"></span><h2>The Linker<a class="headerlink" href="#the-linker" title="Permalink to this heading"></a></h2>
 <p>The Linker takes as input the set of candidates selected by the Ranker and
 disambiguates them, selecting the best matching entity depending on the
 approach selected for disambiguation.</p>
@@ -958,9 +964,9 @@ and adapts it. To know more:</p>
 </li>
 </ul>
 <section id="instantiate-the-linker">
-<h3>1. Instantiate the Linker<a class="headerlink" href="#instantiate-the-linker" title="Permalink to this headline"></a></h3>
+<h3>1. Instantiate the Linker<a class="headerlink" href="#instantiate-the-linker" title="Permalink to this heading"></a></h3>
 <section id="mostpopular">
-<h4>1.1. <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code><a class="headerlink" href="#mostpopular" title="Permalink to this headline"></a></h4>
+<h4>1.1. <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code><a class="headerlink" href="#mostpopular" title="Permalink to this heading"></a></h4>
 <p>To use the Linker with the <code class="docutils literal notranslate"><span class="pre">mostpopular</span></code> approach, instantiate it as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">linking</span>
 
@@ -989,7 +995,7 @@ least contain the following resources:</p>
 </div>
 </section>
 <section id="reldisamb">
-<h4>1.2. <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code><a class="headerlink" href="#reldisamb" title="Permalink to this headline"></a></h4>
+<h4>1.2. <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code><a class="headerlink" href="#reldisamb" title="Permalink to this heading"></a></h4>
 <p>To use the Linker with the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code> approach, instantiate it as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">geoparser</span> <span class="kn">import</span> <span class="n">linking</span>
 
@@ -1065,7 +1071,7 @@ least contain the following resources:</p>
 </section>
 </section>
 <section id="id9">
-<h3>2. Load the resources<a class="headerlink" href="#id9" title="Permalink to this headline"></a></h3>
+<h3>2. Load the resources<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
 <p>The following line of code loads the resources required by the Linker, regardless
 of the Linker method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mylinker</span><span class="o">.</span><span class="n">linking_resources</span> <span class="o">=</span> <span class="n">mylinker</span><span class="o">.</span><span class="n">load_resources</span><span class="p">()</span>
@@ -1077,7 +1083,7 @@ of the Linker method.</p>
 </div>
 </section>
 <section id="train-an-entity-disambiguation-model">
-<h3>3. Train an entity disambiguation model<a class="headerlink" href="#train-an-entity-disambiguation-model" title="Permalink to this headline"></a></h3>
+<h3>3. Train an entity disambiguation model<a class="headerlink" href="#train-an-entity-disambiguation-model" title="Permalink to this heading"></a></h3>
 <p>The following line will train an entity disambiguation model, given the arguments
 specified when instantiating the Linker.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mylinker</span><span class="o">.</span><span class="n">rel_params</span><span class="p">[</span><span class="s2">&quot;ed_model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mylinker</span><span class="o">.</span><span class="n">train_load_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myranker</span><span class="p">)</span>

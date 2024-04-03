@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>t_res.utils.process_wikipedia module &mdash; T-Res 0.1.0 documentation</title>
@@ -14,7 +14,9 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> T-Res
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            T-Res
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -48,7 +54,12 @@
 <li class="toctree-l3"><a class="reference internal" href="ner.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.ner</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="preprocess_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.preprocess_data</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="process_data.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_data</span></code> module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_wikipedia.make_wikilinks_consistent"><code class="docutils literal notranslate"><span class="pre">make_wikilinks_consistent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_wikipedia.make_wikipedia2wikidata_consisent"><code class="docutils literal notranslate"><span class="pre">make_wikipedia2wikidata_consisent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#t_res.utils.process_wikipedia.title_to_id"><code class="docutils literal notranslate"><span class="pre">title_to_id()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rel_e2e.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_e2e</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel_utils.html"><code class="docutils literal notranslate"><span class="pre">t_res.utils.rel_utils</span></code> module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rel/index.html"><code class="docutils literal notranslate"><span class="pre">utils.REL</span></code> module</a></li>
@@ -73,10 +84,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Reference</a> &raquo;</li>
-          <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a> &raquo;</li>
-      <li><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html"><code class="docutils literal notranslate"><span class="pre">utils</span></code> module</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/reference/utils/process_wikipedia.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,10 +98,10 @@
            <div itemprop="articleBody">
              
   <section id="t-res-utils-process-wikipedia-module">
-<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module<a class="headerlink" href="#t-res-utils-process-wikipedia-module" title="Permalink to this headline"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">t_res.utils.process_wikipedia</span></code> module<a class="headerlink" href="#t-res-utils-process-wikipedia-module" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_wikipedia.make_wikilinks_consistent">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikilinks_consistent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#t_res.utils.process_wikipedia.make_wikilinks_consistent" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikilinks_consistent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#t_res.utils.process_wikipedia.make_wikilinks_consistent" title="Permalink to this definition"></a></dt>
 <dd><p>Make the wiki links consistent by performing the following operations:</p>
 <ol class="arabic simple">
 <li><p>Convert the URL to lowercase.</p></li>
@@ -100,13 +111,13 @@
 <li><p>Quote the modified URL to encode any special characters.</p></li>
 </ol>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The URL to make consistent.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The modified and quoted URL.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
 </dd>
 </dl>
@@ -123,7 +134,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_wikipedia.make_wikipedia2wikidata_consisent">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikipedia2wikidata_consisent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#t_res.utils.process_wikipedia.make_wikipedia2wikidata_consisent" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">make_wikipedia2wikidata_consisent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#t_res.utils.process_wikipedia.make_wikipedia2wikidata_consisent" title="Permalink to this definition"></a></dt>
 <dd><p>Make the Wikipedia entity consistent with Wikidata by performing the
 following operations:</p>
 <ol class="arabic simple">
@@ -134,14 +145,14 @@ characters.</p></li>
 <li><p>Replace spaces with underscores in the unquoted URL.</p></li>
 </ol>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The Wikipedia entity to make consistent.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The modified Wikipedia entity consistent with the
 wikipedia2wikidata mapper.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
 </dd>
 </dl>
@@ -156,23 +167,23 @@ wikipedia2wikidata mapper.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="t_res.utils.process_wikipedia.title_to_id">
-<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">title_to_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_wikipedia.title_to_id" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">t_res.utils.process_wikipedia.</span></span><span class="sig-name descname"><span class="pre">title_to_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.utils.process_wikipedia.title_to_id" title="Permalink to this definition"></a></dt>
 <dd><p>Given a Wikipedia page title, returns the corresponding Wikidata ID.
 The page title is the last part of a Wikipedia url <strong>unescaped</strong> and spaces
 replaced by underscores , e.g. for <cite>https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem</cite>,
 the title would be <cite>Fermat’s_Last_Theorem</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path_to_db</strong> – The path to the wikidata2wikipedia db</p></li>
 <li><p><strong>page_title</strong> – The page title of the Wikipedia entry, e.g. <code class="docutils literal notranslate"><span class="pre">Manatee</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>If a mapping could be found for <code class="docutils literal notranslate"><span class="pre">wiki_page_title</span></code>, then returns
 the mapping, otherwise None.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a>, optional</p>
 </dd>
 </dl>
