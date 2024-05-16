@@ -129,4 +129,4 @@ In our experiments, we have used resources built from Wikidata and Wikipedia for
 
 ## Cite
 
-**[TODO]**
+Coll-Ardanuy, Mariona, Federico Nanni, Kaspar Beelen, & Luke Hare. '[The Past is a Foreign Place: Improving Toponym Linking for Historical Newspapers](https://ceur-ws.org/Vol-3558/paper4426.pdf).' Proceedings of the Computational Humanities Research Conference 2023, ed. by Artjoms Šeļa, Fotis Jannidis, and Iza Romanowska. Paris, France, December 6-8, 2023. https://ceur-ws.org/Vol-3558/ ISSN, 1613, 0073. 
