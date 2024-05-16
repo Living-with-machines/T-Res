@@ -16,7 +16,7 @@ The three components are used in combination in the **Pipeline** class.
 
 We also provide the code to deploy T-Res as an API, and show how to use it. Each of these elements are described in the documentation.
 
-The repository contains the code for the experiments described in our paper.
+The repository contains the code for the experiments described in [our CHR 2023 paper](https://ceur-ws.org/Vol-3558/paper4426.pdf).
 
 ## Documentation
 
