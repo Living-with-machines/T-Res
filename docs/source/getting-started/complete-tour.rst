@@ -834,7 +834,7 @@ the Ranker method.
 
 .. code-block:: python
 
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.load_resources()
 
 .. note::
 
@@ -1056,7 +1056,7 @@ of the Linker method.
 
 .. code-block:: python
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
 .. note::
 

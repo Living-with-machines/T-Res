@@ -50,18 +50,18 @@ class Ranker:
             )
 
         >>> # Load resources
-        >>> ranker.mentions_to_wikidata = ranker.load_resources()
+        >>> ranker.load_resources()
 
         >>> # Train the ranker (if applicable)
         >>> ranker.train()
 
         >>> # Perform candidate selection
         >>> queries = ['London', 'Paraguay']
-        >>> candidates, already_collected = ranker.run(queries)
+        >>> candidates = ranker.run(queries)
 
         >>> # Find candidates for mentions
         >>> mentions = [{'mention': 'London'}, {'mention': 'Paraguay'}]
-        >>> mention_candidates, mention_already_collected = ranker.find_candidates(mentions)
+        >>> mention_candidates = ranker.find_candidates(mentions)
 
         >>> # Print the results
         >>> print("Candidate Selection Results:")
@@ -136,7 +136,7 @@ class Ranker:
             "overwrite_training": False,
             "do_test": False,
         },
-        already_collected_cands: Optional[dict] = dict(),
+        already_collected_cands: Optional[dict] = None,
     ):
         """
         Initialize a Ranker object.
@@ -147,7 +147,11 @@ class Ranker:
         self.wikidata_to_mentions = wikidata_to_mentions
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
-        self.already_collected_cands = already_collected_cands
+        
+        if already_collected_cands:
+            self.already_collected_cands = already_collected_cands
+        else:
+            self.already_collected_cands = dict()
 
     def __str__(self) -> str:
         """
@@ -173,17 +177,9 @@ class Ranker:
 
         return s
 
-    def load_resources(self) -> dict:
+    def load_resources(self):
         """
         Load the ranker resources.
-
-        Returns:
-            dict:
-                The loaded mentions-to-wikidata dictionary, which maps a
-                mention (e.g. ``"London"``) to the Wikidata entities that are
-                referred to by this mention on Wikipedia (e.g. ``Q84``,
-                ``Q2477346``). The data also includes, for each entity, their
-                normalized "relevance", i.e. number of in-links across Wikipedia.
 
         Note:
             This method loads the mentions-to-wikidata and
@@ -195,6 +191,12 @@ class Ranker:
             It filters the dictionaries to remove noise and updates the class
             attributes accordingly.
 
+            The loaded mentions-to-wikidata dictionary, which maps a mention 
+            (e.g. ``"London"``) to the Wikidata entities that are
+            referred to by this mention on Wikipedia (e.g. ``Q84``,
+            ``Q2477346``). The data also includes, for each entity, their
+            normalized "relevance", i.e. number of in-links across Wikipedia.
+            
             The method also initialises ``pandarallel`` if needed by the
             candidate ranking method (if the ``method`` set in the initialiser
             of the ``Ranker`` was set to "partialmatch" or "levenshtein").
@@ -253,8 +255,6 @@ class Ranker:
         if self.method in ["partialmatch", "levenshtein"]:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
-        return self.mentions_to_wikidata
 
     def train(self) -> None:
         """
@@ -466,7 +466,7 @@ class Ranker:
 
             self.already_collected_cands[query] = mention_df
 
-        return candidates, self.already_collected_cands
+        return candidates
 
     def deezy_on_the_fly(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -490,7 +490,7 @@ class Ranker:
 
         Example:
             >>> ranker = Ranker(...)
-            >>> ranker.mentions_to_wikidata = ranker.load_resources()
+            >>> ranker.load_resources()
             >>> queries = ['London', 'Shefrield']
             >>> candidates, already_collected = ranker.deezy_on_the_fly(queries)
             >>> print(candidates)
@@ -515,7 +515,7 @@ class Ranker:
         dm_output = self.deezy_parameters["dm_output"]
 
         # first we fill in the perfect matches and already collected queries
-        cands_dict, self.already_collected_cands = self.perfect_match(queries)
+        cands_dict = self.perfect_match(queries)
 
         # the rest go through
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]
@@ -565,7 +565,7 @@ class Ranker:
 
                 self.already_collected_cands[row["query"]] = returned_cands
 
-        return cands_dict, self.already_collected_cands
+        return cands_dict
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -583,9 +583,9 @@ class Ranker:
 
         Example:
             >>> myranker = Ranker(method="perfectmatch", ...)
-            >>> myranker.mentions_to_wikidata = myranker.load_resources()
+            >>> myranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> candidates, already_collected = myranker.run(queries)
+            >>> candidates = myranker.run(queries)
             >>> print(candidates)
             {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
             >>> print(already_collected)
@@ -674,7 +674,7 @@ class Ranker:
         queries = list(set([mention["mention"] for mention in mentions]))
 
         # Pass the mentions to :py:meth:`geoparser.ranking.Ranker.run`
-        cands, self.already_collected_cands = self.run(queries)
+        cands = self.run(queries)
 
         # Get Wikidata candidates
         wk_cands = dict()
@@ -702,4 +702,4 @@ class Ranker:
                             "Candidates": found_cands,
                         }
 
-        return wk_cands, self.already_collected_cands
+        return wk_cands
