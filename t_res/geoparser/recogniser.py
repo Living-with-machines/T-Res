@@ -326,7 +326,7 @@ class Recogniser:
             model_name = os.path.join(self.model_path, f"{self.model}.model")
 
         # Load a NER pipeline:
-        self.pipe = pipeline("ner", model=model_name, ignore_labels=[])
+        self.pipe = pipeline("ner", model=model_name, ignore_labels=[], device_map="auto")
         return self.pipe
 
     # -------------------------------------------------------------
