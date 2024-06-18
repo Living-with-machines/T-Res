@@ -16,7 +16,7 @@ The three components are used in combination in the **Pipeline** class.
 
 We also provide the code to deploy T-Res as an API, and show how to use it. Each of these elements are described in the documentation.
 
-The repository contains the code for the experiments described in our paper.
+The repository contains the code for the experiments described in [our CHR 2023 paper](https://ceur-ws.org/Vol-3558/paper4426.pdf).
 
 ## Documentation
 
@@ -130,4 +130,4 @@ In our experiments, we have used resources built from Wikidata and Wikipedia for
 
 ## Cite
 
-**[TODO]**
+Coll-Ardanuy, Mariona, Federico Nanni, Kaspar Beelen, & Luke Hare. '[The Past is a Foreign Place: Improving Toponym Linking for Historical Newspapers](https://ceur-ws.org/Vol-3558/paper4426.pdf).' Proceedings of the Computational Humanities Research Conference 2023, ed. by Artjoms Šeļa, Fotis Jannidis, and Iza Romanowska. Paris, France, December 6-8, 2023. https://ceur-ws.org/Vol-3558/ ISSN, 1613, 0073. 
