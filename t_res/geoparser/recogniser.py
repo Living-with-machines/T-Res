@@ -94,6 +94,7 @@ class Recogniser:
         overwrite_training: Optional[bool] = False,
         do_test: Optional[bool] = False,
         load_from_hub: Optional[bool] = False,
+        device: Optional[str] = None,
     ):
         """
         Initialises a Recogniser object.
@@ -108,6 +109,7 @@ class Recogniser:
         self.overwrite_training = overwrite_training
         self.do_test = do_test
         self.load_from_hub = load_from_hub
+        self.device = device
 
         # Add "_test" to the model name if do_test is True, unless
         # the model is downloaded from Huggingface, in which case
@@ -322,11 +324,11 @@ class Recogniser:
         # If the model is local (has not been obtained from the hub),
         # pre-append the model path and the extension of the model
         # to obtain the model name.
-        if self.load_from_hub == False:
+        if self.load_from_hub is False:
             model_name = os.path.join(self.model_path, f"{self.model}.model")
 
         # Load a NER pipeline:
-        self.pipe = pipeline("ner", model=model_name, ignore_labels=[])
+        self.pipe = pipeline("ner", model=model_name, ignore_labels=[], device=self.device)
         return self.pipe
 
     # -------------------------------------------------------------

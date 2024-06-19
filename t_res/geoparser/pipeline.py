@@ -78,6 +78,7 @@ class Pipeline:
         mylinker: Optional[linking.Linker] = None,
         resources_path: Optional[str] = None,
         experiments_path: Optional[str] = None,
+        ner_device: Optional[str] = None,
     ):
         """
         Instantiates a Pipeline object.
@@ -92,6 +93,7 @@ class Pipeline:
             self.myner = recogniser.Recogniser(
                 model="Livingwithmachines/toponym-19thC-en",
                 load_from_hub=True,
+                device=ner_device,
             )
 
         # If myranker is None, instantiate the default Ranker.

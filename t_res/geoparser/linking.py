@@ -112,6 +112,7 @@ class Linker:
         linking_resources: Optional[dict] = dict(),
         overwrite_training: Optional[bool] = False,
         rel_params: Optional[dict] = None,
+        rel_device: Optional[str] = None, 
     ):
         """
         Initialises a Linker object.
@@ -136,6 +137,7 @@ class Linker:
             }
 
         self.rel_params = rel_params
+        self.rel_device = rel_device
 
     def __str__(self) -> str:
         """
@@ -455,6 +457,8 @@ class Linker:
                     "mode": "train",
                     "model_path": os.path.join(linker_name, "model"),
                 }
+                if self.rel_device is not None:
+                    config_rel["device"] = self.rel_device
 
                 # Instantiate the entity disambiguation model:
                 model = entity_disambiguation.EntityDisambiguation(
@@ -476,6 +480,8 @@ class Linker:
                     "mode": "eval",
                     "model_path": os.path.join(linker_name, "model"),
                 }
+                if self.rel_device is not None:
+                    config_rel["device"] = self.rel_device
 
                 model = entity_disambiguation.EntityDisambiguation(
                     self.rel_params["db_embeddings"],

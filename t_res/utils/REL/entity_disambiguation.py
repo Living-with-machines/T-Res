@@ -67,7 +67,7 @@ class EntityDisambiguation:
         self.config = self.__get_config(user_config)
 
         # Use CPU if cuda is not available:
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = self.config.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         self.prerank_model = None
         self.model = None
         self.reset_embeddings = reset_embeddings
