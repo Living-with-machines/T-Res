@@ -275,6 +275,32 @@ def add_publication(
     return new_json
 
 
+def add_publication_in_context(rel_json: dict, publname: Optional[str] = "") -> dict:
+    """
+    Add publication information to the provided JSON data as context.
+
+    Arguments:
+        rel_json (dict): The JSON data containing articles and mention
+            information.
+        publname (str, optional): The name of the publication. Defaults to an
+            empty string.
+
+    Returns:
+        dict: A new JSON dictionary with the added publication information.
+    """
+    new_json = rel_json.copy()
+    for article in rel_json:
+        place = publname
+        if article != "linking":
+            place = rel_json[article][0].get("place", publname)
+        new_article = []
+        for art_mention in rel_json[article]:
+            art_mention["context"][1] += " " + place
+            new_article.append(art_mention)
+        new_json[article] = new_article
+    return new_json
+
+
 def prepare_rel_trainset(
     df: pd.DataFrame,
     rel_params,
@@ -333,6 +359,10 @@ def prepare_rel_trainset(
     # If "publ" is taken into account for the disambiguation, add the place
     # of publication as an additional already disambiguated entity per row:
     if rel_params["with_publication"] == True:
+        rel_json = add_publication_in_context(
+            rel_json,
+            rel_params["default_publname"],
+        )
         rel_json = add_publication(
             rel_json,
             rel_params["default_publname"],
