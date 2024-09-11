@@ -109,14 +109,12 @@ class Pipeline:
                 raise ValueError("[ERROR] Please specify path to resources directory.")
 
             if experiments_path:
-                self.mylinker = linking.Linker(
-                    method="mostpopular",
+                self.mylinker = linking.MostPopularLinker(
                     resources_path=resources_path,
                     experiments_path=experiments_path,
                 )
             else:
-                self.mylinker = linking.Linker(
-                    method="mostpopular",
+                self.mylinker = linking.MostPopularLinker(
                     resources_path=resources_path,
                 )
 
@@ -255,7 +253,7 @@ class Pipeline:
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
-        if self.mylinker.method == "reldisamb":
+        if self.mylinker.method_name() == "reldisamb":
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
@@ -334,7 +332,7 @@ class Pipeline:
                     )
                 }
 
-        if self.mylinker.method in ["mostpopular", "bydistance"]:
+        if self.mylinker.method_name() in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
 
@@ -763,7 +761,7 @@ class Pipeline:
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
-        if self.mylinker.method == "reldisamb":
+        if self.mylinker.method_name() == "reldisamb":
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
@@ -842,7 +840,7 @@ class Pipeline:
                     )
                 }
 
-        if self.mylinker.method in ["mostpopular", "bydistance"]:
+        if self.mylinker.method_name() in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
 

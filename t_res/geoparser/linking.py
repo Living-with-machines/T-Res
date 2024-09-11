@@ -26,8 +26,6 @@ class Linker:
     knowledge base.
 
     Arguments:
-        method (Literal["mostpopular", "reldisamb", "bydistance"]): The
-            linking method to use.
         resources_path (str): The path to the linking resources.
         experiments_path (str, optional): The path to the experiments
             directory. Default is "../experiments/".
@@ -46,7 +44,6 @@ class Linker:
     .. code-block:: python
 
        linker = Linker(
-         method="mostpopular",
          resources_path="/path/to/resources/",
          experiments_path="/path/to/experiments/",
          linking_resources={},
@@ -106,7 +103,7 @@ class Linker:
 
     def __init__(
         self,
-        method: Literal["mostpopular", "reldisamb", "bydistance"],
+        # method: Literal["mostpopular", "reldisamb", "bydistance"],
         resources_path: str,
         experiments_path: Optional[str] = "../experiments",
         linking_resources: Optional[dict] = dict(),
@@ -116,7 +113,6 @@ class Linker:
         """
         Initialises a Linker object.
         """
-        self.method = method
         self.resources_path = resources_path
         self.experiments_path = experiments_path
         self.linking_resources = linking_resources
@@ -145,9 +141,18 @@ class Linker:
             str: String representation of the Linker object.
         """
         s = ">>> Entity Linking:\n"
-        s += f"    * Method: {self.method}\n"
+        s += f"    * Method: {self.method_name()}\n"
         s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
+
+    def method_name(self) -> str:
+        """
+        The name of the entity linking method.
+
+        Returns:
+            str: The entity linking method name.
+        """
+        raise NotImplementedError("Subclass implementation required.")
 
     def load_resources(self) -> dict:
         """
@@ -216,135 +221,7 @@ class Linker:
                   :py:meth:`~geoparser.linking.Linker.by_distance`.
 
         """
-        if self.method == "mostpopular":
-            return self.most_popular(dict_mention)
-
-        if self.method == "bydistance":
-            return self.by_distance(dict_mention)
-
-        raise SyntaxError(f"Unknown method provided: {self.method}")
-
-    def most_popular(self, dict_mention: dict) -> Tuple[str, float, dict]:
-        """
-        Select most popular candidate, given Wikipedia's in-link structure.
-
-        Arguments:
-            dict_mention (dict): dictionary with all the relevant information
-                needed to disambiguate a certain mention.
-
-        Returns:
-            Tuple[str, float, dict]:
-                A tuple containing the most popular candidate's Wikidata ID
-                (e.g. ``"Q84"``) or ``"NIL"``, the confidence score of the
-                predicted link as a float, and a dictionary of all candidates
-                and their confidence scores.
-
-        .. note::
-
-            Applying the "most popular" disambiguation method for linking
-            entities. Given a set of candidates for a given mention, the
-            function returns as a prediction the more relevant Wikidata
-            candidate, determined from the in-link structure of Wikipedia.
-        """
-        cands = dict_mention["candidates"]
-        most_popular_candidate_id = "NIL"
-        keep_highest_score = 0.0
-        total_score = 0.0
-        final_score = 0.0
-        all_candidates = {}
-        if cands:
-            for variation in cands:
-                for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][
-                        candidate
-                    ]
-                    total_score += score
-                    all_candidates[candidate] = score
-                    if score > keep_highest_score:
-                        keep_highest_score = score
-                        most_popular_candidate_id = candidate
-
-            # Return the predicted and the score (overall the total):
-            final_score = keep_highest_score / total_score
-
-            # Compute scores for all candidates
-            all_candidates = {
-                cand: (score / total_score) for cand, score in all_candidates.items()
-            }
-
-        return most_popular_candidate_id, final_score, all_candidates
-
-    def by_distance(
-        self, dict_mention: dict, origin_wqid: Optional[str] = ""
-    ) -> Tuple[str, float, dict]:
-        """
-        Select candidate based on distance to the place of publication.
-
-        Arguments:
-            dict_mention (dict): dictionary with all the relevant information
-                needed to disambiguate a certain mention.
-            origin_wqid (str, optional): The origin Wikidata ID for distance
-                calculation. Defaults to ``""``.
-
-        Returns:
-            Tuple[str, float, dict]:
-                A tuple containing the Wikidata ID of the closest candidate
-                to the place of publication (e.g. ``"Q84"``) or ``"NIL"``,
-                the confidence score of the predicted link as a float (rounded
-                to 3 decimals), and a dictionary of all candidates and their
-                confidence scores.
-
-        .. note::
-
-            Applying the "by distance" disambiguation method for linking
-            entities, based on geographical distance. It undertakes an
-            unsupervised disambiguation, which returns a prediction of a
-            location closest to the place of publication, for a provided set
-            of candidates and the place of publication of the original text.
-        """
-        cands = dict_mention["candidates"]
-        origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
-        if not origin_coords:
-            origin_coords = self.linking_resources["wqid_to_coords"].get(
-                dict_mention["place_wqid"]
-            )
-        closest_candidate_id = "NIL"
-        max_on_gb = 1000  # 1000 km, max on GB
-        keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
-        keep_lowest_relv = 1.0
-        all_candidates = {}
-
-        if cands:
-            for x in cands:
-                matching_score = cands[x]["Score"]
-                for candidate, score in cands[x]["Candidates"].items():
-                    cand_coords = self.linking_resources["wqid_to_coords"][candidate]
-                    geodist = 20000
-                    # if origin_coords and cand_coords:  # If there are coordinates
-                    try:
-                        geodist = haversine(origin_coords, cand_coords)
-                        all_candidates[candidate] = geodist
-                    except ValueError:
-                        # We have one candidate with coordinates in Venus!
-                        pass
-                    if geodist < keep_lowest_distance:
-                        keep_lowest_distance = geodist
-                        closest_candidate_id = candidate
-                        keep_lowest_relv = (matching_score + score) / 2.0
-
-        if keep_lowest_distance == 0.0:
-            keep_lowest_distance = 1.0
-        else:
-            keep_lowest_distance = (
-                max_on_gb if keep_lowest_distance > max_on_gb else keep_lowest_distance
-            )
-            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
-
-        final_score = 0.0
-        if not closest_candidate_id == "NIL":
-            final_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
-
-        return closest_candidate_id, final_score, all_candidates
+        raise NotImplementedError("Subclass implementation required.")
 
     def train_load_model(
         self, myranker: ranking.Ranker, split: Optional[str] = "originalsplit"
@@ -393,7 +270,7 @@ class Linker:
                 publisher = {ACM}
                 }
         """
-        if self.method == "reldisamb":
+        if self.method_name() == "reldisamb":
             # Generate ED model name:
             linker_name = myranker.method
             if myranker.method == "deezymatch":
@@ -483,3 +360,143 @@ class Linker:
                 )
 
                 return model
+
+class MostPopularLinker(Linker):
+    """
+    An entity linking method that selects the candidate that is most
+    popular in the Wikipedia knowledgebase.
+    """
+
+    def method_name(self) -> str:
+        return "mostpopular"
+
+    def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
+        """
+        Select most popular candidate, given Wikipedia's in-link structure.
+
+        Arguments:
+            dict_mention (dict): dictionary with all the relevant information
+                needed to disambiguate a certain mention.
+
+        Returns:
+            Tuple[str, float, dict]:
+                A tuple containing the most popular candidate's Wikidata ID
+                (e.g. ``"Q84"``) or ``"NIL"``, the confidence score of the
+                predicted link as a float, and a dictionary of all candidates
+                and their confidence scores.
+
+        .. note::
+
+            Applying the "most popular" disambiguation method for linking
+            entities. Given a set of candidates for a given mention, the
+            function returns as a prediction the more relevant Wikidata
+            candidate, determined from the in-link structure of Wikipedia.
+        """
+        cands = dict_mention["candidates"]
+        most_popular_candidate_id = "NIL"
+        keep_highest_score = 0.0
+        total_score = 0.0
+        final_score = 0.0
+        all_candidates = {}
+        if cands:
+            for variation in cands:
+                for candidate in cands[variation]["Candidates"]:
+                    score = self.linking_resources["mentions_to_wikidata"][variation][
+                        candidate
+                    ]
+                    total_score += score
+                    all_candidates[candidate] = score
+                    if score > keep_highest_score:
+                        keep_highest_score = score
+                        most_popular_candidate_id = candidate
+
+            # Return the predicted and the score (overall the total):
+            final_score = keep_highest_score / total_score
+
+            # Compute scores for all candidates
+            all_candidates = {
+                cand: (score / total_score) for cand, score in all_candidates.items()
+            }
+
+        return most_popular_candidate_id, final_score, all_candidates
+
+class ByDistanceLinker(Linker):
+    """
+    An entity linking method that selects the candidate based on its
+    proximity to the place of publication.
+    """
+
+    def method_name(self) -> str:
+        return "bydistance"
+
+    def run(
+        self, dict_mention: dict, origin_wqid: Optional[str] = ""
+    ) -> Tuple[str, float, dict]:
+        """
+        Select candidate based on distance to the place of publication.
+
+        Arguments:
+            dict_mention (dict): dictionary with all the relevant information
+                needed to disambiguate a certain mention.
+            origin_wqid (str, optional): The origin Wikidata ID for distance
+                calculation. Defaults to ``""``.
+
+        Returns:
+            Tuple[str, float, dict]:
+                A tuple containing the Wikidata ID of the closest candidate
+                to the place of publication (e.g. ``"Q84"``) or ``"NIL"``,
+                the confidence score of the predicted link as a float (rounded
+                to 3 decimals), and a dictionary of all candidates and their
+                confidence scores.
+
+        .. note::
+
+            Applying the "by distance" disambiguation method for linking
+            entities, based on geographical distance. It undertakes an
+            unsupervised disambiguation, which returns a prediction of a
+            location closest to the place of publication, for a provided set
+            of candidates and the place of publication of the original text.
+        """
+        cands = dict_mention["candidates"]
+        origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
+        if not origin_coords:
+            origin_coords = self.linking_resources["wqid_to_coords"].get(
+                dict_mention["place_wqid"]
+            )
+        closest_candidate_id = "NIL"
+        max_on_gb = 1000  # 1000 km, max on GB
+        keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
+        keep_lowest_relv = 1.0
+        all_candidates = {}
+
+        if cands:
+            for x in cands:
+                matching_score = cands[x]["Score"]
+                for candidate, score in cands[x]["Candidates"].items():
+                    cand_coords = self.linking_resources["wqid_to_coords"][candidate]
+                    geodist = 20000
+                    # if origin_coords and cand_coords:  # If there are coordinates
+                    try:
+                        geodist = haversine(origin_coords, cand_coords)
+                        all_candidates[candidate] = geodist
+                    except ValueError:
+                        # We have one candidate with coordinates in Venus!
+                        pass
+                    if geodist < keep_lowest_distance:
+                        keep_lowest_distance = geodist
+                        closest_candidate_id = candidate
+                        keep_lowest_relv = (matching_score + score) / 2.0
+
+        if keep_lowest_distance == 0.0:
+            keep_lowest_distance = 1.0
+        else:
+            keep_lowest_distance = (
+                max_on_gb if keep_lowest_distance > max_on_gb else keep_lowest_distance
+            )
+            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
+
+        final_score = 0.0
+        if not closest_candidate_id == "NIL":
+            final_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
+
+        return closest_candidate_id, final_score, all_candidates
