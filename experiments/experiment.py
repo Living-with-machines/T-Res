@@ -571,8 +571,8 @@ class Experiment:
                 )
             scenario_name += cand_approach + "_" + how_split + "_"
 
-            link_approach = self.mylinker.method
-            if self.mylinker.method == "reldisamb":
+            link_approach = self.mylinker.method_name()
+            if self.mylinker.method_name() == "reldisamb":
                 if self.mylinker.rel_params["with_publication"]:
                     link_approach += "+wpubl"
                 if self.mylinker.rel_params["without_microtoponyms"]:
@@ -722,7 +722,7 @@ class Experiment:
                 prediction["sentence"] = mention_data["sentence"]
                 prediction["place"] = mention_data["place"]
                 prediction["place_wqid"] = mention_data["place_wqid"]
-                if self.mylinker.method == "reldisamb":
+                if self.mylinker.method_name() == "reldisamb":
                     if (
                         self.mylinker.rel_params["without_microtoponyms"]
                         and mention_data["pred_ner_label"] != "LOC"
@@ -734,7 +734,7 @@ class Experiment:
                     mentions_dataset[sentence_id] = [prediction]
                 all_cands.update({prediction["mention"]: prediction["candidates"]})
 
-            if self.mylinker.method == "reldisamb":
+            if self.mylinker.method_name() == "reldisamb":
                 rel_resolved = dict()
                 for sentence_id in mentions_dataset:
                     article_dataset = {sentence_id: mentions_dataset[sentence_id]}
@@ -774,7 +774,7 @@ class Experiment:
                     ):
                         prediction = mention
 
-                        if self.mylinker.method in ["mostpopular", "bydistance"]:
+                        if self.mylinker.method_name() in ["mostpopular", "bydistance"]:
                             # Run entity linking per mention:
                             selected_cand = self.mylinker.run(
                                 {

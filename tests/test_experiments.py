@@ -68,8 +68,7 @@ def test_load_data(tmp_path):
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.Linker(
-        method="mostpopular",
+    mylinker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
@@ -177,9 +176,8 @@ def test_apply(tmp_path):
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.Linker(
-        method="mostpopular",
-        resources_path=os.path.join(current_dir,"../resources/"),
+    mylinker = linking.MostPopularLinker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     myner.train()

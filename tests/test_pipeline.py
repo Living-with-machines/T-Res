@@ -26,8 +26,7 @@ def test_pipeline_modular():
         resources_path=os.path.join(current_dir,"sample_files/resources"),
     )
     
-    mylinker = linking.Linker(
-        method="mostpopular",
+    mylinker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
