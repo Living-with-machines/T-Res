@@ -145,7 +145,7 @@ def test_train(tmp_path):
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -197,7 +197,7 @@ def test_load_eval_model(tmp_path):
         },
     )
 
-    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
