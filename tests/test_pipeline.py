@@ -40,7 +40,7 @@ def test_pipeline_modular():
     assert resolved[0]["ner_score"]==1.0
     assert resolved[0]["prediction"]=="Q42448"
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_deezy_mostpopular(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
@@ -124,7 +124,7 @@ def test_deezy_mostpopular(tmp_path):
     )
     assert resolved == []
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_deezy_rel_wpubl_wmtops(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
@@ -214,7 +214,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert resolved[0]["ed_score"] == 0.039
     assert resolved[0]["ner_score"] == 1.0
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_perfect_rel_wpubl_wmtops(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
@@ -303,7 +303,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved[0]["ed_score"] == 0.0
     assert resolved[0]["ner_score"] == 1.0
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_modular_deezy_rel(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",

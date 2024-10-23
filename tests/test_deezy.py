@@ -6,7 +6,7 @@ from DeezyMatch import candidate_ranker
 
 current_dir = Path(__file__).parent.resolve()
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_deezy_match_deezy_candidate_ranker(tmp_path):
     deezy_parameters = {
         # Paths and filenames of DeezyMatch models and data:

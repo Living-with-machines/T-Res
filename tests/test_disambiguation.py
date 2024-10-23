@@ -45,7 +45,7 @@ def test_embeddings():
         embs = rel_utils.get_db_emb(cursor, mentions, "entity")
         assert embs == [None]
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_train(tmp_path):
     myner = recogniser.Recogniser(
         model="ner_test",  # NER model name prefix (will have suffixes appended)
@@ -145,7 +145,7 @@ def test_train(tmp_path):
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_load_eval_model(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -242,7 +242,7 @@ def test_load_eval_model(tmp_path):
         == entity_disambiguation.EntityDisambiguation
     )
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_predict(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)

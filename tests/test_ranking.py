@@ -109,7 +109,7 @@ def test_ranking_partial_match():
     candidates, already_collected_cands = myranker.partial_match(["asdasd"], damlev=True)
     assert candidates["asdasd"] == {"New York City": 0.0}
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_ranking_deezy_on_the_fly(tmp_path):
     myranker = ranking.Ranker(
         method="deezymatch",
@@ -154,7 +154,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     candidates, already_collected_cands = myranker.deezy_on_the_fly(["Ashton-cnderLyne"])
     assert (0.0 < candidates["Ashton-cnderLyne"]["Ashton-under-Lyne"] < 1.0)
 
-@pytest.mark.deezy(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs deezy model")
 def test_ranking_find_candidates(tmp_path):
     myranker = ranking.Ranker(
         method="deezymatch",
