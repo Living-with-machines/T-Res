@@ -10,7 +10,7 @@ current_dir = Path(__file__).parent.resolve()
 def test_deezy_match_deezy_candidate_ranker(tmp_path):
     deezy_parameters = {
         # Paths and filenames of DeezyMatch models and data:
-        "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
+        "dm_path": os.path.join(current_dir,"../resources/deezymatch/"),
         "dm_cands": "wkdtalts",
         "dm_model": "w2v_ocr",
         "dm_output": "deezymatch_on_the_fly",
@@ -40,5 +40,11 @@ def test_deezy_match_deezy_candidate_ranker(tmp_path):
         search_size=deezy_parameters["num_candidates"],
         verbose=deezy_parameters["verbose"],
         output_path=os.path.join(tmp_path,dm_output),
+        pretrained_model_path = os.path.join(
+            f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".model"
+        ),
+        pretrained_vocab_path = os.path.join(
+            f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
+        ),
     )
     assert len(candidates) == len(query)
