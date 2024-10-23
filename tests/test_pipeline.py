@@ -214,15 +214,18 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert resolved[0]["ed_score"] == 0.039
     assert resolved[0]["ner_score"] == 1.0
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs large resources")
 def test_perfect_rel_wpubl_wmtops(tmp_path):
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        model_path=str(tmp_path),  # Path where the NER model will be stored
+        model_path=model_path,
         training_args={
             "batch_size": 8,
             "num_train_epochs": 1,
@@ -238,7 +241,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -268,11 +271,11 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
         },
     )
 
-    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path=os.path.join(current_dir,"sample_files/resources/"),
+            resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
