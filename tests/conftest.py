@@ -1,20 +1,13 @@
-import pytest
-import _pytest.skipping
+from typing import Any, List
+from typing_extensions import Final
 
+NO_SKIP_OPTION: Final[str] = "--no-skip"
 
 def pytest_addoption(parser):
-    parser.addoption(
-        "--no-skip",
-        action="store_true",
-        default=False, help="disable skip marks")
+    parser.addoption(NO_SKIP_OPTION, action="store_true", default=False, help="also run skipped tests")
 
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_cmdline_preparse(config, args):
-    if "--no-skip" not in args:
-        return
-
-    def no_skip(*args, **kwargs):
-        return
-
-    _pytest.skipping.skip = no_skip
+def pytest_collection_modifyitems(config,
+                                  items: List[Any]):
+    if config.getoption(NO_SKIP_OPTION):
+        for test in items:
+            test.own_markers = [marker for marker in test.own_markers if marker.name not in ('skip', 'skipif')]
