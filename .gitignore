@@ -142,6 +142,8 @@ preprocessing/toponymmatching/experiments/
 /experiments/explore_data.ipynb
 /experiments/examine_res.py
 
+/tests/sample_files/experiments/outputs/
+
 # Docs
 _build
 test.ipynb
