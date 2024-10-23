@@ -303,15 +303,18 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved[0]["ed_score"] == 0.0
     assert resolved[0]["ner_score"] == 1.0
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs large resources")
 def test_modular_deezy_rel(tmp_path):
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        model_path=str(tmp_path),  # Path where the NER model will be stored
+        model_path=model_path,
         training_args={
             "batch_size": 8,
             "num_train_epochs": 1,
@@ -327,7 +330,7 @@ def test_modular_deezy_rel(tmp_path):
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -342,7 +345,7 @@ def test_modular_deezy_rel(tmp_path):
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
+            "dm_path": os.path.join(current_dir, "../resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -357,11 +360,11 @@ def test_modular_deezy_rel(tmp_path):
         },
     )
 
-    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path=os.path.join(current_dir,"sample_files/resources/"),
+            resources_path=os.path.join(current_dir,"../resources/"),
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
@@ -389,7 +392,13 @@ def test_modular_deezy_rel(tmp_path):
         place=location,
     )
 
+    assert type(toponyms) == list
+    assert len(toponyms) == 4
+
     cands = geoparser.run_candidate_selection(toponyms)
+
+    assert type(cands) == dict
+    assert len(cands) == 4
 
     disambiguation = geoparser.run_disambiguation(
         toponyms,
@@ -399,5 +408,6 @@ def test_modular_deezy_rel(tmp_path):
     )
 
     assert type(disambiguation) == list
+
     assert disambiguation[0]["prediction"] == "Q989418"
     assert disambiguation[-1]["prediction"] == "Q171866"
