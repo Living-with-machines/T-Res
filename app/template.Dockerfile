@@ -4,10 +4,11 @@ ARG APP_NAME
 WORKDIR /app
 
 COPY pyproject.toml /app/pyproject.toml
+COPY t_res /app/t_res
 
 RUN pip3 install poetry
 RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+RUN poetry install
 
 ENV APP_CONFIG_NAME=${APP_NAME}
 COPY app/app_template.py /app/app.py

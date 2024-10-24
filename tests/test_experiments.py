@@ -1,23 +1,25 @@
 import os
 import sys
 from ast import literal_eval
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
+# Add "../" to path to import experiment
+current_dir = Path(__file__).parent.resolve()
+sys.path.insert(0, os.path.join(current_dir,"../"))
 from experiments import experiment
-from geoparser import linking, ranking, recogniser
 
+from t_res.geoparser import linking, ranking, recogniser
 
-def test_wrong_dataset_path():
+def test_experiments_wrong_dataset_path(tmp_path):
     with pytest.raises(SystemExit) as cm:
         experiment.Experiment(
             dataset="lwm",
             data_path="wrong_path/",
             dataset_df=pd.DataFrame(),
-            results_path="experiments/outputs/results/",
+            results_path=str(tmp_path),
             myner="test",
             myranker="test",
             mylinker="test",
@@ -30,8 +32,8 @@ def test_wrong_dataset_path():
     )
 
 
-def test_load_data():
-    data = pd.read_csv("experiments/outputs/data/lwm/linking_df_split.tsv", sep="\t")
+def test_load_data(tmp_path):
+    data = pd.read_csv(os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"), sep="\t")
     ids = set()
 
     for idx, row in data.iterrows():
@@ -41,29 +43,34 @@ def test_load_data():
             ids.add(str(article_id) + "_" + str(sent["sentence_pos"]))
 
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args=dict(),
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path=str(tmp_path),  # Path where the NER model will be stored
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 1,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
+        load_from_hub=False,  
     )
 
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     myner.train()
@@ -78,9 +85,9 @@ def test_load_data():
     # Instantiate the experiment:
     exp = experiment.Experiment(
         dataset="lwm",
-        data_path="experiments/outputs/data/",
+        data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
-        results_path="experiments/outputs/results/",
+        results_path=str(tmp_path),
         myner=myner,
         myranker=myranker,
         mylinker=mylinker,
@@ -121,18 +128,18 @@ def test_load_data():
         assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
 
-def test_wrong_ranker_method():
+def test_wrong_ranker_method(tmp_path):
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
         method="perfect_match",
-        resources_path="resources/wikidata/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     exp = experiment.Experiment(
         dataset="lwm",
-        data_path="experiments/outputs/data/",
+        data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
-        results_path="experiments/outputs/results/",
+        results_path=str(tmp_path),
         myner="test",
         myranker=ranker,
         mylinker="test",
@@ -142,31 +149,36 @@ def test_wrong_ranker_method():
     assert cm.value.code == 0
 
 
-def test_apply():
+def test_apply(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
-        pipe=None,  # We'll store the NER pipeline here
-        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
-        training_args=dict(),
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path=str(tmp_path),  # Path where the NER model will be stored
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 1,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
+        load_from_hub=False,  
     )
 
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path="resources/wikidata/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path="resources/",
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     myner.train()
@@ -181,9 +193,9 @@ def test_apply():
     # Instantiate the experiment:
     exp = experiment.Experiment(
         dataset="lwm",
-        data_path="experiments/outputs/data/",
+        data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
-        results_path="experiments/outputs/results/",
+        results_path=str(tmp_path),
         myner=myner,
         myranker=myranker,
         mylinker=mylinker,

@@ -16,9 +16,7 @@ from transformers import (
     pipeline,
 )
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import ner
+from ..utils import ner
 
 
 class Recogniser:
@@ -167,7 +165,7 @@ class Recogniser:
             return None
 
         # If model exists and overwrite is set to False, skip training:
-        model_path = f"{self.model_path}{self.model}.model"
+        model_path = os.path.join(self.model_path,f"{self.model}.model")
         if Path(model_path).exists() and self.overwrite_training == False:
             s = "\n** Note: Model "
             s += f"{model_path} is already trained.\n"
@@ -272,7 +270,7 @@ class Recogniser:
         training_args = TrainingArguments(
             output_dir=self.model_path,
             evaluation_strategy="epoch",
-            logging_dir=self.model_path + "runs/" + self.model,
+            logging_dir=os.path.join(self.model_path,"runs/",self.model),
             learning_rate=self.training_args["learning_rate"],
             per_device_train_batch_size=self.training_args["batch_size"],
             per_device_eval_batch_size=self.training_args["batch_size"],
@@ -297,7 +295,7 @@ class Recogniser:
         trainer.evaluate()
 
         # Save the model:
-        trainer.save_model(self.model_path + self.model + ".model")
+        trainer.save_model(os.path.join(self.model_path,f"{self.model}.model"))
 
     # -------------------------------------------------------------
     def create_pipeline(self) -> Pipeline:
@@ -325,7 +323,7 @@ class Recogniser:
         # pre-append the model path and the extension of the model
         # to obtain the model name.
         if self.load_from_hub == False:
-            model_name = self.model_path + self.model + ".model"
+            model_name = os.path.join(self.model_path, f"{self.model}.model")
 
         # Load a NER pipeline:
         self.pipe = pipeline("ner", model=model_name, ignore_labels=[])

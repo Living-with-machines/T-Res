@@ -9,8 +9,8 @@ warnings.filterwarnings(
     "ignore", category=FutureWarning
 )  # To fix properly in the future
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath("HIPE-scorer/"))
+# Add "./HIPE-scorer" to path to import HIPE-scorer
+sys.path.insert(0, os.path.abspath("./HIPE-scorer/"))
 import clef_evaluation
 
 dApprNames = dict()

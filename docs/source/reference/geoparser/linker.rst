@@ -1,8 +1,8 @@
-``geoparser.linking.Linker``
+``t_res.geoparser.linking.Linker``
 ============================
 
-.. autoclass:: geoparser.linking.Linker
+.. autoclass:: t_res.geoparser.linking.Linker
     :members:
     :undoc-members:
 
-.. autoattribute:: geoparser.linking.RANDOM_SEED
+.. autoattribute:: t_res.geoparser.linking.RANDOM_SEED

@@ -28,6 +28,9 @@ T-Res relies on several resources in the following directory structure:
 
 ```
 T-Res/
+├── t-res/
+│   ├── geoparser/
+│   └── utils/
 ├── app/
 ├── evaluation/
 ├── examples/
@@ -38,11 +41,10 @@ T-Res/
 │               ├── linking_df_split.tsv [*?]
 │               ├── ner_fine_dev.json [*+?]
 │               └── ner_fine_train.json [*+?]
-├── geoparser/
 ├── resources/
 │   ├── deezymatch/
 │   │   └── data/
-│   │       └── w2v_ocr_pairs.txt [*+?]
+│   │       └── w2v_ocr_pairs.txt [?]
 │   ├── models/
 │   ├── news_datasets/
 │   ├── rel_db/
@@ -53,8 +55,7 @@ T-Res/
 │       ├── mentions_to_wikidata.json [*]
 │       ├── wikidta_gazetteer.csv [*]
 │       └── wikidata_to_mentions_normalized.json [*]
-├── tests/
-└── utils/
+└── tests/
 ```
 
 These resources are described in detail in the documentation. A question mark (`?`) is used to indicate resources which are only required for some approaches (for example, the `rel_db/embeddings_database.db` file is only required by the REL-based disambiguation approaches). Note that an asterisk (`*`) next to the resource means that the path can be changed when instantiating the T-Res objects, and a plus sign (`+`) if the name of the file can be changed in the instantiation.
@@ -68,7 +69,7 @@ This is an example on how to use the default T-Res pipeline:
 ```python
 from geoparser import pipeline
 
-geoparser = pipeline.Pipeline()
+geoparser = pipeline.Pipeline(resources_path="./resources")
 
 output = geoparser.run_text("She was on a visit at Chippenham.")
 ```

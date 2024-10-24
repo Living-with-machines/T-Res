@@ -1,15 +1,14 @@
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
+from t_res.geoparser import recogniser
+from t_res.utils import process_data
 
-from geoparser import recogniser
-from utils import process_data
-
+current_dir = Path(__file__).parent.resolve()
 
 def test_eval_with_exception():
     # test normal behaviour
@@ -18,10 +17,8 @@ def test_eval_with_exception():
     list_of_dict = process_data.eval_with_exception(str_list_of_dict)
 
     assert list_of_dict != str_list_of_dict
-
-    assert type(list_of_dict) == list
-
-    assert type(list_of_dict[0]) == dict
+    assert isinstance(list_of_dict,list)
+    assert isinstance(list_of_dict[0],dict)
 
     # test that it returns "" if the input is None
 
@@ -32,17 +29,14 @@ def test_eval_with_exception():
 
     # test that it raises an error if the syntax is wrong
     str_list_of_dict = "[{'key_1': 1, 'key_2': 2}"
-    check = False
-    with pytest.raises(SyntaxError) as cm:
-        check = True
-        process_data.eval_with_exception(str_list_of_dict)
 
-    assert check == True
+    with pytest.raises(SyntaxError) as cm:
+        process_data.eval_with_exception(str_list_of_dict)
 
 
 def test_prepare_sents():
     dataset_df = pd.read_csv(
-        "experiments/outputs/data/lwm/linking_df_split.tsv",
+        os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
         sep="\t",
     )
 
@@ -53,7 +47,7 @@ def test_prepare_sents():
 
     dAnnotated, dSentences, dMetadata = process_data.prepare_sents(dataset_df)
 
-    assert dAnnotated["4428937_4"][(26, 41)] == ("LOC", "Bt. Jamess Park", "Q216914")
+    assert dAnnotated["3580760_2"][(0, 6)] == ('LOC', 'LONDON', 'Q84')
 
     test_data = process_data.eval_with_exception(dataset_df["annotations"][0])
     test_data[0]["wkdt_qid"] = "*"
@@ -62,7 +56,7 @@ def test_prepare_sents():
 
     dAnnotated, dSentences, dMetadata = process_data.prepare_sents(dataset_df)
 
-    assert dAnnotated["4428937_4"][(26, 41)] == ("LOC", "Bt. Jamess Park", "Q216914")
+    assert dAnnotated["3580760_2"][(0, 6)] == ('LOC', 'LONDON', 'Q84')
 
     assert len(dAnnotated) == len(dSentences) == len(dMetadata)
 
@@ -70,35 +64,37 @@ def test_prepare_sents():
     assert len([x for x, y in dMetadata.items() if len(y) == 0]) == 0
 
 
-def test_align_gold():
+def test_align_gold(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # We'll store the NER model here
-        pipe=None,  # We'll store the NER pipeline here
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path=str(tmp_path),  # Path where the NER model will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
-            "num_train_epochs": 4,
+            "num_train_epochs": 1,
             "weight_decay": 0.01,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
+        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
+    myner.train()
     myner.pipe = myner.create_pipeline()
 
     dataset_df = pd.read_csv(
-        "experiments/outputs/data/lwm/linking_df_split.tsv",
+        os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
         sep="\t",
     )
 
     dAnnotated, dSentences, dMetadata = process_data.prepare_sents(dataset_df)
     empty_list = []
     for sent_id in dSentences.keys():
-        if "4935585_1" == sent_id:
+        if "3580760_2" == sent_id:
             sent = dSentences[sent_id]
             annotations = dAnnotated[sent_id]
             predictions = myner.ner_predict(sent)
@@ -125,27 +121,30 @@ def test_align_gold():
     assert len(empty_list) == 0
 
 
-def test_ner_and_process():
+def test_ner_and_process(tmp_path):
     myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # We'll store the NER model here
-        pipe=None,  # We'll store the NER pipeline here
+        model="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
-        train_dataset="experiments/outputs/data/lwm/ner_fine_train.json",  # Training set (part of overall training set)
-        test_dataset="experiments/outputs/data/lwm/ner_fine_dev.json",  # Test set (part of overall training set)
-        model_path="resources/models/",  # Path where the NER model is or will be stored
+        model_path=str(tmp_path),  # Path where the NER model will be stored
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
-            "num_train_epochs": 4,
+            "num_train_epochs": 1,
             "weight_decay": 0.01,
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
+        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
+
+    myner.train()
     myner.pipe = myner.create_pipeline()
 
     dataset_df = pd.read_csv(
-        "experiments/outputs/data/lwm/linking_df_split.tsv",
+        os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
         sep="\t",
     )
 

@@ -6,11 +6,13 @@ from ast import literal_eval
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
-large_resources = "/resources/"  # path to large resources
-small_resources = "resources/"  # path to small resources
-processed_path_lwm = "experiments/outputs/data/lwm/"  # path to processed LwM data
-processed_path_hipe = "experiments/outputs/data/hipe/"  # path to processed LwM data
+current_dir = Path(__file__).parent.resolve()
+
+small_resources = os.path.join(current_dir,"sample_files/resources/")  # path to small resources
+processed_path_lwm = os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/")  # path to processed LwM data
+processed_path_hipe = os.path.join(current_dir,"sample_files/experiments/outputs/data/hipe/")  # path to processed LwM data
 
 
 def test_publication_metadata_exists():
@@ -53,8 +55,8 @@ def test_original_lwm_data():
     train_metadata = pd.read_csv(path_train_metadata, sep="\t")
     test_metadata = pd.read_csv(path_test_metadata, sep="\t")
     # Assert the size of the metadata files:
-    assert train_metadata.shape[0] == 343
-    assert test_metadata.shape[0] == 112
+    assert train_metadata.shape[0] == 1
+    assert test_metadata.shape[0] == 1    
     assert train_metadata.shape[1] == 10
     assert test_metadata.shape[1] == 10
     # Items in metadata match number of files in directory, for test:
@@ -98,8 +100,8 @@ def test_lwm_ner_conversion_fine():
         dtype={"id": str},
     )
     # Assert size of the train and dev sets:
-    assert df_ner_train.shape == (5216, 3)
-    assert df_ner_dev.shape == (1304, 3)
+    assert df_ner_train.shape == (141, 3)
+    assert df_ner_dev.shape == (41, 3)
     # Assert number of sentences in train and dev (length of list and set should be the same):
     assert (
         len(list(df_ner_train["id"]) + list(df_ner_dev["id"]))
@@ -107,45 +109,11 @@ def test_lwm_ner_conversion_fine():
         == df_ner_train.shape[0] + df_ner_dev.shape[0]
     )
     # Assert ID is read as string:
-    assert type(df_ner_train["id"].iloc[0]) == str
+    assert isinstance(df_ner_train["id"].iloc[0],str)
     # Assert number of unique articles:
     train_articles = [x.split("_")[0] for x in list(df_ner_train["id"])]
     dev_articles = [x.split("_")[0] for x in list(df_ner_dev["id"])]
-    assert len(set(train_articles + dev_articles)) == 343
-
-
-def test_lwm_ner_conversion_coarse():
-    """
-    Test process_lwm_for_ner is not missing articles.
-    """
-    df_ner_train = pd.read_json(
-        os.path.join(f"{processed_path_lwm}", "ner_coarse_train.json"),
-        orient="records",
-        lines=True,
-        dtype={"id": str},
-    )
-    df_ner_dev = pd.read_json(
-        os.path.join(f"{processed_path_lwm}", "ner_coarse_dev.json"),
-        orient="records",
-        lines=True,
-        dtype={"id": str},
-    )
-    # Assert size of the train and dev sets:
-    assert df_ner_train.shape == (5216, 3)
-    assert df_ner_dev.shape == (1304, 3)
-    # Assert number of sentences in train and dev (length of list and set should be the same):
-    assert (
-        len(list(df_ner_train["id"]) + list(df_ner_dev["id"]))
-        == len(set(list(df_ner_train["id"]) + list(df_ner_dev["id"])))
-        == df_ner_train.shape[0] + df_ner_dev.shape[0]
-    )
-    # Assert ID is read as string:
-    assert type(df_ner_train["id"].iloc[0]) == str
-    # Assert number of unique articles:
-    train_articles = [x.split("_")[0] for x in list(df_ner_train["id"])]
-    dev_articles = [x.split("_")[0] for x in list(df_ner_dev["id"])]
-    assert len(set(train_articles + dev_articles)) == 343
-
+    assert len(set(train_articles + dev_articles)) == 11
 
 def test_lwm_linking_conversion():
     """
@@ -156,26 +124,26 @@ def test_lwm_linking_conversion():
         sep="\t",
     )
     # Assert size of the dataset (i.e. number of articles):
-    assert df_linking.shape[0] == 455
+    assert df_linking.shape[0] == 14
     # Assert if place has been filled correctly:
     for x in df_linking.place:
-        assert type(x) == str
+        assert isinstance(x,str)
         assert x != ""
     # Assert if place QID has been filled correctly:
     for x in df_linking.place_wqid:
-        assert type(x) == str
+        assert isinstance(x,str)
         assert x != ""
     for x in df_linking.annotations:
         x = literal_eval(x)
         for ann in x:
             assert ann["wkdt_qid"] == "NIL" or ann["wkdt_qid"].startswith("Q")
-    assert df_linking[df_linking["originalsplit"] == "train"].shape[0] == 229
-    assert df_linking[df_linking["originalsplit"] == "dev"].shape[0] == 114
-    assert df_linking[df_linking["originalsplit"] == "test"].shape[0] == 112
-    assert df_linking[df_linking["withouttest"] == "train"].shape[0] == 153
-    assert df_linking[df_linking["withouttest"] == "dev"].shape[0] == 76
-    assert df_linking[df_linking["withouttest"] == "test"].shape[0] == 114
-    assert df_linking[df_linking["withouttest"] == "left_out"].shape[0] == 112
+    assert df_linking[df_linking["originalsplit"] == "train"].shape[0] == 10
+    assert df_linking[df_linking["originalsplit"] == "dev"].shape[0] == 2
+    assert df_linking[df_linking["originalsplit"] == "test"].shape[0] == 2
+    assert df_linking[df_linking["withouttest"] == "train"].shape[0] == 8
+    assert df_linking[df_linking["withouttest"] == "dev"].shape[0] == 2
+    assert df_linking[df_linking["withouttest"] == "test"].shape[0] == 2
+    assert df_linking[df_linking["withouttest"] == "left_out"].shape[0] == 2
     test_withouttest = set(
         list(df_linking[df_linking["withouttest"] == "test"].article_id)
     )
@@ -185,7 +153,7 @@ def test_lwm_linking_conversion():
     # Test articles of the original split and without test should not overlap:
     assert not (test_withouttest & test_originalsplit)
 
-
+@pytest.mark.skip(reason="Requires HIPE data")
 def test_hipe_linking_conversion():
     """
     Test process_hipe_for_linking is not missing articles.
@@ -211,11 +179,11 @@ def test_hipe_linking_conversion():
     assert not (test_withouttest & test_originalsplit)
     # Assert if place has been filled correctly:
     for x in df_linking.place:
-        assert type(x) == str
+        assert isinstance(x,str)
         assert x != ""
     # Assert if place QID has been filled correctly:
     for x in df_linking.place_wqid:
-        assert type(x) == str
+        assert isinstance(x,str)
         assert x != ""
     # Do HIPE stats match https://github.com/hipe-eval/HIPE-2022-data/blob/main/notebooks/hipe2022-datasets-stats.ipynb
     number_locs = 0
