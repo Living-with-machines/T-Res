@@ -13,14 +13,14 @@ from t_res.utils.REL import entity_disambiguation
 
 current_dir = Path(__file__).parent.resolve()
 
-@pytest.mark.skip(reason="Needs large db file")
+@pytest.mark.skip(reason="Needs embeddings database")
 def test_embeddings():
     """
     Test embeddings are loaded correctly.
     """
     # Test 1: Check glove embeddings
     mentions = ["in", "apple"]
-    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         embs = rel_utils.get_db_emb(cursor, mentions, "snd")
         assert len(mentions) == len(embs)
@@ -45,15 +45,18 @@ def test_embeddings():
         embs = rel_utils.get_db_emb(cursor, mentions, "entity")
         assert embs == [None]
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs large resources")
 def test_train(tmp_path):
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
     myner = recogniser.Recogniser(
         model="ner_test",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
-        model_path=str(tmp_path),  # Path where the NER model is or will be stored
+        model_path=model_path,
         training_args={
             "batch_size": 8,
             "num_train_epochs": 1,
@@ -67,7 +70,7 @@ def test_train(tmp_path):
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -82,7 +85,7 @@ def test_train(tmp_path):
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch"),
+            "dm_path": os.path.join(current_dir, "../resources/deezymatch"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -97,14 +100,14 @@ def test_train(tmp_path):
         },
     )
 
-    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path=os.path.join(current_dir,"sample_files/resources/"),
+            resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir, "../resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
@@ -143,7 +146,7 @@ def test_train(tmp_path):
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.6288416075650118
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.8571428571428571
 
 @pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
@@ -242,7 +245,7 @@ def test_load_eval_model(tmp_path):
         == entity_disambiguation.EntityDisambiguation
     )
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.skip(reason="Needs large resources")
 def test_predict(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -294,11 +297,11 @@ def test_predict(tmp_path):
         },
     )
 
-    with sqlite3.connect(os.path.join(current_dir,"sample_files/resources/rel_db/embeddings_database.db")) as conn:
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path=os.path.join(current_dir,"sample_files/resources/"),
+            resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),

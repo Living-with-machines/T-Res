@@ -322,7 +322,8 @@ def prepare_rel_trainset(
     # Format the mentions are required by the ranker:
     all_mentions = [{"mention": mention} for mention in all_mentions]
     # Use the ranker to find candidates:
-    wk_cands = myranker.find_candidates(all_mentions)
+    wk_cands, other = myranker.find_candidates(all_mentions)
+
     # Rank the candidates:
     rel_json = rank_candidates(
         rel_json,
