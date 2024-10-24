@@ -128,7 +128,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
+            "dm_path": os.path.join(current_dir, "../resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -142,6 +142,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
             "overwrite_training": False,
             "do_test": False,
         },
+        already_collected_cands=dict(),
     )
 
     # Test that perfect_match acts before deezy
@@ -152,6 +153,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     # Test that deezy works
     myranker.already_collected_cands = {}
     candidates, already_collected_cands = myranker.deezy_on_the_fly(["Ashton-cnderLyne"])
+
     assert (0.0 < candidates["Ashton-cnderLyne"]["Ashton-under-Lyne"] < 1.0)
 
 @pytest.mark.skip(reason="Needs deezy model")
@@ -187,6 +189,7 @@ def test_ranking_find_candidates(tmp_path):
             "overwrite_training": False,
             "do_test": True,
         },
+        already_collected_cands=dict(),
     )
 
     # Test that perfect_match acts before deezy
