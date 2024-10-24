@@ -247,13 +247,16 @@ def test_load_eval_model(tmp_path):
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_predict(tmp_path):
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
-        model_path=str(tmp_path),  # Path where the NER model is or will be stored
+        model_path=model_path,
         training_args={
             "learning_rate": 5e-5,
             "batch_size": 16,
@@ -267,7 +270,7 @@ def test_predict(tmp_path):
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -323,6 +326,7 @@ def test_predict(tmp_path):
         place_wqid="Q84",
     )
     assert isinstance(predictions,list)
+    assert len(predictions) == 6
 
     assert predictions[1]["prediction"] in predictions[1]["cross_cand_score"]
 
