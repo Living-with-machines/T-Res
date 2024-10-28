@@ -143,6 +143,10 @@ preprocessing/toponymmatching/experiments/
 /experiments/examine_res.py
 
 /tests/sample_files/experiments/outputs/
+/tests/sample_files/resources/deezymatch/candidate_vectors/
+/tests/sample_files/resources/deezymatch/combined/
+/tests/sample_files/resources/deezymatch/data/
+/tests/sample_files/resources/deezymatch/ranking/
 
 # Docs
 _build
