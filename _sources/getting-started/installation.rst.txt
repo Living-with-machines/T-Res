@@ -113,11 +113,18 @@ To add a package:
 
     $ poetry add [package name]
 
-To run the Python tests:
+To run the Python unit tests:
 
 .. code-block:: bash
 
     $ poetry run pytest
+
+To run unit and integration tests, some of which depend on the `T-Res resources <../getting-started/resources.html>`_:
+
+.. code-block:: bash
+
+    $ poetry run pytest tests --no-skip
+
 
 If you want to use Jupyter notebook, run it as usual, and then select the
 created kernel in "Kernel" > "Change kernel".

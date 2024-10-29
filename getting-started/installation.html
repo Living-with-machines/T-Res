@@ -174,8 +174,12 @@ $<span class="w"> </span>poetry<span class="w"> </span>install
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>add<span class="w"> </span><span class="o">[</span>package<span class="w"> </span>name<span class="o">]</span>
 </pre></div>
 </div>
-<p>To run the Python tests:</p>
+<p>To run the Python unit tests:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>pytest
+</pre></div>
+</div>
+<p>To run unit and integration tests, some of which depend on the <a class="reference external" href="../getting-started/resources.html">T-Res resources</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests<span class="w"> </span>--no-skip
 </pre></div>
 </div>
 <p>If you want to use Jupyter notebook, run it as usual, and then select the
