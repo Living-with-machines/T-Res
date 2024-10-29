@@ -1,6 +1,6 @@
-<div style="text-align: center">
-<h1>T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers</h1>
-</div>
+# T-Res: A Toponym Resolution Pipeline for Digitised Historical Newspapers
+
+[![DOI record for the Zenodo release of T-Res](https://zenodo.org/badge/DOI/10.5281/zenodo.14008534.svg)](http://doi.org/10.5281/zenodo.14008534)
 
 ## Overview
 
