@@ -13,7 +13,7 @@ current_dir = Path(__file__).parent.resolve()
 def test_linking_most_popular():
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
         linking_resources=dict(),
         rel_params=dict(),
         overwrite_training=False,

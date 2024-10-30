@@ -170,7 +170,7 @@ def test_load_eval_model(tmp_path):
 
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -185,7 +185,7 @@ def test_load_eval_model(tmp_path):
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch"),
+            "dm_path": os.path.join(current_dir,"../resources/deezymatch"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -204,10 +204,10 @@ def test_load_eval_model(tmp_path):
         cursor = conn.cursor()
         mylinker = linking.Linker(
             method="reldisamb",
-            resources_path=os.path.join(current_dir,"sample_files/resources/"),
+            resources_path=os.path.join(current_dir,"../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
@@ -307,7 +307,7 @@ def test_predict(tmp_path):
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,

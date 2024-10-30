@@ -10,7 +10,7 @@ current_dir = Path(__file__).parent.resolve()
 
 def test_pipeline_basic():
     geoparser = pipeline.Pipeline(
-        resources_path=os.path.join(current_dir,"sample_files/resources")
+        resources_path=os.path.join(current_dir,"../resources")
     )
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -23,12 +23,12 @@ def test_pipeline_basic():
 def test_pipeline_modular():
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources"),
+        resources_path=os.path.join(current_dir,"../resources"),
     )
     
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
     )
 
     geoparser = pipeline.Pipeline(myranker=myranker, mylinker=mylinker)
@@ -193,7 +193,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
@@ -264,7 +264,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"sample_files/resources/deezymatch/"),
+            "dm_path": os.path.join(current_dir,"../resources/deezymatch/"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -287,7 +287,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
@@ -380,7 +380,7 @@ def test_modular_deezy_rel(tmp_path):
             resources_path=os.path.join(current_dir,"../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
                 "training_split": "apply",
                 "db_embeddings": cursor,

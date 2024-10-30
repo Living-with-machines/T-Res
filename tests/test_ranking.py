@@ -13,7 +13,7 @@ def test_ranking_perfect_match():
     """
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
     )
     
     myranker.mentions_to_wikidata = myranker.load_resources()
@@ -34,7 +34,7 @@ def test_ranking_damlev():
     """
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
     )
 
     score = myranker.damlev_dist("Lvndon", {"mentions": "London"})
@@ -54,7 +54,7 @@ def test_ranking_check_if_contained():
 
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
     )
     
     score_a = myranker.check_if_contained("New York", {"mentions": "New York City"})
@@ -75,7 +75,7 @@ def test_ranking_partial_match():
 
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
     )
 
     myranker.mentions_to_wikidata = myranker.load_resources()
@@ -113,7 +113,7 @@ def test_ranking_partial_match():
 def test_ranking_deezy_on_the_fly(tmp_path):
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -160,7 +160,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
 def test_ranking_find_candidates(tmp_path):
     myranker = ranking.Ranker(
         method="deezymatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
