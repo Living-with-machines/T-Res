@@ -118,6 +118,7 @@ class Linker:
         self.linking_resources = linking_resources
         self.overwrite_training = overwrite_training
 
+        # TODO: move to RelDisamb __init__
         if rel_params is None:
             rel_params = {
                 "model_path": os.path.join(resources_path, "models/disambiguation/"),
@@ -223,143 +224,6 @@ class Linker:
         """
         raise NotImplementedError("Subclass implementation required.")
 
-    def train_load_model(
-        self, myranker: ranking.Ranker, split: Optional[str] = "originalsplit"
-    ) -> entity_disambiguation.EntityDisambiguation:
-        """
-        Trains or loads the entity disambiguation model.
-
-        Arguments:
-            myranker (geoparser.ranking.Ranker): The ranker object used for
-                training.
-            split (str, optional): The split type for training. Defaults to
-                ``"originalsplit"``.
-
-        Returns:
-            entity_disambiguation.EntityDisambiguation:
-                A trained Entity Disambiguation model.
-
-        .. note::
-
-            The training will be skipped if the model already exists and
-            ``overwrite_training`` was set to False when initiating the Linker
-            object, or if the disambiguation method is unsupervised. The
-            training will be run on test mode if ``rel_params`` had a
-            ``do_test`` key's value set to True when initiating the Linker
-            object.
-
-        .. note::
-
-            **Credit:**
-
-            This method is adapted from the `REL: Radboud Entity Linker
-            <https://github.com/informagi/REL/>`_ Github repository:
-            Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
-            notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
-
-            ::
-
-                Reference:
-
-                @inproceedings{vanHulst:2020:REL,
-                author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
-                title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
-                booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
-                series =    {SIGIR '20},
-                year =      {2020},
-                publisher = {ACM}
-                }
-        """
-        if self.method_name() == "reldisamb":
-            # Generate ED model name:
-            linker_name = myranker.method
-            if myranker.method == "deezymatch":
-                linker_name += "+" + str(myranker.deezy_parameters["num_candidates"])
-                linker_name += "+" + str(
-                    myranker.deezy_parameters["selection_threshold"]
-                )
-            linker_name += f"_{split}"
-            if self.rel_params["with_publication"]:
-                linker_name += "+wpubl"
-            if self.rel_params["without_microtoponyms"]:
-                linker_name += "+wmtops"
-            if self.rel_params["do_test"]:
-                linker_name += "_test"
-            linker_name = os.path.join(self.rel_params["model_path"], linker_name)
-
-            if self.overwrite_training == True or not Path(linker_name).is_dir():
-                print(
-                    "The entity disambiguation model does not exist or overwrite_training is set to True."
-                )
-
-                print("Creating the dataset.")
-                # Create the folder where to store the resulting
-                # disambiguation models:
-                Path(linker_name).mkdir(parents=True, exist_ok=True)
-
-                # Load the linking dataset, separate training and dev:
-                linking_df_path = os.path.join(
-                    self.rel_params["data_path"], "linking_df_split.tsv"
-                )
-                linking_df = pd.read_csv(linking_df_path, sep="\t")
-                train_df = linking_df[linking_df[split] == "train"]
-                dev_df = linking_df[linking_df[split] == "dev"]
-
-                # If this is a test, use only the first 20 rows of the train
-                # and dev sets:
-                if self.rel_params["do_test"] == True:
-                    train_df = train_df.iloc[:20]
-                    dev_df = dev_df.iloc[:20]
-
-                # Prepare the dataset into the format required by REL:
-                train_json = rel_utils.prepare_rel_trainset(
-                    train_df,
-                    self.rel_params,
-                    self.linking_resources["mentions_to_wikidata"],
-                    myranker,
-                    "train",
-                )
-                dev_json = rel_utils.prepare_rel_trainset(
-                    dev_df,
-                    self.rel_params,
-                    self.linking_resources["mentions_to_wikidata"],
-                    myranker,
-                    "dev",
-                )
-
-                # Set ED configuration to train mode:
-                config_rel = {
-                    "mode": "train",
-                    "model_path": os.path.join(linker_name, "model"),
-                }
-
-                # Instantiate the entity disambiguation model:
-                model = entity_disambiguation.EntityDisambiguation(
-                    self.rel_params["db_embeddings"],
-                    config_rel,
-                )
-                print("Training the model.")
-
-                # Train the model using lwm_train:
-                model.train(train_json, dev_json)
-
-                # Train and predict using LR (to obtain confidence scores)
-                model.train_LR(train_json, dev_json, linker_name)
-
-                return model
-            else:
-                # Setting disambiguation model mode to "eval":
-                config_rel = {
-                    "mode": "eval",
-                    "model_path": os.path.join(linker_name, "model"),
-                }
-
-                model = entity_disambiguation.EntityDisambiguation(
-                    self.rel_params["db_embeddings"],
-                    config_rel,
-                )
-
-                return model
 
 class MostPopularLinker(Linker):
     """
@@ -500,3 +364,156 @@ class ByDistanceLinker(Linker):
             final_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
 
         return closest_candidate_id, final_score, all_candidates
+
+
+class RelDisambLinker(Linker):
+    """
+    An entity linking method that selects the candidate based on its
+    proximity to the place of publication.
+    """
+
+    def method_name(self) -> str:
+        return "reldisamb"
+
+    # TODO: refactor linking logic into this run method.
+    def run(
+        self, dict_mention: dict, origin_wqid: Optional[str] = ""
+    ) -> Tuple[str, float, dict]:
+        raise NotImplementedError("reldisamb linking method has no run method.")
+        
+    def train_load_model(
+        self, myranker: ranking.Ranker, split: Optional[str] = "originalsplit"
+    ) -> entity_disambiguation.EntityDisambiguation:
+        """
+        Trains or loads the entity disambiguation model.
+
+        Arguments:
+            myranker (geoparser.ranking.Ranker): The ranker object used for
+                training.
+            split (str, optional): The split type for training. Defaults to
+                ``"originalsplit"``.
+
+        Returns:
+            entity_disambiguation.EntityDisambiguation:
+                A trained Entity Disambiguation model.
+
+        .. note::
+
+            The training will be skipped if the model already exists and
+            ``overwrite_training`` was set to False when initiating the Linker
+            object, or if the disambiguation method is unsupervised. The
+            training will be run on test mode if ``rel_params`` had a
+            ``do_test`` key's value set to True when initiating the Linker
+            object.
+
+        .. note::
+
+            **Credit:**
+
+            This method is adapted from the `REL: Radboud Entity Linker
+            <https://github.com/informagi/REL/>`_ Github repository:
+            Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
+            notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
+
+            ::
+
+                Reference:
+
+                @inproceedings{vanHulst:2020:REL,
+                author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+                title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+                booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+                series =    {SIGIR '20},
+                year =      {2020},
+                publisher = {ACM}
+                }
+        """
+        # Generate ED model name:
+        linker_name = myranker.method
+        if myranker.method == "deezymatch":
+            linker_name += "+" + str(myranker.deezy_parameters["num_candidates"])
+            linker_name += "+" + str(
+                myranker.deezy_parameters["selection_threshold"]
+            )
+        linker_name += f"_{split}"
+        if self.rel_params["with_publication"]:
+            linker_name += "+wpubl"
+        if self.rel_params["without_microtoponyms"]:
+            linker_name += "+wmtops"
+        if self.rel_params["do_test"]:
+            linker_name += "_test"
+        linker_name = os.path.join(self.rel_params["model_path"], linker_name)
+
+        if self.overwrite_training == True or not Path(linker_name).is_dir():
+            print(
+                "The entity disambiguation model does not exist or overwrite_training is set to True."
+            )
+
+            print("Creating the dataset.")
+            # Create the folder where to store the resulting
+            # disambiguation models:
+            Path(linker_name).mkdir(parents=True, exist_ok=True)
+
+            # Load the linking dataset, separate training and dev:
+            linking_df_path = os.path.join(
+                self.rel_params["data_path"], "linking_df_split.tsv"
+            )
+            linking_df = pd.read_csv(linking_df_path, sep="\t")
+            train_df = linking_df[linking_df[split] == "train"]
+            dev_df = linking_df[linking_df[split] == "dev"]
+
+            # If this is a test, use only the first 20 rows of the train
+            # and dev sets:
+            if self.rel_params["do_test"] == True:
+                train_df = train_df.iloc[:20]
+                dev_df = dev_df.iloc[:20]
+
+            # Prepare the dataset into the format required by REL:
+            train_json = rel_utils.prepare_rel_trainset(
+                train_df,
+                self.rel_params,
+                self.linking_resources["mentions_to_wikidata"],
+                myranker,
+                "train",
+            )
+            dev_json = rel_utils.prepare_rel_trainset(
+                dev_df,
+                self.rel_params,
+                self.linking_resources["mentions_to_wikidata"],
+                myranker,
+                "dev",
+            )
+
+            # Set ED configuration to train mode:
+            config_rel = {
+                "mode": "train",
+                "model_path": os.path.join(linker_name, "model"),
+            }
+
+            # Instantiate the entity disambiguation model:
+            model = entity_disambiguation.EntityDisambiguation(
+                self.rel_params["db_embeddings"],
+                config_rel,
+            )
+            print("Training the model.")
+
+            # Train the model using lwm_train:
+            model.train(train_json, dev_json)
+
+            # Train and predict using LR (to obtain confidence scores)
+            model.train_LR(train_json, dev_json, linker_name)
+
+            return model
+        else:
+            # Setting disambiguation model mode to "eval":
+            config_rel = {
+                "mode": "eval",
+                "model_path": os.path.join(linker_name, "model"),
+            }
+
+            model = entity_disambiguation.EntityDisambiguation(
+                self.rel_params["db_embeddings"],
+                config_rel,
+            )
+
+            return model

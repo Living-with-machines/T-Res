@@ -672,11 +672,6 @@ class Experiment:
             # Get ids of articles in each split:
             test_article_ids = list(test_original.article_id.astype(str))
 
-            # Train a linking model if needed (it requires myranker to generate potential
-            # candidates to the training set):
-            print("Train EL model using:", split)
-            linking_model = self.mylinker.train_load_model(self.myranker, split=split)
-
             # Dictionary of sentences:
             # {k1 : {k2 : v}}, where k1 is article id, k2 is
             # sentence pos, and v is the sentence text.
@@ -746,6 +741,12 @@ class Experiment:
                     if self.mylinker.rel_params["with_publication"]:
                         # If "publ", add an artificial publication entry:
                         article_dataset = rel_utils.add_publication(article_dataset)
+
+                    # Train a linking model if needed (it requires myranker to generate potential
+                    # candidates to the training set):
+                    print("Train EL model using:", split)
+                    linking_model = self.mylinker.train_load_model(self.myranker, split=split)
+
                     predicted = linking_model.predict(article_dataset)
                     if self.mylinker.rel_params["with_publication"]:
                         # ... and if "publ", now remove the artificial publication entry!

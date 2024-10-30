@@ -95,8 +95,7 @@ def test_deezy_mostpopular(tmp_path):
         already_collected_cands=dict(),
     )
 
-    mylinker = linking.Linker(
-        method="mostpopular",
+    mylinker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir, "../resources/"),
     )
 
@@ -187,8 +186,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        mylinker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -281,8 +279,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        mylinker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -374,8 +371,7 @@ def test_modular_deezy_rel(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        mylinker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir,"../resources/"),
             linking_resources=dict(),
             rel_params={

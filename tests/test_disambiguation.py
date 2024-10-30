@@ -102,8 +102,7 @@ def test_train(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        mylinker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -199,9 +198,8 @@ def test_load_eval_model(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
-            resources_path=os.path.join(current_dir,"../resources/"),
+        mylinker = linking.RelDisambLinker(
+            resources_path=os.path.join(current_dir,"sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
@@ -296,8 +294,7 @@ def test_predict(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        mylinker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={

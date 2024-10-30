@@ -144,9 +144,10 @@ class Pipeline:
 
         # Train a linking model if needed (it requires myranker to generate
         # potential candidates to the training set):
-        self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
-            self.myranker
-        )
+        if self.mylinker.method_name() == "reldisamb":
+            self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
+                self.myranker
+            )
 
     def run_sentence(
         self,
