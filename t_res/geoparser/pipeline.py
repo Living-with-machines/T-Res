@@ -157,7 +157,6 @@ class Pipeline:
         place: Optional[str] = "",
         place_wqid: Optional[str] = "",
         postprocess_output: Optional[bool] = True,
-        without_microtoponyms: Optional[bool] = False,
     ) -> List[dict]:
         """
         Runs the pipeline on a single sentence.
@@ -176,8 +175,6 @@ class Pipeline:
                 ``""``.
             postprocess_output (bool, optional): Whether to postprocess the
                 output, adding geographic coordinates. Defaults to ``True``.
-            without_microtoponyms (bool, optional): Specifies whether to
-                exclude microtoponyms during processing. Defaults to ``False``.
 
         Returns:
             List[dict]:
@@ -226,6 +223,8 @@ class Pipeline:
 
         # List of mentions for the ranker:
         rmentions = []
+        without_microtoponyms = self.mylinker.method_name() == "reldisamb" \
+            and self.mylinker.rel_params.get("without_microtoponyms", False)
         if without_microtoponyms:
             rmentions = [
                 {"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"
@@ -461,9 +460,8 @@ class Pipeline:
 
             This method runs the
             :py:meth:`~geoparser.pipeline.Pipeline.run_sentence` method for
-            each of the document's sentences. The ``without_microtoponyms``
-            keyword, passed to ``run_sentence`` comes from the ``Linker``'s
-            (passed when initialising the
+            each of the document's sentences. Uses the ``without_microtoponyms``
+            keyword from the ``Linker`` (assigned when initialising the
             :py:meth:`~geoparser.pipeline.Pipeline` object) ``rel_params``
             parameter. See :py:class:`geoparser.linking.Linker` for
             instructions on how to set that up.
@@ -489,9 +487,6 @@ class Pipeline:
                 place=place,
                 place_wqid=place_wqid,
                 postprocess_output=postprocess_output,
-                without_microtoponyms=self.mylinker.rel_params.get(
-                    "without_microtoponyms", False
-                ),
             )
 
             # Collect results from all sentences:
@@ -678,9 +673,8 @@ class Pipeline:
         """
 
         # Get without_microtoponyms value (whether to resolve microtoponyms or not):
-        without_microtoponyms = self.mylinker.rel_params.get(
-            "without_microtoponyms", False
-        )
+        without_microtoponyms = self.mylinker.method_name() == "reldisamb" \
+            and self.mylinker.rel_params.get("without_microtoponyms", False)
 
         # List of mentions for the ranker:
         rmentions = []

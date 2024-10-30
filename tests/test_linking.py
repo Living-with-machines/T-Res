@@ -17,8 +17,6 @@ def test_init():
         resources_path="path/to/resources/",
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
-        rel_params={'param': 'value'},
-        overwrite_training=True,
     )
 
     assert mylinker.method_name()  == "mostpopular"
@@ -26,24 +24,44 @@ def test_init():
     assert mylinker.resources_path  == "path/to/resources/"
     assert mylinker.experiments_path  == "path/to/experiments/"
     assert mylinker.linking_resources['resource'] == 'value'
-    assert mylinker.rel_params['param'] == 'value'
-    assert mylinker.overwrite_training
 
     mylinker = linking.MostPopularLinker(
         resources_path="path/to/resources/",
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
+    )
+
+    # Test the extra parameters in the RelDisambLinker
+    mylinker = linking.RelDisambLinker(
+        resources_path="path/to/resources/",
+        experiments_path="path/to/experiments/",
+        linking_resources={'resource': 'value'},
         rel_params={'param': 'value'},
+        overwrite_training=True,
+    )
+
+    assert mylinker.method_name()  == "reldisamb"
+
+    assert mylinker.resources_path  == "path/to/resources/"
+    assert mylinker.experiments_path  == "path/to/experiments/"
+    assert mylinker.linking_resources['resource'] == 'value'
+    assert mylinker.rel_params['param'] == 'value'
+    assert mylinker.overwrite_training
+
+    mylinker = linking.RelDisambLinker(
+        resources_path="path/to/resources/",
+        experiments_path="path/to/experiments/",
+        rel_params={'param': 'value'},
+        linking_resources={'resource': 'value'},
     )
 
     assert not mylinker.overwrite_training
+
 
 def test_linking_most_popular():
     mylinker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
-        rel_params=dict(),
-        overwrite_training=False,
     )
 
     assert mylinker.method_name()  == "mostpopular"
@@ -69,8 +87,6 @@ def test_linking_by_distance():
     mylinker = linking.ByDistanceLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
-        rel_params=dict(),
-        overwrite_training=False,
     )
 
     assert mylinker.method_name()  == "bydistance"

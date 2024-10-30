@@ -32,83 +32,16 @@ class Linker:
         linking_resources (dict, optional): Dictionary containing the
             necessary linking resources. Defaults to ``dict()`` (an empty
             dictionary).
-        overwrite_training (bool): Flag indicating whether to overwrite the
-            training. Defaults to ``False``.
-        rel_params (dict, optional): Dictionary containing the parameters
-            for performing entity disambiguation using the ``reldisamb``
-            approach (adapted from the Radboud Entityt Linker, REL).
-            For the default settings, see Notes below.
 
-    Example:
-
-    .. code-block:: python
-
-       linker = Linker(
-         resources_path="/path/to/resources/",
-         experiments_path="/path/to/experiments/",
-         linking_resources={},
-         overwrite_training=True,
-         rel_params={"with_publication": True, "do_test": True}
-       )
-
-    Note:
-
-        * Note that, in order to instantiate the Linker with the ``reldisamb``
-        method, the Linker needs to be wrapped by a context manager in which
-        a connection to the entity embeddings database is established and a
-        cursor is created:
-
-        .. code-block:: python
-
-           with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
-             cursor = conn.cursor()
-             mylinker = linking.Linker(
-             method="reldisamb",
-             resources_path="../resources/",
-             experiments_path="../experiments/",
-             linking_resources=dict(),
-             rel_params={
-               "model_path": "../resources/models/disambiguation/",
-               "data_path": "../experiments/outputs/data/lwm/",
-               "training_split": "",
-               "db_embeddings": cursor,
-               "with_publication": wpubl,
-               "without_microtoponyms": wmtops,
-               "do_test": False,
-               "default_publname": "",
-               "default_publwqid": "",
-             },
-             overwrite_training=False,
-           )
-
-        See below the default settings for ``rel_params``. Note that
-        `db_embeddings` defaults to None, but it should be assigned a
-        cursor to the entity embeddings database, as described above:
-
-        .. code-block:: python
-
-           rel_params: Optional[dict] = {
-             "model_path": "../resources/models/disambiguation/",
-             "data_path": "../experiments/outputs/data/lwm/",
-             "training_split": "originalsplit",
-             "db_embeddings": None,
-             "with_publication": True,
-             "without_microtoponyms": True,
-             "do_test": False,
-             "default_publname": "United Kingdom",
-             "default_publwqid": "Q145",
-           }
-
+    This base class should not be instatiated directly. Instead use a subclass
+    constructor.
     """
 
     def __init__(
         self,
-        # method: Literal["mostpopular", "reldisamb", "bydistance"],
         resources_path: str,
         experiments_path: Optional[str] = "../experiments",
         linking_resources: Optional[dict] = dict(),
-        overwrite_training: Optional[bool] = False,
-        rel_params: Optional[dict] = None,
     ):
         """
         Initialises a Linker object.
@@ -116,23 +49,7 @@ class Linker:
         self.resources_path = resources_path
         self.experiments_path = experiments_path
         self.linking_resources = linking_resources
-        self.overwrite_training = overwrite_training
 
-        # TODO: move to RelDisamb __init__
-        if rel_params is None:
-            rel_params = {
-                "model_path": os.path.join(resources_path, "models/disambiguation/"),
-                "data_path": os.path.join(experiments_path, "outputs/data/lwm/"),
-                "training_split": "originalsplit",
-                "db_embeddings": None,  # The cursor to the embeddings database.
-                "with_publication": True,
-                "without_microtoponyms": True,
-                "do_test": False,
-                "default_publname": "United Kingdom",
-                "default_publwqid": "Q145",
-            }
-
-        self.rel_params = rel_params
 
     def __str__(self) -> str:
         """
@@ -229,6 +146,16 @@ class MostPopularLinker(Linker):
     """
     An entity linking method that selects the candidate that is most
     popular in the Wikipedia knowledgebase.
+
+    Example:
+
+    .. code-block:: python
+
+       linker = MostPopularLinker(
+         resources_path="/path/to/resources/",
+         experiments_path="/path/to/experiments/",
+         linking_resources={},
+       )
     """
 
     def method_name(self) -> str:
@@ -288,6 +215,16 @@ class ByDistanceLinker(Linker):
     """
     An entity linking method that selects the candidate based on its
     proximity to the place of publication.
+
+    Example:
+
+    .. code-block:: python
+
+       linker = ByDistanceLinker(
+         resources_path="/path/to/resources/",
+         experiments_path="/path/to/experiments/",
+         linking_resources={},
+       )
     """
 
     def method_name(self) -> str:
@@ -368,9 +305,113 @@ class ByDistanceLinker(Linker):
 
 class RelDisambLinker(Linker):
     """
-    An entity linking method that selects the candidate based on its
-    proximity to the place of publication.
+    Linker subclass implementing an entity linking method that selects the 
+    candidate using the Radboud Entity Linker (REL) model.
+
+    Arguments:
+        resources_path (str): The path to the linking resources.
+        experiments_path (str, optional): The path to the experiments
+            directory. Default is "../experiments/".
+        linking_resources (dict, optional): Dictionary containing the
+            necessary linking resources. Defaults to ``dict()`` (an empty
+            dictionary).
+        overwrite_training (bool): Flag indicating whether to overwrite the
+            training. Defaults to ``False``.
+        rel_params (dict, optional): Dictionary containing the parameters
+            for performing entity disambiguation using the ``reldisamb``
+            approach (adapted from the Radboud Entityt Linker, REL).
+            For the default settings, see Notes below.
+
+    Example:
+
+    .. code-block:: python
+
+       linker = Linker(
+         resources_path="/path/to/resources/",
+         experiments_path="/path/to/experiments/",
+         linking_resources={},
+         overwrite_training=True,
+         rel_params={"with_publication": True, "do_test": True}
+       )
+
+    Note:
+
+        * Note that, in order to instantiate the Linker with the ``reldisamb``
+        method, the Linker needs to be wrapped by a context manager in which
+        a connection to the entity embeddings database is established and a
+        cursor is created:
+
+        .. code-block:: python
+
+           with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
+             cursor = conn.cursor()
+             mylinker = linking.Linker(
+             method="reldisamb",
+             resources_path="../resources/",
+             experiments_path="../experiments/",
+             linking_resources=dict(),
+             rel_params={
+               "model_path": "../resources/models/disambiguation/",
+               "data_path": "../experiments/outputs/data/lwm/",
+               "training_split": "",
+               "db_embeddings": cursor,
+               "with_publication": wpubl,
+               "without_microtoponyms": wmtops,
+               "do_test": False,
+               "default_publname": "",
+               "default_publwqid": "",
+             },
+             overwrite_training=False,
+           )
+
+        See below the default settings for ``rel_params``. Note that
+        `db_embeddings` defaults to None, but it should be assigned a
+        cursor to the entity embeddings database, as described above:
+
+        .. code-block:: python
+
+           rel_params: Optional[dict] = {
+             "model_path": "../resources/models/disambiguation/",
+             "data_path": "../experiments/outputs/data/lwm/",
+             "training_split": "originalsplit",
+             "db_embeddings": None,
+             "with_publication": True,
+             "without_microtoponyms": True,
+             "do_test": False,
+             "default_publname": "United Kingdom",
+             "default_publwqid": "Q145",
+           }
+
     """
+
+    # Override the constructor to include REL model parameters.
+    def __init__(
+        self,
+        resources_path: str,
+        experiments_path: Optional[str] = "../experiments",
+        linking_resources: Optional[dict] = dict(),
+        overwrite_training: Optional[bool] = False,
+        rel_params: Optional[dict] = None,
+    ):
+        
+        super().__init__(resources_path, experiments_path, linking_resources)
+
+        self.overwrite_training = overwrite_training
+        if rel_params is None:
+            rel_params = {
+                "model_path": os.path.join(resources_path, "models/disambiguation/"),
+                "data_path": os.path.join(experiments_path, "outputs/data/lwm/"),
+                "training_split": "originalsplit",
+                "db_embeddings": None,  # The cursor to the embeddings database.
+                "with_publication": True,
+                "without_microtoponyms": True,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+            }
+
+        self.rel_params = rel_params
+
 
     def method_name(self) -> str:
         return "reldisamb"
