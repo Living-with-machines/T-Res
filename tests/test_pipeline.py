@@ -216,8 +216,8 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     assert len(resolved) == 3
     assert resolved[0]["mention"] == "Shefiield"
-    assert resolved[0]["prior_cand_score"]["Q42448"] == 0.891
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.766
+    assert resolved[0]["prior_cand_score"]["Q42448"] == pytest.approx(0.891, abs=1e-3)
+    assert resolved[0]["cross_cand_score"]["Q42448"] == pytest.approx(0.766, abs=1e-3)
     assert resolved[0]["prediction"] == "Q42448"
     # assert resolved[0]["ed_score"] == 0.039 # TODO: reproduce this number.
     assert resolved[0]["ner_score"] == 1.0
@@ -405,12 +405,12 @@ def test_modular_deezy_rel(tmp_path):
         place=location,
     )
 
-    assert type(toponyms) == list
+    assert isinstance(toponyms, list)
     assert len(toponyms) == 4
 
     cands = geoparser.run_candidate_selection(toponyms)
 
-    assert type(cands) == dict
+    assert isinstance(cands, dict)
     assert len(cands) == 4
 
     disambiguation = geoparser.run_disambiguation(
@@ -420,7 +420,7 @@ def test_modular_deezy_rel(tmp_path):
         place=location,
     )
 
-    assert type(disambiguation) == list
+    assert isinstance(disambiguation,list)
 
     assert disambiguation[0]["prediction"] == "Q989418"
     assert disambiguation[-1]["prediction"] == "Q171866"

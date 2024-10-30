@@ -20,8 +20,8 @@ def test_make_links_consistent():
 @pytest.mark.skip(reason="Needs large db file")
 def test_wikidata2wikipedia():
     db = "resources/wikipedia/index_enwiki-latest.db"
-    assert process_wikipedia.title_to_id("BOLOGNA", lower=True, path_to_db=db) == None
-    assert process_wikipedia.title_to_id("Bologna", lower=True, path_to_db=db) == None
+    assert process_wikipedia.title_to_id("BOLOGNA", lower=True, path_to_db=db) is None
+    assert process_wikipedia.title_to_id("Bologna", lower=True, path_to_db=db) is None
     assert (
         process_wikipedia.title_to_id("bologna", lower=True, path_to_db=db) == "Q1891"
     )
@@ -31,7 +31,7 @@ def test_wikidata2wikipedia():
     )
     assert (
         process_wikipedia.title_to_id("new%20york%20city", lower=True, path_to_db=db)
-        == None
+        is None
     )
     prepare_url = process_wikipedia.make_wikipedia2wikidata_consisent("New York City")
     assert (

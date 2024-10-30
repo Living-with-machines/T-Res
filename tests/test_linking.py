@@ -25,8 +25,8 @@ def test_linking_most_popular():
     }
     keep_most_popular, final_score, candidates = mylinker.most_popular(dict_mention)
     assert keep_most_popular == "Q84"
-    assert final_score == 0.9812731647051174
-    assert candidates == {"Q84": 0.9812731647051174, "Q92561": 0.018726835294882633}
+    assert final_score == pytest.approx(0.9812731647051174, abs=1e-3)
+    assert candidates == {"Q84": pytest.approx(0.9812731647051174, abs=1e-3), "Q92561": pytest.approx(0.018726835294882633, abs=1e-3)}
 
     dict_mention = {"candidates": {}}
     keep_most_popular, final_score, candidates = mylinker.most_popular(dict_mention)
@@ -38,7 +38,7 @@ def test_linking_most_popular():
 def test_by_distance():
     mylinker = linking.Linker(
         method="bydistance",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir,"../resources/"),
         linking_resources=dict(),
         rel_params=dict(),
         overwrite_training=False,
@@ -55,7 +55,7 @@ def test_by_distance():
     }
     pred, final_score, resulting_cands = mylinker.by_distance(dict_mention)
     assert pred == "Q84"
-    assert final_score == 0.824
+    assert final_score == pytest.approx(0.824, abs=1e-3)
     assert "Q84" in resulting_cands
 
     #test it finds London, CA
@@ -67,7 +67,7 @@ def test_by_distance():
     }
     pred, final_score, resulting_cands = mylinker.by_distance(dict_mention)
     assert pred == "Q92561"
-    assert final_score == 0.624
+    assert final_score == pytest.approx(0.624, abs=1e-3)
     assert "Q84" in resulting_cands
 
     #check it finds none

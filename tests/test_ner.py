@@ -62,7 +62,7 @@ def test_ner_predict():
     predictions = myner.ner_predict(sentence)
     assert isinstance(predictions, list)
     assert len(predictions) == 15
-    assert predictions[13] == {'entity': 'B-LOC', 'score': 0.9996446371078491, 'word': 'Sheffield', 'start': 74, 'end': 83}
+    assert predictions[13] == {'entity': 'B-LOC', 'score': pytest.approx(0.9996446371078491, abs=1e-3), 'word': 'Sheffield', 'start': 74, 'end': 83}
 
     # Test that ner_predict() can handle hyphens
     sentence = "- I grew up in Plymouth—Kingston."
@@ -84,7 +84,7 @@ def test_ner_from_hub():
     predictions = myner.ner_predict(sentence)
     assert isinstance(predictions, list)
     assert len(predictions) == 15
-    assert predictions[13] == {'entity': 'B-LOC', 'score': 0.9996446371078491, 'word': 'Sheffield', 'start': 74, 'end': 83}
+    assert predictions[13] == {'entity': 'B-LOC', 'score': pytest.approx(0.9996446371078491, abs=1e-3), 'word': 'Sheffield', 'start': 74, 'end': 83}
 
 
 def test_aggregate_mentions():

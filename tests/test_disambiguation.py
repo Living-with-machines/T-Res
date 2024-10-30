@@ -140,10 +140,7 @@ def test_train(tmp_path):
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert (
-        type(mylinker.rel_params["ed_model"])
-        == entity_disambiguation.EntityDisambiguation
-    )
+    assert isinstance(mylinker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
 
     # assert expected performance on test set
     assert mylinker.rel_params["ed_model"].best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
@@ -240,10 +237,7 @@ def test_load_eval_model(tmp_path):
     # candidates to the training set):
     mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
 
-    assert (
-        type(mylinker.rel_params["ed_model"])
-        == entity_disambiguation.EntityDisambiguation
-    )
+    assert isinstance(mylinker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_predict(tmp_path):
