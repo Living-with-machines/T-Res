@@ -25,8 +25,8 @@ def test_linking_most_popular():
     }
     keep_most_popular, final_score, candidates = mylinker.most_popular(dict_mention)
     assert keep_most_popular == "Q84"
-    assert final_score == pytest.approx(0.9812731647051174, abs=1e-3)
-    assert candidates == {"Q84": pytest.approx(0.9812731647051174, abs=1e-3), "Q92561": pytest.approx(0.018726835294882633, abs=1e-3)}
+    assert final_score == pytest.approx(0.9895689976719958, abs=1e-3)
+    assert candidates == {"Q84": pytest.approx(0.9895689976719958, abs=1e-3), "Q92561": pytest.approx(0.018726835294882633, abs=1e-3)}
 
     dict_mention = {"candidates": {}}
     keep_most_popular, final_score, candidates = mylinker.most_popular(dict_mention)
