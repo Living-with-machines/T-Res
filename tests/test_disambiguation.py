@@ -146,7 +146,7 @@ def test_train(tmp_path):
     )
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == 0.8571428571428571
+    assert mylinker.rel_params["ed_model"].best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
 
 @pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
