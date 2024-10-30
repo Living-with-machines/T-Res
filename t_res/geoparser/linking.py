@@ -115,7 +115,6 @@ class Linker:
             self.linking_resources["entity2class"] = json.load(f)
 
         print("*** Linking resources loaded!\n")
-        return self.linking_resources
 
     def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
         """

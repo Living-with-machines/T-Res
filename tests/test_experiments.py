@@ -78,7 +78,7 @@ def test_load_data(tmp_path):
     myranker.mentions_to_wikidata = myranker.load_resources()
     myranker.train()
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -186,7 +186,7 @@ def test_apply(tmp_path):
     myranker.mentions_to_wikidata = myranker.load_resources()
     myranker.train()
 
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:

@@ -193,7 +193,7 @@ for exp_param in experiments:
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.linking_resources = mylinker.load_resources()
+    mylinker.load_resources()
 
     # -----------------------------------------
     # Prepare experiment:
