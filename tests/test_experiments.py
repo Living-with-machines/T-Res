@@ -63,14 +63,14 @@ def test_load_data(tmp_path):
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     myner.train()
@@ -132,7 +132,7 @@ def test_wrong_ranker_method(tmp_path):
     ranker = ranking.Ranker(
         # wrong naming: it should be perfectmatch
         method="perfect_match",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     exp = experiment.Experiment(
@@ -149,6 +149,7 @@ def test_wrong_ranker_method(tmp_path):
     assert cm.value.code == 0
 
 
+@pytest.mark.skip(reason="Needs large resources")
 def test_apply(tmp_path):
     myner = recogniser.Recogniser(
         model="blb_lwm-ner-fine",
@@ -171,7 +172,7 @@ def test_apply(tmp_path):
     # Instantiate the ranker:
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------

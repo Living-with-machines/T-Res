@@ -13,7 +13,7 @@ def test_ranking_perfect_match():
     """
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     
     myranker.mentions_to_wikidata = myranker.load_resources()
@@ -34,7 +34,7 @@ def test_ranking_damlev():
     """
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     score = myranker.damlev_dist("Lvndon", {"mentions": "London"})
@@ -54,7 +54,7 @@ def test_ranking_check_if_contained():
 
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     
     score_a = myranker.check_if_contained("New York", {"mentions": "New York City"})
@@ -75,7 +75,7 @@ def test_ranking_partial_match():
 
     myranker = ranking.Ranker(
         method="partialmatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     myranker.mentions_to_wikidata = myranker.load_resources()
