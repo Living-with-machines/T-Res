@@ -204,7 +204,7 @@ def test_load_eval_model(tmp_path):
             resources_path=os.path.join(current_dir,"../resources/"),
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
+                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
                 "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
