@@ -116,6 +116,7 @@ class Linker:
 
         print("*** Linking resources loaded!\n")
 
+    # TODO: fix docstring
     def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
         """
         Executes the linking process based on the specified unsupervised
