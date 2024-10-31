@@ -10,7 +10,7 @@ current_dir = Path(__file__).parent.resolve()
 
 def test_pipeline_basic():
     geoparser = pipeline.Pipeline(
-        resources_path=os.path.join(current_dir,"../resources")
+        resources_path=os.path.join(current_dir,"sample_files/resources")
     )
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -23,12 +23,12 @@ def test_pipeline_basic():
 def test_pipeline_modular():
     myranker = ranking.Ranker(
         method="perfectmatch",
-        resources_path=os.path.join(current_dir,"../resources"),
+        resources_path=os.path.join(current_dir,"sample_files/resources"),
     )
     
     mylinker = linking.Linker(
         method="mostpopular",
-        resources_path=os.path.join(current_dir,"../resources/"),
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     geoparser = pipeline.Pipeline(myranker=myranker, mylinker=mylinker)
