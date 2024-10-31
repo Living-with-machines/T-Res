@@ -6,11 +6,11 @@ from pathlib import Path
 import requests
 from tqdm import tqdm
 
-# Import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_data, process_wikipedia
-from experiments import experiment
+from . import process_data, process_wikipedia
 
+# Add "../../experiments/" to path to import experiments
+sys.path.insert(0, os.path.abspath("../../experiments/"))
+from experiments import experiment
 
 def rel_end_to_end(sent: str) -> dict:
     """
@@ -57,12 +57,16 @@ def get_rel_from_api(dSentences: dict, rel_end2end_path: str) -> None:
                 rel_preds = json.load(f)
 
 
-def match_wikipedia_to_wikidata(wiki_title: str) -> str:
+def match_wikipedia_to_wikidata(
+    wiki_title: str,
+    path_to_db: str,
+    ) -> str:
     """
     Retrieve the Wikidata ID corresponding to a Wikipedia title.
 
     Arguments:
         wiki_title (str): A Wikipedia title in underscore-separated format.
+        path_to_db (str): The path to your wikipedia database (e.g. "../resources/wikipedia/index_enwiki-latest.db").
 
     Returns:
         str:
@@ -72,7 +76,7 @@ def match_wikipedia_to_wikidata(wiki_title: str) -> str:
     wqid = process_wikipedia.title_to_id(
         wiki_title,
         lower=False,
-        path_to_db="../resources/wikipedia/index_enwiki-latest.db",
+        path_to_db=path_to_db,
     )
     if not wqid:
         wqid = "NIL"

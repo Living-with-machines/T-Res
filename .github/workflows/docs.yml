@@ -49,7 +49,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          python -m poetry install --extras docs
+          python -m poetry install --with docs
 
       - name: Build documentation
         run: |

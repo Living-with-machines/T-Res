@@ -1,29 +1,26 @@
-import os
-import sys
 import sqlite3
 from pathlib import Path
 
-# sys.path.insert(0, os.path.abspath(os.path.pardir))
-from geoparser import pipeline, ranking, linking
+from t_res.geoparser import linking, pipeline, ranking
 
 # --------------------------------------
 # Instantiate the ranker:
 myranker = ranking.Ranker(
     method="deezymatch",
-    resources_path="../resources/wikidata/",
+    resources_path="./resources/",
     strvar_parameters={
         # Parameters to create the string pair dataset:
         "ocr_threshold": 60,
         "top_threshold": 85,
         "min_len": 5,
         "max_len": 15,
-        "w2v_ocr_path": str(Path("../resources/models/w2v/").resolve()),
+        "w2v_ocr_path": str(Path("./resources/models/w2v/").resolve()),
         "w2v_ocr_model": "w2v_*_news",
         "overwrite_dataset": False,
     },
     deezy_parameters={
         # Paths and filenames of DeezyMatch models and data:
-        "dm_path": str(Path("../resources/deezymatch/").resolve()),
+        "dm_path": str(Path("./resources/deezymatch/").resolve()),
         "dm_cands": "wkdtalts",
         "dm_model": "w2v_ocr",
         "dm_output": "deezymatch_on_the_fly",
@@ -38,15 +35,16 @@ myranker = ranking.Ranker(
     },
 )
 
-with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
+with sqlite3.connect("./resources/rel_db/embeddings_database.db") as conn:
     cursor = conn.cursor()
     mylinker = linking.Linker(
         method="reldisamb",
-        resources_path="../resources/",
+        resources_path="./resources/",
+        experiments_path="./experiments/",
         linking_resources=dict(),
         rel_params={
-            "model_path": "../resources/models/disambiguation/",
-            "data_path": "outputs/data/lwm/",
+            "model_path": "./resources/models/disambiguation/",
+            "data_path": "./experiments/outputs/data/lwm/",
             "training_split": "originalsplit",
             "db_embeddings": cursor,
             "with_publication": True,

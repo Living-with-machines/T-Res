@@ -1,8 +1,8 @@
-``utils.REL.entity_disambiguation`` module
+``t_res.utils.REL.entity_disambiguation`` module
 ==========================================
 
-.. autoclass:: utils.REL.entity_disambiguation.EntityDisambiguation
+.. autoclass:: t_res.utils.REL.entity_disambiguation.EntityDisambiguation
     :members:
     :undoc-members:
 
-.. autoattribute:: utils.REL.entity_disambiguation.RANDOM_SEED
+.. autoattribute:: t_res.utils.REL.entity_disambiguation.RANDOM_SEED

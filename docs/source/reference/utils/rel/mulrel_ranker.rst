@@ -1,10 +1,10 @@
-``utils.REL.mulrel_ranker`` module
+``t_res.utils.REL.mulrel_ranker`` module
 ==================================
 
-.. autoclass:: utils.REL.mulrel_ranker.PreRank
+.. autoclass:: t_res.utils.REL.mulrel_ranker.PreRank
     :members:
     :undoc-members:
 
-.. autoclass:: utils.REL.mulrel_ranker.MulRelRanker
+.. autoclass:: t_res.utils.REL.mulrel_ranker.MulRelRanker
     :members:
     :undoc-members:

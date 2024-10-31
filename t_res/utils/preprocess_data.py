@@ -11,31 +11,30 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 
-# Add "../" to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.pardir))
-from utils import process_wikipedia
-
-# Path to Wikipedia resources (where the wiki2wiki mapper is located):
-path_to_wikipedia = "../resources/wikipedia/"
+from . import process_wikipedia
 
 
-def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
+def turn_wikipedia2wikidata(
+    wikipedia_title: str,
+    wikipedia_path: str,
+) -> Optional[str]:
     """
     Convert a Wikipedia title to its corresponding Wikidata ID.
 
     Arguments:
         wikipedia_title (str): The title of the Wikipedia page.
+        wikipedia_path (str): The path to your wikipedia directory.
 
     Returns:
         Optional[str]:
             The corresponding Wikidata ID if available, or None if not.
 
     Example:
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum")
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum", "../resources")
         'Q10285'
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt")
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt", "../resources")
         'Q11768'
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location")
+        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location", "../resources")
         Warning: invalid_location is not in wikipedia2wikidata, the wkdt_qid will be None.
     """
     if not wikipedia_title == "NIL" and not wikipedia_title == "*":
@@ -46,7 +45,7 @@ def turn_wikipedia2wikidata(wikipedia_title: str) -> Optional[str]:
         )
         linked_wqid = process_wikipedia.title_to_id(
             processed_wikipedia_title,
-            path_to_db=os.path.join(path_to_wikipedia, "index_enwiki-latest.db"),
+            path_to_db=os.path.join(wikipedia_path, "index_enwiki-latest.db"),
             lower=True,
         )
         if not linked_wqid:
@@ -234,7 +233,7 @@ def process_lwm_for_ner(tsv_topres_path: str):
 
 
 def process_lwm_for_linking(
-    tsv_topres_path: str, gazetteer_ids: List[str]
+    resources_dir: str, tsv_topres_path: str, gazetteer_ids: List[str]
 ) -> pd.DataFrame:
     """
     Process LwM data for performing entity linking.
@@ -243,6 +242,7 @@ def process_lwm_for_linking(
     Each row includes the annotation and resolution information of the toponym.
 
     Arguments:
+        resources_dir (str): The path to the resources directory
         tsv_topres_path (str): The path to the top-level directory containing the annotated TSV files.
         gazetteer_ids (list): The set of Wikidata IDs in the gazetteer.
 
@@ -327,8 +327,9 @@ def process_lwm_for_linking(
                 # Clean Wikidata URL:
                 wkpd = wkpd.replace("\\", "")
 
+                wikipedia_path = os.path.join(resources_dir, "wikipedia/")
                 # Get Wikidata ID:
-                wkdt = turn_wikipedia2wikidata(wkpd)
+                wkdt = turn_wikipedia2wikidata(wkpd, wikipedia_path)
 
                 # In mentions attached to next token through a dash,
                 # keep only the true mention (this has to do with
