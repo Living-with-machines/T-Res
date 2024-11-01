@@ -98,8 +98,7 @@ class Pipeline:
         if not self.myranker:
             if not resources_path:
                 raise ValueError("[ERROR] Please specify path to resources directory.")
-            self.myranker = ranking.Ranker(
-                method="perfectmatch",
+            self.myranker = ranking.PerfectMatchRanker(
                 resources_path=resources_path,
             )
 

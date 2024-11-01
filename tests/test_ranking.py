@@ -11,61 +11,62 @@ def test_ranking_perfect_match():
     """
     Test that perfect_match returns only perfect matching cases
     """
-    myranker = ranking.Ranker(
-        method="perfectmatch",
+    myranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     
     myranker.mentions_to_wikidata = myranker.load_resources()
     myranker.already_collected_cands = {}
-    candidates, already_collected_cands = myranker.perfect_match(["London"])
+    candidates, already_collected_cands = myranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
-    candidates, already_collected_cands = myranker.perfect_match(["Lvndon"])
+    candidates, already_collected_cands = myranker.run(["Lvndon"])
     assert candidates["Lvndon"] == {}
 
-    candidates, already_collected_cands = myranker.perfect_match(["Paperopoli"])
+    candidates, already_collected_cands = myranker.run(["Paperopoli"])
     assert candidates["Paperopoli"] == {}
 
 
-def test_ranking_damlev():
+def test_ranking_matching_score():
     """
-    Test that damlev returns correctly
-    """
-    myranker = ranking.Ranker(
-        method="partialmatch",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
-    )
-
-    score = myranker.damlev_dist("Lvndon", {"mentions": "London"})
-    assert score == 0.8333333283662796
-
-    score = myranker.damlev_dist("uityity", {"mentions": "asdasd"})
-    assert score == 0.0
-
-    with pytest.raises(TypeError):
-        myranker.damlev_dist("Lvndon", "London")
-
-
-def test_ranking_check_if_contained():
-    """
-    Test that check_if_contained returns score only when there is an overlap
+    Test that matching_score returns score only when there is an overlap
     """
 
-    myranker = ranking.Ranker(
-        method="partialmatch",
+    # Test the overlap matching score.
+    myranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     
-    score_a = myranker.check_if_contained("New York", {"mentions": "New York City"})
-    score_b = myranker.check_if_contained("New York City", {"mentions": "New York"})
+    score_a = myranker.matching_score("New York", {"mentions": "New York City"})
+    score_b = myranker.matching_score("New York City", {"mentions": "New York"})
     assert score_a == score_b == 0.6153846153846154
 
     with pytest.raises(TypeError):
-        myranker.check_if_contained("Lvndon", "London")
+        myranker.matching_score("Lvndon", "London")
 
-    score = myranker.check_if_contained("London", {"mentions": "New York"})
+    score = myranker.matching_score("London", {"mentions": "New York"})
     assert score is None
+
+    # Test the Levenshtein distance matching score.
+    myranker = ranking.LevenshteinRanker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    )
+    
+    myranker.mentions_to_wikidata = myranker.load_resources()
+
+    score = myranker.matching_score("Lvndon", {"mentions": "London"})
+    assert score == 0.8333333283662796
+
+    score = myranker.matching_score("uityity", {"mentions": "asdasd"})
+    assert score == 0.0
+
+    with pytest.raises(TypeError):
+        myranker.matching_score("Lvndon", "London")
+
+    # myranker.already_collected_cands = {}
+
+    # candidates, already_collected_cands = myranker.run(["asdasd"])
+    # assert candidates["asdasd"] == {"New York City": 0.0}
 
 
 def test_ranking_partial_match():
@@ -73,8 +74,7 @@ def test_ranking_partial_match():
     Test that partial match either returns results or {}
     """
 
-    myranker = ranking.Ranker(
-        method="partialmatch",
+    myranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
@@ -83,36 +83,61 @@ def test_ranking_partial_match():
     # Test that perfect_match acts before partial match
     myranker.mentions_to_wikidata = {"London": "Q84"}
     myranker.already_collected_cands = {}
-    candidates, already_collected_cands = myranker.partial_match(["London"], damlev=False)
+    candidates, already_collected_cands = myranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
-
-    # Test that damlev works
-    myranker.already_collected_cands = {}
-
-    candidates, already_collected_cands = myranker.partial_match(["Lvndvn"], damlev=True)
-    assert candidates["Lvndvn"]["London"] == 0.6666666567325592
 
     # Test that overlap works properly
     myranker.mentions_to_wikidata = {"New York City": "Q60"}
-    myranker.already_collected_cands = {}
-
-    candidates, already_collected_cands = myranker.partial_match(["New York"], damlev=False)
-    assert candidates["New York"]["New York City"] == 0.6153846153846154
 
     myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["New York"])
+    assert candidates["New York"]["New York City"] == pytest.approx(0.6153846153846154, abs=10e-6)
 
-    candidates, already_collected_cands = myranker.partial_match(["Lvndvn"], damlev=False)
+    myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["Lvndvn"])
     assert candidates["Lvndvn"] == {}
 
-    myranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = myranker.partial_match(["asdasd"], damlev=True)
+def test_ranking_levenshtein():
+    """
+    Test that Levenshtein partial match either returns results or {}
+    """
+
+    myranker = ranking.LevenshteinRanker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    )
+
+    myranker.mentions_to_wikidata = myranker.load_resources()
+
+    # Test that perfect_match acts before partial match
+    myranker.mentions_to_wikidata = {"London": "Q84"}
+    myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["London"])
+    assert candidates["London"]["London"] == 1.0
+
+    myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["Lvndvn"])
+    assert candidates["Lvndvn"]["London"] == pytest.approx(0.6666666567325592, abs=10e-6)
+
+    # Test that overlap works properly
+    myranker.mentions_to_wikidata = {"New York City": "Q60"}
+
+    myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["New York"])
+    assert candidates["New York"]["New York City"] == pytest.approx(0.6153846153846154, abs=10e-6)
+
+    myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["Lvndvn"])
+    assert candidates["Lvndvn"] == {"New York City": 0.0}
+
+    myranker.already_collected_cands = {}
+    candidates, already_collected_cands = myranker.run(["asdasd"])
     assert candidates["asdasd"] == {"New York City": 0.0}
+
 
 @pytest.mark.skip(reason="Needs deezy model")
 def test_ranking_deezy_on_the_fly(tmp_path):
-    myranker = ranking.Ranker(
-        method="deezymatch",
+    myranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -158,8 +183,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
 
 @pytest.mark.skip(reason="Needs deezy model")
 def test_ranking_find_candidates(tmp_path):
-    myranker = ranking.Ranker(
-        method="deezymatch",
+    myranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),

@@ -122,8 +122,8 @@ class Experiment:
         output_path = os.path.join(self.data_path, self.dataset, self.myner.model)
 
         # Add the candidate experiment info to the path:
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
+        cand_approach = self.myranker.method_name()
+        if self.myranker.method_name() == "deezymatch":
             cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
                 self.myranker.deezy_parameters["selection_threshold"]
@@ -168,19 +168,6 @@ class Experiment:
 
         # ----------------------------------
         # Coherence checks:
-        # Some scenarios do not make sense. Warn and exit:
-        if self.myranker.method not in [
-            "perfectmatch",
-            "partialmatch",
-            "levenshtein",
-            "deezymatch",
-        ]:
-            print(
-                "\n!!! Coherence check failed. "
-                "This is because the candidate ranking method does not exist.\n"
-            )
-            sys.exit(0)
-
         # ----------------------------------
         # If data is processed and overwrite is set to False, then do nothing,
         # otherwise process the data.
@@ -298,8 +285,8 @@ class Experiment:
         model_name = self.myner.model
         output_path = data_path + dataset + "/" + model_name
 
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
+        cand_approach = self.myranker.method_name()
+        if self.myranker.method_name() == "deezymatch":
             cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
                 self.myranker.deezy_parameters["selection_threshold"]
@@ -374,8 +361,8 @@ class Experiment:
         dMetadata = self.processed_data["dMetadata"]
         dCandidates = self.processed_data["dCandidates"]
 
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
+        cand_approach = self.myranker.method_name()
+        if self.myranker.method_name() == "deezymatch":
             cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
                 self.myranker.deezy_parameters["selection_threshold"]
@@ -561,8 +548,8 @@ class Experiment:
 
         if task == "linking":
             scenario_name += task + "_" + self.myner.model + "_"
-            cand_approach = self.myranker.method
-            if self.myranker.method == "deezymatch":
+            cand_approach = self.myranker.method_name()
+            if self.myranker.method_name() == "deezymatch":
                 cand_approach += "+" + str(
                     self.myranker.deezy_parameters["num_candidates"]
                 )

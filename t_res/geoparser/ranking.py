@@ -119,6 +119,9 @@ class Ranker:
         self.wikidata_to_mentions = wikidata_to_mentions
         self.already_collected_cands = already_collected_cands
 
+    def method_name(self) -> str:
+        raise NotImplementedError("Subclass implementation required.")
+
     # TODO: move to subclasses.
     def __str__(self) -> str:
         """
@@ -130,9 +133,9 @@ class Ranker:
             string will also include the training parameters provided.
         """
         s = ">>> Candidate selection:\n"
-        s += f"    * Method: {self.method}\n"
+        s += f"    * Method: {self.method_name()}\n"
 
-        if self.method == "deezymatch":
+        if self.method_name() == "deezymatch":
             s += "    * DeezyMatch details:\n"
             s += f"      * Model: {self.deezy_parameters['dm_model']}\n"
             s += f"      * Ranking metric: {self.deezy_parameters['ranking_metric']}\n"
@@ -225,7 +228,7 @@ class Ranker:
         del wikidata_to_mentions_filtered
 
         # Parallelize if ranking method is one of the following:
-        if self.method in ["partialmatch", "levenshtein"]:
+        if self.method_name() in ["partialmatch", "levenshtein"]:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -245,7 +248,7 @@ class Ranker:
             None.
         """
 
-        if self.method == "deezymatch":
+        if self.method_name() == "deezymatch":
             Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
             if self.deezy_parameters["do_test"] == True:
                 self.deezy_parameters["dm_model"] += "_test"
@@ -276,43 +279,12 @@ class Ranker:
                 will vary depending on the method set in the Ranker object.
                 See Notes below for further information.
 
-        Example:
-            >>> myranker = Ranker(method="perfectmatch", ...)
-            >>> ranker.mentions_to_wikidata = myranker.load_resources()
-            >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> candidates, already_collected = myranker.run(queries)
-            >>> print(candidates)
-            {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
-            >>> print(already_collected)
-            {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
-
-        Note:
-            This method executes the appropriate ranking method based on the
-            ``method`` parameter, selected when initialising the
-            :py:meth:`~geoparser.ranking.Ranker` object.
-
-            It delegates the execution to the corresponding method:
-
-            * :py:meth:`~geoparser.ranking.Ranker.perfect_match`
-            * :py:meth:`~geoparser.ranking.Ranker.partial_match`
-            * :py:meth:`~geoparser.ranking.Ranker.levenshtein`
-            * :py:meth:`~geoparser.ranking.Ranker.deezy_on_the_fly`
-
-            See the documentation of those methods for more details about
-            their processing if the provided mentions (``queries``).
+        This base class should not be instatiated directly. Instead use a subclass
+        constructor. 
+        
+        Each subclass implements a ranking method in its ``run`` method.
         """
         raise NotImplementedError("Subclass implementation required.")
-
-        # old:
-        if self.method == "perfectmatch":
-            return self.perfect_match(queries)
-        if self.method == "partialmatch":
-            return self.partial_match(queries, damlev=False)
-        if self.method == "levenshtein":
-            return self.partial_match(queries, damlev=True)
-        if self.method == "deezymatch":
-            return self.deezy_on_the_fly(queries)
-        raise SyntaxError(f"Unknown method: {self.method}")
 
     def find_candidates(self, mentions: List[dict]) -> Tuple[dict, dict]:
         """
@@ -408,17 +380,17 @@ class PerfectMatchRanker(Ranker):
     A ranking method using perfect string matching.
 
     Example:
-
-    .. code-block:: python
-
-        ranker = PerfectMatchRanker(
-            resources_path="/path/to/resources/",
-        )
+        >>> myranker = PerfectMatchRanker(...)
+        >>> ranker.mentions_to_wikidata = myranker.load_resources()
+        >>> queries = ['London', 'Barcelona', 'Bologna']
+        >>> candidates, already_collected = myranker.run(queries)
+        >>> print(candidates)
+        {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
+        >>> print(already_collected)
+        {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
     """
-
     def method_name(self) -> str:
         return "perfectmatch"
-
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -472,9 +444,12 @@ class PerfectMatchRanker(Ranker):
         return candidates, self.already_collected_cands
 
 
-class PartialMatchRanker(Ranker):
+class PartialMatchRanker(PerfectMatchRanker):
     """
-    A ranking method using partial string matching.
+    A ranking method using partial string matching. 
+    
+    This class extends PerfectMatchRanker because perfect matches are sought
+    before attempting a partial match.
 
     Example:
 
@@ -516,7 +491,8 @@ class PartialMatchRanker(Ranker):
             partial matching method: Levenshtein distance or containment.
 
         """
-        candidates, self.already_collected_cands = self.perfect_match(queries)
+        # First fill in the perfect matches and already collected queries
+        candidates, self.already_collected_cands = super().run(queries)
 
         # the rest go through
         remainers = [x for x, y in candidates.items() if len(y) == 0]
@@ -615,10 +591,9 @@ class LevenshteinRanker(PartialMatchRanker):
         Note:
             This method computes the Damerau-Levenshtein distance between the
             lowercase versions of a mention and the "mentions" column value in
-            the given row.
-
-            The distance is then normalized to a similarity score by
-            subtracting it from ``1.0``.
+            the given row. The distance is then normalized to a similarity score 
+            by subtracting it from ``1.0``. If a mention has already been matched 
+            perfectly, it skips the partial matching process for that mention. 
 
         Example:
             >>> ranker = LevenshteinRanker(...)
@@ -633,10 +608,13 @@ class LevenshteinRanker(PartialMatchRanker):
         )
 
 
-class DeezyMatchRanker(Ranker):
+class DeezyMatchRanker(PerfectMatchRanker):
     """
     A ranking method using DeezyMatch (a deep neural network approach to 
     fuzzy string matching).
+
+    This class extends PerfectMatchRanker because perfect matches are sought
+    before attempting a fuzzy string match.
 
     Example:
 
@@ -737,8 +715,8 @@ class DeezyMatchRanker(Ranker):
         dm_model = self.deezy_parameters["dm_model"]
         dm_output = self.deezy_parameters["dm_output"]
 
-        # first we fill in the perfect matches and already collected queries
-        cands_dict, self.already_collected_cands = self.perfect_match(queries)
+        # First fill in the perfect matches and already collected queries
+        cands_dict, self.already_collected_cands = super().run(queries)
 
         # the rest go through
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]

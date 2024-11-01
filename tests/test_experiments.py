@@ -61,8 +61,7 @@ def test_load_data(tmp_path):
     )
 
     # Instantiate the ranker:
-    myranker = ranking.Ranker(
-        method="perfectmatch",
+    myranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
@@ -127,27 +126,6 @@ def test_load_data(tmp_path):
         assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
 
-def test_wrong_ranker_method(tmp_path):
-    ranker = ranking.Ranker(
-        # wrong naming: it should be perfectmatch
-        method="perfect_match",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
-    )
-
-    exp = experiment.Experiment(
-        dataset="lwm",
-        data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
-        dataset_df=pd.DataFrame(),
-        results_path=str(tmp_path),
-        myner="test",
-        myranker=ranker,
-        mylinker="test",
-    )
-    with pytest.raises(SystemExit) as cm:
-        exp.prepare_data()
-    assert cm.value.code == 0
-
-
 @pytest.mark.skip(reason="Needs large resources")
 def test_apply(tmp_path):
     myner = recogniser.Recogniser(
@@ -169,8 +147,7 @@ def test_apply(tmp_path):
     )
 
     # Instantiate the ranker:
-    myranker = ranking.Ranker(
-        method="perfectmatch",
+    myranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
