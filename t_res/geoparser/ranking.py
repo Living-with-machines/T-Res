@@ -667,7 +667,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
         self.deezy_parameters = deezy_parameters
 
     def method_name(self) -> str:
-        return "partialmatch"
+        return "deezymatch"
     
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
