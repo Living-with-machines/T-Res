@@ -12,6 +12,7 @@ from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 from ..utils import deezy_processing
 
 
+# TODO: class docstring
 class Ranker:
     """
     The Ranker class implements a system for candidate selection through string
@@ -31,9 +32,6 @@ class Ranker:
             will store the mapping between Wikidata IDs and mentions,
             which will be loaded through the
             :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
-        strvar_parameters (dict, optional): Dictionary of string variation
-            parameters required to create a DeezyMatch training dataset.
-            For the default settings, see Notes below.
         already_collected_cands (dict, optional): Dictionary of already
             collected candidates. Defaults to ``dict()`` (an empty dictionary).
 
@@ -616,6 +614,25 @@ class DeezyMatchRanker(PerfectMatchRanker):
     This class extends PerfectMatchRanker because perfect matches are sought
     before attempting a fuzzy string match.
 
+    Arguments:
+        resources_path (str): Relative path to the resources directory
+            (containing Wikidata resources).
+        mentions_to_wikidata (dict, optional): An empty dictionary which
+            will store the mapping between mentions and Wikidata IDs,
+            which will be loaded through the
+            :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
+        wikidata_to_mentions (dict, optional): An empty dictionary which
+            will store the mapping between Wikidata IDs and mentions,
+            which will be loaded through the
+            :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
+        strvar_parameters (dict, optional): Dictionary of string variation
+            parameters required to create a DeezyMatch training dataset.
+            For the default settings, see Notes below.
+        deezy_parameters (dict, optional): Dictionary of DeezyMatch parameters
+            for model training. For the default settings, see Notes below.
+        already_collected_cands (dict, optional): Dictionary of already
+            collected candidates. Defaults to ``dict()`` (an empty dictionary).
+
     Example:
 
     .. code-block:: python
@@ -628,10 +645,13 @@ class DeezyMatchRanker(PerfectMatchRanker):
     def __init__(
         self,
         resources_path: str,
-        strvar_parameters: Optional[dict] = None, # TODO: check that strvar_parameters is only needed in Deezy case.
+        mentions_to_wikidata: Optional[dict] = dict(),
+        wikidata_to_mentions: Optional[dict] = dict(),
+        strvar_parameters: Optional[dict] = None,
         deezy_parameters: Optional[dict] = None,
+        already_collected_cands: Optional[dict] = dict(),
     ):
-        super().__init__(resources_path)
+        super().__init__(resources_path, mentions_to_wikidata, wikidata_to_mentions, already_collected_cands)
 
         # set paths based on resources path
         if strvar_parameters is None:

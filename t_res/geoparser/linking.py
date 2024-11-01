@@ -470,8 +470,8 @@ class RelDisambLinker(Linker):
                 }
         """
         # Generate ED model name:
-        linker_name = myranker.method
-        if myranker.method == "deezymatch":
+        linker_name = myranker.method_name()
+        if myranker.method_name() == "deezymatch":
             linker_name += "+" + str(myranker.deezy_parameters["num_candidates"])
             linker_name += "+" + str(
                 myranker.deezy_parameters["selection_threshold"]

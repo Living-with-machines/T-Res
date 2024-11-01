@@ -172,12 +172,12 @@ def test_ranking_deezy_on_the_fly(tmp_path):
 
     # Test that perfect_match acts before deezy
     myranker.mentions_to_wikidata = myranker.load_resources()
-    candidates, already_collected_cands = myranker.deezy_on_the_fly(["London"])
+    candidates, already_collected_cands = myranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
     # Test that deezy works
     myranker.already_collected_cands = {}
-    candidates, already_collected_cands = myranker.deezy_on_the_fly(["Ashton-cnderLyne"])
+    candidates, already_collected_cands = myranker.run(["Ashton-cnderLyne"])
 
     assert (0.0 < candidates["Ashton-cnderLyne"]["Ashton-under-Lyne"] < 1.0)
 
@@ -229,7 +229,10 @@ def test_ranking_find_candidates(tmp_path):
     assert "Q42448" in candidates["Sheftield"]["Sheffield"]["Candidates"]
 
     # Test that Perfect Match works
-    myranker.method = "perfectmatch"
+    myranker = ranking.PerfectMatchRanker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    )
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     # Test that perfect_match acts before deezy
     myranker.mentions_to_wikidata = myranker.load_resources()
@@ -242,7 +245,10 @@ def test_ranking_find_candidates(tmp_path):
     assert candidates["Sheftield"] == {}
 
     # Test that check if contained works
-    myranker.method = "partialmatch"
+    myranker = ranking.PartialMatchRanker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    )
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     # Test that perfect_match acts before partialmatch
     myranker.mentions_to_wikidata = myranker.load_resources()
@@ -257,7 +263,10 @@ def test_ranking_find_candidates(tmp_path):
     assert "Sheffield" not in candidates["Sheftield"]
 
     # Test that levenshtein works
-    myranker.method = "levenshtein"
+    myranker = ranking.LevenshteinRanker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    )
+    myranker.mentions_to_wikidata = myranker.load_resources()
 
     # Test that perfect_match acts before partialmatch
     myranker.mentions_to_wikidata = myranker.load_resources()

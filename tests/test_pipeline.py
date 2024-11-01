@@ -245,31 +245,6 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        strvar_parameters={
-            # Parameters to create the string pair dataset:
-            "ocr_threshold": 60,
-            "top_threshold": 85,
-            "min_len": 5,
-            "max_len": 15,
-            "w2v_ocr_path": str(tmp_path),
-            "w2v_ocr_model": "w2v_1800s_news",
-            "overwrite_dataset": False,
-        },
-        deezy_parameters={
-            # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"../resources/deezymatch/"),
-            "dm_cands": "wkdtalts",
-            "dm_model": "w2v_ocr",
-            "dm_output": "deezymatch_on_the_fly",
-            # Ranking measures:
-            "ranking_metric": "faiss",
-            "selection_threshold": 50,
-            "num_candidates": 1,
-            "verbose": False,
-            # DeezyMatch training:
-            "overwrite_training": False,
-            "do_test": False,
-        },
         already_collected_cands=dict(),
     )
 
