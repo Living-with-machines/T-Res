@@ -177,7 +177,8 @@ class Ranker:
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
-        Run the appropriate ranking method based on the specified method.
+        Execute the ranking process. Each Ranker subclass must implement a 
+        ranking method by overriding this function.
 
         Arguments:
             queries (list): A list of mentions (strings) identified in a text
@@ -186,10 +187,7 @@ class Ranker:
         Returns:
             Tuple[dict, dict]:
                 A tuple containing two dictionaries. The resulting dictionaries
-                will vary depending on the method set in the Ranker object.
-                See Notes below for further information.
-        
-        Each subclass implements a ranking method in its ``run`` method.
+                will vary depending on the particular ranking method.
         """
         raise NotImplementedError("Subclass implementation required.")
 
@@ -651,7 +649,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
-        Perform DeezyMatch  on-the-fly for a list of given mentions (``queries``).
+        Perform DeezyMatch ranking on-the-fly for a list of given mentions (``queries``).
 
         Arguments:
             queries (list): A list of mentions (strings) identified in a text
@@ -749,7 +747,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
     
     def train(self) -> None:
         """
-        Training a DeezyMatch model. The training will be skipped if the model
+        Train a DeezyMatch model. The training will be skipped if the model
         already exists and the ``overwrite_training`` key in the
         ``deezy_parameters`` passed when initialising the
         :py:meth:`~geoparser.ranking.Ranker` object is set to ``False``. The

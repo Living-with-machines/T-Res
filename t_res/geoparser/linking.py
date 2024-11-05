@@ -116,11 +116,10 @@ class Linker:
 
         print("*** Linking resources loaded!\n")
 
-    # TODO: fix docstring
     def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
         """
-        Executes the linking process based on the specified unsupervised
-        method.
+        Execute the linking process. Each Linker subclass must implement a 
+        linking method by overriding this function.
 
         Arguments:
             dict_mention: Dictionary containing the mention information.
@@ -140,7 +139,6 @@ class Linker:
 
         """
         raise NotImplementedError("Subclass implementation required.")
-
 
 class MostPopularLinker(Linker):
     """
