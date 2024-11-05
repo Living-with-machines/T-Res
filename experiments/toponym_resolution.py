@@ -64,8 +64,8 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the recogniser:
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-" + granularity,
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-" + granularity,
         train_dataset=str(current_dir)
         + "/outputs/data/lwm/ner_"
         + granularity
@@ -92,7 +92,6 @@ for exp_param in experiments:
         },  # Training arguments: you can change them. These are selected based on: https://github.com/dbmdz/clef-hipe/tree/main/experiments/clef-hipe-2022#topres19th
         overwrite_training=False,  # Set to True if you want to overwrite an existing model with the same name.
         do_test=False,  # Set to True if you want to perform the training on test mode (the string "_test" will be appended to your model name).
-        load_from_hub=False,  # Whether the model should be loaded from the HuggingFace hub
     )
 
     # --------------------------------------

@@ -42,8 +42,8 @@ def test_load_data(tmp_path):
         for sent in sents:
             ids.add(str(article_id) + "_" + str(sent["sentence_pos"]))
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -57,7 +57,6 @@ def test_load_data(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  
     )
 
     # Instantiate the ranker:
@@ -71,8 +70,7 @@ def test_load_data(tmp_path):
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
 
     # Load the resources (and train a DeezyMatch model if needed):
     myranker.mentions_to_wikidata = myranker.load_resources()
@@ -128,8 +126,8 @@ def test_load_data(tmp_path):
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_apply(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -143,7 +141,6 @@ def test_apply(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  
     )
 
     # Instantiate the ranker:
@@ -157,8 +154,7 @@ def test_apply(tmp_path):
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
 
     # Load the resources (and train a DeezyMatch model if needed):
     myranker.mentions_to_wikidata = myranker.load_resources()

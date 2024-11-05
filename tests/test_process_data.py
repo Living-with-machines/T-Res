@@ -65,8 +65,8 @@ def test_prepare_sents():
 
 
 def test_align_gold(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -80,11 +80,9 @@ def test_align_gold(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -122,8 +120,8 @@ def test_align_gold(tmp_path):
 
 
 def test_ner_and_process(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -137,11 +135,9 @@ def test_ner_and_process(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),

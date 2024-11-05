@@ -50,8 +50,8 @@ def test_train(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="ner_test",  # NER model name prefix (will have suffixes appended)
+    myner = recogniser.CustomRecogniser(
+        model_name="ner_test",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
@@ -65,7 +65,6 @@ def test_train(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
     )
 
     myranker = ranking.DeezyMatchRanker(
@@ -118,10 +117,7 @@ def test_train(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    # Train the NER models if needed:
-    myner.train()
-    # Load the NER pipeline:
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
@@ -143,8 +139,8 @@ def test_train(tmp_path):
 
 @pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
@@ -158,7 +154,6 @@ def test_load_eval_model(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
     )
 
     myranker = ranking.DeezyMatchRanker(
@@ -211,10 +206,7 @@ def test_load_eval_model(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    # Train the NER models if needed:
-    myner.train()
-    # Load the NER pipeline:
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
@@ -236,8 +228,8 @@ def test_predict(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
@@ -251,7 +243,6 @@ def test_predict(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
     )
 
     myranker = ranking.DeezyMatchRanker(

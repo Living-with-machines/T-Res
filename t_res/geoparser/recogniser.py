@@ -18,14 +18,162 @@ from transformers import (
 
 from ..utils import ner
 
-
 class Recogniser:
     """
-    A class for training and using a toponym recogniser with the specified
-    parameters.
+    The Recogniser class provides methods for named entity recognition
+    applied to toponyms.
 
     Arguments:
-        model (str): The name of the NER model.
+        model_name (str): The name of the NER model.
+
+    This base class should not be instatiated directly. Instead use a subclass
+    constructor.
+    """
+
+    def __init__(
+        self,
+        model_name: str,
+    ):
+        """
+        Initialises a Recogniser object.
+        """
+        self.model_name = model_name
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the Recogniser object.
+
+        Returns:
+            str: String representation of the Recogniser object.
+        """
+        s = "\n>>> Toponym recogniser:\n"
+        s += f"    * Model: {self.model()}\n"
+        return s
+
+    def model(self) -> str:
+        """
+        Returns the ``model`` parameter to be passed to the Pipeline factory 
+        method in the ``transformers`` package.
+
+        Returns:
+            str: The ``model`` parameter
+        """
+        raise NotImplementedError("Subclass implementation required.")
+
+    def create_pipeline(self):
+        """
+        Creates a Named Entity Recognition (NER) pipeline and assigns it
+        to the ``pipe`` attribute.
+
+        Note:
+            This method creates and loads a NER pipeline for performing named
+            entity recognition tasks. The created pipeline is stored in the 
+            ``pipe`` attribute of the ``Recogniser`` instance.
+        """
+
+        print("*** Creating and loading a NER pipeline.")
+        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[])
+
+    # TODO: rename as `run` for consistency with Linker and Ranker. 
+    def ner_predict(self, sentence: str) -> List[dict]:
+        """
+        Predicts named entities in a given sentence using the NER pipeline.
+
+        Arguments:
+            sentence (str): The input sentence.
+
+        Returns:
+            List[dict]:
+                A list of dictionaries representing the predicted named
+                entities. Each dictionary contains the keys ``"word"``,
+                ``"entity"``, ``"score"``, ``"start"`` , and ``"end"``
+                representing the entity text, entity label, confidence
+                score and start and end character position of the text
+                respectively. For example:
+
+                .. code-block:: json
+
+                    {
+                        "word": "From",
+                        "entity": "O",
+                        "score": 0.99975187,
+                        "start": 0,
+                        "end": 4
+                    }
+
+        Note:
+            This method takes a sentence as input and uses the NER pipeline to
+            predict named entities in the sentence.
+
+            Any n-dash characters (``—``) in the provided sentence are
+            replaced with a comma (``,``) to handle parsing issues related to
+            the n-dash in OCR from historical newspapers.
+        """
+        # Error if the sentence is too short.
+        if len(sentence) <= 1:
+            return []
+
+        # The n-dash is a very frequent character in historical newspapers,
+        # but the NER pipeline does not process it well: Plymouth—Kingston
+        # is parsed as "Plymouth (B-LOC), — (B-LOC), Kingston (B-LOC)", instead
+        # of the n-dash being interpreted as a word separator. Therefore, we
+        # replace it by a comma, except when the n-dash occurs in the opening
+        # position of a sentence.
+        sentence = sentence[0] + sentence[1:].replace("—", ",")
+
+        # Run the NER pipeline to predict mentions:
+        ner_preds = self.pipe(sentence)
+
+        # Post-process the predictions, fixing potential grouping errors:
+        lEntities = []
+        predictions = []
+        for pred_ent in ner_preds:
+            pred_ent["score"] = float(pred_ent["score"])
+            pred_ent["entity"] = pred_ent["entity"]
+            pred_ent = ner.fix_capitalization(pred_ent, sentence)
+            predictions = ner.aggregate_entities(pred_ent, lEntities)
+
+        if len(predictions) > 0:
+            predictions = ner.fix_hyphens(predictions)
+            predictions = ner.fix_nested(predictions)
+            predictions = ner.fix_startEntity(predictions)
+
+        return predictions
+
+class PretrainedRecogniser(Recogniser):
+    """
+    A pretrained toponym recogniser loaded from HuggingFace.
+
+    Example:
+        >>> # Create an instance of the Recogniser class
+        >>> recogniser = PretrainedRecogniser(
+                model_name="Livingwithmachines/toponym-19thC-en",
+            )
+
+        >>> # Create and load the NER pipeline
+        >>> pipeline = recogniser.create_pipeline()
+
+        >>> # Predict named entities in a sentence
+        >>> sentence = "I live in London."
+        >>> predictions = recogniser.ner_predict(sentence)
+        >>> print(predictions)
+    """
+
+    def model(self) -> str:
+        """
+        Returns the name of the model loaded from HuggingFace.
+
+        Returns:
+            str: The name of the pretrained HuggingFace model.
+        """
+        return self.model_name
+
+class CustomRecogniser(Recogniser):
+    """
+    A toponym recogniser with data and parameters for custom training.
+
+    Arguments:
+        model_name (str): The name of the NER model.
         train_dataset (str, optional): Path to the training dataset
             (default: ``""``).
         test_dataset (str, optional): Path to the testing dataset
@@ -43,13 +191,11 @@ class Recogniser:
             trained model (default: ``False``).
         do_test (bool, optional): Whether to train in test mode
             (default: ``False``).
-        load_from_hub (bool, optional): Whether to load the model from
-            HuggingFace model hub or locally (default: ``False``).
 
     Example:
         >>> # Create an instance of the Recogniser class
-        >>> recogniser = Recogniser(
-                model="ner-model",
+        >>> recogniser = CustomRecogniser(
+                model_name="ner-model",
                 train_dataset="train.json",
                 test_dataset="test.json",
                 base_model="bert-base-uncased",
@@ -62,14 +208,10 @@ class Recogniser:
                     },
                 overwrite_training=False,
                 do_test=False,
-                load_from_hub=False
             )
 
         >>> # Create and load the NER pipeline
-        >>> pipeline = recogniser.create_pipeline()
-
-        >>> # Train the model
-        >>> recogniser.train()
+        >>> recogniser.create_pipeline()
 
         >>> # Predict named entities in a sentence
         >>> sentence = "I live in London."
@@ -79,7 +221,7 @@ class Recogniser:
 
     def __init__(
         self,
-        model: str,
+        model_name: str,
         train_dataset: Optional[str] = "",
         test_dataset: Optional[str] = "",
         pipe: Optional[Pipeline] = None,
@@ -93,12 +235,11 @@ class Recogniser:
         },
         overwrite_training: Optional[bool] = False,
         do_test: Optional[bool] = False,
-        load_from_hub: Optional[bool] = False,
     ):
         """
         Initialises a Recogniser object.
         """
-        self.model = model
+        super().__init__(model_name)
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
         self.pipe = pipe
@@ -107,15 +248,11 @@ class Recogniser:
         self.training_args = training_args
         self.overwrite_training = overwrite_training
         self.do_test = do_test
-        self.load_from_hub = load_from_hub
 
-        # Add "_test" to the model name if do_test is True, unless
-        # the model is downloaded from Huggingface, in which case
-        # we keep the name inputed by the user.
-        if self.do_test == True and self.load_from_hub == False:
-            self.model += "_test"
+        # Add "_test" to the model name if do_test is True.
+        if self.do_test:
+            self.model_name += "_test"
 
-    # -------------------------------------------------------------
     def __str__(self) -> str:
         """
         Returns a string representation of the Recogniser object.
@@ -123,31 +260,54 @@ class Recogniser:
         Returns:
             str: String representation of the Recogniser object.
         """
-        s = "\n>>> Toponym recogniser:\n"
-        s += f"    * Model path: {self.model_path}\n"
-        s += f"    * Model name: {self.model}\n"
+        s = super().__str__()
         s += f"    * Base model: {self.base_model}\n"
         s += f"    * Overwrite model if exists: {self.overwrite_training}\n"
         s += f"    * Train in test mode: {self.do_test}\n"
-        s += f"    * Load from hub: {self.load_from_hub}\n"
         s += f"    * Training args: {self.training_args}\n"
         return s
 
-    # -------------------------------------------------------------
-    def train(self) -> None:
+    def model(self) -> str:
         """
-        Trains a NER model.
+        Returns the path and filename of the trained model.
 
         Returns:
-            None.
+            str: Path and filename of the trained model
+        """
+        return os.path.join(self.model_path, f"{self.model_name}.model")
+
+    # Override the create_pipeline method to train the model if necessary.
+    def create_pipeline(self):
+        """
+        Creates a Named Entity Recognition (NER) pipeline and assigns it
+        to the ``pipe`` attribute.
 
         Note:
-            If the model is obtained from the HuggingFace model hub
-            (``load_from_hub=True``) or if the model already exists at the
-            specified model path and ``overwrite_training`` is False,
-            training is skipped.
+            This method creates and loads a NER pipeline for performing named
+            entity recognition tasks. Unless a trained model already exists and
+            overwrite_training is False, it calls the ``train`` method to 
+            train a custom model and saves it using the specified model name 
+            and model path. It then creates the pipeline from that model.
+            The created pipeline is stored in the ``pipe`` attribute of the
+            ``Recogniser`` object.
+        """
 
-            Otherwise, the training process is executed, including the
+        if Path(self.model()).exists() and not self.overwrite_training:
+            s = "\n** Note: Model "
+            s += f"{self.model()} is already trained.\n"
+            s += "Set overwrite_training to True if needed.\n"
+            print(s)
+        else:
+            self.train()
+
+        super().create_pipeline()
+
+    def train(self):
+        """
+        Trains a NER model and saves it under the model path.
+
+        Note:
+            Training process is executed, including the
             loading of datasets, model, and tokenizer, tokenization and
             alignment of labels, computation of evaluation metrics,
             training using the Trainer object, evaluation, and saving the
@@ -159,19 +319,6 @@ class Recogniser:
         Credit:
             This function is adapted from `a HuggingFace tutorial <https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb>`_.
         """
-
-        # Skip training if the model is obtained from the hub:
-        if self.load_from_hub == True:
-            return None
-
-        # If model exists and overwrite is set to False, skip training:
-        model_path = os.path.join(self.model_path,f"{self.model}.model")
-        if Path(model_path).exists() and self.overwrite_training == False:
-            s = "\n** Note: Model "
-            s += f"{model_path} is already trained.\n"
-            s += "Set overwrite to True if needed.\n"
-            print(s)
-            return None
 
         print("*** Training the toponym recognition model...")
 
@@ -270,7 +417,7 @@ class Recogniser:
         training_args = TrainingArguments(
             output_dir=self.model_path,
             evaluation_strategy="epoch",
-            logging_dir=os.path.join(self.model_path,"runs/",self.model),
+            logging_dir=os.path.join(self.model_path,"runs/",self.model_name),
             learning_rate=self.training_args["learning_rate"],
             per_device_train_batch_size=self.training_args["batch_size"],
             per_device_eval_batch_size=self.training_args["batch_size"],
@@ -295,102 +442,4 @@ class Recogniser:
         trainer.evaluate()
 
         # Save the model:
-        trainer.save_model(os.path.join(self.model_path,f"{self.model}.model"))
-
-    # -------------------------------------------------------------
-    def create_pipeline(self) -> Pipeline:
-        """
-        Creates and loads a Named Entity Recognition (NER) pipeline.
-
-        Returns:
-            geoparser.pipeline.Pipeline: The created NER pipeline.
-
-        Note:
-            This method creates and loads a NER pipeline for performing named
-            entity recognition tasks. It uses the specified model name and
-            model path (if the model is not obtained from the HuggingFace
-            model hub or from a local path) to initialise the pipeline.
-            The created pipeline is stored in the ``pipe`` attribute of the
-            ``Recogniser`` object. It is also returned by the method.
-        """
-
-        print("*** Creating and loading a NER pipeline.")
-
-        # Path to NER Model:
-        model_name = self.model
-
-        # If the model is local (has not been obtained from the hub),
-        # pre-append the model path and the extension of the model
-        # to obtain the model name.
-        if self.load_from_hub == False:
-            model_name = os.path.join(self.model_path, f"{self.model}.model")
-
-        # Load a NER pipeline:
-        self.pipe = pipeline("ner", model=model_name, ignore_labels=[])
-        return self.pipe
-
-    # -------------------------------------------------------------
-    def ner_predict(self, sentence: str) -> List[dict]:
-        """
-        Predicts named entities in a given sentence using the NER pipeline.
-
-        Arguments:
-            sentence (str): The input sentence.
-
-        Returns:
-            List[dict]:
-                A list of dictionaries representing the predicted named
-                entities. Each dictionary contains the keys ``"word"``,
-                ``"entity"``, ``"score"``, ``"start"`` , and ``"end"``
-                representing the entity text, entity label, confidence
-                score and start and end character position of the text
-                respectively. For example:
-
-                .. code-block:: json
-
-                    {
-                        "word": "From",
-                        "entity": "O",
-                        "score": 0.99975187,
-                        "start": 0,
-                        "end": 4
-                    }
-
-        Note:
-            This method takes a sentence as input and uses the NER pipeline to
-            predict named entities in the sentence.
-
-            Any n-dash characters (``—``) in the provided sentence are
-            replaced with a comma (``,``) to handle parsing issues related to
-            the n-dash in OCR from historical newspapers.
-        """
-        # Error if the sentence is too short.
-        if len(sentence) <= 1:
-            return []
-
-        # The n-dash is a very frequent character in historical newspapers,
-        # but the NER pipeline does not process it well: Plymouth—Kingston
-        # is parsed as "Plymouth (B-LOC), — (B-LOC), Kingston (B-LOC)", instead
-        # of the n-dash being interpreted as a word separator. Therefore, we
-        # replace it by a comma, except when the n-dash occurs in the opening
-        # position of a sentence.
-        sentence = sentence[0] + sentence[1:].replace("—", ",")
-
-        # Run the NER pipeline to predict mentions:
-        ner_preds = self.pipe(sentence)
-
-        # Post-process the predictions, fixing potential grouping errors:
-        lEntities = []
-        predictions = []
-        for pred_ent in ner_preds:
-            pred_ent["score"] = float(pred_ent["score"])
-            pred_ent["entity"] = pred_ent["entity"]
-            pred_ent = ner.fix_capitalization(pred_ent, sentence)
-            predictions = ner.aggregate_entities(pred_ent, lEntities)
-
-        if len(predictions) > 0:
-            predictions = ner.fix_hyphens(predictions)
-            predictions = ner.fix_nested(predictions)
-            predictions = ner.fix_startEntity(predictions)
-
-        return predictions
+        trainer.save_model(self.model())

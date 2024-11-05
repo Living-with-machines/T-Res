@@ -43,8 +43,8 @@ def test_deezy_mostpopular(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -58,7 +58,6 @@ def test_deezy_mostpopular(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     myranker = ranking.DeezyMatchRanker(
@@ -129,8 +128,8 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -144,7 +143,6 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     # --------------------------------------
@@ -221,8 +219,8 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -236,7 +234,6 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     # --------------------------------------
@@ -287,8 +284,8 @@ def test_modular_deezy_rel(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -302,7 +299,6 @@ def test_modular_deezy_rel(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
     # --------------------------------------

@@ -47,9 +47,8 @@ class Pipeline:
 
           .. code-block:: python
 
-            recogniser.Recogniser(
+            recogniser.PretrainedRecogniser(
                 model="Livingwithmachines/toponym-19thC-en",
-                load_from_hub=True,
             )
 
         * The default settings for the ``Ranker``:
@@ -89,9 +88,8 @@ class Pipeline:
 
         # If myner is None, instantiate the default Recogniser.
         if not self.myner:
-            self.myner = recogniser.Recogniser(
-                model="Livingwithmachines/toponym-19thC-en",
-                load_from_hub=True,
+            self.myner = recogniser.PretrainedRecogniser(
+                model_name="Livingwithmachines/toponym-19thC-en",
             )
 
         # If myranker is None, instantiate the default Ranker.
@@ -119,12 +117,7 @@ class Pipeline:
 
         # -----------------------------------------
         # NER training and creating pipeline:
-
-        # Train the NER models if needed:
-        self.myner.train()
-
-        # Load the NER pipeline:
-        self.myner.pipe = self.myner.create_pipeline()
+        self.myner.create_pipeline()
 
         # -----------------------------------------
         # Ranker loading resources and training a model:

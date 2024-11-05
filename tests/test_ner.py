@@ -12,8 +12,8 @@ current_dir = Path(__file__).parent.resolve()
 def test_ner_local_train(tmp_path):
     model_path = os.path.join(tmp_path,"ner_test.model")
     
-    myner = recogniser.Recogniser(
-        model="ner_test",
+    myner = recogniser.CustomRecogniser(
+        model_name="ner_test",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         base_model="Livingwithmachines/bert_1760_1900", 
@@ -26,7 +26,6 @@ def test_ner_local_train(tmp_path):
         },
         overwrite_training=False,
         do_test=False,
-        load_from_hub=False,
     )
     assert os.path.exists(model_path) is False
     myner.train()
@@ -39,8 +38,8 @@ def test_ner_predict():
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    myner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         base_model="Livingwithmachines/bert_1760_1900", 
@@ -53,9 +52,8 @@ def test_ner_predict():
         },
         overwrite_training=False,
         do_test=False,
-        load_from_hub=False, # Whether the final model should be loaded from the HuggingFace hub"
     )
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
     assert isinstance(myner.pipe, TokenClassificationPipeline)
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -72,12 +70,10 @@ def test_ner_predict():
 
 
 def test_ner_from_hub():
-    myner = recogniser.Recogniser(
-        model="Livingwithmachines/toponym-19thC-en",
-        load_from_hub=True,
+    myner = recogniser.PretrainedRecogniser(
+        model_name="Livingwithmachines/toponym-19thC-en",
     )
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
     assert isinstance(myner.pipe, TokenClassificationPipeline)
     
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -88,11 +84,10 @@ def test_ner_from_hub():
 
 
 def test_aggregate_mentions():
-    myner = recogniser.Recogniser(
-        model="Livingwithmachines/toponym-19thC-en",
-        load_from_hub=True,
+    myner = recogniser.PretrainedRecogniser(
+        model_name="Livingwithmachines/toponym-19thC-en",
     )
-    myner.pipe = myner.create_pipeline()
+    myner.create_pipeline()
     
     sentence = "I grew up in Bologna, a city near Florence, but way more interesting."
     predictions = myner.ner_predict(sentence)

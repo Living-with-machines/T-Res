@@ -119,7 +119,7 @@ class Experiment:
             dict: A dictionary where the processed data is stored.
         """
 
-        output_path = os.path.join(self.data_path, self.dataset, self.myner.model)
+        output_path = os.path.join(self.data_path, self.dataset, self.myner.model_name)
 
         # Add the candidate experiment info to the path:
         cand_approach = self.myranker.method_name()
@@ -282,7 +282,7 @@ class Experiment:
         """
         data_path = self.data_path
         dataset = self.dataset
-        model_name = self.myner.model
+        model_name = self.myner.model_name
         output_path = data_path + dataset + "/" + model_name
 
         cand_approach = self.myranker.method_name()
@@ -453,9 +453,9 @@ class Experiment:
             data=rows,
         )
 
-        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.myner.model}_{cand_approach}')}")
+        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.myner.model_name}_{cand_approach}')}")
         output_path = (
-            os.path.join(self.data_path,self.dataset,f"{self.myner.model}_{cand_approach}")
+            os.path.join(self.data_path,self.dataset,f"{self.myner.model_name}_{cand_approach}")
         )
 
 
@@ -527,7 +527,7 @@ class Experiment:
 
         scenario_name = ""
         if task == "ner":
-            scenario_name += task + "_" + self.myner.model + "_"
+            scenario_name += task + "_" + self.myner.model_name + "_"
 
             # Store predictions results formatted for CLEF-HIPE scorer:
             preds_name = "preds"
@@ -547,7 +547,7 @@ class Experiment:
             )
 
         if task == "linking":
-            scenario_name += task + "_" + self.myner.model + "_"
+            scenario_name += task + "_" + self.myner.model_name + "_"
             cand_approach = self.myranker.method_name()
             if self.myranker.method_name() == "deezymatch":
                 cand_approach += "+" + str(
