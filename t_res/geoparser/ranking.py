@@ -80,29 +80,12 @@ class Ranker:
     def method_name(self) -> str:
         raise NotImplementedError("Subclass implementation required.")
 
-    # TODO: move to subclasses.
     def __str__(self) -> str:
         """
-        Returns a string representation of the Ranker object.
-
-        Note:
-            The string will, at minimum, include the method name, and if the
-            ``method`` was set to "deezymatch" in the Ranker initialiser, the
-            string will also include the training parameters provided.
+        Returns a string representation of the Ranker object, including the method name.
         """
         s = ">>> Candidate selection:\n"
         s += f"    * Method: {self.method_name()}\n"
-
-        if self.method_name() == "deezymatch":
-            s += "    * DeezyMatch details:\n"
-            s += f"      * Model: {self.deezy_parameters['dm_model']}\n"
-            s += f"      * Ranking metric: {self.deezy_parameters['ranking_metric']}\n"
-            s += f"      * Selection threshold: {self.deezy_parameters['selection_threshold']}\n"
-            s += f"      * Num candidates: {self.deezy_parameters['num_candidates']}\n"
-            s += f"      * Overwrite training: {self.deezy_parameters['overwrite_training']}\n"
-            s += f"      * Overwrite dataset: {self.strvar_parameters['overwrite_dataset']}\n"
-            s += f"      * Test mode: {self.deezy_parameters['do_test']}\n"
-
         return s
 
     def load_resources(self) -> dict:
@@ -649,6 +632,22 @@ class DeezyMatchRanker(PerfectMatchRanker):
     def method_name(self) -> str:
         return "deezymatch"
     
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the Ranker object, including the 
+        method name and DeezyMatch training parameters.
+        """
+        s = super().__str__()
+        s += "    * DeezyMatch details:\n"
+        s += f"      * Model: {self.deezy_parameters['dm_model']}\n"
+        s += f"      * Ranking metric: {self.deezy_parameters['ranking_metric']}\n"
+        s += f"      * Selection threshold: {self.deezy_parameters['selection_threshold']}\n"
+        s += f"      * Num candidates: {self.deezy_parameters['num_candidates']}\n"
+        s += f"      * Overwrite training: {self.deezy_parameters['overwrite_training']}\n"
+        s += f"      * Overwrite dataset: {self.strvar_parameters['overwrite_dataset']}\n"
+        s += f"      * Test mode: {self.deezy_parameters['do_test']}\n"
+        
+        return s
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
