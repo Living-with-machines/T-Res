@@ -11,15 +11,13 @@ from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 from ..utils import deezy_processing
 
-
-# TODO: class docstring
 class Ranker:
     """
     The Ranker class implements a system for candidate selection through string
-    variation ranking. It provides methods to select candidates based on different
-    matching approaches, such as perfect match, partial match, Levenshtein distance,
-    and DeezyMatch. The class also handles loading and processing of resources
-    related to candidate selection.
+    variation ranking. Its subclasses provide methods to select candidates based 
+    on different matching approaches, such as perfect match, partial match, 
+    Levenshtein distance, and DeezyMatch. The base class handles loading and 
+    processing of resources related to candidate selection.
 
     Arguments:
         resources_path (str): Relative path to the resources directory
@@ -38,19 +36,14 @@ class Ranker:
     This base class should not be instatiated directly. Instead use a subclass
     constructor.
 
-    # TODO: move examples to subclasses
     Example:
         >>> # Create a Ranker object:
-        >>> ranker = Ranker(
-                method="perfectmatch",
+        >>> ranker = PerfectMatchRanker(
                 resources_path="/path/to/resources/",
             )
 
         >>> # Load resources
         >>> ranker.mentions_to_wikidata = ranker.load_resources()
-
-        >>> # Train the ranker (if applicable)
-        >>> ranker.train()
 
         >>> # Perform candidate selection
         >>> queries = ['London', 'Paraguay']
@@ -67,39 +60,6 @@ class Ranker:
         >>> print("Find Candidates Results:")
         >>> print(mention_candidates)
         >>> print(mention_already_collected)
-
-    Note:
-        * The default settings for ``strvar_parameters``:
-
-          .. code-block:: python
-
-            strvar_parameters: Optional[dict] = {
-                # Parameters to create the string pair dataset:
-                "ocr_threshold": 60,
-                "top_threshold": 85,
-                "min_len": 5,
-                "max_len": 15,
-                "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
-                "w2v_ocr_model": "w2v_*_news",
-                "overwrite_dataset": False,
-            }
-
-        * The default settings for ``deezy_parameters``:
-
-          .. code-block:: python
-
-            deezy_parameters: Optional[dict] = {
-                "dm_path": str(Path("resources/deezymatch/").resolve()),
-                "dm_cands": "wkdtalts",
-                "dm_model": "w2v_ocr",
-                "dm_output": "deezymatch_on_the_fly",
-                "ranking_metric": "faiss",
-                "selection_threshold": 50,
-                "num_candidates": 1,
-                "verbose": False,
-                "overwrite_training": False,
-                "do_test": False,
-            }
     """
 
     def __init__(
@@ -232,7 +192,6 @@ class Ranker:
 
         return self.mentions_to_wikidata
 
-    # TODO: fix docstring
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
         Run the appropriate ranking method based on the specified method.
@@ -246,9 +205,6 @@ class Ranker:
                 A tuple containing two dictionaries. The resulting dictionaries
                 will vary depending on the method set in the Ranker object.
                 See Notes below for further information.
-
-        This base class should not be instatiated directly. Instead use a subclass
-        constructor. 
         
         Each subclass implements a ranking method in its ``run`` method.
         """
@@ -610,7 +566,41 @@ class DeezyMatchRanker(PerfectMatchRanker):
         ranker = DeezyMatchRanker(
             resources_path="/path/to/resources/",
         )
+
+    Note:
+        * The default settings for ``strvar_parameters``:
+
+          .. code-block:: python
+
+            strvar_parameters: Optional[dict] = {
+                # Parameters to create the string pair dataset:
+                "ocr_threshold": 60,
+                "top_threshold": 85,
+                "min_len": 5,
+                "max_len": 15,
+                "w2v_ocr_path": str(Path("resources/models/w2v/").resolve()),
+                "w2v_ocr_model": "w2v_*_news",
+                "overwrite_dataset": False,
+            }
+
+        * The default settings for ``deezy_parameters``:
+
+          .. code-block:: python
+
+            deezy_parameters: Optional[dict] = {
+                "dm_path": str(Path("resources/deezymatch/").resolve()),
+                "dm_cands": "wkdtalts",
+                "dm_model": "w2v_ocr",
+                "dm_output": "deezymatch_on_the_fly",
+                "ranking_metric": "faiss",
+                "selection_threshold": 50,
+                "num_candidates": 1,
+                "verbose": False,
+                "overwrite_training": False,
+                "do_test": False,
+            }
     """
+    
     # Override the constructor to include DeezyMatch model parameters.
     def __init__(
         self,
