@@ -125,10 +125,8 @@ def test_train(tmp_path):
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
-    # Load the resources:
+    # Load the resources (and train a DeezyMatch model if needed):
     myranker.mentions_to_wikidata = myranker.load_resources()
-    # Train a DeezyMatch model if needed:
-    myranker.train()
 
     # -----------------------------------------
     # Linker loading resources:
@@ -220,10 +218,8 @@ def test_load_eval_model(tmp_path):
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
-    # Load the resources:
+    # Load the resources (and train a DeezyMatch model if needed):
     myranker.mentions_to_wikidata = myranker.load_resources()
-    # Train a DeezyMatch model if needed:
-    myranker.train()
 
     # -----------------------------------------
     # Linker loading resources:

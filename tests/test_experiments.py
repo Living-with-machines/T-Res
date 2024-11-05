@@ -74,8 +74,8 @@ def test_load_data(tmp_path):
     myner.train()
     myner.pipe = myner.create_pipeline()
 
+    # Load the resources (and train a DeezyMatch model if needed):
     myranker.mentions_to_wikidata = myranker.load_resources()
-    myranker.train()
 
     mylinker.load_resources()
 
@@ -160,8 +160,8 @@ def test_apply(tmp_path):
     myner.train()
     myner.pipe = myner.create_pipeline()
 
+    # Load the resources (and train a DeezyMatch model if needed):
     myranker.mentions_to_wikidata = myranker.load_resources()
-    myranker.train()
 
     mylinker.load_resources()
 

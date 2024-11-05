@@ -232,36 +232,6 @@ class Ranker:
 
         return self.mentions_to_wikidata
 
-    def train(self) -> None:
-        """
-        Training a DeezyMatch model. The training will be skipped if the model
-        already exists and the ``overwrite_training`` key in the
-        ``deezy_parameters`` passed when initialising the
-        :py:meth:`~geoparser.ranking.Ranker` object is set to ``False``. The
-        training will be run on test mode if the ``do_test`` key in the
-        ``deezy_parameters`` passed when initialising the
-        :py:meth:`~geoparser.ranking.Ranker` object is set to ``True``.
-
-        Returns:
-            None.
-        """
-
-        if self.method_name() == "deezymatch":
-            Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
-            if self.deezy_parameters["do_test"] == True:
-                self.deezy_parameters["dm_model"] += "_test"
-                self.deezy_parameters["dm_cands"] += "_test"
-            deezy_processing.train_deezy_model(
-                self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions
-            )
-            deezy_processing.generate_candidates(
-                self.deezy_parameters, self.mentions_to_wikidata
-            )
-
-        # This dictionary is not used anymore:
-        self.wikidata_to_mentions = dict()
-
-
     # TODO: fix docstring
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -787,3 +757,41 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 self.already_collected_cands[row["query"]] = returned_cands
 
         return cands_dict, self.already_collected_cands
+    
+    def train(self) -> None:
+        """
+        Training a DeezyMatch model. The training will be skipped if the model
+        already exists and the ``overwrite_training`` key in the
+        ``deezy_parameters`` passed when initialising the
+        :py:meth:`~geoparser.ranking.Ranker` object is set to ``False``. The
+        training will be run on test mode if the ``do_test`` key in the
+        ``deezy_parameters`` passed when initialising the
+        :py:meth:`~geoparser.ranking.Ranker` object is set to ``True``.
+
+        Returns:
+            None.
+        """
+
+        Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
+        if self.deezy_parameters["do_test"] == True:
+            self.deezy_parameters["dm_model"] += "_test"
+            self.deezy_parameters["dm_cands"] += "_test"
+        deezy_processing.train_deezy_model(
+            self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions
+        )
+        deezy_processing.generate_candidates(
+            self.deezy_parameters, self.mentions_to_wikidata
+        )
+
+        # This dictionary is not used anymore:
+        self.wikidata_to_mentions = dict()
+
+
+    # Override the base class implementation to optionally train the DeezyMatch 
+    # model if either a trained model does not alredy exist or the 
+    # `overwrite_training` parameter is True.
+    def load_resources(self, train: bool =True) -> dict:
+        ret = super().load_resources()
+        if train:
+            self.train()
+        return ret

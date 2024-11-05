@@ -217,7 +217,7 @@ def test_ranking_find_candidates(tmp_path):
     )
 
     # Test that perfect_match acts before deezy
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    myranker.mentions_to_wikidata = myranker.load_resources(train=False)
     candidates, already_collected_cands = myranker.find_candidates([{"mention": "London"}])
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
