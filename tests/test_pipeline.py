@@ -8,9 +8,23 @@ from t_res.geoparser import linking, pipeline, ranking, recogniser
 
 current_dir = Path(__file__).parent.resolve()
 
+def test_pipeline_constructor():
+    resources_path=os.path.join(current_dir, "sample_files/resources")
+    geoparser = pipeline.Pipeline(resources_path=resources_path)
+
+    # Check default pipeline components.
+    assert isinstance(geoparser.ner, recogniser.PretrainedRecogniser)
+    assert geoparser.ner.model_name == "Livingwithmachines/toponym-19thC-en"
+
+    assert isinstance(geoparser.ranker, ranking.PerfectMatchRanker)
+    assert geoparser.ranker.resources_path == resources_path
+
+    assert isinstance(geoparser.linker, linking.MostPopularLinker)
+    assert geoparser.linker.resources_path == resources_path
+
 def test_pipeline_basic():
     geoparser = pipeline.Pipeline(
-        resources_path=os.path.join(current_dir,"sample_files/resources")
+        resources_path=os.path.join(current_dir, "sample_files/resources")
     )
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -22,11 +36,11 @@ def test_pipeline_basic():
 
 def test_pipeline_modular():
     ranker = ranking.PerfectMatchRanker(
-        resources_path=os.path.join(current_dir,"sample_files/resources"),
+        resources_path=os.path.join(current_dir, "sample_files/resources"),
     )
     
     linker = linking.MostPopularLinker(
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+        resources_path=os.path.join(current_dir, "sample_files/resources"),
     )
 
     geoparser = pipeline.Pipeline(ranker=ranker, linker=linker)
