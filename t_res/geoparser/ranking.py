@@ -89,8 +89,7 @@ class Ranker:
         s += f"    * Method: {self.method_name()}\n"
         return s
 
-    # TODO: no return value needed. The instance attribute is assigned.
-    def load_resources(self) -> dict:
+    def load_resources(self):
         """
         Load the ranker resources.
 
@@ -174,8 +173,6 @@ class Ranker:
         if self.method_name() in ["partialmatch", "levenshtein"]:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
-        return self.mentions_to_wikidata
 
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
@@ -650,6 +647,14 @@ class DeezyMatchRanker(PerfectMatchRanker):
         
         return s
 
+    # Override the base class implementation to optionally train the 
+    # DeezyMatch model.
+    def load_resources(self, train: bool =True) -> dict:
+        ret = super().load_resources()
+        if train:
+            self.train()
+        return ret
+    
     def run(self, queries: List[str]) -> Tuple[dict, dict]:
         """
         Perform DeezyMatch ranking on-the-fly for a list of given mentions (``queries``).
@@ -775,13 +780,3 @@ class DeezyMatchRanker(PerfectMatchRanker):
 
         # This dictionary is not used anymore:
         self.wikidata_to_mentions = dict()
-
-
-    # Override the base class implementation to optionally train the DeezyMatch 
-    # model if either a trained model does not alredy exist or the 
-    # `overwrite_training` parameter is True.
-    def load_resources(self, train: bool =True) -> dict:
-        ret = super().load_resources()
-        if train:
-            self.train()
-        return ret

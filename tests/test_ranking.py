@@ -15,7 +15,7 @@ def test_ranking_perfect_match():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
     ranker.already_collected_cands = {}
     candidates, already_collected_cands = ranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
@@ -52,7 +52,7 @@ def test_ranking_matching_score():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     score = ranker.matching_score("Lvndon", {"mentions": "London"})
     assert score == 0.8333333283662796
@@ -78,7 +78,7 @@ def test_ranking_partial_match():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     # Test that perfect_match acts before partial match
     ranker.mentions_to_wikidata = {"London": "Q84"}
@@ -107,7 +107,7 @@ def test_ranking_levenshtein():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     # Test that perfect_match acts before partial match
     ranker.mentions_to_wikidata = {"London": "Q84"}
@@ -171,7 +171,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     )
 
     # Test that perfect_match acts before deezy
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
     candidates, already_collected_cands = ranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
@@ -217,7 +217,7 @@ def test_ranking_find_candidates(tmp_path):
     )
 
     # Test that perfect_match acts before deezy
-    ranker.mentions_to_wikidata = ranker.load_resources(train=False)
+    ranker.load_resources(train=False)
     candidates, already_collected_cands = ranker.find_candidates([{"mention": "London"}])
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
@@ -232,10 +232,10 @@ def test_ranking_find_candidates(tmp_path):
     ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     # Test that perfect_match acts before deezy
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
     candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
@@ -248,10 +248,10 @@ def test_ranking_find_candidates(tmp_path):
     ranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     # Test that perfect_match acts before partialmatch
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
@@ -266,10 +266,10 @@ def test_ranking_find_candidates(tmp_path):
     ranker = ranking.LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     # Test that perfect_match acts before partialmatch
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0

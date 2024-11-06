@@ -73,7 +73,7 @@ def test_load_data(tmp_path):
     ner.create_pipeline()
 
     # Load the resources (and train a DeezyMatch model if needed):
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     linker.load_resources()
 
@@ -157,7 +157,7 @@ def test_apply(tmp_path):
     ner.create_pipeline()
 
     # Load the resources (and train a DeezyMatch model if needed):
-    ranker.mentions_to_wikidata = ranker.load_resources()
+    ranker.load_resources()
 
     linker.load_resources()
 

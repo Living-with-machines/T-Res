@@ -117,7 +117,7 @@ class Pipeline:
         # Ranker loading resources and training a model:
 
         # Load the resources (and train a DeezyMatch model if needed):
-        self.ranker.mentions_to_wikidata = self.ranker.load_resources()
+        self.ranker.load_resources()
 
         # -----------------------------------------
         # Linker loading resources:
