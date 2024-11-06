@@ -76,7 +76,7 @@ class Pipeline:
         ranker: Optional[ranking.Ranker] = None,
         linker: Optional[linking.Linker] = None,
         resources_path: Optional[str] = None,
-        experiments_path: Optional[str] = None,
+        experiments_path: Optional[str] = "../experiments",
     ):
         """
         Instantiates a Pipeline object.
@@ -104,16 +104,10 @@ class Pipeline:
         if not self.linker:
             if not resources_path:
                 raise ValueError("[ERROR] Please specify path to resources directory.")
-
-            if experiments_path:
-                self.linker = linking.MostPopularLinker(
-                    resources_path=resources_path,
-                    experiments_path=experiments_path,
-                )
-            else:
-                self.linker = linking.MostPopularLinker(
-                    resources_path=resources_path,
-                )
+            self.linker = linking.MostPopularLinker(
+                resources_path=resources_path,
+                experiments_path=experiments_path,
+            )
 
         # -----------------------------------------
         # NER training and creating pipeline:
