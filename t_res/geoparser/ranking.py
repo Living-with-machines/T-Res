@@ -48,19 +48,21 @@ class Ranker:
 
         >>> # Perform candidate selection
         >>> queries = ['London', 'Paraguay']
-        >>> candidates, already_collected = ranker.run(queries)
-
-        >>> # Find candidates for mentions
-        >>> mentions = [{'mention': 'London'}, {'mention': 'Paraguay'}]
-        >>> mention_candidates, mention_already_collected = ranker.find_candidates(mentions)
+        >>> candidates = ranker.run(queries)
 
         >>> # Print the results
         >>> print("Candidate Selection Results:")
         >>> print(candidates)
-        >>> print(already_collected)
+        >>> print(ranker.already_collected_cands)
+
+        >>> # Find candidates for mentions
+        >>> mentions = [{'mention': 'London'}, {'mention': 'Paraguay'}]
+        >>> mention_candidates = ranker.find_candidates(mentions)
+
+        >>> # Print the results
         >>> print("Find Candidates Results:")
         >>> print(mention_candidates)
-        >>> print(mention_already_collected)
+        >>> print(ranker.already_collected_cands)
     """
 
     def __init__(
@@ -174,7 +176,7 @@ class Ranker:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-    def run(self, queries: List[str]) -> Tuple[dict, dict]:
+    def run(self, queries: List[str]) -> dict:
         """
         Execute the ranking process. Each Ranker subclass must implement a 
         ranking method by overriding this function.
@@ -184,13 +186,12 @@ class Ranker:
                 to match.
 
         Returns:
-            Tuple[dict, dict]:
-                A tuple containing two dictionaries. The resulting dictionaries
-                will vary depending on the particular ranking method.
+            dict: A dictionary whose content will vary depending on the 
+                particular ranking method.
         """
         raise NotImplementedError("Subclass implementation required.")
 
-    def find_candidates(self, mentions: List[dict]) -> Tuple[dict, dict]:
+    def find_candidates(self, mentions: List[dict]) -> dict:
         """
         Find candidates for the given mentions using the selected ranking
         method.
@@ -199,17 +200,13 @@ class Ranker:
             mentions (list): A list of predicted mentions as dictionaries.
 
         Returns:
-            Tuple[dict, dict]: A tuple containing two dictionaries:
-
-            #. The first dictionary maps each original mention to a
+            dict: A dictionary mapping each original mention to a
                sub-dictionary, where the sub-dictionary maps the mention
                variations to a sub-sub-dictionary with two keys: ``"Score"``
                (the string matching similarity score) and ``"Candidates"``
                (a dictionary containing the Wikidata candidates, where the
                key is the Wikidata ID and value is the the relative mention-
                to-wikidata frequency).
-            #. The second dictionary stores the already collected candidates
-               for each query.
 
                The variation is found by the candidate ranker in the knowledge
                base, and for each variation, the candidate ranking score and
@@ -248,7 +245,7 @@ class Ranker:
         queries = list(set([mention["mention"] for mention in mentions]))
 
         # Pass the mentions to :py:meth:`geoparser.ranking.Ranker.run`
-        cands, self.already_collected_cands = self.run(queries)
+        cands = self.run(queries)
 
         # Get Wikidata candidates
         wk_cands = dict()
@@ -276,7 +273,7 @@ class Ranker:
                             "Candidates": found_cands,
                         }
 
-        return wk_cands, self.already_collected_cands
+        return wk_cands
 
 
 # TODO: fix docstring
@@ -288,7 +285,7 @@ class PerfectMatchRanker(Ranker):
         >>> ranker = PerfectMatchRanker(...)
         >>> ranker.mentions_to_wikidata = ranker.load_resources()
         >>> queries = ['London', 'Barcelona', 'Bologna']
-        >>> candidates, already_collected = ranker.run(queries)
+        >>> candidates = ranker.run(queries)
         >>> print(candidates)
         {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
         >>> print(already_collected)
@@ -297,7 +294,7 @@ class PerfectMatchRanker(Ranker):
     def method_name(self) -> str:
         return "perfectmatch"
 
-    def run(self, queries: List[str]) -> Tuple[dict, dict]:
+    def run(self, queries: List[str]) -> dict:
         """
         Perform perfect matching between a provided list of mentions
         (``queries``) and the altnames in the knowledge base.
@@ -307,16 +304,10 @@ class PerfectMatchRanker(Ranker):
                 to match.
 
         Returns:
-            Tuple[dict, dict]: A tuple containing two dictionaries:
-
-                #. The first dictionary maps each mention to its candidate
-                   list, where the candidate list is a dictionary with the
-                   mention itself as the key and a perfect match score of
-                   ``1.0``.
-
-                #. The second dictionary stores the already collected
-                   candidates for each mention. It is an updated version of the
-                   Ranker's ``already_collected_cands`` attribute.
+            dict: A dictionary mapping each mention to its candidate
+                list, where the candidate list is a dictionary with the
+                mention itself as the key and a perfect match score of
+                ``1.0``.
 
         Note:
             This method checks if each mention has an exact match in the
@@ -328,7 +319,7 @@ class PerfectMatchRanker(Ranker):
             >>> ranker = PerfectMatchRanker(resources_path="...")
             >>> ranker.mentions_to_wikidata = ranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> candidates, already_collected = ranker.run(queries)
+            >>> candidates= ranker.run(queries)
             >>> print(candidates)
             {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
             >>> print(already_collected)
@@ -346,7 +337,7 @@ class PerfectMatchRanker(Ranker):
                     candidates[query] = {}
                     self.already_collected_cands[query] = {}
 
-        return candidates, self.already_collected_cands
+        return candidates
 
 
 class PartialMatchRanker(PerfectMatchRanker):
@@ -369,7 +360,7 @@ class PartialMatchRanker(PerfectMatchRanker):
         return "partialmatch"
     
 
-    def run(self, queries: List[str]) -> Tuple[dict, dict]:
+    def run(self, queries: List[str]) -> dict:
         """
         Perform partial matching for a list of given mentions (``queries``).
 
@@ -378,15 +369,9 @@ class PartialMatchRanker(PerfectMatchRanker):
                 to match.
 
         Returns:
-            Tuple[dict, dict]: A tuple containing two dictionaries:
-
-                #. The first dictionary maps each mention to its candidate
+            dict: A dictionary mapping each mention to its candidate
                    list, where the candidate list is a dictionary with the
                    mention variations as keys and their match scores as values.
-
-                #. The second dictionary stores the already collected
-                   candidates for each mention. It is an updated version of the
-                   Ranker's ``already_collected_cands`` attribute.
 
         Note:
             This method performs partial matching for each mention in the given
@@ -397,7 +382,7 @@ class PartialMatchRanker(PerfectMatchRanker):
 
         """
         # First fill in the perfect matches and already collected queries
-        candidates, self.already_collected_cands = super().run(queries)
+        candidates = super().run(queries)
 
         # the rest go through
         remainers = [x for x, y in candidates.items() if len(y) == 0]
@@ -421,7 +406,7 @@ class PartialMatchRanker(PerfectMatchRanker):
 
             self.already_collected_cands[query] = mention_df
 
-        return candidates, self.already_collected_cands
+        return candidates
     
 
     def matching_score(self, query: str, row: pd.Series) -> float:
@@ -655,7 +640,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
             self.train()
         return ret
     
-    def run(self, queries: List[str]) -> Tuple[dict, dict]:
+    def run(self, queries: List[str]) -> dict:
         """
         Perform DeezyMatch ranking on-the-fly for a list of given mentions (``queries``).
 
@@ -664,21 +649,15 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 to match.
 
         Returns:
-            Tuple[dict, dict]: A tuple containing two dictionaries:
-
-                #. The first dictionary maps each mention to its candidate
-                   list, where the candidate list is a dictionary with the
-                   mention variations as keys and their match scores as values.
-
-                #. The second dictionary stores the already collected
-                   candidates for each mention. It is an updated version of the
-                   Ranker's ``already_collected_cands`` attribute.
+            dict: A dictionary mapping each mention to its candidate
+                list, where the candidate list is a dictionary with the
+                mention variations as keys and their match scores as values.
 
         Example:
             >>> ranker = DeezyMatchRanker(...)
             >>> ranker.load_resources()
             >>> queries = ['London', 'Shefrield']
-            >>> candidates, already_collected = ranker.run(queries)
+            >>> candidates = ranker.run(queries)
             >>> print(candidates)
             {'London': {'London': 1.0}, 'Shefrield': {'Sheffield': 0.03382000000000005}}
             >>> print(already_collected)
@@ -701,7 +680,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
         dm_output = self.deezy_parameters["dm_output"]
 
         # First fill in the perfect matches and already collected queries
-        cands_dict, self.already_collected_cands = super().run(queries)
+        cands_dict = super().run(queries)
 
         # the rest go through
         remainers = [x for x, y in cands_dict.items() if len(y) == 0]
@@ -751,7 +730,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
 
                 self.already_collected_cands[row["query"]] = returned_cands
 
-        return cands_dict, self.already_collected_cands
+        return cands_dict
     
     def train(self) -> None:
         """

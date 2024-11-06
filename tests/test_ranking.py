@@ -17,13 +17,13 @@ def test_ranking_perfect_match():
     
     ranker.load_resources()
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["London"])
+    candidates = ranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
-    candidates, already_collected_cands = ranker.run(["Lvndon"])
+    candidates = ranker.run(["Lvndon"])
     assert candidates["Lvndon"] == {}
 
-    candidates, already_collected_cands = ranker.run(["Paperopoli"])
+    candidates = ranker.run(["Paperopoli"])
     assert candidates["Paperopoli"] == {}
 
 
@@ -83,18 +83,18 @@ def test_ranking_partial_match():
     # Test that perfect_match acts before partial match
     ranker.mentions_to_wikidata = {"London": "Q84"}
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["London"])
+    candidates = ranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
     # Test that overlap works properly
     ranker.mentions_to_wikidata = {"New York City": "Q60"}
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["New York"])
+    candidates = ranker.run(["New York"])
     assert candidates["New York"]["New York City"] == pytest.approx(0.6153846153846154, abs=10e-6)
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["Lvndvn"])
+    candidates = ranker.run(["Lvndvn"])
     assert candidates["Lvndvn"] == {}
 
 
@@ -112,26 +112,26 @@ def test_ranking_levenshtein():
     # Test that perfect_match acts before partial match
     ranker.mentions_to_wikidata = {"London": "Q84"}
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["London"])
+    candidates = ranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["Lvndvn"])
+    candidates = ranker.run(["Lvndvn"])
     assert candidates["Lvndvn"]["London"] == pytest.approx(0.6666666567325592, abs=10e-6)
 
     # Test that overlap works properly
     ranker.mentions_to_wikidata = {"New York City": "Q60"}
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["New York"])
+    candidates = ranker.run(["New York"])
     assert candidates["New York"]["New York City"] == pytest.approx(0.6153846153846154, abs=10e-6)
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["Lvndvn"])
+    candidates = ranker.run(["Lvndvn"])
     assert candidates["Lvndvn"] == {"New York City": 0.0}
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["asdasd"])
+    candidates = ranker.run(["asdasd"])
     assert candidates["asdasd"] == {"New York City": 0.0}
 
 
@@ -172,12 +172,12 @@ def test_ranking_deezy_on_the_fly(tmp_path):
 
     # Test that perfect_match acts before deezy
     ranker.load_resources()
-    candidates, already_collected_cands = ranker.run(["London"])
+    candidates = ranker.run(["London"])
     assert candidates["London"]["London"] == 1.0
 
     # Test that deezy works
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.run(["Ashton-cnderLyne"])
+    candidates = ranker.run(["Ashton-cnderLyne"])
 
     assert (0.0 < candidates["Ashton-cnderLyne"]["Ashton-under-Lyne"] < 1.0)
 
@@ -218,13 +218,13 @@ def test_ranking_find_candidates(tmp_path):
 
     # Test that perfect_match acts before deezy
     ranker.load_resources(train=False)
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "London"}])
+    candidates = ranker.find_candidates([{"mention": "London"}])
     assert candidates["London"]["London"]["Score"] == 1.0
     assert "Q84" in candidates["London"]["London"]["Candidates"]
 
     # Test that deezy works
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheftield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheftield"}])
     assert (0.0 < candidates["Sheftield"]["Sheffield"]["Score"] < 1.0)
     assert "Q42448" in candidates["Sheftield"]["Sheffield"]["Candidates"]
 
@@ -236,12 +236,12 @@ def test_ranking_find_candidates(tmp_path):
 
     # Test that perfect_match acts before deezy
     ranker.load_resources()
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheffield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheftield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheftield"}])
     assert candidates["Sheftield"] == {}
 
     # Test that check if contained works
@@ -253,13 +253,13 @@ def test_ranking_find_candidates(tmp_path):
     # Test that perfect_match acts before partialmatch
     ranker.load_resources()
 
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheffield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
 
     ranker.already_collected_cands = {}
 
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheftield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheftield"}])
     assert "Sheffield" not in candidates["Sheftield"]
 
     # Test that levenshtein works
@@ -271,11 +271,11 @@ def test_ranking_find_candidates(tmp_path):
     # Test that perfect_match acts before partialmatch
     ranker.load_resources()
 
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheffield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheffield"}])
     assert candidates["Sheffield"]["Sheffield"]["Score"] == 1.0
     assert "Q42448" in candidates["Sheffield"]["Sheffield"]["Candidates"]
 
     ranker.already_collected_cands = {}
-    candidates, already_collected_cands = ranker.find_candidates([{"mention": "Sheftield"}])
+    candidates = ranker.find_candidates([{"mention": "Sheftield"}])
     assert (0.0 < candidates["Sheftield"]["Sheffield"]["Score"] < 1.0)
     assert "Q42448" in candidates["Sheftield"]["Sheffield"]["Candidates"]
