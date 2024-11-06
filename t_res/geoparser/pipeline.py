@@ -826,7 +826,7 @@ class Pipeline:
                 selected_cand = self.linker.run(
                     {
                         "candidates": wk_cands[mention["mention"]],
-                        "place_wqid": "",
+                        "place_wqid": place_wqid,
                     }
                 )
                 mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
