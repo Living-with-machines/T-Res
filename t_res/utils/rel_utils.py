@@ -278,7 +278,7 @@ def prepare_rel_trainset(
     df: pd.DataFrame,
     rel_params,
     mentions_to_wikidata,
-    myranker: ranking.Ranker,
+    ranker: ranking.Ranker,
     dsplit: str,
 ) -> dict:
     """
@@ -286,7 +286,7 @@ def prepare_rel_trainset(
 
     This function takes as input a pandas DataFrame (`df`) containing the
     dataset generated in the ``experiments/prepare_data.py`` script, along
-    with a Linking object (``mylinker``) and a Ranking object (``myranker``).
+    with a Linking object (``linker``) and a Ranking object (``ranker``).
     It prepares the data in the format required to train and test a REL
     disambiguation model, using the candidates from the ranker.
 
@@ -297,7 +297,7 @@ def prepare_rel_trainset(
             entity disambiguation using the ``reldisamb`` approach.
         mentions_to_wikidata (dict): Dictionary mapping mentions to Wikidata
             entities, with counts.
-        myranker (geoparser.ranking.Ranker): The Ranking object.
+        ranker (geoparser.ranking.Ranker): The Ranking object.
         dsplit (str): The split identifier for the data (e.g., ``"train"``,
             ``"test"``).
 
@@ -322,7 +322,7 @@ def prepare_rel_trainset(
     # Format the mentions are required by the ranker:
     all_mentions = [{"mention": mention} for mention in all_mentions]
     # Use the ranker to find candidates:
-    wk_cands, other = myranker.find_candidates(all_mentions)
+    wk_cands, other = ranker.find_candidates(all_mentions)
 
     # Rank the candidates:
     rel_json = rank_candidates(

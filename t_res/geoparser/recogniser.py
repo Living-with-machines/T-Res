@@ -16,7 +16,7 @@ from transformers import (
     pipeline,
 )
 
-from ..utils import ner
+from ..utils import ner_utils
 
 class Recogniser:
     """
@@ -130,13 +130,13 @@ class Recogniser:
         for pred_ent in ner_preds:
             pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = pred_ent["entity"]
-            pred_ent = ner.fix_capitalization(pred_ent, sentence)
-            predictions = ner.aggregate_entities(pred_ent, lEntities)
+            pred_ent = ner_utils.fix_capitalization(pred_ent, sentence)
+            predictions = ner_utils.aggregate_entities(pred_ent, lEntities)
 
         if len(predictions) > 0:
-            predictions = ner.fix_hyphens(predictions)
-            predictions = ner.fix_nested(predictions)
-            predictions = ner.fix_startEntity(predictions)
+            predictions = ner_utils.fix_hyphens(predictions)
+            predictions = ner_utils.fix_nested(predictions)
+            predictions = ner_utils.fix_startEntity(predictions)
 
         return predictions
 
@@ -374,7 +374,7 @@ class CustomRecogniser(Recogniser):
         # Align tokens and labels when training:
         lwm_train_tok = lwm_train.map(
             partial(
-                ner.training_tokenize_and_align_labels,
+                ner_utils.training_tokenize_and_align_labels,
                 tokenizer=tokenizer,
                 label_encoding_dict=label2id,
             ),
@@ -382,7 +382,7 @@ class CustomRecogniser(Recogniser):
         )
         lwm_test_tok = lwm_test.map(
             partial(
-                ner.training_tokenize_and_align_labels,
+                ner_utils.training_tokenize_and_align_labels,
                 tokenizer=tokenizer,
                 label_encoding_dict=label2id,
             ),

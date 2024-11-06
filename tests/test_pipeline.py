@@ -21,15 +21,15 @@ def test_pipeline_basic():
     assert resolved[0]["prediction"]=="Q42448"
 
 def test_pipeline_modular():
-    myranker = ranking.PerfectMatchRanker(
+    ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources"),
     )
     
-    mylinker = linking.MostPopularLinker(
+    linker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    geoparser = pipeline.Pipeline(myranker=myranker, mylinker=mylinker)
+    geoparser = pipeline.Pipeline(ranker=ranker, linker=linker)
     
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
     resolved = geoparser.run_text(sentence)
@@ -43,7 +43,7 @@ def test_deezy_mostpopular(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -60,7 +60,7 @@ def test_deezy_mostpopular(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myranker = ranking.DeezyMatchRanker(
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -92,12 +92,12 @@ def test_deezy_mostpopular(tmp_path):
         already_collected_cands=dict(),
     )
 
-    mylinker = linking.MostPopularLinker(
+    linker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir, "../resources/"),
     )
 
-    geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
-    assert len(geoparser.myranker.mentions_to_wikidata.keys())>0
+    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
+    assert len(geoparser.ranker.mentions_to_wikidata.keys())>0
 
     resolved = geoparser.run_text(
         "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
@@ -128,7 +128,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -147,7 +147,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     # --------------------------------------
     # Instantiate the ranker:
-    myranker = ranking.DeezyMatchRanker(
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -181,7 +181,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.RelDisambLinker(
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -198,7 +198,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
             overwrite_training=False,
         )
 
-    geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
     resolved = geoparser.run_text(
         "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
@@ -219,7 +219,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -238,7 +238,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
 
     # --------------------------------------
     # Instantiate the ranker:
-    myranker = ranking.PerfectMatchRanker(
+    ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -247,7 +247,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.RelDisambLinker(
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -264,7 +264,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
             overwrite_training=False,
         )
 
-    geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
     resolved = geoparser.run_text(
         "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
@@ -284,7 +284,7 @@ def test_modular_deezy_rel(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -303,7 +303,7 @@ def test_modular_deezy_rel(tmp_path):
 
     # --------------------------------------
     # Instantiate the ranker:
-    myranker = ranking.DeezyMatchRanker(
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -337,7 +337,7 @@ def test_modular_deezy_rel(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.RelDisambLinker(
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir,"../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -354,7 +354,7 @@ def test_modular_deezy_rel(tmp_path):
             overwrite_training=False,
         )
 
-    geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
     sentence = "STOCKTON AND MIDDLESBROUGH WATER IVARD.  The monthly meeting of the Sr-id:toe and bladtiltwitrough Water Lkerd was held at the Corp.acit:o.i liniklinga, Middlesbrough, on Monday."
     wikidata_id = "Q989418"

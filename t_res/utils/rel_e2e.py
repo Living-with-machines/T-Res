@@ -192,7 +192,7 @@ def store_rel(
     scenario_name = (
         approach
         + "_"
-        + experiment.myner.model  # The model name is needed due to tokenization
+        + experiment.ner.model  # The model name is needed due to tokenization
         + "_"
         + how_split
     )

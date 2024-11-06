@@ -65,7 +65,7 @@ def test_prepare_sents():
 
 
 def test_align_gold(tmp_path):
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -82,7 +82,7 @@ def test_align_gold(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myner.create_pipeline()
+    ner.create_pipeline()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -95,7 +95,7 @@ def test_align_gold(tmp_path):
         if "3580760_2" == sent_id:
             sent = dSentences[sent_id]
             annotations = dAnnotated[sent_id]
-            predictions = myner.ner_predict(sent)
+            predictions = ner.ner_predict(sent)
             gold_positions = process_data.align_gold(predictions, annotations)
 
             I_elements = [
@@ -120,7 +120,7 @@ def test_align_gold(tmp_path):
 
 
 def test_ner_and_process(tmp_path):
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -137,7 +137,7 @@ def test_ner_and_process(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myner.create_pipeline()
+    ner.create_pipeline()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -153,7 +153,7 @@ def test_ner_and_process(tmp_path):
         gold_tokenization,
         dMentionsPred,
         dMentionsGold,
-    ) = process_data.ner_and_process(dSentences, dAnnotated, myner)
+    ) = process_data.ner_and_process(dSentences, dAnnotated, ner)
 
     B_els = [
         [z for z in range(len(y)) if "B-" in y[z]["entity"]]

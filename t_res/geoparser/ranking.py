@@ -11,6 +11,7 @@ from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 from ..utils import deezy_processing
 
+# TODO: fix docstring.
 class Ranker:
     """
     The Ranker class implements a system for candidate selection through string
@@ -88,6 +89,7 @@ class Ranker:
         s += f"    * Method: {self.method_name()}\n"
         return s
 
+    # TODO: no return value needed. The instance attribute is assigned.
     def load_resources(self) -> dict:
         """
         Load the ranker resources.
@@ -280,15 +282,16 @@ class Ranker:
         return wk_cands, self.already_collected_cands
 
 
+# TODO: fix docstring
 class PerfectMatchRanker(Ranker):
     """
     A ranking method using perfect string matching.
 
     Example:
-        >>> myranker = PerfectMatchRanker(...)
-        >>> ranker.mentions_to_wikidata = myranker.load_resources()
+        >>> ranker = PerfectMatchRanker(...)
+        >>> ranker.mentions_to_wikidata = ranker.load_resources()
         >>> queries = ['London', 'Barcelona', 'Bologna']
-        >>> candidates, already_collected = myranker.run(queries)
+        >>> candidates, already_collected = ranker.run(queries)
         >>> print(candidates)
         {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
         >>> print(already_collected)
@@ -325,10 +328,10 @@ class PerfectMatchRanker(Ranker):
             dictionary is assigned as the candidate list for the mention.
 
         Example:
-            >>> myranker = PerfectMatchRanker(resources_path="...")
-            >>> ranker.mentions_to_wikidata = myranker.load_resources()
+            >>> ranker = PerfectMatchRanker(resources_path="...")
+            >>> ranker.mentions_to_wikidata = ranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> candidates, already_collected = myranker.run(queries)
+            >>> candidates, already_collected = ranker.run(queries)
             >>> print(candidates)
             {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
             >>> print(already_collected)

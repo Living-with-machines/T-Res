@@ -64,7 +64,7 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the recogniser:
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-" + granularity,
         train_dataset=str(current_dir)
         + "/outputs/data/lwm/ner_"
@@ -96,7 +96,7 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the ranker:
-    myranker = ranking.Ranker(
+    ranker = ranking.Ranker(
         method=cand_select_method,
         resources_path=resources_dir,
         mentions_to_wikidata=dict(),
@@ -134,7 +134,7 @@ for exp_param in experiments:
         os.path.join(resources_dir, "rel_db/embeddings_database.db")
     ) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
+        linker = linking.Linker(
             method=top_res_method,
             resources_path=resources_dir,
             linking_resources=dict(),
@@ -159,9 +159,9 @@ for exp_param in experiments:
         data_path=os.path.join(current_dir, "outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=os.path.join(current_dir, "outputs/results/"),
-        myner=myner,
-        myranker=myranker,
-        mylinker=mylinker,
+        ner=ner,
+        ranker=ranker,
+        linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
@@ -171,26 +171,26 @@ for exp_param in experiments:
 
     # Print experiment information:
     print(myexperiment)
-    print(myner)
-    print(myranker)
-    print(mylinker)
+    print(ner)
+    print(ranker)
+    print(linker)
 
     # -----------------------------------------
     # NER training and creating pipeline:
     # Train the NER models if needed:
-    myner.train()
+    ner.train()
     # Load the NER pipeline:
-    myner.pipe = myner.create_pipeline()
+    ner.pipe = ner.create_pipeline()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources (and train a DeezyMatch model if needed):
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    ranker.mentions_to_wikidata = ranker.load_resources()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.load_resources()
+    linker.load_resources()
 
     # -----------------------------------------
     # Prepare experiment:

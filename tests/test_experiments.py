@@ -20,9 +20,9 @@ def test_experiments_wrong_dataset_path(tmp_path):
             data_path="wrong_path/",
             dataset_df=pd.DataFrame(),
             results_path=str(tmp_path),
-            myner="test",
-            myranker="test",
-            mylinker="test",
+            ner="test",
+            ranker="test",
+            linker="test",
             test_split="dev",
         )
 
@@ -42,7 +42,7 @@ def test_load_data(tmp_path):
         for sent in sents:
             ids.add(str(article_id) + "_" + str(sent["sentence_pos"]))
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -60,22 +60,22 @@ def test_load_data(tmp_path):
     )
 
     # Instantiate the ranker:
-    myranker = ranking.PerfectMatchRanker(
+    ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.MostPopularLinker(
+    linker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    myner.create_pipeline()
+    ner.create_pipeline()
 
     # Load the resources (and train a DeezyMatch model if needed):
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    ranker.mentions_to_wikidata = ranker.load_resources()
 
-    mylinker.load_resources()
+    linker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -84,9 +84,9 @@ def test_load_data(tmp_path):
         data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=str(tmp_path),
-        myner=myner,
-        myranker=myranker,
-        mylinker=mylinker,
+        ner=ner,
+        ranker=ranker,
+        linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split="test",  # "dev" while experimenting, "test" when running final experiments.
@@ -126,7 +126,7 @@ def test_load_data(tmp_path):
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_apply(tmp_path):
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -144,22 +144,22 @@ def test_apply(tmp_path):
     )
 
     # Instantiate the ranker:
-    myranker = ranking.PerfectMatchRanker(
+    ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.MostPopularLinker(
+    linker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    myner.create_pipeline()
+    ner.create_pipeline()
 
     # Load the resources (and train a DeezyMatch model if needed):
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    ranker.mentions_to_wikidata = ranker.load_resources()
 
-    mylinker.load_resources()
+    linker.load_resources()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -168,9 +168,9 @@ def test_apply(tmp_path):
         data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=str(tmp_path),
-        myner=myner,
-        myranker=myranker,
-        mylinker=mylinker,
+        ner=ner,
+        ranker=ranker,
+        linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split="apply",  # "dev" while experimenting, "test" when running final experiments.

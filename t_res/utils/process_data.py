@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 import pandas as pd
 from tqdm import tqdm
 
-from . import ner
+from . import ner_utils
 
 if TYPE_CHECKING:
     from ..geoparser import recogniser
@@ -253,9 +253,9 @@ def postprocess_predictions(
     return postprocessed_sentence
 
 
-# TODO/typing: set ``myner: recogniser.Recogniser`` here, but creates problem with Sphinx currently
+# TODO/typing: set ``ner: recogniser.Recogniser`` here, but creates problem with Sphinx currently
 def ner_and_process(
-    dSentences: dict, dAnnotated: dict, myner
+    dSentences: dict, dAnnotated: dict, ner
 ) -> Tuple[dict, dict, dict, dict, dict]:
     """
     Perform named entity recognition in the LwM way, and postprocess the
@@ -272,7 +272,7 @@ def ner_and_process(
             key) and another tuple as its value, which consists of: the type
             of named entity (such as ``LOC`` or ``BUILDING``, the mention, and
             its annotated link), all extracted from the gold standard.
-        myner (recogniser.Recogniser): a Recogniser object, for NER.
+        ner (recogniser.Recogniser): a Recogniser object, for NER.
 
     Returns:
         Tuple[dict, dict, dict, dict, dict]:
@@ -371,17 +371,17 @@ def ner_and_process(
     for sent_id in tqdm(list(dSentences.keys())):
         sent = dSentences[sent_id]
         annotations = dAnnotated[sent_id]
-        predictions = myner.ner_predict(sent)
+        predictions = ner.ner_predict(sent)
         gold_positions = align_gold(predictions, annotations)
         sentence_postprocessing = postprocess_predictions(predictions, gold_positions)
         dPreds[sent_id] = sentence_postprocessing["sentence_preds"]
         dTrues[sent_id] = sentence_postprocessing["sentence_trues"]
         dSkys[sent_id] = sentence_postprocessing["sentence_skys"]
         gold_tokenization[sent_id] = gold_positions
-        dMentionsPred[sent_id] = ner.aggregate_mentions(
+        dMentionsPred[sent_id] = ner_utils.aggregate_mentions(
             sentence_postprocessing["sentence_preds"], "pred"
         )
-        dMentionsGold[sent_id] = ner.aggregate_mentions(
+        dMentionsGold[sent_id] = ner_utils.aggregate_mentions(
             sentence_postprocessing["sentence_trues"], "gold"
         )
 

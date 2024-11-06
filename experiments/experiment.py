@@ -25,10 +25,10 @@ class Experiment:
             be stored. If it does not exist, it will be created.
         dataset_df (pandas.DataFrame): The dataframe representing the
             resulting, preprocessed, dataset.
-        myner (recogniser.Recogniser): An instance of the NER model to use.
-        myranker (ranking.Ranker): An instance of the candidate ranking model
+        ner (recogniser.Recogniser): An instance of the NER model to use.
+        ranker (ranking.Ranker): An instance of the candidate ranking model
             to use.
-        mylinker (linking.Linker): An instance of the linking model to use.
+        linker (linking.Linker): An instance of the linking model to use.
         overwrite_processing (bool, optional): Whether to overwrite the
             processed data if it already exists (default is ``True``).
         processed_data (dict, optional): A dictionary to store the processed
@@ -48,9 +48,9 @@ class Experiment:
         data_path: str,
         results_path: str,
         dataset_df: pd.DataFrame,
-        myner: recogniser.Recogniser,
-        myranker: ranking.Ranker,
-        mylinker: linking.Linker,
+        ner: recogniser.Recogniser,
+        ranker: ranking.Ranker,
+        linker: linking.Linker,
         overwrite_processing: Optional[bool] = True,
         processed_data: Optional[dict] = dict(),
         test_split: Optional[str] = "",
@@ -63,9 +63,9 @@ class Experiment:
         self.dataset = dataset
         self.data_path = data_path
         self.results_path = results_path
-        self.myner = myner
-        self.myranker = myranker
-        self.mylinker = mylinker
+        self.ner = ner
+        self.ranker = ranker
+        self.linker = linker
         self.overwrite_processing = overwrite_processing
         self.dataset_df = dataset_df
         self.processed_data = processed_data
@@ -119,14 +119,14 @@ class Experiment:
             dict: A dictionary where the processed data is stored.
         """
 
-        output_path = os.path.join(self.data_path, self.dataset, self.myner.model_name)
+        output_path = os.path.join(self.data_path, self.dataset, self.ner.model_name)
 
         # Add the candidate experiment info to the path:
-        cand_approach = self.myranker.method_name()
-        if self.myranker.method_name() == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+        cand_approach = self.ranker.method_name()
+        if self.ranker.method_name() == "deezymatch":
+            cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
 
         output_processed_data = dict()
@@ -188,7 +188,7 @@ class Experiment:
         # Parse with NER in the LwM way
         print("\nPerform NER with our model:")
         output_lwm_ner = process_data.ner_and_process(
-            dSentences, dAnnotated, self.myner
+            dSentences, dAnnotated, self.ner
         )
 
         dPreds = output_lwm_ner[0]
@@ -212,8 +212,8 @@ class Experiment:
             pred_mentions_sent = dMentionsPred[sentence_id]
             (
                 wk_cands,
-                self.myranker.already_collected_cands,
-            ) = self.myranker.find_candidates(pred_mentions_sent)
+                self.ranker.already_collected_cands,
+            ) = self.ranker.find_candidates(pred_mentions_sent)
             dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
@@ -282,14 +282,14 @@ class Experiment:
         """
         data_path = self.data_path
         dataset = self.dataset
-        model_name = self.myner.model_name
+        model_name = self.ner.model_name
         output_path = data_path + dataset + "/" + model_name
 
-        cand_approach = self.myranker.method_name()
-        if self.myranker.method_name() == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+        cand_approach = self.ranker.method_name()
+        if self.ranker.method_name() == "deezymatch":
+            cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
 
         # Store NER predictions using a specific NER model:
@@ -361,11 +361,11 @@ class Experiment:
         dMetadata = self.processed_data["dMetadata"]
         dCandidates = self.processed_data["dCandidates"]
 
-        cand_approach = self.myranker.method_name()
-        if self.myranker.method_name() == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+        cand_approach = self.ranker.method_name()
+        if self.ranker.method_name() == "deezymatch":
+            cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
 
         rows = []
@@ -453,9 +453,9 @@ class Experiment:
             data=rows,
         )
 
-        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.myner.model_name}_{cand_approach}')}")
+        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.ner.model_name}_{cand_approach}')}")
         output_path = (
-            os.path.join(self.data_path,self.dataset,f"{self.myner.model_name}_{cand_approach}")
+            os.path.join(self.data_path,self.dataset,f"{self.ner.model_name}_{cand_approach}")
         )
 
 
@@ -527,7 +527,7 @@ class Experiment:
 
         scenario_name = ""
         if task == "ner":
-            scenario_name += task + "_" + self.myner.model_name + "_"
+            scenario_name += task + "_" + self.ner.model_name + "_"
 
             # Store predictions results formatted for CLEF-HIPE scorer:
             preds_name = "preds"
@@ -547,24 +547,24 @@ class Experiment:
             )
 
         if task == "linking":
-            scenario_name += task + "_" + self.myner.model_name + "_"
-            cand_approach = self.myranker.method_name()
-            if self.myranker.method_name() == "deezymatch":
+            scenario_name += task + "_" + self.ner.model_name + "_"
+            cand_approach = self.ranker.method_name()
+            if self.ranker.method_name() == "deezymatch":
                 cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["num_candidates"]
+                    self.ranker.deezy_parameters["num_candidates"]
                 )
                 cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["selection_threshold"]
+                    self.ranker.deezy_parameters["selection_threshold"]
                 )
             scenario_name += cand_approach + "_" + how_split + "_"
 
-            link_approach = self.mylinker.method_name()
-            if self.mylinker.method_name() == "reldisamb":
-                if self.mylinker.rel_params["with_publication"]:
+            link_approach = self.linker.method_name()
+            if self.linker.method_name() == "reldisamb":
+                if self.linker.rel_params["with_publication"]:
                     link_approach += "+wpubl"
-                if self.mylinker.rel_params["without_microtoponyms"]:
+                if self.linker.rel_params["without_microtoponyms"]:
                     link_approach += "+wmtops"
-                if self.mylinker.rel_params["do_test"]:
+                if self.linker.rel_params["do_test"]:
                     link_approach += "_test"
 
             # Store predictions results formatted for CLEF-HIPE scorer:
@@ -704,9 +704,9 @@ class Experiment:
                 prediction["sentence"] = mention_data["sentence"]
                 prediction["place"] = mention_data["place"]
                 prediction["place_wqid"] = mention_data["place_wqid"]
-                if self.mylinker.method_name() == "reldisamb":
+                if self.linker.method_name() == "reldisamb":
                     if (
-                        self.mylinker.rel_params["without_microtoponyms"]
+                        self.linker.rel_params["without_microtoponyms"]
                         and mention_data["pred_ner_label"] != "LOC"
                     ):
                         prediction["candidates"] = dict()
@@ -716,26 +716,26 @@ class Experiment:
                     mentions_dataset[sentence_id] = [prediction]
                 all_cands.update({prediction["mention"]: prediction["candidates"]})
 
-            if self.mylinker.method_name() == "reldisamb":
+            if self.linker.method_name() == "reldisamb":
                 rel_resolved = dict()
                 for sentence_id in mentions_dataset:
                     article_dataset = {sentence_id: mentions_dataset[sentence_id]}
                     article_dataset = rel_utils.rank_candidates(
                         article_dataset,
                         all_cands,
-                        self.mylinker.linking_resources["mentions_to_wikidata"],
+                        self.linker.linking_resources["mentions_to_wikidata"],
                     )
-                    if self.mylinker.rel_params["with_publication"]:
+                    if self.linker.rel_params["with_publication"]:
                         # If "publ", add an artificial publication entry:
                         article_dataset = rel_utils.add_publication(article_dataset)
 
-                    # Train a linking model if needed (it requires myranker to generate potential
+                    # Train a linking model if needed (it requires ranker to generate potential
                     # candidates to the training set):
                     print("Train EL model using:", split)
-                    linking_model = self.mylinker.train_load_model(self.myranker, split=split)
+                    linking_model = self.linker.train_load_model(self.ranker, split=split)
 
                     predicted = linking_model.predict(article_dataset)
-                    if self.mylinker.rel_params["with_publication"]:
+                    if self.linker.rel_params["with_publication"]:
                         # ... and if "publ", now remove the artificial publication entry!
                         predicted[sentence_id].pop()
                     for i in range(len(predicted[sentence_id])):
@@ -762,9 +762,9 @@ class Experiment:
                     ):
                         prediction = mention
 
-                        if self.mylinker.method_name() in ["mostpopular", "bydistance"]:
+                        if self.linker.method_name() in ["mostpopular", "bydistance"]:
                             # Run entity linking per mention:
-                            selected_cand = self.mylinker.run(
+                            selected_cand = self.linker.run(
                                 {
                                     "candidates": prediction["candidates"],
                                     "place_wqid": prediction["place_wqid"],

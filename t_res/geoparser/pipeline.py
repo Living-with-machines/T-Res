@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 
 from sentence_splitter import split_text_into_sentences
 
-from ..utils import ner, rel_utils
+from ..utils import ner_utils, rel_utils
 from . import linking, ranking, recogniser
 
 
@@ -16,14 +16,14 @@ class Pipeline:
     to geoparse any entities in the text.
 
     Arguments:
-        myner (recogniser.Recogniser, optional): The NER (Named Entity
+        ner (recogniser.Recogniser, optional): The NER (Named Entity
             Recogniser) object to use in the pipeline. If None, a default
             ``Recogniser`` will be instantiated. For the default settings, see
             Notes below.
-        myranker (ranking.Ranker, optional): The ``Ranker`` object to use in
+        ranker (ranking.Ranker, optional): The ``Ranker`` object to use in
             the pipeline. If None, the default ``Ranker`` will be instantiated.
             For the default settings, see Notes below.
-        mylinker (linking.Linker, optional): The ``Linker`` object to use in
+        linker (linking.Linker, optional): The ``Linker`` object to use in
             the pipeline. If None, the default ``Linker`` will be instantiated.
             For the default settings, see Notes below.
         resources_path (str, optional): The path to your resources directory.
@@ -72,9 +72,9 @@ class Pipeline:
 
     def __init__(
         self,
-        myner: Optional[recogniser.Recogniser] = None,
-        myranker: Optional[ranking.Ranker] = None,
-        mylinker: Optional[linking.Linker] = None,
+        ner: Optional[recogniser.Recogniser] = None,
+        ranker: Optional[ranking.Ranker] = None,
+        linker: Optional[linking.Linker] = None,
         resources_path: Optional[str] = None,
         experiments_path: Optional[str] = None,
     ):
@@ -82,60 +82,60 @@ class Pipeline:
         Instantiates a Pipeline object.
         """
 
-        self.myner = myner
-        self.myranker = myranker
-        self.mylinker = mylinker
+        self.ner = ner
+        self.ranker = ranker
+        self.linker = linker
 
-        # If myner is None, instantiate the default Recogniser.
-        if not self.myner:
-            self.myner = recogniser.PretrainedRecogniser(
+        # If ner is None, instantiate the default Recogniser.
+        if not self.ner:
+            self.ner = recogniser.PretrainedRecogniser(
                 model_name="Livingwithmachines/toponym-19thC-en",
             )
 
-        # If myranker is None, instantiate the default Ranker.
-        if not self.myranker:
+        # If ranker is None, instantiate the default Ranker.
+        if not self.ranker:
             if not resources_path:
                 raise ValueError("[ERROR] Please specify path to resources directory.")
-            self.myranker = ranking.PerfectMatchRanker(
+            self.ranker = ranking.PerfectMatchRanker(
                 resources_path=resources_path,
             )
 
-        # If mylinker is None, instantiate the default Linker.
-        if not self.mylinker:
+        # If linker is None, instantiate the default Linker.
+        if not self.linker:
             if not resources_path:
                 raise ValueError("[ERROR] Please specify path to resources directory.")
 
             if experiments_path:
-                self.mylinker = linking.MostPopularLinker(
+                self.linker = linking.MostPopularLinker(
                     resources_path=resources_path,
                     experiments_path=experiments_path,
                 )
             else:
-                self.mylinker = linking.MostPopularLinker(
+                self.linker = linking.MostPopularLinker(
                     resources_path=resources_path,
                 )
 
         # -----------------------------------------
         # NER training and creating pipeline:
-        self.myner.create_pipeline()
+        self.ner.create_pipeline()
 
         # -----------------------------------------
         # Ranker loading resources and training a model:
 
         # Load the resources (and train a DeezyMatch model if needed):
-        self.myranker.mentions_to_wikidata = self.myranker.load_resources()
+        self.ranker.mentions_to_wikidata = self.ranker.load_resources()
 
         # -----------------------------------------
         # Linker loading resources:
 
         # Load linking resources:
-        self.mylinker.load_resources()
+        self.linker.load_resources()
 
-        # Train a linking model if needed (it requires myranker to generate
+        # Train a linking model if needed (it requires ranker to generate
         # potential candidates to the training set):
-        if self.mylinker.method_name() == "reldisamb":
-            self.mylinker.rel_params["ed_model"] = self.mylinker.train_load_model(
-                self.myranker
+        if self.linker.method_name() == "reldisamb":
+            self.linker.rel_params["ed_model"] = self.linker.train_load_model(
+                self.ranker
             )
 
     def run_sentence(
@@ -212,8 +212,8 @@ class Pipeline:
 
         # List of mentions for the ranker:
         rmentions = []
-        without_microtoponyms = self.mylinker.method_name() == "reldisamb" \
-            and self.mylinker.rel_params.get("without_microtoponyms", False)
+        without_microtoponyms = self.linker.method_name() == "reldisamb" \
+            and self.linker.rel_params.get("without_microtoponyms", False)
         if without_microtoponyms:
             rmentions = [
                 {"mention": y["mention"]} for y in mentions if y["ner_label"] == "LOC"
@@ -222,7 +222,7 @@ class Pipeline:
             rmentions = [{"mention": y["mention"]} for y in mentions]
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
+        wk_cands, self.ranker.already_collected_cands = self.ranker.find_candidates(
             rmentions
         )
 
@@ -242,17 +242,17 @@ class Pipeline:
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
-        if self.mylinker.method_name() == "reldisamb":
+        if self.linker.method_name() == "reldisamb":
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
-                self.mylinker.linking_resources["mentions_to_wikidata"],
+                self.linker.linking_resources["mentions_to_wikidata"],
             )
 
-            if self.mylinker.rel_params["with_publication"]:
+            if self.linker.rel_params["with_publication"]:
                 if place_wqid == "" or place == "":
-                    place_wqid = self.mylinker.rel_params["default_publwqid"]
-                    place = self.mylinker.rel_params["default_publname"]
+                    place_wqid = self.linker.rel_params["default_publwqid"]
+                    place = self.linker.rel_params["default_publname"]
 
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(
@@ -261,9 +261,9 @@ class Pipeline:
                     place_wqid,
                 )
 
-            predicted = self.mylinker.rel_params["ed_model"].predict(mentions_dataset)
+            predicted = self.linker.rel_params["ed_model"].predict(mentions_dataset)
 
-            if self.mylinker.rel_params["with_publication"]:
+            if self.linker.rel_params["with_publication"]:
                 # ... and if "publ", now remove the artificial publication entry!
                 mentions_dataset["linking"].pop()
 
@@ -321,12 +321,12 @@ class Pipeline:
                     )
                 }
 
-        if self.mylinker.method_name() in ["mostpopular", "bydistance"]:
+        if self.linker.method_name() in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
 
                 # Run entity linking per mention:
-                selected_cand = self.mylinker.run(
+                selected_cand = self.linker.run(
                     {
                         "candidates": wk_cands[mention["mention"]],
                         "place_wqid": place_wqid,
@@ -374,10 +374,10 @@ class Pipeline:
             sentence_dataset = []
             for md in mentions_dataset["linking"]:
                 md = dict((k, md[k]) for k in md if k in keys)
-                md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
+                md["latlon"] = self.linker.linking_resources["wqid_to_coords"].get(
                     md["prediction"]
                 )
-                md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
+                md["wkdt_class"] = self.linker.linking_resources["entity2class"].get(
                     md["prediction"]
                 )
                 sentence_dataset.append(md)
@@ -486,7 +486,7 @@ class Pipeline:
 
     def run_sentence_recognition(self, sentence) -> List[dict]:
         # Get predictions:
-        predictions = self.myner.ner_predict(sentence)
+        predictions = self.ner.ner_predict(sentence)
 
         # Process predictions:
         procpreds = [
@@ -495,7 +495,7 @@ class Pipeline:
         ]
 
         # Aggregate mentions:
-        mentions = ner.aggregate_mentions(procpreds, "pred")
+        mentions = ner_utils.aggregate_mentions(procpreds, "pred")
         return mentions
 
     def format_prediction(
@@ -662,8 +662,8 @@ class Pipeline:
         """
 
         # Get without_microtoponyms value (whether to resolve microtoponyms or not):
-        without_microtoponyms = self.mylinker.method_name() == "reldisamb" \
-            and self.mylinker.rel_params.get("without_microtoponyms", False)
+        without_microtoponyms = self.linker.method_name() == "reldisamb" \
+            and self.linker.rel_params.get("without_microtoponyms", False)
 
         # List of mentions for the ranker:
         rmentions = []
@@ -679,7 +679,7 @@ class Pipeline:
         mentions = [{"mention": m} for m in mentions]
 
         # Perform candidate ranking:
-        wk_cands, self.myranker.already_collected_cands = self.myranker.find_candidates(
+        wk_cands, self.ranker.already_collected_cands = self.ranker.find_candidates(
             mentions
         )
         return wk_cands
@@ -745,17 +745,17 @@ class Pipeline:
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
-        if self.mylinker.method_name() == "reldisamb":
+        if self.linker.method_name() == "reldisamb":
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
-                self.mylinker.linking_resources["mentions_to_wikidata"],
+                self.linker.linking_resources["mentions_to_wikidata"],
             )
 
-            if self.mylinker.rel_params["with_publication"]:
+            if self.linker.rel_params["with_publication"]:
                 if place_wqid == "" or place == "":
-                    place_wqid = self.mylinker.rel_params["default_publwqid"]
-                    place = self.mylinker.rel_params["default_publname"]
+                    place_wqid = self.linker.rel_params["default_publwqid"]
+                    place = self.linker.rel_params["default_publname"]
 
                 # If "publ", add an artificial publication entry:
                 mentions_dataset = rel_utils.add_publication(
@@ -764,9 +764,9 @@ class Pipeline:
                     place_wqid,
                 )
 
-            predicted = self.mylinker.rel_params["ed_model"].predict(mentions_dataset)
+            predicted = self.linker.rel_params["ed_model"].predict(mentions_dataset)
 
-            if self.mylinker.rel_params["with_publication"]:
+            if self.linker.rel_params["with_publication"]:
                 # ... and if "publ", now remove the artificial publication entry!
                 mentions_dataset["linking"].pop()
 
@@ -824,12 +824,12 @@ class Pipeline:
                     )
                 }
 
-        if self.mylinker.method_name() in ["mostpopular", "bydistance"]:
+        if self.linker.method_name() in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
 
                 # Run entity linking per mention:
-                selected_cand = self.mylinker.run(
+                selected_cand = self.linker.run(
                     {
                         "candidates": wk_cands[mention["mention"]],
                         "place_wqid": "",
@@ -873,10 +873,10 @@ class Pipeline:
         sentence_dataset = []
         for md in mentions_dataset["linking"]:
             md = dict((k, md[k]) for k in md if k in keys)
-            md["latlon"] = self.mylinker.linking_resources["wqid_to_coords"].get(
+            md["latlon"] = self.linker.linking_resources["wqid_to_coords"].get(
                 md["prediction"]
             )
-            md["wkdt_class"] = self.mylinker.linking_resources["entity2class"].get(
+            md["wkdt_class"] = self.linker.linking_resources["entity2class"].get(
                 md["prediction"]
             )
             sentence_dataset.append(md)

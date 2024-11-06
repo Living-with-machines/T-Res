@@ -421,13 +421,13 @@ class RelDisambLinker(Linker):
         raise NotImplementedError("reldisamb linking method has no run method.")
         
     def train_load_model(
-        self, myranker: ranking.Ranker, split: Optional[str] = "originalsplit"
+        self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"
     ) -> entity_disambiguation.EntityDisambiguation:
         """
         Trains or loads the entity disambiguation model.
 
         Arguments:
-            myranker (geoparser.ranking.Ranker): The ranker object used for
+            ranker (geoparser.ranking.Ranker): The ranker object used for
                 training.
             split (str, optional): The split type for training. Defaults to
                 ``"originalsplit"``.
@@ -468,11 +468,11 @@ class RelDisambLinker(Linker):
                 }
         """
         # Generate ED model name:
-        linker_name = myranker.method_name()
-        if myranker.method_name() == "deezymatch":
-            linker_name += "+" + str(myranker.deezy_parameters["num_candidates"])
+        linker_name = ranker.method_name()
+        if ranker.method_name() == "deezymatch":
+            linker_name += "+" + str(ranker.deezy_parameters["num_candidates"])
             linker_name += "+" + str(
-                myranker.deezy_parameters["selection_threshold"]
+                ranker.deezy_parameters["selection_threshold"]
             )
         linker_name += f"_{split}"
         if self.rel_params["with_publication"]:
@@ -512,14 +512,14 @@ class RelDisambLinker(Linker):
                 train_df,
                 self.rel_params,
                 self.linking_resources["mentions_to_wikidata"],
-                myranker,
+                ranker,
                 "train",
             )
             dev_json = rel_utils.prepare_rel_trainset(
                 dev_df,
                 self.rel_params,
                 self.linking_resources["mentions_to_wikidata"],
-                myranker,
+                ranker,
                 "dev",
             )
 

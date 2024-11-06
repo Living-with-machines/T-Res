@@ -50,7 +50,7 @@ def test_train(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="ner_test",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
@@ -67,7 +67,7 @@ def test_train(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myranker = ranking.DeezyMatchRanker(
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -100,7 +100,7 @@ def test_train(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.RelDisambLinker(
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -117,29 +117,29 @@ def test_train(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    myner.create_pipeline()
+    ner.create_pipeline()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources (and train a DeezyMatch model if needed):
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    ranker.mentions_to_wikidata = ranker.load_resources()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.load_resources()
-    # Train a linking model if needed (it requires myranker to generate potential
+    linker.load_resources()
+    # Train a linking model if needed (it requires ranker to generate potential
     # candidates to the training set):
-    mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
+    linker.rel_params["ed_model"] = linker.train_load_model(ranker)
 
-    assert isinstance(mylinker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
+    assert isinstance(linker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
+    assert linker.rel_params["ed_model"].best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
 
 @pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
@@ -156,7 +156,7 @@ def test_load_eval_model(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myranker = ranking.DeezyMatchRanker(
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -189,7 +189,7 @@ def test_load_eval_model(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.RelDisambLinker(
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "sample_files/resources/"),
             linking_resources=dict(),
             rel_params={
@@ -206,29 +206,29 @@ def test_load_eval_model(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    myner.create_pipeline()
+    ner.create_pipeline()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources (and train a DeezyMatch model if needed):
-    myranker.mentions_to_wikidata = myranker.load_resources()
+    ranker.mentions_to_wikidata = ranker.load_resources()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.load_resources()
-    # Train a linking model if needed (it requires myranker to generate potential
+    linker.load_resources()
+    # Train a linking model if needed (it requires ranker to generate potential
     # candidates to the training set):
-    mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
+    linker.rel_params["ed_model"] = linker.train_load_model(ranker)
 
-    assert isinstance(mylinker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
+    assert isinstance(linker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_predict(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.CustomRecogniser(
+    ner = recogniser.CustomRecogniser(
         model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
@@ -245,7 +245,7 @@ def test_predict(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    myranker = ranking.DeezyMatchRanker(
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -278,7 +278,7 @@ def test_predict(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.RelDisambLinker(
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
             linking_resources=dict(),
             rel_params={
@@ -293,7 +293,7 @@ def test_predict(tmp_path):
             overwrite_training=False,
         )
 
-    mypipe = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    mypipe = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
     predictions = mypipe.run_text(
         "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
