@@ -7,6 +7,74 @@ from t_res.geoparser import ranking
 
 current_dir = Path(__file__).parent.resolve()
 
+def test_ranking_data_classes():
+    """
+    Test the data classes that represent ranking candidates.
+    """
+
+    # Legacy example:
+    # {'London': 1.0}
+    string_match = ranking.StringMatch('London', 1.0)
+    assert string_match.variation == 'London'
+    assert string_match.string_similarity == 1.0
+
+    # Legacy example:
+    # {'Q619055': 0.03571428571428571}
+    wikidata_match = ranking.WikidataMatch('Q619055', 0.03571428571428571)
+    assert wikidata_match.wqid == 'Q619055'
+    assert wikidata_match.freq == 0.03571428571428571
+
+    # Legacy example:
+    # {'Shielfield': {'Score': 0.9387, 'Candidates': {'Q619055': 0.03571428571428571, 'Q5953687': 0.22857142857142856}}
+    candidate_match = ranking.CandidateMatch('Shielfield', 0.9387, [
+        ranking.WikidataMatch('Q619055', 0.03571428571428571),
+        ranking.WikidataMatch('Q5953687', 0.22857142857142856),
+    ])
+    assert candidate_match.variation == 'Shielfield'
+    assert candidate_match.string_similarity == 0.9387
+    # Wikidata candidates are in order of decreasing freq.
+    assert candidate_match.wikidata_candidates[0].wqid == 'Q5953687'
+    assert candidate_match.wikidata_candidates[0].freq == 0.22857142857142856
+    assert candidate_match.wikidata_candidates[1].wqid == 'Q619055'
+    assert candidate_match.wikidata_candidates[1].freq == 0.03571428571428571
+
+    # Legacy example without wikidata:
+    # {'Sheftield': {'Shielfield': 0.9387, 'Sheffield': 0.9228, 'Shelfield': 0.8947}}
+    candidates = ranking.Candidates('Sheftield', [
+        ranking.StringMatch('Shielfield', 0.9387),
+        ranking.StringMatch('Sheffield', 0.9228),
+        ranking.StringMatch('Shelfield', 0.8947),
+    ])
+    assert candidates.mention == 'Sheftield'
+    assert len(candidates.matches) == 3
+
+    candidates = ranking.Candidates('Sheftield', [
+        ranking.CandidateMatch('Sheffield', 0.9228, [
+            ranking.WikidataMatch('Q6707254', 0.0410958904109589),
+            ranking.WikidataMatch('Q7492778', 0.20202020202020204),
+            ranking.WikidataMatch('Q1421317', 0.03875968992248062),
+        ]), 
+        ranking.CandidateMatch('Shelfield', 0.8947, [
+            ranking.WikidataMatch('Q7493600', 1.0),
+        ]),
+        ranking.CandidateMatch('Shielfield', 0.9387, [
+            ranking.WikidataMatch('Q619055', 0.03571428571428571),
+            ranking.WikidataMatch('Q5953687', 0.22857142857142856),
+        ]),
+    ])
+    assert candidates.mention == 'Sheftield'
+    assert len(candidates.matches) == 3
+    # matches are in order of decreasing string similarity.
+    assert candidates.matches[0].variation == 'Shielfield'
+    assert candidates.matches[0].string_similarity == 0.9387
+    assert len(candidates.matches[0].wikidata_candidates) == 2
+    assert candidates.matches[1].variation == 'Sheffield'
+    assert candidates.matches[1].string_similarity == 0.9228
+    assert len(candidates.matches[1].wikidata_candidates) == 3
+    assert candidates.matches[2].variation == 'Shelfield'
+    assert candidates.matches[2].string_similarity == 0.8947
+    assert len(candidates.matches[2].wikidata_candidates) == 1
+
 def test_ranking_perfect_match():
     """
     Test that perfect_match returns only perfect matching cases
@@ -25,7 +93,6 @@ def test_ranking_perfect_match():
 
     candidates = ranker.run(["Paperopoli"])
     assert candidates["Paperopoli"] == {}
-
 
 def test_ranking_matching_score():
     """

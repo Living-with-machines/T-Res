@@ -8,8 +8,68 @@ import pandas as pd
 from DeezyMatch import candidate_ranker
 from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
+from dataclasses import dataclass, field
 
 from ..utils import deezy_processing
+
+@dataclass(order=True)
+class StringMatch:
+    """Data class representing a potential toponym string match."""
+    sort_index: float = field(init=False)
+    # The toponym spelling variation.
+    variation: str
+    # String matching similarly score.
+    string_similarity: float
+
+    def __post_init__(self):
+        self.sort_index = self.string_similarity
+
+@dataclass(order=True)
+class WikidataMatch:
+    """Data class representing a potential toponym match in Wikidata."""
+    sort_index: float = field(init=False)
+    # The Wikidata ID.
+    wqid: str
+    # The relative mention-to-wikidata frequency.
+    freq: float
+
+    def __post_init__(self):
+        self.sort_index = self.freq
+@dataclass
+class CandidateMatch(StringMatch):
+    """Data class representing a potential toponym match with Wikidata candidates."""
+    sort_index: float = field(init=False)
+    # A list of potential matches in Wikidata.
+    wikidata_candidates: List[WikidataMatch]
+
+    def __post_init__(self):
+        self.sort_index = self.string_similarity
+        self.wikidata_candidates = sorted(self.wikidata_candidates, reverse=True)
+
+@dataclass
+class Candidates:
+    # The toponym as mentioned in the text.
+    mention: str
+    # A list of potential toponym matches (each of which may contain a list of Wikidata candidates).
+    matches: List[StringMatch]
+
+    def __post_init__(self):
+        self.matches = sorted(self.matches, reverse=True)
+
+    def __str__(self):
+        s = f"Candidates for '{self.mention}':"
+        l = max([len(m.variation) for m in self.matches])
+        for c in self.matches:
+            s += f"\n    {c.variation.ljust(l)} [{'{:.3f}'.format(c.string_similarity)}]"
+            if isinstance(c, CandidateMatch):
+                s += ": "
+                for w in c.wikidata_candidates[:2]:
+                    s += f"({w.wqid}, {'{:.3f}'.format(w.freq)}), "
+                if len(c.wikidata_candidates) > 2:
+                    s += "..."
+                else:
+                    s = s[:-2]
+        return s
 
 # TODO: fix docstring.
 class Ranker:
