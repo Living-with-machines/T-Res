@@ -1,8 +1,7 @@
 import json
 import os
-import sys
 from pathlib import Path
-from typing import List, Literal, Optional, Tuple
+from typing import List, Optional
 
 import pandas as pd
 from DeezyMatch import candidate_ranker
@@ -12,7 +11,7 @@ from dataclasses import dataclass, field
 
 from ..utils import deezy_processing
 
-@dataclass(order=True)
+@dataclass(order=True, frozen=True)
 class StringMatch:
     """Data class representing a potential toponym string match."""
     sort_index: float = field(init=False)
@@ -22,9 +21,15 @@ class StringMatch:
     string_similarity: float
 
     def __post_init__(self):
-        self.sort_index = self.string_similarity
+        object.__setattr__(self, 'sort_index', self.string_similarity)
 
-@dataclass(order=True)
+    def is_empty(self) -> bool:
+        return self.variation is None and self.string_similarity is None
+
+    def as_string_match(self):
+        return self
+
+@dataclass(order=True, frozen=True)
 class WikidataMatch:
     """Data class representing a potential toponym match in Wikidata."""
     sort_index: float = field(init=False)
@@ -34,42 +39,77 @@ class WikidataMatch:
     freq: float
 
     def __post_init__(self):
-        self.sort_index = self.freq
-@dataclass
+        object.__setattr__(self, 'sort_index', self.freq)
+
+@dataclass(order=True, frozen=True)
 class CandidateMatch(StringMatch):
     """Data class representing a potential toponym match with Wikidata candidates."""
     sort_index: float = field(init=False)
     # A list of potential matches in Wikidata.
-    wikidata_candidates: List[WikidataMatch]
+    wikidata_matches: List[WikidataMatch]
 
     def __post_init__(self):
-        self.sort_index = self.string_similarity
-        self.wikidata_candidates = sorted(self.wikidata_candidates, reverse=True)
+        object.__setattr__(self, 'sort_index', self.string_similarity)
+        object.__setattr__(self, 'wikidata_matches', sorted(self.wikidata_matches, reverse=True))
 
-@dataclass
+    def as_string_match(self):
+        return StringMatch(self.variation, self.string_similarity)
+
+    # Returns the WikidataMatch instance with the given Wikidata ID
+    # or None if no such match exists.
+    def get(self, wqid: str):
+        for m in self.wikidata_matches:
+            if m.wqid == wqid:
+                return m
+        return None
+
+@dataclass(order=True, frozen=True)
 class Candidates:
     # The toponym as mentioned in the text.
     mention: str
-    # A list of potential toponym matches (each of which may contain a list of Wikidata candidates).
+    # The string matching method used.
+    method: str
+    # A dictionary of potential toponym matches, keyed by (each of which may contain a list of Wikidata candidates).
     matches: List[StringMatch]
 
     def __post_init__(self):
-        self.matches = sorted(self.matches, reverse=True)
+        # Check that the variations are unique in self.matches.
+        variations = [match.variation for match in self.matches]
+        if len(variations) != len(set(variations)):
+            raise ValueError("StringMatch variations must be unique.")
+        object.__setattr__(self, 'matches', sorted(self.matches, reverse=True))
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"Candidates for '{self.mention}':"
         l = max([len(m.variation) for m in self.matches])
         for c in self.matches:
             s += f"\n    {c.variation.ljust(l)} [{'{:.3f}'.format(c.string_similarity)}]"
             if isinstance(c, CandidateMatch):
                 s += ": "
-                for w in c.wikidata_candidates[:2]:
+                for w in c.wikidata_matches[:2]:
                     s += f"({w.wqid}, {'{:.3f}'.format(w.freq)}), "
-                if len(c.wikidata_candidates) > 2:
+                if len(c.wikidata_matches) > 2:
                     s += "..."
                 else:
                     s = s[:-2]
         return s
+    
+    def is_empty(self) -> bool:
+        return len(self.matches) == 0 or self.matches[0].is_empty()
+    
+    # Strips away information relating to potential Wikidata matches.
+    def as_string_matches(self):
+        return Candidates(self.mention, 
+                          self.method, 
+                          [m.as_string_match() for m in self.matches])
+    
+    # Returns the StringMatch instance with the given spelling variation
+    # or None if no such match exists.
+    def get(self, variation: str):
+        for m in self.matches:
+            if m.variation == variation:
+                return m
+        return None
 
 # TODO: fix docstring.
 class Ranker:
@@ -91,8 +131,9 @@ class Ranker:
             will store the mapping between Wikidata IDs and mentions,
             which will be loaded through the
             :py:meth:`~geoparser.ranking.Ranker.load_resources` method.
-        already_collected_cands (dict, optional): Dictionary of already
-            collected candidates. Defaults to ``dict()`` (an empty dictionary).
+        already_collected_cands (dict, optional): Dictionary for caching the
+            results of queries that have already been executed. Defaults 
+            to ``dict()`` (an empty dictionary).
 
     This base class should not be instatiated directly. Instead use a subclass
     constructor.
@@ -102,27 +143,15 @@ class Ranker:
         >>> ranker = PerfectMatchRanker(
                 resources_path="/path/to/resources/",
             )
-
         >>> # Load resources
         >>> ranker.mentions_to_wikidata = ranker.load_resources()
-
         >>> # Perform candidate selection
         >>> queries = ['London', 'Paraguay']
-        >>> candidates = ranker.run(queries)
-
+        >>> results = [ranker.run(query) for query in queries]
         >>> # Print the results
         >>> print("Candidate Selection Results:")
-        >>> print(candidates)
-        >>> print(ranker.already_collected_cands)
-
-        >>> # Find candidates for mentions
-        >>> mentions = [{'mention': 'London'}, {'mention': 'Paraguay'}]
-        >>> mention_candidates = ranker.find_candidates(mentions)
-
-        >>> # Print the results
-        >>> print("Find Candidates Results:")
-        >>> print(mention_candidates)
-        >>> print(ranker.already_collected_cands)
+        >>> for candidates in results:
+        >>>     print(candidates)
     """
 
     def __init__(
@@ -138,6 +167,7 @@ class Ranker:
         self.resources_path = resources_path
         self.mentions_to_wikidata = mentions_to_wikidata
         self.wikidata_to_mentions = wikidata_to_mentions
+        # TODO: rename as `cache`.
         self.already_collected_cands = already_collected_cands
 
     def method_name(self) -> str:
@@ -236,105 +266,91 @@ class Ranker:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-    def run(self, queries: List[str]) -> dict:
+    # TODO: rename `query` to `mention`.
+    def run(self, query: str, attach_wikidata: bool = True) -> Candidates:
         """
-        Execute the ranking process. Each Ranker subclass must implement a 
-        ranking method by overriding this function.
+        Execute the ranking process.
 
         Arguments:
-            queries (list): A list of mentions (strings) identified in a text
-                to match.
+            query (str): A toponym to be matched.
+            attach_wikidata (bool): If True, potential Wikidata 
+                matches are included in the returned candidates.
 
         Returns:
-            dict: A dictionary whose content will vary depending on the 
-                particular ranking method.
+            Candidates: An instance of the Candidates dataclass, containing
+                potential matches for the given toponym.
+
+        Note: if the query result has already been cached with Wikidata
+        matches attached, that cached result will be returned (even if
+        the `attach_wikidata` flag is set to False). To remove the 
+        Wikidata matches, call the `as_string_matches` method on the
+        returned Candidates instance.
+        """
+        if not isinstance(query, str):
+            raise ValueError("`query` argument must have type `str`")
+
+        # Use the cache if possible.
+        if query in self.already_collected_cands:
+            candidates = self.already_collected_cands[query]
+        else:
+            candidates = self.match_candidates(query)
+        if not attach_wikidata:
+            return candidates
+        return self.attach_wikidata(candidates)
+
+    def match_candidates(self, query: str) -> Candidates:
+        """
+        Identify matching candidates for the given toponym query.
+        
+        Each Ranker subclass must implement a ranking method by overriding 
+        this function.
+
+        Args:
+            query (str): A toponym to be matched.
+
+        Raises:
+            NotImplementedError: If this method is not overridden in a subclass.
+
+        Returns:
+            Candidates: An instance of the Candidates dataclass, containing
+                potential matches for the given toponym.
         """
         raise NotImplementedError("Subclass implementation required.")
 
-    def find_candidates(self, mentions: List[dict]) -> dict:
+    def attach_wikidata(self, candidates: Candidates) -> Candidates:
         """
-        Find candidates for the given mentions using the selected ranking
-        method.
+        Replace each `StringMatch` instance in the given candidates by 
+        a `CandidateMatch` instance containing potential Wikidata matches.
 
-        Arguments:
-            mentions (list): A list of predicted mentions as dictionaries.
+        Args:
+            candidates: An instance of the Candidates dataclass in which
+                each match is a StringMatch instance.
 
         Returns:
-            dict: A dictionary mapping each original mention to a
-               sub-dictionary, where the sub-dictionary maps the mention
-               variations to a sub-sub-dictionary with two keys: ``"Score"``
-               (the string matching similarity score) and ``"Candidates"``
-               (a dictionary containing the Wikidata candidates, where the
-               key is the Wikidata ID and value is the the relative mention-
-               to-wikidata frequency).
+            Candidates: An instance of the Candidates dataclass in which
+                each match is a CandidateMatch instance.
 
-               The variation is found by the candidate ranker in the knowledge
-               base, and for each variation, the candidate ranking score and
-               the candidates from Wikidata are provided. E.g. for mention
-               "Guadaloupe" in sentence "sn83030483-1790-03-31-a-i0004_1", the
-               candidates will show as follows:
-
-               .. code-block:: json
-
-                  {
-                    "Guadaloupe": {
-                        "Score": 1.0,
-                        "Candidates": {
-                            "Q17012": 0.003935458480913026,
-                            "Q3153836": 0.07407407407407407
-                        }
-                    }
-                }
+        The toponym variation is sought in the Wikidata knowledgebase and
+        potential matches are attached to the candidates instance.
 
         Note:
-            This method takes a list of mentions and finds candidates for each
-            mention using the selected ranking method. It first extracts the
-            queries from the mentions and then calls the appropriate method
-            based on the ranking method chosen when initialising the
-            :py:meth:`~geoparser.ranking.Ranker` object.
-
-            The method returns a dictionary that maps each original mention to
-            a sub-dictionary containing the mention variations as keys and
-            their corresponding Wikidata match scores as values.
-
-            Additionally, it updates the already collected candidates
-            dictionary (the Ranker object's ``already_collected_cands``
-            attribute).
+            This method updates the Ranker cache, replacing any existing
+            entry for the given toponym.
         """
-        # Extract the mention
-        queries = list(set([mention["mention"] for mention in mentions]))
+        # If Wikidata candidates are already attached, there's nothing to do.
+        if all([isinstance(m, CandidateMatch) for m in candidates.matches]):
+            return candidates
 
-        # Pass the mentions to :py:meth:`geoparser.ranking.Ranker.run`
-        cands = self.run(queries)
+        # Replace each StringMatch instance in the candidates with a CandidateMatch
+        # instance (containing potential Wikidata matches).
+        for i, match in enumerate(candidates.matches):
+            found_cands = self.mentions_to_wikidata.get(match.variation, dict())
+            wikidata_matches = [WikidataMatch(k, v) for (k, v) in found_cands.items()]
+            candidates.matches[i] = CandidateMatch(match.variation, match.string_similarity, wikidata_matches)
 
-        # Get Wikidata candidates
-        wk_cands = dict()
-        for original_mention in cands:
-            wk_cands[original_mention] = dict()
-            for variation in cands[original_mention]:
-                # If the candidates of the variation of the original mention
-                # have already been stored, reuse them:
-                stored_value = self.already_collected_cands[original_mention][variation]
-                if type(stored_value) == dict:
-                    wk_cands[original_mention][variation] = stored_value
-                # If the candidates of the variation of the original mention
-                # have not yet been found, find them:
-                else:
-                    match_score = cands[original_mention][variation]
-                    # Find Wikidata ID and relv.
-                    found_cands = self.mentions_to_wikidata.get(variation, dict())
-                    if found_cands and not variation in wk_cands[original_mention]:
-                        wk_cands[original_mention][variation] = {
-                            "Score": match_score,
-                            "Candidates": found_cands,
-                        }
-                        self.already_collected_cands[original_mention][variation] = {
-                            "Score": match_score,
-                            "Candidates": found_cands,
-                        }
-
-        return wk_cands
-
+        # Update the cache.
+        self.already_collected_cands[candidates.mention] = candidates
+        return candidates
 
 # TODO: fix docstring
 class PerfectMatchRanker(Ranker):
@@ -345,60 +361,53 @@ class PerfectMatchRanker(Ranker):
         >>> ranker = PerfectMatchRanker(...)
         >>> ranker.mentions_to_wikidata = ranker.load_resources()
         >>> queries = ['London', 'Barcelona', 'Bologna']
-        >>> candidates = ranker.run(queries)
-        >>> print(candidates)
-        {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
-        >>> print(already_collected)
-        {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
+        >>> results = [ranker.run(query) for query in queries]
+        >>> # Print the results
+        >>> print("Candidate Selection Results:")
+        >>> for candidates in results:
+        >>>     print(candidates)
     """
     def method_name(self) -> str:
         return "perfectmatch"
 
-    def run(self, queries: List[str]) -> dict:
+    def match_candidates(self, query: str) -> Candidates:
         """
         Perform perfect matching between a provided list of mentions
         (``queries``) and the altnames in the knowledge base.
 
         Arguments:
-            queries (list): A list of mentions (strings) identified in a text
-                to match.
+            query: A toponym mention (string) to be matched.
 
         Returns:
-            dict: A dictionary mapping each mention to its candidate
-                list, where the candidate list is a dictionary with the
-                mention itself as the key and a perfect match score of
-                ``1.0``.
+            Candidates: An instance of the Candidates dataclass, containing
+                potential matches for the given toponym. In the case of perfect
+                matching, all matches have string_similarity equal to 1.0.
 
         Note:
-            This method checks if each mention has an exact match in the
+            This method checks if the query has an exact match in the
             mentions_to_wikidata dictionary. If a match is found, it assigns a
             perfect match score of ``1.0`` to the mention. Otherwise, an empty
-            dictionary is assigned as the candidate list for the mention.
+            dictionary is assigned as the list of matches for the query.
 
         Example:
             >>> ranker = PerfectMatchRanker(resources_path="...")
             >>> ranker.mentions_to_wikidata = ranker.load_resources()
             >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> candidates= ranker.run(queries)
-            >>> print(candidates)
-            {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
-            >>> print(already_collected)
-            {'London': {'London': 1.0}, 'Barcelona': {'Barcelona': 1.0}, 'Bologna': {'Bologna': 1.0}}
+            >>> results = [ranker.run(query) for query in queries]
+            >>> # Print the results
+            >>> print("Candidate Selection Results:")
+            >>> for candidates in results:
+            >>>     print(candidates)
         """
-        candidates = {}
-        for query in queries:
-            if query in self.already_collected_cands:
-                candidates[query] = self.already_collected_cands[query]
-            else:
-                if query in self.mentions_to_wikidata:
-                    candidates[query] = {query: 1.0}
-                    self.already_collected_cands[query] = {query: 1.0}
-                else:
-                    candidates[query] = {}
-                    self.already_collected_cands[query] = {}
-
+        if query in self.mentions_to_wikidata:
+            matches = [StringMatch(query, 1.0)]
+        else:
+            # If no match exists, assign an empty list to matches. 
+            matches = list()
+        candidates = Candidates(query, self.method_name(), matches)
+        # Update the cache.
+        self.already_collected_cands[query] = candidates
         return candidates
-
 
 class PartialMatchRanker(PerfectMatchRanker):
     """
@@ -419,19 +428,16 @@ class PartialMatchRanker(PerfectMatchRanker):
     def method_name(self) -> str:
         return "partialmatch"
     
-
-    def run(self, queries: List[str]) -> dict:
+    def match_candidates(self, query: str) -> Candidates:
         """
-        Perform partial matching for a list of given mentions (``queries``).
+        Perform partial string matching for a given toponym query.
 
         Arguments:
-            queries (list): A list of mentions (strings) identified in a text
-                to match.
+            query (str): A toponym to be matched.
 
         Returns:
-            dict: A dictionary mapping each mention to its candidate
-                   list, where the candidate list is a dictionary with the
-                   mention variations as keys and their match scores as values.
+            Candidates: An instance of the Candidates dataclass, containing
+                potential matches for the given toponym.
 
         Note:
             This method performs partial matching for each mention in the given
@@ -439,35 +445,33 @@ class PartialMatchRanker(PerfectMatchRanker):
             partial matching process for that mention. For the remaining
             mentions, it calculates the match score based on the specified
             partial matching method: Levenshtein distance or containment.
-
         """
-        # First fill in the perfect matches and already collected queries
-        candidates = super().run(queries)
+        # First attempt a perfect string match.
+        candidates = super().match_candidates(query)
+        if not candidates.is_empty():
+            return candidates
+        
+        # Seek partial string matches.
+        mention_df = pd.DataFrame({"mentions": self.mentions_to_wikidata.keys()})
+        mention_df["score"] = mention_df.parallel_apply(
+            lambda row: self.matching_score(query, row), axis=1
+        )
+        mention_df = mention_df.dropna()
 
-        # the rest go through
-        remainers = [x for x, y in candidates.items() if len(y) == 0]
+        # currently hardcoded cutoff
+        top_scores = sorted(
+            list(set(list(mention_df["score"].unique()))), reverse=True
+        )[:1]
 
-        for query in remainers:
-            mention_df = pd.DataFrame({"mentions": self.mentions_to_wikidata.keys()})
+        mention_df = mention_df[mention_df["score"].isin(top_scores)]
+        cands_dict = mention_df.set_index("mentions").to_dict()["score"]
+        matches = [StringMatch(k, v) for (k, v) in cands_dict.items()]
 
-            mention_df["score"] = mention_df.parallel_apply(
-                lambda row: self.matching_score(query, row), axis=1
-            )
-            mention_df = mention_df.dropna()
-
-            # currently hardcoded cutoff
-            top_scores = sorted(
-                list(set(list(mention_df["score"].unique()))), reverse=True
-            )[:1]
-            mention_df = mention_df[mention_df["score"].isin(top_scores)]
-            mention_df = mention_df.set_index("mentions").to_dict()["score"]
-
-            candidates[query] = mention_df
-
-            self.already_collected_cands[query] = mention_df
-
+        # Convert the partial string matches into candidates.
+        candidates = Candidates(query, self.method_name(), matches)
+        # Update the cache.
+        self.already_collected_cands[query] = candidates
         return candidates
-    
 
     def matching_score(self, query: str, row: pd.Series) -> float:
         """
@@ -556,7 +560,6 @@ class LevenshteinRanker(PartialMatchRanker):
         return 1.0 - normalized_damerau_levenshtein_distance(
             query.lower(), row["mentions"].lower()
         )
-
 
 class DeezyMatchRanker(PerfectMatchRanker):
     """
@@ -692,36 +695,34 @@ class DeezyMatchRanker(PerfectMatchRanker):
         
         return s
 
-    # Override the base class implementation to optionally train the 
-    # DeezyMatch model.
+    # Override the base class implementation to optionally train the model.
     def load_resources(self, train: bool =True) -> dict:
         ret = super().load_resources()
         if train:
             self.train()
         return ret
     
-    def run(self, queries: List[str]) -> dict:
+    # TODO: docstring inc. example
+    def match_candidates(self, query: str) -> Candidates:
         """
         Perform DeezyMatch ranking on-the-fly for a list of given mentions (``queries``).
 
         Arguments:
-            queries (list): A list of mentions (strings) identified in a text
-                to match.
+            query (str): A toponym to be matched.
 
         Returns:
-            dict: A dictionary mapping each mention to its candidate
-                list, where the candidate list is a dictionary with the
-                mention variations as keys and their match scores as values.
+            Candidates: An instance of the Candidates dataclass, containing
+                potential matches for the given toponym.
 
         Example:
             >>> ranker = DeezyMatchRanker(...)
             >>> ranker.load_resources()
             >>> queries = ['London', 'Shefrield']
-            >>> candidates = ranker.run(queries)
-            >>> print(candidates)
-            {'London': {'London': 1.0}, 'Shefrield': {'Sheffield': 0.03382000000000005}}
-            >>> print(already_collected)
-            {'London': {'London': 1.0}, 'Shefrield': {'Sheffield': 0.03382000000000005}}
+            >>> results = [ranker.match_candidates(query) for query in queries]
+            >>> # Print the results
+            >>> print("Candidate Selection Results:")
+            >>> for candidates in results:
+            >>>     print(candidates)
 
         Note:
             This method performs DeezyMatch on-the-fly for each mention in a
@@ -730,8 +731,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
             process for that query. For the remaining queries,
             it uses the DeezyMatch model to generate candidates and ranks them
             based on the specified ranking metric and selection threshold,
-            provided when initialising the :py:meth:`~geoparser.ranking.Ranker`
-            object.
+            provided when initialising the ranker.
         """
 
         dm_path = self.deezy_parameters["dm_path"]
@@ -739,58 +739,61 @@ class DeezyMatchRanker(PerfectMatchRanker):
         dm_model = self.deezy_parameters["dm_model"]
         dm_output = self.deezy_parameters["dm_output"]
 
-        # First fill in the perfect matches and already collected queries
-        cands_dict = super().run(queries)
+        # First attempt a perfect string match.
+        candidates = super().match_candidates(query)
+        if not candidates.is_empty():
+            return candidates
+        
+        # Seek fuzzy string matches.
+        candidate_scenario = os.path.join(
+            dm_path, "combined", dm_cands + "_" + dm_model
+        )
+        pretrained_model_path = os.path.join(
+            f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".model"
+        )
+        pretrained_vocab_path = os.path.join(
+            f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
+        )
 
-        # the rest go through
-        remainers = [x for x, y in cands_dict.items() if len(y) == 0]
+        deezy_result = candidate_ranker(
+            candidate_scenario=candidate_scenario,
+            query=query,
+            ranking_metric=self.deezy_parameters["ranking_metric"],
+            selection_threshold=self.deezy_parameters["selection_threshold"],
+            num_candidates=self.deezy_parameters["num_candidates"],
+            search_size=self.deezy_parameters["num_candidates"],
+            verbose=self.deezy_parameters["verbose"],
+            output_path=os.path.join(dm_path, "ranking", dm_output),
+            pretrained_model_path=pretrained_model_path,
+            pretrained_vocab_path=pretrained_vocab_path,
+        )
 
-        if remainers:
-            candidate_scenario = os.path.join(
-                dm_path, "combined", dm_cands + "_" + dm_model
-            )
-            pretrained_model_path = os.path.join(
-                f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".model"
-            )
-            pretrained_vocab_path = os.path.join(
-                f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
-            )
+        if len(deezy_result.index) != 1:
+            raise Exception(f"DeezyMatch result contains {len(deezy_result.index)} rows. Expected 1.")
+        row = deezy_result.iloc[0]
 
-            candidates = candidate_ranker(
-                candidate_scenario=candidate_scenario,
-                query=remainers,
-                ranking_metric=self.deezy_parameters["ranking_metric"],
-                selection_threshold=self.deezy_parameters["selection_threshold"],
-                num_candidates=self.deezy_parameters["num_candidates"],
-                search_size=self.deezy_parameters["num_candidates"],
-                verbose=self.deezy_parameters["verbose"],
-                output_path=os.path.join(dm_path, "ranking", dm_output),
-                pretrained_model_path=pretrained_model_path,
-                pretrained_vocab_path=pretrained_vocab_path,
-            )
+        # Reverse cosine distance to cosine similarity:
+        returned_cands = dict()
+        if self.deezy_parameters["ranking_metric"] == "faiss":
+            returned_cands = row["faiss_distance"]
+            returned_cands = {
+                k: (
+                    self.deezy_parameters["selection_threshold"]
+                    - returned_cands[k]
+                )
+                / self.deezy_parameters["selection_threshold"]
+                for k in returned_cands
+            }
+        else:
+            returned_cands = row["cosine_dist"]
+            returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
 
-            for _, row in candidates.iterrows():
-                # Reverse cosine distance to cosine similarity:
-                returned_cands = dict()
-                if self.deezy_parameters["ranking_metric"] == "faiss":
-                    returned_cands = row["faiss_distance"]
-                    returned_cands = {
-                        k: (
-                            self.deezy_parameters["selection_threshold"]
-                            - returned_cands[k]
-                        )
-                        / self.deezy_parameters["selection_threshold"]
-                        for k in returned_cands
-                    }
-                else:
-                    returned_cands = row["cosine_dist"]
-                    returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
-
-                cands_dict[row["query"]] = returned_cands
-
-                self.already_collected_cands[row["query"]] = returned_cands
-
-        return cands_dict
+        matches = [StringMatch(k, v) for (k, v) in returned_cands.items()]
+        # Convert the partial string matches into candidates.
+        candidates = Candidates(query, self.method_name(), matches)
+        # Update the cache.
+        self.already_collected_cands[query] = candidates
+        return candidates
     
     def train(self) -> None:
         """
