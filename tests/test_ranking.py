@@ -24,23 +24,29 @@ def test_ranking_data_classes():
 
     # Legacy example:
     # {'Q619055': 0.03571428571428571}
-    wikidata_match = ranking.WikidataMatch('Q619055', 0.03571428571428571)
+    wikidata_match = ranking.WikidataMatch('Q619055', normalized_score=0.03571428571428571, freq=22)
     assert wikidata_match.wqid == 'Q619055'
-    assert wikidata_match.freq == 0.03571428571428571
+    assert wikidata_match.normalized_score == 0.03571428571428571
+    assert wikidata_match.freq == 22
 
     # Legacy example:
     # {'Shielfield': {'Score': 0.9387, 'Candidates': {'Q619055': 0.03571428571428571, 'Q5953687': 0.22857142857142856}}
-    candidate_match = ranking.CandidateMatch('Shielfield', 0.9387, [
-        ranking.WikidataMatch('Q619055', 0.03571428571428571),
-        ranking.WikidataMatch('Q5953687', 0.22857142857142856),
-    ])
+    wikidata_matches = [
+        ranking.WikidataMatch('Q619055', 0.03571428571428571, 5),
+        ranking.WikidataMatch('Q5953687', 0.22857142857142856, 33),
+    ]
+    candidate_match = ranking.CandidateMatch(variation='Shielfield', 
+                                             string_similarity=0.9387, 
+                                             wikidata_matches=wikidata_matches)
     assert candidate_match.variation == 'Shielfield'
     assert candidate_match.string_similarity == 0.9387
     # Wikidata candidates are in order of decreasing freq.
     assert candidate_match.wikidata_matches[0].wqid == 'Q5953687'
-    assert candidate_match.wikidata_matches[0].freq == 0.22857142857142856
+    assert candidate_match.wikidata_matches[0].freq == 33
+    assert candidate_match.wikidata_matches[0].normalized_score == 0.22857142857142856
     assert candidate_match.wikidata_matches[1].wqid == 'Q619055'
-    assert candidate_match.wikidata_matches[1].freq == 0.03571428571428571
+    assert candidate_match.wikidata_matches[1].normalized_score == 0.03571428571428571
+    assert candidate_match.wikidata_matches[1].freq == 5
 
     # Legacy example without wikidata:
     # {'Sheftield': {'Shielfield': 0.9387, 'Sheffield': 0.9228, 'Shelfield': 0.8947}}
@@ -54,16 +60,16 @@ def test_ranking_data_classes():
 
     candidates = ranking.Candidates('Sheftield', "levenshtein", [
         ranking.CandidateMatch('Sheffield', 0.9228, [
-            ranking.WikidataMatch('Q6707254', 0.0410958904109589),
-            ranking.WikidataMatch('Q7492778', 0.20202020202020204),
-            ranking.WikidataMatch('Q1421317', 0.03875968992248062),
+            ranking.WikidataMatch('Q6707254', 0.0410958904109589, 5),
+            ranking.WikidataMatch('Q7492778', 0.20202020202020204, 33),
+            ranking.WikidataMatch('Q1421317', 0.03875968992248062, 22),
         ]), 
         ranking.CandidateMatch('Shelfield', 0.8947, [
-            ranking.WikidataMatch('Q7493600', 1.0),
+            ranking.WikidataMatch('Q7493600', 1.0, 7),
         ]),
         ranking.CandidateMatch('Shielfield', 0.9387, [
-            ranking.WikidataMatch('Q619055', 0.03571428571428571),
-            ranking.WikidataMatch('Q5953687', 0.22857142857142856),
+            ranking.WikidataMatch('Q619055', 0.03571428571428571, 2),
+            ranking.WikidataMatch('Q5953687', 0.22857142857142856, 55),
         ]),
     ])
     assert candidates.mention == 'Sheftield'
@@ -78,6 +84,73 @@ def test_ranking_data_classes():
     assert candidates.matches[2].variation == 'Shelfield'
     assert candidates.matches[2].string_similarity == 0.8947
     assert len(candidates.matches[2].wikidata_matches) == 1
+
+    # Wikidata candidates are in order of decreasing freq.
+    assert candidates.matches[0].wikidata_matches[0].wqid == 'Q5953687'
+    assert candidates.matches[0].wikidata_matches[0].freq == 55
+    assert candidates.matches[0].wikidata_matches[0].normalized_score == 0.22857142857142856
+    assert candidates.matches[0].wikidata_matches[1].wqid == 'Q619055'
+    assert candidates.matches[0].wikidata_matches[1].freq == 2
+    assert candidates.matches[0].wikidata_matches[1].normalized_score == 0.03571428571428571
+
+    assert candidates.matches[1].wikidata_matches[0].wqid == 'Q7492778'
+    assert candidates.matches[1].wikidata_matches[0].freq == 33
+    assert candidates.matches[1].wikidata_matches[0].normalized_score == 0.20202020202020204
+    assert candidates.matches[1].wikidata_matches[1].wqid == 'Q1421317'
+    assert candidates.matches[1].wikidata_matches[1].freq == 22
+    assert candidates.matches[1].wikidata_matches[1].normalized_score == 0.03875968992248062
+    assert candidates.matches[1].wikidata_matches[2].wqid == 'Q6707254'
+    assert candidates.matches[1].wikidata_matches[2].freq == 5
+    assert candidates.matches[1].wikidata_matches[2].normalized_score == 0.0410958904109589
+
+    # Test sort order of wikidata_matches is correct even when assigned 
+    # after instantiation.
+    candidates = ranking.Candidates('Sheftield', "levenshtein", [
+        ranking.CandidateMatch('Sheffield', 0.9228, [
+            ranking.WikidataMatch('Q6707254', freq=None, normalized_score=0.0410958904109589),
+            ranking.WikidataMatch('Q7492778', freq=None, normalized_score=0.20202020202020204),
+            ranking.WikidataMatch('Q1421317', freq=None, normalized_score=0.03875968992248062),
+        ]), 
+        ranking.CandidateMatch('Shielfield', 0.9387, [
+            ranking.WikidataMatch('Q619055', freq=None, normalized_score=0.03571428571428571),
+            ranking.WikidataMatch('Q5953687', freq=None, normalized_score=0.22857142857142856),
+        ]),
+    ])
+
+    # Arbitrary order of Wikidata matches when freq is None.
+    assert candidates.matches[0].wikidata_matches[0].wqid == 'Q619055'
+    assert candidates.matches[0].wikidata_matches[0].freq == None
+    assert candidates.matches[0].wikidata_matches[0].normalized_score == 0.03571428571428571
+    assert candidates.matches[0].wikidata_matches[1].wqid == 'Q5953687'
+    assert candidates.matches[0].wikidata_matches[1].freq == None
+    assert candidates.matches[0].wikidata_matches[1].normalized_score == 0.22857142857142856
+
+    # Assign Wikidata link frequencies after instantiation.
+    candidates.matches[0].get('Q619055').freq = 2
+    candidates.matches[0].get('Q5953687').freq = 55
+    
+    candidates.matches[1].get('Q6707254').freq = 5
+    candidates.matches[1].get('Q7492778').freq = 33
+    candidates.matches[1].get('Q1421317').freq = 22
+
+    # Wikidata candidates are in order of decreasing freq 
+    # (even when assigned after instantiation).
+    assert candidates.matches[0].wikidata_matches[0].wqid == 'Q5953687'
+    assert candidates.matches[0].wikidata_matches[0].freq == 55
+    assert candidates.matches[0].wikidata_matches[0].normalized_score == 0.22857142857142856
+    assert candidates.matches[0].wikidata_matches[1].wqid == 'Q619055'
+    assert candidates.matches[0].wikidata_matches[1].freq == 2
+    assert candidates.matches[0].wikidata_matches[1].normalized_score == 0.03571428571428571
+
+    assert candidates.matches[1].wikidata_matches[0].wqid == 'Q7492778'
+    assert candidates.matches[1].wikidata_matches[0].freq == 33
+    assert candidates.matches[1].wikidata_matches[0].normalized_score == 0.20202020202020204
+    assert candidates.matches[1].wikidata_matches[1].wqid == 'Q1421317'
+    assert candidates.matches[1].wikidata_matches[1].freq == 22
+    assert candidates.matches[1].wikidata_matches[1].normalized_score == 0.03875968992248062
+    assert candidates.matches[1].wikidata_matches[2].wqid == 'Q6707254'
+    assert candidates.matches[1].wikidata_matches[2].freq == 5
+    assert candidates.matches[1].wikidata_matches[2].normalized_score == 0.0410958904109589
 
 def test_ranking_perfect_match():
     """
@@ -329,6 +402,7 @@ def test_ranking_attach_wikidata(tmp_path):
     assert len(ranker.already_collected_cands) == 0
 
     candidates = ranker.run("London")
+
     assert candidates.mention == "London"
     assert isinstance(candidates.get("London"), ranking.CandidateMatch)
     assert candidates.get("London").variation == "London"
@@ -336,7 +410,8 @@ def test_ranking_attach_wikidata(tmp_path):
     assert candidates.get("London").string_similarity == 1.0
     assert len(candidates.get("London").wikidata_matches) == 194
     assert "Q84" in [m.wqid for m in candidates.get("London").wikidata_matches]
-    assert candidates.get("London").get("Q84").freq == pytest.approx(0.9761847, abs=10e-6)
+    assert candidates.get("London").get("Q84").freq == None
+    assert candidates.get("London").get("Q84").normalized_score == pytest.approx(0.9761847, abs=10e-6)
 
     # Check the cache has been updated.
     assert len(ranker.already_collected_cands) == 1
@@ -352,7 +427,8 @@ def test_ranking_attach_wikidata(tmp_path):
     assert (0.0 < candidates.get("Sheffield").string_similarity < 1.0)
     assert len(candidates.get("Sheffield").wikidata_matches) == 50
     assert "Q42448" in [m.wqid for m in candidates.get("Sheffield").wikidata_matches]
-    assert candidates.get("Sheffield").get("Q42448").freq == pytest.approx(0.96211867, abs=10e-6)
+    assert candidates.get("Sheffield").get("Q42448").freq == None
+    assert candidates.get("Sheffield").get("Q42448").normalized_score == pytest.approx(0.96211867, abs=10e-6)
 
     # Test that Perfect Match works
     ranker = ranking.PerfectMatchRanker(

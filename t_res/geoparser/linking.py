@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from haversine import haversine
 from tqdm import tqdm
+from dataclasses import dataclass, field
 
 tqdm.pandas()
 
@@ -17,7 +18,6 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-
 
 class Linker:
     """
@@ -159,7 +159,8 @@ class MostPopularLinker(Linker):
     def method_name(self) -> str:
         return "mostpopular"
 
-    def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
+    # TODO: update docstring
+    def run(self, dict_mention: dict) -> ranking.Candidates:
         """
         Select most popular candidate, given Wikipedia's in-link structure.
 
@@ -182,32 +183,22 @@ class MostPopularLinker(Linker):
             candidate, determined from the in-link structure of Wikipedia.
         """
         cands = dict_mention["candidates"]
-        most_popular_candidate_id = "NIL"
-        keep_highest_score = 0.0
-        total_score = 0.0
-        final_score = 0.0
-        all_candidates = {}
-        if cands:
-            for variation in cands:
-                for candidate in cands[variation]["Candidates"]:
-                    score = self.linking_resources["mentions_to_wikidata"][variation][
-                        candidate
-                    ]
-                    total_score += score
-                    all_candidates[candidate] = score
-                    if score > keep_highest_score:
-                        keep_highest_score = score
-                        most_popular_candidate_id = candidate
 
-            # Return the predicted and the score (overall the total):
-            final_score = keep_highest_score / total_score
+        if not cands:
+            return ranking.Candidates(dict_mention["mention"], None, [])
 
-            # Compute scores for all candidates
-            all_candidates = {
-                cand: (score / total_score) for cand, score in all_candidates.items()
-            }
+        for variation in [sm.variation for sm in cands.matches]:
+            for candidate in cands.get(variation).wikidata_matches:
 
-        return most_popular_candidate_id, final_score, all_candidates
+                # Get the absolute Wikidata link frequency for the candidate from
+                # the linking resource "mentions_to_wikidata".
+                freq = self.linking_resources["mentions_to_wikidata"][variation][
+                    candidate.wqid
+                ]
+                # Update the `freq` field on the Candidate instance.
+                candidate.freq = freq
+
+        return cands
 
 class ByDistanceLinker(Linker):
     """

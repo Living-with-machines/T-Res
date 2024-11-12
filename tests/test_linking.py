@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from t_res.geoparser import linking
+from t_res.geoparser import linking, ranking
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -67,21 +67,24 @@ def test_linking_most_popular():
     assert linker.method_name()  == "mostpopular"
 
     linker.load_resources()
-    dict_mention = {
-        "candidates": {"London": {"Candidates": {"Q84": 0.9, "Q92561": 0.1}}}
-    }
-    keep_most_popular, final_score, candidates = linker.run(dict_mention)
-    assert keep_most_popular == "Q84"
-    assert final_score == pytest.approx(0.9812731647051174, abs=1e-3)
-    assert candidates == {"Q84": pytest.approx(0.9812731647051174, abs=1e-3), \
-                          "Q92561": pytest.approx(0.018726835294882633, abs=1e-3)}
+    wikidata_matches = [ranking.WikidataMatch("Q84", 0.9),
+                        ranking.WikidataMatch("Q92561", 0.1)]
+    matches = [ranking.CandidateMatch("London", 1.0, wikidata_matches)]
+    dict_mention = {"candidates": ranking.Candidates("London", "mostpopular", matches)}
 
-    dict_mention = {"candidates": {}}
-    keep_most_popular, final_score, candidates = linker.run(dict_mention)
-    assert keep_most_popular == "NIL"
-    assert final_score == 0.0
-    assert candidates == {}
+    candidates = linker.run(dict_mention)
 
+    assert candidates.matches[0].wikidata_matches[0].wqid == "Q84"
+    assert candidates.matches[0].wikidata_matches[0].normalized_score == 0.9
+    assert candidates.matches[0].relative_frequencies()[0] == pytest.approx(0.9812731647051174, abs=1e-3)
+    assert candidates.matches[0].wikidata_matches[1].wqid == "Q92561"
+    assert candidates.matches[0].wikidata_matches[1].normalized_score == 0.1
+    assert candidates.matches[0].relative_frequencies()[1] == pytest.approx(0.018726835294882633, abs=1e-3)
+
+    dict_mention = {"candidates": ranking.Candidates("London", "mostpopular", [])}
+    candidates = linker.run(dict_mention)
+
+    assert candidates.is_empty()
 
 def test_linking_by_distance():
     linker = linking.ByDistanceLinker(

@@ -761,19 +761,18 @@ class Experiment:
 
                         if self.linker.method_name() in ["mostpopular", "bydistance"]:
                             # Run entity linking per mention:
-                            selected_cand = self.linker.run(
-                                {
-                                    "candidates": prediction["candidates"],
-                                    "place_wqid": prediction["place_wqid"],
-                                }
-                            )
-                            prediction["prediction"] = selected_cand[0]
-                            prediction["ed_score"] = round(selected_cand[1], 3)
+                            selected_cand = self.linker.run(prediction)
+                            prediction["prediction"] = selected_cand.best_wqid()
+                            # TODO: replace this with a call to `disambiguation_scores` on the Candidate.
+                            if selected_cand.best_match():
+                                prediction["ed_score"] = round(selected_cand.best_match().relative_frequencies()[0], 3)
+                            else:
+                                prediction["ed_score"] = None
 
                 to_append.append(
                     [
                         prediction["prediction"],
-                        round(prediction["ed_score"], 3),
+                        prediction["ed_score"]
                     ]
                 )
 

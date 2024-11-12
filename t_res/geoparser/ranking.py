@@ -29,42 +29,104 @@ class StringMatch:
     def as_string_match(self):
         return self
 
-@dataclass(order=True, frozen=True)
+# TODO: WikidataMatch (or subclasses) will need to accommodate data relating to 
+# all linking methods, with a generic `disambiguation_score` method to get the 
+# linking score (previously referred to as `ed_score`).
+# And note that the normalized_score is used in rel_utils::rank_candidates method
+# when the linking method is `mostpopular`, i.e. when the link freq data must also be
+# available. Whereas when the linking method is REL, the freq data is not needed.
+
+# Set frozen=False to allow freq to be set after instantiation.
+@dataclass(order=True, frozen=False)
 class WikidataMatch:
     """Data class representing a potential toponym match in Wikidata."""
-    sort_index: float = field(init=False)
+    sort_index: int = field(init=False)
     # The Wikidata ID.
     wqid: str
-    # The relative mention-to-wikidata frequency.
-    freq: float
+    # The normalized score.
+    normalized_score: float
+    # The mention-to-wikidata link frequency.
+    freq: int
+    # Associated private field to reconcile dataclasses & properties.
+    # (See https://florimond.dev/en/posts/2018/10/reconciling-dataclasses-and-properties-in-python)
+    _freq: int = field(init=False, repr=False)
+
+    @property
+    def freq(self) -> str:
+        return self._freq
+
+    # Custom setter to ensure sort_index is always equal to freq attribute.
+    @freq.setter
+    def freq(self, freq: int) -> None:
+        self._freq = freq
+        self.sort_index = freq
 
     def __post_init__(self):
-        object.__setattr__(self, 'sort_index', self.freq)
+        # When WikidataMatch instances are sorted in a list, sort by the freq.
+        self.sort_index = self.freq
 
+# TODO: rename as Candidate.
 @dataclass(order=True, frozen=True)
 class CandidateMatch(StringMatch):
     """Data class representing a potential toponym match with Wikidata candidates."""
     sort_index: float = field(init=False)
     # A list of potential matches in Wikidata.
     wikidata_matches: List[WikidataMatch]
+    # Associated private field to reconcile dataclasses & properties.
+    # (See https://florimond.dev/en/posts/2018/10/reconciling-dataclasses-and-properties-in-python)
+    _wikidata_matches: List[WikidataMatch] = field(init=False, repr=False)
 
     def __post_init__(self):
+        # When CandidateMatch instances are sorted in a list, sort by the string_similarity.
         object.__setattr__(self, 'sort_index', self.string_similarity)
-        object.__setattr__(self, 'wikidata_matches', sorted(self.wikidata_matches, reverse=True))
 
+    # Custom getter for the wikidata_matches attribute to ensure correct ordering.
+    @property
+    def wikidata_matches(self) -> List[WikidataMatch]:
+        return sorted(self._wikidata_matches, reverse=True)
+
+    @wikidata_matches.setter
+    def wikidata_matches(self, wikidata_matches: List[WikidataMatch]):
+        object.__setattr__(self, '_wikidata_matches', wikidata_matches)
+
+    # Returns a StringMatch instance identical to this CandidateMatch
+    # instance except with the wikidata_matches attribute removed.
     def as_string_match(self):
         return StringMatch(self.variation, self.string_similarity)
+    
+    # Returns a list of Wikidata link relative frequencies in descending order.
+    # The order is identical to the list in the wikidata_matches attribute.
+    def relative_frequencies(self) -> List[float]:
+        abs_freqs = [m.freq for m in self._wikidata_matches]
+        if any(f is None for f in abs_freqs):
+            raise ValueError("Wikidata frequencies not populated.")
+        total = sum([m.freq for m in self.wikidata_matches])
+        return [m.freq / total for m in self.wikidata_matches]
+    
+    # Returns the top 7 linking confidence score for each Wikidata candidate
+    # as reported as `cross_cand_score` in the T-Res pipeline output.
+    # (Currently assumes the `mostpopular` linking method.)
+    def cross_cand_score(self, len=7) -> dict:
+        tmp = {m.wqid: round(rf, 3) for (m, rf) in zip(self.wikidata_matches, self.relative_frequencies())}
+        return dict(sorted(tmp.items(), key=lambda x: x[1], reverse=True)[:len])
 
     # Returns the WikidataMatch instance with the given Wikidata ID
     # or None if no such match exists.
     def get(self, wqid: str):
-        for m in self.wikidata_matches:
+        for m in self._wikidata_matches:
             if m.wqid == wqid:
                 return m
         return None
-
+    
+    # TODO: 
+    # (will depend on the linking method, to be recorded in a new field.)
+    # Returns a list of disambiguation scores, one for each Wikidata 
+    # candidate, in descending order.
+    # def disambiguation_scores(self) -> List[float]:
+    
 @dataclass(order=True, frozen=True)
 class Candidates:
+    """Data class representing candidate matches for a toponym."""
     # The toponym as mentioned in the text.
     mention: str
     # The string matching method used.
@@ -81,13 +143,18 @@ class Candidates:
 
     def __str__(self) -> str:
         s = f"Candidates for '{self.mention}':"
+        if self.is_empty():
+            s += " None"
+            return s
         l = max([len(m.variation) for m in self.matches])
         for c in self.matches:
+            if c.is_empty():
+                continue
             s += f"\n    {c.variation.ljust(l)} [{'{:.3f}'.format(c.string_similarity)}]"
-            if isinstance(c, CandidateMatch):
+            if isinstance(c, CandidateMatch) and len(c.wikidata_matches) > 0:
                 s += ": "
                 for w in c.wikidata_matches[:2]:
-                    s += f"({w.wqid}, {'{:.3f}'.format(w.freq)}), "
+                    s += f"({w.wqid}, {w.freq}), "
                 if len(c.wikidata_matches) > 2:
                     s += "..."
                 else:
@@ -110,6 +177,36 @@ class Candidates:
             if m.variation == variation:
                 return m
         return None
+    
+    # Returns the match with the highest string similarity.
+    def best_match(self):
+        if self.is_empty():
+            return None
+        return self.matches[0]
+
+    # Returns the Wikidata match with the highest disambiguation score.
+    def best_wikidata_match(self):
+        best_match = self.best_match()
+        if not best_match or best_match.is_empty():
+            return None
+        if not isinstance(best_match, CandidateMatch):
+            return None
+        if len(best_match.wikidata_matches) == 0:
+            return None
+        return best_match.wikidata_matches[0]
+
+    def best_wqid(self):
+        best_wikidata_match = self.best_wikidata_match()
+        if not best_wikidata_match:
+            return None
+        return best_wikidata_match.wqid
+
+    # TODO:
+    # def best_disambiguation_score(self):
+    #     best_match = self.best_match()
+    #     if not best_match:
+    #         return None
+    #     return best_match....
 
 # TODO: fix docstring.
 class Ranker:
@@ -209,6 +306,7 @@ class Ranker:
         """
         print("*** Loading the ranker resources.")
 
+        # NOTE: these are the *normalized* mentions, *not* relative frequencies.
         # Load files
         files = {
             "mentions_to_wikidata": os.path.join(
@@ -266,7 +364,7 @@ class Ranker:
             pandarallel.initialize(nb_workers=10)
             os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-    # TODO: rename `query` to `mention`.
+    # TODO: rename `query` as `mention`.
     def run(self, query: str, attach_wikidata: bool = True) -> Candidates:
         """
         Execute the ranking process.
@@ -342,10 +440,12 @@ class Ranker:
             return candidates
 
         # Replace each StringMatch instance in the candidates with a CandidateMatch
-        # instance (containing potential Wikidata matches).
+        # instance (containing potential Wikidata matches with normalized scores).
         for i, match in enumerate(candidates.matches):
             found_cands = self.mentions_to_wikidata.get(match.variation, dict())
-            wikidata_matches = [WikidataMatch(k, v) for (k, v) in found_cands.items()]
+            wikidata_matches = [WikidataMatch(wqid=k, 
+                                              freq=None, 
+                                              normalized_score=v) for (k, v) in found_cands.items()]
             candidates.matches[i] = CandidateMatch(match.variation, match.string_similarity, wikidata_matches)
 
         # Update the cache.

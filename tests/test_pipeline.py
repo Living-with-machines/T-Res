@@ -385,12 +385,17 @@ def test_modular_deezy_rel(tmp_path):
 
     cands = geoparser.run_candidate_selection(toponyms)
 
-    assert isinstance(cands, dict)
+    assert isinstance(cands, list)
     assert len(cands) == 4
+    for c in cands:
+        assert isinstance(c, ranking.Candidates)
+
+    # Put the candidates in a dictionary for easier access inside run_disambiguation.
+    wk_cands = {c.mention : c for c in cands}
 
     disambiguation = geoparser.run_disambiguation(
         toponyms,
-        cands,
+        wk_cands,
         place_wqid=wikidata_id,
         place=location,
     )

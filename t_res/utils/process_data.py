@@ -410,7 +410,12 @@ def update_with_linking(ner_predictions: dict, link_predictions: pd.Series) -> d
             link_predictions[lp]["token_start"], link_predictions[lp]["token_end"] + 1
         ):
             position_ner = resulting_preds[x][1][:2]
-            resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+            # TODO: improve handling of empty Wikidata predictions:
+            # resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+            if link_predictions[lp]["pred_wqid"]:
+                resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+            else:
+                resulting_preds[x][2] = position_ner
     return resulting_preds
 
 

@@ -8,7 +8,6 @@ from sentence_splitter import split_text_into_sentences
 from ..utils import ner_utils, rel_utils
 from . import linking, ranking, recogniser
 
-
 class Pipeline:
     """
     Represents a pipeline for processing a text using natural language
@@ -216,7 +215,15 @@ class Pipeline:
             rmentions = [{"mention": y["mention"]} for y in mentions]
 
         # Perform candidate ranking:
-        wk_cands = self.ranker.find_candidates(rmentions)
+        # NOTE: `rmentions` simply takes the microtoponyms flag into account - apart from
+        # that its the same as `mentions`. TODO: handle this in a `Mentions` dataclass.
+        # NOTE: we only need the string mention part of the `mention` for the call 
+        # to the ranker, but the rest of the data in the `mention` is needed in the 
+        # call to format_prediction below.
+        wk_cands = {d["mention"] : self.ranker.run(d["mention"]) for d in rmentions}
+
+        print("wk_cands.keys():")
+        print(wk_cands.keys())
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -224,7 +231,7 @@ class Pipeline:
             prediction = self.format_prediction(
                 m,
                 sentence,
-                wk_cands=wk_cands,
+                wk_cands=wk_cands.get(m["mention"], None),
                 context=context,
                 sent_idx=sent_idx,
                 place=place,
@@ -259,16 +266,19 @@ class Pipeline:
                 # ... and if "publ", now remove the artificial publication entry!
                 mentions_dataset["linking"].pop()
 
+            # TODO: fix this brittle iteration with shared index i:
             for i in range(len(mentions_dataset["linking"])):
-                mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
+                mention = mentions_dataset["linking"][i]
+
+                mention["prediction"] = predicted["linking"][i][
                     "prediction"
                 ]
-                mentions_dataset["linking"][i]["ed_score"] = round(
+                mention["ed_score"] = round(
                     predicted["linking"][i]["conf_ed"], 3
                 )
 
                 # Get cross-candidate confidence scores per candidate:
-                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                mention["cross_cand_score"] = {
                     cand: score
                     for cand, score in zip(
                         predicted["linking"][i]["candidates"],
@@ -278,42 +288,50 @@ class Pipeline:
                 }
 
                 # Sort candidates and round scores:
-                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                mention["cross_cand_score"] = {
                     k: round(v, 3)
                     for k, v in sorted(
-                        mentions_dataset["linking"][i]["cross_cand_score"].items(),
+                        mention["cross_cand_score"].items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
                 }
 
+                # If there are no candidates for this mention, skip the rest.
+                if not mention["mention"] in wk_cands.keys():
+                    continue
+
                 # Get string matching confidence scores per candidate:
-                dCs = mentions_dataset["linking"][i]["string_match_candidates"]
-                mentions_dataset["linking"][i]["string_match_score"] = {
-                    x: (
-                        round(dCs[x]["Score"], 3),
-                        [wqc for wqc in dCs[x]["Candidates"]],
+                dCs = mention["string_match_candidates"]
+
+                # TODO: some duplication here and below (but all this linking logic belongs elsewhere).
+                mention["string_match_score"] = {
+                    candidate_match.variation: (
+                        round(candidate_match.string_similarity, 3),
+                        [wqc for wqc in candidate_match.wikidata_matches],
                     )
-                    for x in dCs
+                    for candidate_match in dCs.matches
                 }
+
                 # Get linking prior confidence scores per candidate:
-                mentions_dataset["linking"][i]["prior_cand_score"] = {
+                mention["prior_cand_score"] = {
                     cand: score
-                    for cand, score in mentions_dataset["linking"][i]["candidates"]
-                    if cand in mentions_dataset["linking"][i]["cross_cand_score"]
+                    for cand, score in mention["candidates"]
+                    if cand in mention["cross_cand_score"]
                 }
 
                 # Sort candidates and round scores:
-                mentions_dataset["linking"][i]["prior_cand_score"] = {
+                mention["prior_cand_score"] = {
                     k: round(v, 3)
                     for k, v in sorted(
-                        mentions_dataset["linking"][i]["prior_cand_score"].items(),
+                        mention["prior_cand_score"].items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
                 }
 
         if self.linker.method_name() in ["mostpopular", "bydistance"]:
+            # TODO: fix this brittle iteration with shared index i:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
 
@@ -324,24 +342,34 @@ class Pipeline:
                         "place_wqid": place_wqid,
                     }
                 )
-                mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
-                mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
-                dCs = mentions_dataset["linking"][i]["string_match_candidates"]
-                mentions_dataset["linking"][i]["string_match_score"] = {
-                    x: (
-                        round(dCs[x]["Score"], 3),
-                        [wqc for wqc in dCs[x]["Candidates"]],
+
+                # If there are no candidates for this mention, skip the rest.
+                if not mention["mention"] in wk_cands.keys():
+                    continue
+
+                mention["prediction"] = selected_cand.best_wqid()
+
+                # Set the entity disambiguation score as the highest Wikidata relative frequency.
+                # TODO: in general this needs to be handled inside the CandidateMatch dataclass,
+                # e.g. with a method named `ed_score` that takes the linking method as an argument.
+                mention["ed_score"] = round(selected_cand.best_match().relative_frequencies()[0], 3)
+
+                dCs = mention["string_match_candidates"]
+                mention["string_match_score"] = {
+                    candidate_match.variation: (
+                        round(candidate_match.string_similarity, 3),
+                        [wqc for wqc in candidate_match.wikidata_matches],
                     )
-                    for x in dCs
+                    for candidate_match in dCs.matches
                 }
-                mentions_dataset["linking"][i]["prior_cand_score"] = dict()
+
+                mention["prior_cand_score"] = dict()
 
                 # Return candidates scores for top n=7 candidates
                 # (same returned by REL):
-                tmp_cands = {k: round(selected_cand[2][k], 3) for k in selected_cand[2]}
-                mentions_dataset["linking"][i]["cross_cand_score"] = dict(
-                    sorted(tmp_cands.items(), key=lambda x: x[1], reverse=True)[:7]
-                )
+                # NOTE: these are the relative frequencies when linking is `most_popular`.
+                # and tmp_cands is just used as an inbetween stop to populate `cross_cand_score`
+                mention["cross_cand_score"] = selected_cand.best_match().cross_cand_score()
 
         if not postprocess_output:
             return mentions_dataset
@@ -365,6 +393,7 @@ class Pipeline:
             ]
             sentence_dataset = []
             for md in mentions_dataset["linking"]:
+
                 md = dict((k, md[k]) for k in md if k in keys)
                 md["latlon"] = self.linker.linking_resources["wqid_to_coords"].get(
                     md["prediction"]
@@ -494,13 +523,14 @@ class Pipeline:
         self,
         mention,
         sentence: str,
-        wk_cands: Optional[dict] = None,
+        wk_cands: Optional[ranking.Candidates],
         context: Optional[Tuple[str, str]] = ("", ""),
         sent_idx: Optional[int] = 0,
         place: Optional[str] = "",
         place_wqid: Optional[str] = "",
     ) -> dict:
         prediction = dict()
+
         prediction["mention"] = mention["mention"]
         prediction["context"] = context
         prediction["candidates"] = []
@@ -516,10 +546,8 @@ class Pipeline:
         prediction["place"] = place
         prediction["place_wqid"] = place_wqid
         if wk_cands:
-            prediction["string_match_candidates"] = wk_cands.get(
-                mention["mention"], dict()
-            )
-            prediction["candidates"] = wk_cands.get(mention["mention"], dict())
+            prediction["string_match_candidates"] = wk_cands
+            prediction["candidates"] = wk_cands
         return prediction
 
     def run_text_recognition(
@@ -667,17 +695,17 @@ class Pipeline:
         # Make list of mentions unique:
         mentions = list(set(rmentions))
 
-        # Prepare list of mentions as required by candidate selection and ranking:
-        mentions = [{"mention": m} for m in mentions]
+        # # Prepare list of mentions as required by candidate selection and ranking:
+        # mentions = [{"mention": m} for m in mentions]
 
         # Perform candidate ranking:
-        wk_cands = self.ranker.find_candidates(mentions)
+        wk_cands = [self.ranker.run(mention) for mention in mentions]
         return wk_cands
 
     def run_disambiguation(
         self,
         dataset,
-        wk_cands,
+        wk_cands, # TODO: udpate docstring: this is now List[Candidates]
         place: Optional[str] = "",
         place_wqid: Optional[str] = "",
     ):
@@ -729,9 +757,15 @@ class Pipeline:
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
         for prediction in dataset:
-            prediction["candidates"] = wk_cands.get(prediction["mention"], dict())
+
+            # TODO: Temp fix (pending dataclass for sentence candidates collection, 
+            # or better just pass in the right candidates): 
+            prediction["candidates"] = wk_cands[prediction["mention"]]
+
             prediction["string_match_candidates"] = prediction["candidates"]
             mentions_dataset["linking"].append(prediction)
+
+        # TODO: Duplicated code from run_sentence (above).
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
@@ -761,15 +795,17 @@ class Pipeline:
                 mentions_dataset["linking"].pop()
 
             for i in range(len(mentions_dataset["linking"])):
-                mentions_dataset["linking"][i]["prediction"] = predicted["linking"][i][
+                mention = mentions_dataset["linking"][i]
+
+                mention["prediction"] = predicted["linking"][i][
                     "prediction"
                 ]
-                mentions_dataset["linking"][i]["ed_score"] = round(
+                mention["ed_score"] = round(
                     predicted["linking"][i]["conf_ed"], 3
                 )
 
                 # Get cross-candidate confidence scores per candidate:
-                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                mention["cross_cand_score"] = {
                     cand: score
                     for cand, score in zip(
                         predicted["linking"][i]["candidates"],
@@ -779,36 +815,38 @@ class Pipeline:
                 }
 
                 # Sort candidates and round scores:
-                mentions_dataset["linking"][i]["cross_cand_score"] = {
+                mention["cross_cand_score"] = {
                     k: round(v, 3)
                     for k, v in sorted(
-                        mentions_dataset["linking"][i]["cross_cand_score"].items(),
+                        mention["cross_cand_score"].items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
                 }
 
                 # Get string matching confidence scores per candidate:
-                dCs = mentions_dataset["linking"][i]["string_match_candidates"]
-                mentions_dataset["linking"][i]["string_match_score"] = {
-                    x: (
-                        round(dCs[x]["Score"], 3),
-                        [wqc for wqc in dCs[x]["Candidates"]],
+                dCs = mention["string_match_candidates"]
+
+                mention["string_match_score"] = {
+                    candidate_match.variation: (
+                        round(candidate_match.string_similarity, 3),
+                        [wqc for wqc in candidate_match.wikidata_matches],
                     )
-                    for x in dCs
+                    for candidate_match in dCs.matches
                 }
+
                 # Get linking prior confidence scores per candidate:
-                mentions_dataset["linking"][i]["prior_cand_score"] = {
+                mention["prior_cand_score"] = {
                     cand: score
-                    for cand, score in mentions_dataset["linking"][i]["candidates"]
-                    if cand in mentions_dataset["linking"][i]["cross_cand_score"]
+                    for cand, score in mention["candidates"]
+                    if cand in mention["cross_cand_score"]
                 }
 
                 # Sort candidates and round scores:
-                mentions_dataset["linking"][i]["prior_cand_score"] = {
+                mention["prior_cand_score"] = {
                     k: round(v, 3)
                     for k, v in sorted(
-                        mentions_dataset["linking"][i]["prior_cand_score"].items(),
+                        mention["prior_cand_score"].items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
@@ -825,24 +863,28 @@ class Pipeline:
                         "place_wqid": place_wqid,
                     }
                 )
-                mentions_dataset["linking"][i]["prediction"] = selected_cand[0]
-                mentions_dataset["linking"][i]["ed_score"] = round(selected_cand[1], 3)
-                dCs = mentions_dataset["linking"][i]["string_match_candidates"]
-                mentions_dataset["linking"][i]["string_match_score"] = {
-                    x: (
-                        round(dCs[x]["Score"], 3),
-                        [wqc for wqc in dCs[x]["Candidates"]],
+
+                mention["prediction"] = selected_cand.best_wqid()
+
+                # Set the entity disambiguation score as the highest Wikidata relative frequency.
+                # TODO: in general this needs to be handled inside the CandidateMatch dataclass,
+                # e.g. with a method named `ed_score` that takes the linking method as an argument.
+                mention["ed_score"] = round(selected_cand.best_match().relative_frequencies()[0], 3)
+
+                dCs = mention["string_match_candidates"]
+
+                mention["string_match_score"] = {
+                    candidate_match.variation: (
+                        round(candidate_match.string_similarity, 3),
+                        [wqc for wqc in candidate_match.wikidata_matches],
                     )
-                    for x in dCs
+                    for candidate_match in dCs.matches
                 }
-                mentions_dataset["linking"][i]["prior_cand_score"] = dict()
+
+                mention["prior_cand_score"] = dict()
 
                 # Return candidates scores for top n=7 candidates
-                # (same returned by REL):
-                tmp_cands = {k: round(selected_cand[2][k], 3) for k in selected_cand[2]}
-                mentions_dataset["linking"][i]["cross_cand_score"] = dict(
-                    sorted(tmp_cands.items(), key=lambda x: x[1], reverse=True)[:7]
-                )
+                mention["cross_cand_score"] = selected_cand.best_match().cross_cand_score()
 
         # Process output, add coordinates and wikidata class from
         # prediction:

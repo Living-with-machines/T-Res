@@ -197,21 +197,28 @@ def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) 
             cands = []
             tmp_cands = []
             max_cand_freq = 0
-            ranker_cands = wk_cands.get(mention_dict["mention"], dict())
-            for c in ranker_cands:
+
+            default = ranking.Candidates(mention_dict["mention"], "reldisamb", list())
+            ranker_cands = wk_cands.get(mention_dict["mention"], default)
+
+            # NOTE: mentions_to_wikidata here is the absolute link frequency data.
+
+            for m in ranker_cands.matches:
                 # DeezyMatch confidence score (cosine similarity):
-                cand_selection_score = ranker_cands[c]["Score"]
+                cand_selection_score = m.string_similarity
                 # For each Wikidata candidate:
-                for qc in ranker_cands[c]["Candidates"]:
+                for wdm in m.wikidata_matches:
                     # Mention-to-wikidata absolute relevance:
-                    qcrlv_score = mentions_to_wikidata[c][qc]
+                    qcrlv_score = mentions_to_wikidata[m.variation][wdm.wqid]
                     if qcrlv_score > max_cand_freq:
                         max_cand_freq = qcrlv_score
-                    qcm2w_score = ranker_cands[c]["Candidates"][qc]
+                    qcm2w_score = m.get(wdm.wqid).normalized_score
                     # Average of CS conf score and mention2wiki norm relv:
                     if cand_selection_score:
                         qcm2w_score = (qcm2w_score + cand_selection_score) / 2
-                    tmp_cands.append((qc, qcrlv_score, qcm2w_score))
+                    tmp_cands.append((wdm.wqid, qcrlv_score, qcm2w_score))
+
+            # TODO: unchanged from original (yet to be refactored):
             # Append candidate and normalized score weighted by candidate selection conf:
             for cand in tmp_cands:
                 qc_id = cand[0]
@@ -309,6 +316,8 @@ def prepare_rel_trainset(
     """
     rel_json = prepare_initial_data(df)
 
+    # TODO: some refactoring needed.
+
     # Get unique mentions, to run them through the ranker:
     all_mentions = []
     for article in rel_json:
@@ -321,8 +330,10 @@ def prepare_rel_trainset(
     all_mentions = list(set(all_mentions))
     # Format the mentions are required by the ranker:
     all_mentions = [{"mention": mention} for mention in all_mentions]
+    mentions = [m["mention"] for m in all_mentions]
+
     # Use the ranker to find candidates:
-    wk_cands = ranker.find_candidates(all_mentions)
+    wk_cands = {mention: ranker.run(mention) for mention in mentions}
 
     # Rank the candidates:
     rel_json = rank_candidates(
