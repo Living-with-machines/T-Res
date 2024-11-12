@@ -178,14 +178,14 @@ class Candidates:
                 return m
         return None
     
-    # Returns the match with the highest string similarity.
-    def best_match(self):
+    # Returns the StringMatch with the highest string similarity.
+    def best_match(self) -> StringMatch:
         if self.is_empty():
             return None
         return self.matches[0]
 
     # Returns the Wikidata match with the highest disambiguation score.
-    def best_wikidata_match(self):
+    def best_wikidata_match(self) -> WikidataMatch:
         best_match = self.best_match()
         if not best_match or best_match.is_empty():
             return None
@@ -195,7 +195,7 @@ class Candidates:
             return None
         return best_match.wikidata_matches[0]
 
-    def best_wqid(self):
+    def best_wqid(self) -> str:
         best_wikidata_match = self.best_wikidata_match()
         if not best_wikidata_match:
             return None
