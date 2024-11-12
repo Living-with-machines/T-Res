@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from t_res.geoparser import linking, ranking
+from t_res.geoparser.dataclasses import Candidates, WikidataMatch, CandidateMatch
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -67,10 +68,10 @@ def test_linking_most_popular():
     assert linker.method_name()  == "mostpopular"
 
     linker.load_resources()
-    wikidata_matches = [ranking.WikidataMatch("Q84", 0.9),
-                        ranking.WikidataMatch("Q92561", 0.1)]
-    matches = [ranking.CandidateMatch("London", 1.0, wikidata_matches)]
-    dict_mention = {"candidates": ranking.Candidates("London", "mostpopular", matches)}
+    wikidata_matches = [WikidataMatch("Q84", 0.9),
+                        WikidataMatch("Q92561", 0.1)]
+    matches = [CandidateMatch("London", 1.0, wikidata_matches)]
+    dict_mention = {"candidates": Candidates("London", "mostpopular", matches)}
 
     candidates = linker.run(dict_mention)
 
@@ -81,7 +82,7 @@ def test_linking_most_popular():
     assert candidates.matches[0].wikidata_matches[1].normalized_score == 0.1
     assert candidates.matches[0].relative_frequencies()[1] == pytest.approx(0.018726835294882633, abs=1e-3)
 
-    dict_mention = {"candidates": ranking.Candidates("London", "mostpopular", [])}
+    dict_mention = {"candidates": Candidates("London", "mostpopular", [])}
     candidates = linker.run(dict_mention)
 
     assert candidates.is_empty()

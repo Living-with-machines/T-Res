@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from haversine import haversine
 from tqdm import tqdm
-from dataclasses import dataclass, field
 
 tqdm.pandas()
 
@@ -18,6 +17,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
+from .dataclasses import Candidates
 
 class Linker:
     """
@@ -160,7 +160,7 @@ class MostPopularLinker(Linker):
         return "mostpopular"
 
     # TODO: update docstring
-    def run(self, dict_mention: dict) -> ranking.Candidates:
+    def run(self, dict_mention: dict) -> Candidates:
         """
         Select most popular candidate, given Wikipedia's in-link structure.
 
@@ -185,7 +185,7 @@ class MostPopularLinker(Linker):
         cands = dict_mention["candidates"]
 
         if not cands:
-            return ranking.Candidates(dict_mention["mention"], None, [])
+            return Candidates(dict_mention["mention"], None, [])
 
         for variation in [sm.variation for sm in cands.matches]:
             for candidate in cands.get(variation).wikidata_matches:

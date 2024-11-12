@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from t_res.geoparser import ranking
+from t_res.geoparser.dataclasses import Candidates, StringMatch, WikidataMatch, CandidateMatch
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -12,19 +13,19 @@ def test_ranking_data_classes():
     Test the data classes that represent ranking candidates.
     """
 
-    string_match = ranking.StringMatch(None, None)
+    string_match = StringMatch(None, None)
     assert string_match.is_empty()
 
     # Legacy example:
     # {'London': 1.0}
-    string_match = ranking.StringMatch('London', 1.0)
+    string_match = StringMatch('London', 1.0)
     assert not string_match.is_empty()
     assert string_match.variation == 'London'
     assert string_match.string_similarity == 1.0
 
     # Legacy example:
     # {'Q619055': 0.03571428571428571}
-    wikidata_match = ranking.WikidataMatch('Q619055', normalized_score=0.03571428571428571, freq=22)
+    wikidata_match = WikidataMatch('Q619055', normalized_score=0.03571428571428571, freq=22)
     assert wikidata_match.wqid == 'Q619055'
     assert wikidata_match.normalized_score == 0.03571428571428571
     assert wikidata_match.freq == 22
@@ -32,10 +33,10 @@ def test_ranking_data_classes():
     # Legacy example:
     # {'Shielfield': {'Score': 0.9387, 'Candidates': {'Q619055': 0.03571428571428571, 'Q5953687': 0.22857142857142856}}
     wikidata_matches = [
-        ranking.WikidataMatch('Q619055', 0.03571428571428571, 5),
-        ranking.WikidataMatch('Q5953687', 0.22857142857142856, 33),
+        WikidataMatch('Q619055', 0.03571428571428571, 5),
+        WikidataMatch('Q5953687', 0.22857142857142856, 33),
     ]
-    candidate_match = ranking.CandidateMatch(variation='Shielfield', 
+    candidate_match = CandidateMatch(variation='Shielfield', 
                                              string_similarity=0.9387, 
                                              wikidata_matches=wikidata_matches)
     assert candidate_match.variation == 'Shielfield'
@@ -50,7 +51,7 @@ def test_ranking_data_classes():
 
     # Legacy example without wikidata:
     # {'Sheftield': {'Shielfield': 0.9387, 'Sheffield': 0.9228, 'Shelfield': 0.8947}}
-    candidates = ranking.Candidates('Sheftield', "levenshtein", [
+    candidates = Candidates('Sheftield', "levenshtein", [
         ranking.StringMatch('Shielfield', 0.9387),
         ranking.StringMatch('Sheffield', 0.9228),
         ranking.StringMatch('Shelfield', 0.8947),
@@ -58,18 +59,18 @@ def test_ranking_data_classes():
     assert candidates.mention == 'Sheftield'
     assert len(candidates.matches) == 3
 
-    candidates = ranking.Candidates('Sheftield', "levenshtein", [
-        ranking.CandidateMatch('Sheffield', 0.9228, [
-            ranking.WikidataMatch('Q6707254', 0.0410958904109589, 5),
-            ranking.WikidataMatch('Q7492778', 0.20202020202020204, 33),
-            ranking.WikidataMatch('Q1421317', 0.03875968992248062, 22),
+    candidates = Candidates('Sheftield', "levenshtein", [
+        CandidateMatch('Sheffield', 0.9228, [
+            WikidataMatch('Q6707254', 0.0410958904109589, 5),
+            WikidataMatch('Q7492778', 0.20202020202020204, 33),
+            WikidataMatch('Q1421317', 0.03875968992248062, 22),
         ]), 
-        ranking.CandidateMatch('Shelfield', 0.8947, [
-            ranking.WikidataMatch('Q7493600', 1.0, 7),
+        CandidateMatch('Shelfield', 0.8947, [
+            WikidataMatch('Q7493600', 1.0, 7),
         ]),
-        ranking.CandidateMatch('Shielfield', 0.9387, [
-            ranking.WikidataMatch('Q619055', 0.03571428571428571, 2),
-            ranking.WikidataMatch('Q5953687', 0.22857142857142856, 55),
+        CandidateMatch('Shielfield', 0.9387, [
+            WikidataMatch('Q619055', 0.03571428571428571, 2),
+            WikidataMatch('Q5953687', 0.22857142857142856, 55),
         ]),
     ])
     assert candidates.mention == 'Sheftield'
@@ -105,15 +106,15 @@ def test_ranking_data_classes():
 
     # Test sort order of wikidata_matches is correct even when assigned 
     # after instantiation.
-    candidates = ranking.Candidates('Sheftield', "levenshtein", [
-        ranking.CandidateMatch('Sheffield', 0.9228, [
-            ranking.WikidataMatch('Q6707254', freq=None, normalized_score=0.0410958904109589),
-            ranking.WikidataMatch('Q7492778', freq=None, normalized_score=0.20202020202020204),
-            ranking.WikidataMatch('Q1421317', freq=None, normalized_score=0.03875968992248062),
+    candidates = Candidates('Sheftield', "levenshtein", [
+        CandidateMatch('Sheffield', 0.9228, [
+            WikidataMatch('Q6707254', freq=None, normalized_score=0.0410958904109589),
+            WikidataMatch('Q7492778', freq=None, normalized_score=0.20202020202020204),
+            WikidataMatch('Q1421317', freq=None, normalized_score=0.03875968992248062),
         ]), 
-        ranking.CandidateMatch('Shielfield', 0.9387, [
-            ranking.WikidataMatch('Q619055', freq=None, normalized_score=0.03571428571428571),
-            ranking.WikidataMatch('Q5953687', freq=None, normalized_score=0.22857142857142856),
+        CandidateMatch('Shielfield', 0.9387, [
+            WikidataMatch('Q619055', freq=None, normalized_score=0.03571428571428571),
+            WikidataMatch('Q5953687', freq=None, normalized_score=0.22857142857142856),
         ]),
     ])
 
@@ -404,7 +405,7 @@ def test_ranking_attach_wikidata(tmp_path):
     candidates = ranker.run("London")
 
     assert candidates.mention == "London"
-    assert isinstance(candidates.get("London"), ranking.CandidateMatch)
+    assert isinstance(candidates.get("London"), CandidateMatch)
     assert candidates.get("London").variation == "London"
     # Test that perfect_match acts before deezy
     assert candidates.get("London").string_similarity == 1.0
@@ -422,7 +423,7 @@ def test_ranking_attach_wikidata(tmp_path):
     ranker.already_collected_cands = {}
     candidates = ranker.run("Sheftield")
     assert candidates.mention == "Sheftield"
-    assert isinstance(candidates.get("Sheffield"), ranking.CandidateMatch)
+    assert isinstance(candidates.get("Sheffield"), CandidateMatch)
     assert candidates.get("Sheffield").variation == "Sheffield"
     assert (0.0 < candidates.get("Sheffield").string_similarity < 1.0)
     assert len(candidates.get("Sheffield").wikidata_matches) == 50

@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 from sentence_splitter import split_text_into_sentences
 
 from ..utils import ner_utils, rel_utils
+from .dataclasses import Candidates
 from . import linking, ranking, recogniser
 
 class Pipeline:
@@ -523,7 +524,7 @@ class Pipeline:
         self,
         mention,
         sentence: str,
-        wk_cands: Optional[ranking.Candidates],
+        wk_cands: Optional[Candidates],
         context: Optional[Tuple[str, str]] = ("", ""),
         sent_idx: Optional[int] = 0,
         place: Optional[str] = "",

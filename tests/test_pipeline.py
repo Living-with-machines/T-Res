@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from t_res.geoparser import linking, pipeline, ranking, recogniser
+from t_res.geoparser.dataclasses import Candidates
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -388,7 +389,7 @@ def test_modular_deezy_rel(tmp_path):
     assert isinstance(cands, list)
     assert len(cands) == 4
     for c in cands:
-        assert isinstance(c, ranking.Candidates)
+        assert isinstance(c, Candidates)
 
     # Put the candidates in a dictionary for easier access inside run_disambiguation.
     wk_cands = {c.mention : c for c in cands}
