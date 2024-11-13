@@ -218,6 +218,7 @@ class Ranker:
         """
         raise NotImplementedError("Subclass implementation required.")
 
+    # TODO: move to linker with new name attach_link_metadata:
     def attach_wikidata(self, candidates: Candidates) -> Candidates:
         """
         Replace each `StringMatch` instance in the given candidates by 

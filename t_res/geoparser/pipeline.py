@@ -706,7 +706,7 @@ class Pipeline:
     def run_disambiguation(
         self,
         dataset,
-        wk_cands, # TODO: udpate docstring: this is now List[Candidates]
+        wk_cands, # TODO: udpate docstring: this is now Dict[str, Candidates]
         place: Optional[str] = "",
         place_wqid: Optional[str] = "",
     ):
