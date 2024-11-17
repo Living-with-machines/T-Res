@@ -717,6 +717,10 @@ class Experiment:
                 rel_resolved = dict()
                 for sentence_id in mentions_dataset:
                     article_dataset = {sentence_id: mentions_dataset[sentence_id]}
+
+                    dict_mentions = [{"candidates": wk, "place_wqid": None} for wk in all_cands.values()]
+                    all_cands = {d["candidates"].mention : self.linker.run(d) for d in dict_mentions}
+
                     article_dataset = rel_utils.rank_candidates(
                         article_dataset,
                         all_cands,
@@ -760,8 +764,14 @@ class Experiment:
                         prediction = mention
 
                         if self.linker.method_name() in ["mostpopular", "bydistance"]:
+
+                            # Convert `prediction` into a CandidatesMatches instance.
+                            candidate_matches = self.ranker.run(prediction["mention"])
+                            dict_mentions = {"candidates": candidate_matches, "place_wqid": prediction["place_wqid"]}
+
                             # Run entity linking per mention:
-                            selected_cand = self.linker.run(prediction)
+                            selected_cand = self.linker.run(dict_mentions)
+
                             prediction["prediction"] = selected_cand.best_wqid()
                             # TODO: replace this with a call to `disambiguation_scores` on the Candidate.
                             if selected_cand.best_match():

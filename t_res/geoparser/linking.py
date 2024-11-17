@@ -2,7 +2,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional, Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-from .dataclasses import Candidates
+from .dataclasses import StringMatchLinks, Candidates, CandidateMatches, CandidateLinks, MostPopularLink, ByDistanceLink, RelDisambLink
 
 class Linker:
     """
@@ -50,6 +50,8 @@ class Linker:
         self.experiments_path = experiments_path
         self.linking_resources = linking_resources
 
+        # TODO:
+        # self.cache = dict()
 
     def __str__(self) -> str:
         """
@@ -91,6 +93,13 @@ class Linker:
         ) as f:
             self.linking_resources["mentions_to_wikidata"] = json.load(f)
 
+        # Load Wikidata mentions-to-QID with normalized counts:
+        print("  > Loading mentions to normalized wikidata mapping.")
+        with open(
+            os.path.join(self.resources_path, "wikidata/mentions_to_wikidata_normalized.json"), "r"
+        ) as f:
+            self.linking_resources["mentions_to_wikidata_normalized"] = json.load(f)
+
         print("  > Loading gazetteer.")
         gaz = pd.read_csv(
             os.path.join(self.resources_path, "wikidata/wikidata_gazetteer.csv"),
@@ -116,7 +125,10 @@ class Linker:
 
         print("*** Linking resources loaded!\n")
 
-    def run(self, dict_mention: dict) -> Tuple[str, float, dict]:
+    # TODO: replace dict_mention argument with two args:
+    # 1. Mention dataclass instance (Recogniser output)
+    # 2. CandidateMatches dataclass instance (Ranker output)
+    def run(self, dict_mention: dict) -> Candidates:
         """
         Execute the linking process. Each Linker subclass must implement a 
         linking method by overriding this function.
@@ -159,6 +171,13 @@ class MostPopularLinker(Linker):
     def method_name(self) -> str:
         return "mostpopular"
 
+    # Define a closure for computing the disambiguation scores.
+    def disambiguation_scores(wikidata_links: List[MostPopularLink]) -> Dict[str, float]:
+        def closure():
+            total = sum([m.freq for m in wikidata_links])
+            return {link.wqid: link.freq / total for link in wikidata_links}
+        return closure
+
     # TODO: update docstring
     def run(self, dict_mention: dict) -> Candidates:
         """
@@ -182,23 +201,29 @@ class MostPopularLinker(Linker):
             function returns as a prediction the more relevant Wikidata
             candidate, determined from the in-link structure of Wikipedia.
         """
-        cands = dict_mention["candidates"]
+        candidate_matches = dict_mention["candidates"]
 
-        if not cands:
-            return Candidates(dict_mention["mention"], None, [])
+        if not isinstance(candidate_matches, CandidateMatches):
+            raise ValueError("Expected CandidateMatches instance")
 
-        for variation in [sm.variation for sm in cands.matches]:
-            for candidate in cands.get(variation).wikidata_matches:
+        if candidate_matches.is_empty():
+            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), list())
 
-                # Get the absolute Wikidata link frequency for the candidate from
-                # the linking resource "mentions_to_wikidata".
-                freq = self.linking_resources["mentions_to_wikidata"][variation][
-                    candidate.wqid
-                ]
-                # Update the `freq` field on the Candidate instance.
-                candidate.freq = freq
+        wikidata_links = []
+        candidate_links = []
+        for match in candidate_matches.matches:
+            if not isinstance(match, StringMatchLinks):
+                raise ValueError("Expected StringMatchLinks instance.")
+            
+            for wqid in match.wqid_links:
+                freq = self.linking_resources["mentions_to_wikidata"][match.variation][wqid]
+                wikidata_links.append(MostPopularLink(wqid, freq))
 
-        return cands
+            closure = MostPopularLinker.disambiguation_scores(wikidata_links)
+            candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
+
+        # # TODO: create a Linker cache and add the resulting candidates to it.
+        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), candidate_links)
 
 class ByDistanceLinker(Linker):
     """
@@ -219,9 +244,34 @@ class ByDistanceLinker(Linker):
     def method_name(self) -> str:
         return "bydistance"
 
+    # Define a closure for computing the disambiguation scores.
+    def disambiguation_scores(wikidata_links: List[ByDistanceLink], matching_score: float) -> Dict[str, float]:
+        def closure():
+            max_on_gb = 1000  # 1000 km, max on GB
+            ret = dict()
+            for link in wikidata_links:
+                
+                distance = min(max_on_gb, link.geodist if link.geodist is not None else max_on_gb)
+                
+                if distance == 0.0:
+                    distance_score = 1.0
+                else:
+                    distance = (max_on_gb if distance > max_on_gb else distance)
+                    distance_score = 1.0 - (distance / max_on_gb)
+
+                relv_score = min(1.0, (matching_score + link.normalized_score) / 2.0)
+
+                final_score = 0.0
+                if link.geodist is not None:
+                    final_score = round((relv_score + distance_score) / 2, 3)
+                ret[link.wqid] = final_score
+            return ret
+        
+        return closure
+    
     def run(
         self, dict_mention: dict, origin_wqid: Optional[str] = ""
-    ) -> Tuple[str, float, dict]:
+    ) -> Candidates:
         """
         Select candidate based on distance to the place of publication.
 
@@ -247,50 +297,50 @@ class ByDistanceLinker(Linker):
             location closest to the place of publication, for a provided set
             of candidates and the place of publication of the original text.
         """
-        cands = dict_mention["candidates"]
+        candidate_matches = dict_mention["candidates"]
+
+        if not isinstance(candidate_matches, CandidateMatches):
+            raise ValueError("Expected CandidateMatches instance")
+
+        if candidate_matches.is_empty():
+            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), list())
+
+        # TODO: fix this duplication in the method args.
+        if not(origin_wqid):
+            origin_wqid = dict_mention["place_wqid"]
+
         origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
         if not origin_coords:
             origin_coords = self.linking_resources["wqid_to_coords"].get(
                 dict_mention["place_wqid"]
             )
-        closest_candidate_id = "NIL"
-        max_on_gb = 1000  # 1000 km, max on GB
-        keep_lowest_distance = max_on_gb  # 20000 km, max on Earth
-        keep_lowest_relv = 1.0
-        all_candidates = {}
 
-        if cands:
-            for x in cands:
-                matching_score = cands[x]["Score"]
-                for candidate, score in cands[x]["Candidates"].items():
-                    cand_coords = self.linking_resources["wqid_to_coords"][candidate]
-                    geodist = 20000
-                    # if origin_coords and cand_coords:  # If there are coordinates
-                    try:
-                        geodist = haversine(origin_coords, cand_coords)
-                        all_candidates[candidate] = geodist
-                    except ValueError:
-                        # We have one candidate with coordinates in Venus!
-                        pass
-                    if geodist < keep_lowest_distance:
-                        keep_lowest_distance = geodist
-                        closest_candidate_id = candidate
-                        keep_lowest_relv = (matching_score + score) / 2.0
+        wikidata_links = []
+        candidate_links = []
+        for match in candidate_matches.matches:
+            if not isinstance(match, StringMatchLinks):
+                raise ValueError("Expected StringMatchLinks instance.")
+            # for i, wikidata_link in enumerate(match.wikidata_links):
+            for wqid in match.wqid_links:
 
-        if keep_lowest_distance == 0.0:
-            keep_lowest_distance = 1.0
-        else:
-            keep_lowest_distance = (
-                max_on_gb if keep_lowest_distance > max_on_gb else keep_lowest_distance
-            )
-            keep_lowest_distance = 1.0 - (keep_lowest_distance / max_on_gb)
+                candidate_coords = self.linking_resources["wqid_to_coords"][wqid]
+                # If coordinates are known for origin and candidate, compute the geodesic distance.
+                try:
+                    geodist = haversine(origin_coords, candidate_coords)
+                except ValueError:
+                    # We have one candidate with coordinates in Venus!
+                    geodist = None
 
-        final_score = 0.0
-        if not closest_candidate_id == "NIL":
-            final_score = round((keep_lowest_relv + keep_lowest_distance) / 2, 3)
+                normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
+                    wqid
+                ]
+                wikidata_links.append(ByDistanceLink(wqid, origin_wqid, geodist, normalized_score))
 
-        return closest_candidate_id, final_score, all_candidates
+            closure = ByDistanceLinker.disambiguation_scores(wikidata_links, match.string_similarity)
+            candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
+        # # TODO: create a Linker cache and add the resulting candidates to it.
+        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), candidate_links)
 
 class RelDisambLinker(Linker):
     """
@@ -405,11 +455,45 @@ class RelDisambLinker(Linker):
     def method_name(self) -> str:
         return "reldisamb"
 
+    # Define a closure for computing the disambiguation scores.
+    def disambiguation_scores(wikidata_links: List[RelDisambLink]) -> Dict[str, float]:
+        # TODO (refactor "reldisamb" score computation into this closure.)
+        def closure():
+            # TODO: these are dummy scores copied from MostPopularLinker (not yet implemented).
+            total = sum([m.freq for m in wikidata_links])
+            return {link.wqid: link.freq / total for link in wikidata_links}
+            raise NotImplementedError("Not yet implemented.")
+        return closure
+
     # TODO: refactor linking logic into this run method.
-    def run(
-        self, dict_mention: dict, origin_wqid: Optional[str] = ""
-    ) -> Tuple[str, float, dict]:
-        raise NotImplementedError("reldisamb linking method has no run method.")
+    def run(self, dict_mention: dict) -> Candidates:
+        
+        candidate_matches = dict_mention["candidates"]
+
+        if not isinstance(candidate_matches, CandidateMatches):
+            raise ValueError("Expected CandidateMatches instance")
+
+        if candidate_matches.is_empty():
+            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), list())
+
+        wikidata_links = []
+        candidate_links = []
+        for match in candidate_matches.matches:
+            if not isinstance(match, StringMatchLinks):
+                raise ValueError("Expected StringMatchLinks instance.")
+            
+            for wqid in match.wqid_links:
+                freq = self.linking_resources["mentions_to_wikidata"][match.variation][wqid]
+                normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
+                    wqid
+                ]
+                wikidata_links.append(RelDisambLink(wqid, freq, normalized_score))
+
+            closure = RelDisambLinker.disambiguation_scores(wikidata_links)
+            candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
+
+        # # TODO: create a Linker cache and add the resulting candidates to it.
+        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), candidate_links)
         
     def train_load_model(
         self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"
@@ -504,6 +588,7 @@ class RelDisambLinker(Linker):
                 self.rel_params,
                 self.linking_resources["mentions_to_wikidata"],
                 ranker,
+                self,
                 "train",
             )
             dev_json = rel_utils.prepare_rel_trainset(
@@ -511,6 +596,7 @@ class RelDisambLinker(Linker):
                 self.rel_params,
                 self.linking_resources["mentions_to_wikidata"],
                 ranker,
+                self,
                 "dev",
             )
 

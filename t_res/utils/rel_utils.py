@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from ..geoparser import ranking
+from ..geoparser.dataclasses import CandidateLinks
 
 RANDOM_SEED = 42
 """Constant representing the random seed used for generating pseudo-random
@@ -175,7 +176,13 @@ def prepare_initial_data(df: pd.DataFrame) -> dict:
 
     return dict_mentions
 
+# TODO NEXT: Before each call to the `rank_candidates` function, use the linker to
+# attach the normalized_score data to wk_cands, so that ranker_cands (below) is a
+# CandidateLinks instance instead of a CandidateMathches instance. Then make the 
+# obvious changes so this function works.
 
+# TODO: move this logic into the RelDisambLinker run method and delete this function.
+# def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) -> dict:
 def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) -> dict:
     """
     Rank the candidates for each mention in the provided JSON data.
@@ -198,25 +205,33 @@ def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) 
             tmp_cands = []
             max_cand_freq = 0
 
-            default = ranking.Candidates(mention_dict["mention"], "reldisamb", list())
-            ranker_cands = wk_cands.get(mention_dict["mention"], default)
+            # TODO: get the ranking method from wk_cands.
+            default = ranking.Candidates(mention_dict["mention"], "TODO", "reldisamb", list())
+            linker_cands = wk_cands.get(mention_dict["mention"], default)
+
+            print("linker_cands:")
+            print(linker_cands)
+
+            if not isinstance(linker_cands, ranking.Candidates):
+                raise ValueError(f"Expected Candidates instance. Found: {type(linker_cands)}")
 
             # NOTE: mentions_to_wikidata here is the absolute link frequency data.
 
-            for m in ranker_cands.matches:
+            for m in linker_cands.links:
                 # DeezyMatch confidence score (cosine similarity):
-                cand_selection_score = m.string_similarity
+                cand_selection_score = m.string_match.string_similarity
                 # For each Wikidata candidate:
-                for wdm in m.wikidata_matches:
+                for wikidata_link in m.wikidata_links:
+                    wqid = wikidata_link.wqid
                     # Mention-to-wikidata absolute relevance:
-                    qcrlv_score = mentions_to_wikidata[m.variation][wdm.wqid]
+                    qcrlv_score = mentions_to_wikidata[m.string_match.variation][wqid]
                     if qcrlv_score > max_cand_freq:
                         max_cand_freq = qcrlv_score
-                    qcm2w_score = m.get(wdm.wqid).normalized_score
+                    qcm2w_score = wikidata_link.normalized_score
                     # Average of CS conf score and mention2wiki norm relv:
                     if cand_selection_score:
                         qcm2w_score = (qcm2w_score + cand_selection_score) / 2
-                    tmp_cands.append((wdm.wqid, qcrlv_score, qcm2w_score))
+                    tmp_cands.append((wqid, qcrlv_score, qcm2w_score))
 
             # TODO: unchanged from original (yet to be refactored):
             # Append candidate and normalized score weighted by candidate selection conf:
@@ -286,6 +301,7 @@ def prepare_rel_trainset(
     rel_params,
     mentions_to_wikidata,
     ranker: ranking.Ranker,
+    linker,
     dsplit: str,
 ) -> dict:
     """
@@ -327,6 +343,7 @@ def prepare_rel_trainset(
             ]
         else:
             all_mentions += [y["mention"] for y in rel_json[article]]
+
     all_mentions = list(set(all_mentions))
     # Format the mentions are required by the ranker:
     all_mentions = [{"mention": mention} for mention in all_mentions]
@@ -334,6 +351,12 @@ def prepare_rel_trainset(
 
     # Use the ranker to find candidates:
     wk_cands = {mention: ranker.run(mention) for mention in mentions}
+
+    # Run entity linking per mention to convert each CandidatesMatches 
+    # instance into a Candidates instance.
+    # TODO: extract place_wqid from rel_json if needed for training.
+    dict_mentions = [{"candidates": wk, "place_wqid": None} for wk in wk_cands.values()]
+    wk_cands = {d["candidates"].mention : linker.run(d) for d in dict_mentions}
 
     # Rank the candidates:
     rel_json = rank_candidates(

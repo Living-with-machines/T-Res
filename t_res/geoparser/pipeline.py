@@ -6,8 +6,8 @@ from typing import List, Optional, Tuple
 from sentence_splitter import split_text_into_sentences
 
 from ..utils import ner_utils, rel_utils
-from .dataclasses import Candidates
 from . import linking, ranking, recogniser
+from .dataclasses import Candidates
 
 class Pipeline:
     """
@@ -223,8 +223,7 @@ class Pipeline:
         # call to format_prediction below.
         wk_cands = {d["mention"] : self.ranker.run(d["mention"]) for d in rmentions}
 
-        print("wk_cands.keys():")
-        print(wk_cands.keys())
+        # Each value in wk_cands is a CandidatesMatches instance.
 
         mentions_dataset = dict()
         mentions_dataset["linking"] = []
@@ -243,6 +242,12 @@ class Pipeline:
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
         if self.linker.method_name() == "reldisamb":
+
+            # Run entity linking per mention to convert each CandidatesMatches 
+            # instance into a Candidates instance.
+            dict_mentions = [{"candidates": wk, "place_wqid": place_wqid} for wk in wk_cands.values()]
+            wk_cands = {d["candidates"].mention : self.linker.run(d) for d in dict_mentions}
+
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
@@ -309,7 +314,7 @@ class Pipeline:
                 mention["string_match_score"] = {
                     candidate_match.variation: (
                         round(candidate_match.string_similarity, 3),
-                        [wqc for wqc in candidate_match.wikidata_matches],
+                        candidate_match.wqid_links,
                     )
                     for candidate_match in dCs.matches
                 }
@@ -353,13 +358,13 @@ class Pipeline:
                 # Set the entity disambiguation score as the highest Wikidata relative frequency.
                 # TODO: in general this needs to be handled inside the CandidateMatch dataclass,
                 # e.g. with a method named `ed_score` that takes the linking method as an argument.
-                mention["ed_score"] = round(selected_cand.best_match().relative_frequencies()[0], 3)
+                mention["ed_score"] = round(selected_cand.best_match().best_disambiguation_score(), 3)
 
                 dCs = mention["string_match_candidates"]
                 mention["string_match_score"] = {
                     candidate_match.variation: (
                         round(candidate_match.string_similarity, 3),
-                        [wqc for wqc in candidate_match.wikidata_matches],
+                        candidate_match.wqid_links,
                     )
                     for candidate_match in dCs.matches
                 }
@@ -768,6 +773,11 @@ class Pipeline:
 
         # TODO: Duplicated code from run_sentence (above).
 
+        # Run entity linking per mention to convert each CandidatesMatches 
+        # instance into a Candidates instance.
+        dict_mentions = [{"candidates": wk, "place_wqid": place_wqid} for wk in wk_cands.values()]
+        wk_cands = {d["candidates"].mention : self.linker.run(d) for d in dict_mentions}
+
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
         if self.linker.method_name() == "reldisamb":
@@ -831,7 +841,7 @@ class Pipeline:
                 mention["string_match_score"] = {
                     candidate_match.variation: (
                         round(candidate_match.string_similarity, 3),
-                        [wqc for wqc in candidate_match.wikidata_matches],
+                        candidate_match.wqid_links,
                     )
                     for candidate_match in dCs.matches
                 }
@@ -877,7 +887,7 @@ class Pipeline:
                 mention["string_match_score"] = {
                     candidate_match.variation: (
                         round(candidate_match.string_similarity, 3),
-                        [wqc for wqc in candidate_match.wikidata_matches],
+                        candidate_match.wqid_links,
                     )
                     for candidate_match in dCs.matches
                 }
