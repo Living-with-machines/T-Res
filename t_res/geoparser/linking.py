@@ -67,15 +67,6 @@ class Linker:
         s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
 
-    def method_name(self) -> str:
-        """
-        The name of the entity linking method.
-
-        Returns:
-            str: The entity linking method name.
-        """
-        raise NotImplementedError("Subclass implementation required.")
-
     def load_resources(self) -> dict:
         """
         Loads the linking resources.
