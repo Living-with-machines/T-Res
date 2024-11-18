@@ -61,12 +61,62 @@ class CandidateMatches:
                 return m
         return None
     
+
+################################
+# Dataclasses for Linker
+################################
+
 # Base dataclass.
 @pdataclass(frozen=True)
 class WikidataLink:
     """Data class representing a potential toponym link in Wikidata."""
     # The Wikidata ID.
     wqid: str
+
+@pdataclass(frozen=True)
+class MostPopularLink(WikidataLink):
+    """Data class representing a string match and potential links in 
+    Wikidata under the `mostpopular` linking method."""
+    # The mention-to-wikidata link frequency.
+    freq: int
+
+    def __post_init__(self):
+        if not isinstance(self.freq, int):
+            raise ValueError("freq must be an integer.")
+
+    # def disambiguation_score(self, total: float) -> float:
+    #     return self.freq / total
+
+@pdataclass(frozen=True)
+class ByDistanceLink(WikidataLink):
+    """Data class representing a string match and potential links in 
+    Wikidata under the `bydistance` linking method."""
+    # The Wikidata ID of the reference point (or "origin"). 
+    origin_wqid: str
+    # The geodesic distance between the wqid and the origin wqid.
+    geodist: Optional[float]
+    # The normalized score from resource `mentions_to_wikidata_normalized.json`.
+    normalized_score: float
+
+    def __post_init__(self):
+        if not isinstance(self.normalized_score, float):
+            raise ValueError("normalized_score must be an float.")
+
+
+@pdataclass(frozen=True)
+class RelDisambLink(WikidataLink):
+    """Data class representing a string match and potential links in 
+    Wikidata under the `reldisamb` linking method."""
+    # The mention-to-wikidata link frequency.
+    freq: int
+    # The normalized score from resource `mentions_to_wikidata_normalized.json`.
+    normalized_score: float
+
+    def __post_init__(self):
+        if not isinstance(self.freq, int):
+            raise ValueError("freq must be an integer.")
+        if not isinstance(self.normalized_score, float):
+            raise ValueError("normalized_score must be an float.")
 
 @pdataclass(order=True, frozen=True)
 class CandidateLinks:
@@ -208,51 +258,3 @@ class Candidates:
     #         return None
     #     return best_match....
 
-################################
-# Dataclasses for Linker
-################################
-
-@pdataclass(frozen=True)
-class MostPopularLink(WikidataLink):
-    """Data class representing a string match and potential links in 
-    Wikidata under the `mostpopular` linking method."""
-    # The mention-to-wikidata link frequency.
-    freq: int
-
-    def __post_init__(self):
-        if not isinstance(self.freq, int):
-            raise ValueError("freq must be an integer.")
-
-    # def disambiguation_score(self, total: float) -> float:
-    #     return self.freq / total
-
-@pdataclass(frozen=True)
-class ByDistanceLink(WikidataLink):
-    """Data class representing a string match and potential links in 
-    Wikidata under the `bydistance` linking method."""
-    # The Wikidata ID of the reference point (or "origin"). 
-    origin_wqid: str
-    # The geodesic distance between the wqid and the origin wqid.
-    geodist: Optional[float]
-    # The normalized score from resource `mentions_to_wikidata_normalized.json`.
-    normalized_score: float
-
-    def __post_init__(self):
-        if not isinstance(self.normalized_score, float):
-            raise ValueError("normalized_score must be an float.")
-
-
-@pdataclass(frozen=True)
-class RelDisambLink(WikidataLink):
-    """Data class representing a string match and potential links in 
-    Wikidata under the `reldisamb` linking method."""
-    # The mention-to-wikidata link frequency.
-    freq: int
-    # The normalized score from resource `mentions_to_wikidata_normalized.json`.
-    normalized_score: float
-
-    def __post_init__(self):
-        if not isinstance(self.freq, int):
-            raise ValueError("freq must be an integer.")
-        if not isinstance(self.normalized_score, float):
-            raise ValueError("normalized_score must be an float.")
