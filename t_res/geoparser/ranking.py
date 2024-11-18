@@ -38,7 +38,7 @@ class Ranker:
         >>> # Create a Ranker object:
         >>> ranker = PerfectMatchRanker(resources_path="/path/to/resources/")
         >>> # Load resources
-        >>> ranker.mentions_to_wikidata = ranker.load()
+        >>> ranker.load()
         >>> # Perform candidate selection
         >>> mentions = ['London', 'Paraguay']
         >>> results = [ranker.run(mention) for mention in queries]
@@ -207,7 +207,7 @@ class PerfectMatchRanker(Ranker):
 
     Example:
         >>> ranker = PerfectMatchRanker(resources_path="/path/to/resources/")
-        >>> ranker.mentions_to_wikidata = ranker.load()
+        >>> ranker.load()
         >>> mentions = ['London', 'Barcelona', 'Bologna']
         >>> results = [ranker.run(mention) for mention in queries]
         >>> # Print the results
@@ -240,7 +240,7 @@ class PerfectMatchRanker(Ranker):
 
         Example:
             >>> ranker = PerfectMatchRanker(resources_path="...")
-            >>> ranker.mentions_to_wikidata = ranker.load()
+            >>> ranker.load()
             >>> mentions = ['London', 'Barcelona', 'Bologna']
             >>> results = [ranker.run(mention) for mention in queries]
             >>> # Print the results
@@ -264,7 +264,7 @@ class PartialMatchRanker(PerfectMatchRanker):
         >>> # Create a Ranker object:
         >>> ranker = PartialMatchRanker(resources_path="/path/to/resources/")
         >>> # Load resources
-        >>> ranker.mentions_to_wikidata = ranker.load()
+        >>> ranker.load()
         >>> # Perform candidate selection
         >>> mentions = ['London', 'Paraguay']
         >>> results = [ranker.run(mention) for mention in queries]
@@ -368,7 +368,7 @@ class LevenshteinRanker(PartialMatchRanker):
         >>> # Create a Ranker object:
         >>> ranker = LevenshteinRanker(resources_path="/path/to/resources/")
         >>> # Load resources
-        >>> ranker.mentions_to_wikidata = ranker.load()
+        >>> ranker.load()
         >>> # Perform candidate selection
         >>> mentions = ['London', 'Paraguay']
         >>> results = [ranker.run(mention) for mention in queries]
@@ -539,7 +539,6 @@ class DeezyMatchRanker(PerfectMatchRanker):
         s += f"      * Overwrite training: {self.deezy_parameters['overwrite_training']}\n"
         s += f"      * Overwrite dataset: {self.strvar_parameters['overwrite_dataset']}\n"
         s += f"      * Test mode: {self.deezy_parameters['do_test']}\n"
-        
         return s
 
     # Override the base class implementation to optionally train the model.

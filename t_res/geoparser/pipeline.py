@@ -127,7 +127,7 @@ class Pipeline:
 
         # Train a linking model if needed (it requires ranker to generate
         # potential candidates to the training set):
-        if self.linker.method_name() == "reldisamb":
+        if self.linker.method_name == "reldisamb":
             self.linker.rel_params["ed_model"] = self.linker.train_load_model(
                 self.ranker
             )
@@ -206,7 +206,7 @@ class Pipeline:
 
         # List of mentions for the ranker:
         rmentions = []
-        without_microtoponyms = self.linker.method_name() == "reldisamb" \
+        without_microtoponyms = self.linker.method_name == "reldisamb" \
             and self.linker.rel_params.get("without_microtoponyms", False)
         if without_microtoponyms:
             rmentions = [
@@ -241,7 +241,7 @@ class Pipeline:
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
-        if self.linker.method_name() == "reldisamb":
+        if self.linker.method_name == "reldisamb":
 
             # Run entity linking per mention to convert each CandidatesMatches 
             # instance into a Candidates instance.
@@ -336,7 +336,7 @@ class Pipeline:
                     )
                 }
 
-        if self.linker.method_name() in ["mostpopular", "bydistance"]:
+        if self.linker.method_name in ["mostpopular", "bydistance"]:
             # TODO: fix this brittle iteration with shared index i:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
@@ -688,7 +688,7 @@ class Pipeline:
         """
 
         # Get without_microtoponyms value (whether to resolve microtoponyms or not):
-        without_microtoponyms = self.linker.method_name() == "reldisamb" \
+        without_microtoponyms = self.linker.method_name == "reldisamb" \
             and self.linker.rel_params.get("without_microtoponyms", False)
 
         # List of mentions for the ranker:
@@ -780,7 +780,7 @@ class Pipeline:
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
-        if self.linker.method_name() == "reldisamb":
+        if self.linker.method_name == "reldisamb":
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
@@ -863,7 +863,7 @@ class Pipeline:
                     )
                 }
 
-        if self.linker.method_name() in ["mostpopular", "bydistance"]:
+        if self.linker.method_name in ["mostpopular", "bydistance"]:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
 

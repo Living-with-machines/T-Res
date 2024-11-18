@@ -555,8 +555,8 @@ class Experiment:
                 )
             scenario_name += cand_approach + "_" + how_split + "_"
 
-            link_approach = self.linker.method_name()
-            if self.linker.method_name() == "reldisamb":
+            link_approach = self.linker.method_name
+            if self.linker.method_name == "reldisamb":
                 if self.linker.rel_params["with_publication"]:
                     link_approach += "+wpubl"
                 if self.linker.rel_params["without_microtoponyms"]:
@@ -701,7 +701,7 @@ class Experiment:
                 prediction["sentence"] = mention_data["sentence"]
                 prediction["place"] = mention_data["place"]
                 prediction["place_wqid"] = mention_data["place_wqid"]
-                if self.linker.method_name() == "reldisamb":
+                if self.linker.method_name == "reldisamb":
                     if (
                         self.linker.rel_params["without_microtoponyms"]
                         and mention_data["pred_ner_label"] != "LOC"
@@ -713,7 +713,7 @@ class Experiment:
                     mentions_dataset[sentence_id] = [prediction]
                 all_cands.update({prediction["mention"]: prediction["candidates"]})
 
-            if self.linker.method_name() == "reldisamb":
+            if self.linker.method_name == "reldisamb":
                 rel_resolved = dict()
                 for sentence_id in mentions_dataset:
                     article_dataset = {sentence_id: mentions_dataset[sentence_id]}
@@ -763,7 +763,7 @@ class Experiment:
                     ):
                         prediction = mention
 
-                        if self.linker.method_name() in ["mostpopular", "bydistance"]:
+                        if self.linker.method_name in ["mostpopular", "bydistance"]:
 
                             # Convert `prediction` into a CandidatesMatches instance.
                             candidate_matches = self.ranker.run(prediction["mention"])

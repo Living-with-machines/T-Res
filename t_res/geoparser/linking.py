@@ -36,6 +36,8 @@ class Linker:
     This base class should not be instatiated directly. Instead use a subclass
     constructor.
     """
+    # Class attribute for the name of the linking method.
+    method_name: str = None
 
     def __init__(
         self,
@@ -61,7 +63,7 @@ class Linker:
             str: String representation of the Linker object.
         """
         s = ">>> Entity Linking:\n"
-        s += f"    * Method: {self.method_name()}\n"
+        s += f"    * Method: {self.method_name}\n"
         s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
 
@@ -167,9 +169,8 @@ class MostPopularLinker(Linker):
          linking_resources={},
        )
     """
-
-    def method_name(self) -> str:
-        return "mostpopular"
+    # Override the method_name class attribute.
+    method_name: str = "mostpopular"
 
     # Define a closure for computing the disambiguation scores.
     def disambiguation_scores(wikidata_links: List[MostPopularLink]) -> Dict[str, float]:
@@ -207,7 +208,7 @@ class MostPopularLinker(Linker):
             raise ValueError("Expected CandidateMatches instance")
 
         if candidate_matches.is_empty():
-            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), list())
+            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, list())
 
         wikidata_links = []
         candidate_links = []
@@ -223,7 +224,7 @@ class MostPopularLinker(Linker):
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), candidate_links)
+        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, candidate_links)
 
 class ByDistanceLinker(Linker):
     """
@@ -240,9 +241,8 @@ class ByDistanceLinker(Linker):
          linking_resources={},
        )
     """
-
-    def method_name(self) -> str:
-        return "bydistance"
+    # Override the method_name class attribute.
+    method_name: str = "bydistance"
 
     # Define a closure for computing the disambiguation scores.
     def disambiguation_scores(wikidata_links: List[ByDistanceLink], matching_score: float) -> Dict[str, float]:
@@ -303,7 +303,7 @@ class ByDistanceLinker(Linker):
             raise ValueError("Expected CandidateMatches instance")
 
         if candidate_matches.is_empty():
-            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), list())
+            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, list())
 
         # TODO: fix this duplication in the method args.
         if not(origin_wqid):
@@ -340,7 +340,7 @@ class ByDistanceLinker(Linker):
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), candidate_links)
+        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, candidate_links)
 
 class RelDisambLinker(Linker):
     """
@@ -422,6 +422,8 @@ class RelDisambLinker(Linker):
            }
 
     """
+    # Override the method_name class attribute.
+    method_name: str = "reldisamb"
 
     # Override the constructor to include REL model parameters.
     def __init__(
@@ -451,10 +453,6 @@ class RelDisambLinker(Linker):
 
         self.rel_params = rel_params
 
-
-    def method_name(self) -> str:
-        return "reldisamb"
-
     # Define a closure for computing the disambiguation scores.
     def disambiguation_scores(wikidata_links: List[RelDisambLink]) -> Dict[str, float]:
         # TODO (refactor "reldisamb" score computation into this closure.)
@@ -474,7 +472,7 @@ class RelDisambLinker(Linker):
             raise ValueError("Expected CandidateMatches instance")
 
         if candidate_matches.is_empty():
-            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), list())
+            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, list())
 
         wikidata_links = []
         candidate_links = []
@@ -493,7 +491,7 @@ class RelDisambLinker(Linker):
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name(), candidate_links)
+        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, candidate_links)
         
     def train_load_model(
         self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"

@@ -72,7 +72,7 @@ def test_init():
         linking_resources={'resource': 'value'},
     )
 
-    assert linker.method_name()  == "mostpopular"
+    assert linker.method_name  == "mostpopular"
 
     assert linker.resources_path  == "path/to/resources/"
     assert linker.experiments_path  == "path/to/experiments/"
@@ -93,7 +93,7 @@ def test_init():
         overwrite_training=True,
     )
 
-    assert linker.method_name()  == "reldisamb"
+    assert linker.method_name  == "reldisamb"
 
     assert linker.resources_path  == "path/to/resources/"
     assert linker.experiments_path  == "path/to/experiments/"
@@ -115,7 +115,7 @@ def test_linking_most_popular():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
     )
-    assert linker.method_name()  == "mostpopular"
+    assert linker.method_name  == "mostpopular"
     linker.load_resources()
 
     # Construct a CandidateMatches instance (to simulate the output from the Ranker).
@@ -150,7 +150,7 @@ def test_disambiguation_scores_by_distance():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
     )
-    assert linker.method_name()  == "bydistance"
+    assert linker.method_name  == "bydistance"
 
     # Test on London, UK. Wikidata ID "Q84".
 
@@ -254,7 +254,7 @@ def test_linking_by_distance():
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
     )
-    assert linker.method_name()  == "bydistance"
+    assert linker.method_name  == "bydistance"
     linker.load_resources()
 
     # Construct a CandidateMatches instance (to simulate the output from the Ranker).
