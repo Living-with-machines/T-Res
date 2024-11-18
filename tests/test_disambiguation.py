@@ -122,7 +122,7 @@ def test_train(tmp_path):
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources (and train a DeezyMatch model if needed):
-    ranker.load_resources()
+    ranker.load()
 
     # -----------------------------------------
     # Linker loading resources:
@@ -211,7 +211,7 @@ def test_load_eval_model(tmp_path):
     # -----------------------------------------
     # Ranker loading resources and training a model:
     # Load the resources (and train a DeezyMatch model if needed):
-    ranker.load_resources()
+    ranker.load()
 
     # -----------------------------------------
     # Linker loading resources:

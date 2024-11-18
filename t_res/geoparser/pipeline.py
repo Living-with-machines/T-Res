@@ -117,7 +117,7 @@ class Pipeline:
         # Ranker loading resources and training a model:
 
         # Load the resources (and train a DeezyMatch model if needed):
-        self.ranker.load_resources()
+        self.ranker.load()
 
         # -----------------------------------------
         # Linker loading resources:

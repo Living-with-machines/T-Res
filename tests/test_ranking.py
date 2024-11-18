@@ -65,11 +65,11 @@ def test_ranking_perfect_match():
     ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
-    ranker.already_collected_cands = {}
+    ranker.load()
+    ranker.cache = {}
     
     # Check the cache is empty.
-    assert len(ranker.already_collected_cands) == 0
+    assert len(ranker.cache) == 0
 
     candidates = ranker.run("London")
 
@@ -79,8 +79,8 @@ def test_ranking_perfect_match():
     assert candidates.get("London").string_similarity == 1.0 
 
     # Check the cache has been updated.
-    assert len(ranker.already_collected_cands) == 1
-    assert ranker.already_collected_cands["London"] == candidates
+    assert len(ranker.cache) == 1
+    assert ranker.cache["London"] == candidates
 
     # candidates = ranker.run(["Lvndon"])
     # assert candidates["Lvndon"] == {}
@@ -91,8 +91,8 @@ def test_ranking_perfect_match():
     assert candidates.is_empty()
 
     # Check the cache has been updated.
-    assert len(ranker.already_collected_cands) == 2
-    assert ranker.already_collected_cands["Lvndon"] == candidates
+    assert len(ranker.cache) == 2
+    assert ranker.cache["Lvndon"] == candidates
 
     candidates = ranker.run("Paperopoli")
 
@@ -101,8 +101,8 @@ def test_ranking_perfect_match():
     assert candidates.is_empty()
 
     # Check the cache has been updated.
-    assert len(ranker.already_collected_cands) == 3
-    assert ranker.already_collected_cands["Paperopoli"] == candidates
+    assert len(ranker.cache) == 3
+    assert ranker.cache["Paperopoli"] == candidates
 
 def test_ranking_matching_score():
     """
@@ -128,7 +128,7 @@ def test_ranking_matching_score():
     ranker = ranking.LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
+    ranker.load()
 
     score = ranker.matching_score("Lvndon", {"mentions": "London"})
     assert score == 0.8333333283662796
@@ -147,10 +147,10 @@ def test_ranking_partial_match():
     ranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
+    ranker.load()
 
     ranker.mentions_to_wikidata = {"London": {"Q84": 0.922}}
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
 
     candidates = ranker.run("London")
 
@@ -162,14 +162,14 @@ def test_ranking_partial_match():
     # Test that overlap works properly
     ranker.mentions_to_wikidata = {"New York City": {"Q60": 0.884}}
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("New York")
 
     assert candidates.mention == "New York"
     assert candidates.get("New York City").variation == "New York City"
     assert candidates.get("New York City").string_similarity == pytest.approx(0.615384, abs=10e-6)
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Lvndvn")
 
     assert candidates.mention == "Lvndvn"
@@ -184,32 +184,32 @@ def test_ranking_levenshtein():
     ranker = ranking.LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
+    ranker.load()
 
     ranker.mentions_to_wikidata = {"London": {"Q84": 0.922}}
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
 
     candidates = ranker.run("London")
     assert candidates.get("London").string_similarity == 1.0
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Lvndvn")
     assert candidates.get("London").string_similarity == pytest.approx(0.66666665, abs=10e-6)
 
     # Test that overlap works properly
     ranker.mentions_to_wikidata = {"New York City": {"Q60": 0.884}}
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("New York")
     assert candidates.mention == "New York"
     assert candidates.get("New York City").string_similarity == pytest.approx(0.615384615, abs=10e-6)
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Lvndvn")
     assert candidates.mention == "Lvndvn"
     assert candidates.get("New York City").string_similarity == 0.0
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("asdasd")
     assert candidates.mention == "asdasd"
     assert candidates.get("New York City").string_similarity == 0.0
@@ -247,9 +247,8 @@ def test_ranking_deezy_on_the_fly(tmp_path):
             "overwrite_training": False,
             "do_test": False,
         },
-        already_collected_cands=dict(),
     )
-    ranker.load_resources()
+    ranker.load()
 
     # Test that perfect_match acts before deezy
     candidates = ranker.run("London")
@@ -257,7 +256,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     assert candidates.get("London").string_similarity == 1.0
 
     # Test that deezy works
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Ashton-cnderLyne")
     assert candidates.mention == "Ashton-cnderLyne"
     assert candidates.ranking_method == "deezymatch"
@@ -300,12 +299,11 @@ def test_ranking_attach_wikidata(tmp_path):
             "overwrite_training": False,
             "do_test": True,
         },
-        already_collected_cands=dict(),
     )
-    ranker.load_resources(train=False)
+    ranker.load(train=False)
 
     # Check the cache is empty.
-    assert len(ranker.already_collected_cands) == 0
+    assert len(ranker.cache) == 0
 
     candidates = ranker.run("London")
 
@@ -318,12 +316,12 @@ def test_ranking_attach_wikidata(tmp_path):
     assert "Q84" in candidates.get("London").wqid_links
 
     # Check the cache has been updated.
-    assert len(ranker.already_collected_cands) == 1
-    assert ranker.already_collected_cands["London"] == candidates
+    assert len(ranker.cache) == 1
+    assert ranker.cache["London"] == candidates
 
     # Test that deezy works
     # TODO: add a ranker.clear_cache() method.
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Sheftield")
     assert candidates.mention == "Sheftield"
     assert isinstance(candidates.get("Sheffield"), StringMatchLinks)
@@ -336,14 +334,14 @@ def test_ranking_attach_wikidata(tmp_path):
     ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
+    ranker.load()
 
     candidates = ranker.run("Sheffield")
     assert candidates.get("Sheffield").variation == "Sheffield"
     assert candidates.get("Sheffield").string_similarity == 1.0
     assert "Q42448" in candidates.get("Sheffield").wqid_links
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Sheftield")
     assert candidates.is_empty()
 
@@ -351,20 +349,20 @@ def test_ranking_attach_wikidata(tmp_path):
     ranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
+    ranker.load()
 
     # Test that levenshtein works
     ranker = ranking.LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
-    ranker.load_resources()
+    ranker.load()
 
     candidates = ranker.run("Sheffield")
     assert candidates.get("Sheffield").variation == "Sheffield"
     assert candidates.get("Sheffield").string_similarity == 1.0
     assert "Q42448" in candidates.get("Sheffield").wqid_links
 
-    ranker.already_collected_cands = {}
+    ranker.cache = {}
     candidates = ranker.run("Sheftield")
     assert candidates.mention == "Sheftield"
     assert (0.0 < candidates.get("Sheffield").string_similarity < 1.0)

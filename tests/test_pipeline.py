@@ -104,7 +104,6 @@ def test_deezy_mostpopular(tmp_path):
             "overwrite_training": False,
             "do_test": False,
         },
-        already_collected_cands=dict(),
     )
 
     linker = linking.MostPopularLinker(
@@ -191,7 +190,6 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
             "overwrite_training": False,
             "do_test": False,
         },
-        already_collected_cands=dict(),
     )
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
@@ -257,7 +255,6 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
-        already_collected_cands=dict(),
     )
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
@@ -347,7 +344,6 @@ def test_modular_deezy_rel(tmp_path):
             "overwrite_training": False,
             "do_test": False,
         },
-        already_collected_cands=dict(),
     )
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:

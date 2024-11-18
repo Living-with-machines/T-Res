@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from ..geoparser import ranking
-from ..geoparser.dataclasses import CandidateLinks
+from ..geoparser.dataclasses import Candidates
 
 RANDOM_SEED = 42
 """Constant representing the random seed used for generating pseudo-random
@@ -206,13 +206,10 @@ def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) 
             max_cand_freq = 0
 
             # TODO: get the ranking method from wk_cands.
-            default = ranking.Candidates(mention_dict["mention"], "TODO", "reldisamb", list())
+            default = Candidates(mention_dict["mention"], "TODO", "reldisamb", list())
             linker_cands = wk_cands.get(mention_dict["mention"], default)
 
-            print("linker_cands:")
-            print(linker_cands)
-
-            if not isinstance(linker_cands, ranking.Candidates):
+            if not isinstance(linker_cands, Candidates):
                 raise ValueError(f"Expected Candidates instance. Found: {type(linker_cands)}")
 
             # NOTE: mentions_to_wikidata here is the absolute link frequency data.
