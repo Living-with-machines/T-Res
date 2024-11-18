@@ -47,6 +47,8 @@ class Ranker:
         >>> for candidates in results:
         >>>     print(candidates)
     """
+    # Class attribute for the name of the ranking method.
+    method_name: str = None
 
     def __init__(
         self,
@@ -62,16 +64,12 @@ class Ranker:
         self.wikidata_to_mentions = wikidata_to_mentions
         self.cache = dict()
 
-    # TODO: replace with method_name class attribute (in each subclass):
-    def method_name(self) -> str:
-        raise NotImplementedError("Subclass implementation required.")
-
     def __str__(self) -> str:
         """
         Returns a string representation of the Ranker object, including the method name.
         """
         s = ">>> Candidate selection:\n"
-        s += f"    * Method: {self.method_name()}\n"
+        s += f"    * Method: {self.method_name}\n"
         return s
 
     def load(self):
@@ -178,13 +176,12 @@ class Ranker:
             wqid_links = list(self.mentions_to_wikidata.get(match.variation, dict()).keys())
             matches.append(StringMatchLinks(match.variation, match.string_similarity, wqid_links))
 
-        candidates = CandidateMatches(mention, self.method_name(), matches)
+        candidates = CandidateMatches(mention, self.method_name, matches)
 
         # Update the cache.
         self.cache[mention] = candidates
         return candidates
 
-    # TODO: rename as `string_matches`
     def match_candidates(self, mention: str) -> List[StringMatch]:
         """
         Identify string matching candidates for the given toponym mention.
@@ -218,8 +215,8 @@ class PerfectMatchRanker(Ranker):
         >>> for candidates in results:
         >>>     print(candidates)
     """
-    def method_name(self) -> str:
-        return "perfectmatch"
+    # Override the method_name class attribute.
+    method_name: str = "perfectmatch"
 
     def match_candidates(self, mention: str) -> List[StringMatch]:
         """
@@ -276,9 +273,8 @@ class PartialMatchRanker(PerfectMatchRanker):
         >>> for candidates in results:
         >>>     print(candidates)
     """
-
-    def method_name(self) -> str:
-        return "partialmatch"
+    # Override the method_name class attribute.
+    method_name: str = "partialmatch"
     
     # Override the load method to initialise ``pandarellel`` for parallization.
     def load(self):
@@ -381,9 +377,8 @@ class LevenshteinRanker(PartialMatchRanker):
         >>> for candidates in results:
         >>>     print(candidates)
     """
-
-    def method_name(self) -> str:
-        return "levenshtein"
+    # Override the method_name class attribute.
+    method_name: str = "levenshtein"
 
     def matching_score(self, mention: str, row: pd.Series) -> float:
         """
@@ -483,6 +478,8 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 "do_test": False,
             }
     """
+    # Override the method_name class attribute.
+    method_name: str = "deezymatch"
     
     # Override the constructor to include DeezyMatch model parameters.
     def __init__(
@@ -528,9 +525,6 @@ class DeezyMatchRanker(PerfectMatchRanker):
         self.strvar_parameters = strvar_parameters
         self.deezy_parameters = deezy_parameters
 
-    def method_name(self) -> str:
-        return "deezymatch"
-    
     def __str__(self) -> str:
         """
         Returns a string representation of the Ranker object, including the 

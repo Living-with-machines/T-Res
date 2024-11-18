@@ -65,6 +65,8 @@ def test_ranking_perfect_match():
     ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
+    assert ranker.method_name == "perfectmatch"
+    
     ranker.load()
     ranker.cache = {}
     
@@ -113,6 +115,7 @@ def test_ranking_matching_score():
     ranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
+    assert ranker.method_name == "partialmatch"
     
     score_a = ranker.matching_score("New York", {"mentions": "New York City"})
     score_b = ranker.matching_score("New York City", {"mentions": "New York"})
@@ -147,6 +150,8 @@ def test_ranking_partial_match():
     ranker = ranking.PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
+    assert ranker.method_name == "partialmatch"
+    
     ranker.load()
 
     ranker.mentions_to_wikidata = {"London": {"Q84": 0.922}}
@@ -184,6 +189,8 @@ def test_ranking_levenshtein():
     ranker = ranking.LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
+    assert ranker.method_name == "levenshtein"
+    
     ranker.load()
 
     ranker.mentions_to_wikidata = {"London": {"Q84": 0.922}}
@@ -248,6 +255,8 @@ def test_ranking_deezy_on_the_fly(tmp_path):
             "do_test": False,
         },
     )
+    assert ranker.method_name == "deezymatch"
+    
     ranker.load()
 
     # Test that perfect_match acts before deezy

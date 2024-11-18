@@ -122,8 +122,8 @@ class Experiment:
         output_path = os.path.join(self.data_path, self.dataset, self.ner.model_name)
 
         # Add the candidate experiment info to the path:
-        cand_approach = self.ranker.method_name()
-        if self.ranker.method_name() == "deezymatch":
+        cand_approach = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
             cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
                 self.ranker.deezy_parameters["selection_threshold"]
@@ -282,8 +282,8 @@ class Experiment:
         model_name = self.ner.model_name
         output_path = data_path + dataset + "/" + model_name
 
-        cand_approach = self.ranker.method_name()
-        if self.ranker.method_name() == "deezymatch":
+        cand_approach = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
             cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
                 self.ranker.deezy_parameters["selection_threshold"]
@@ -358,8 +358,8 @@ class Experiment:
         dMetadata = self.processed_data["dMetadata"]
         dCandidates = self.processed_data["dCandidates"]
 
-        cand_approach = self.ranker.method_name()
-        if self.ranker.method_name() == "deezymatch":
+        cand_approach = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
             cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
                 self.ranker.deezy_parameters["selection_threshold"]
@@ -545,8 +545,8 @@ class Experiment:
 
         if task == "linking":
             scenario_name += task + "_" + self.ner.model_name + "_"
-            cand_approach = self.ranker.method_name()
-            if self.ranker.method_name() == "deezymatch":
+            cand_approach = self.ranker.method_name
+            if self.ranker.method_name == "deezymatch":
                 cand_approach += "+" + str(
                     self.ranker.deezy_parameters["num_candidates"]
                 )
