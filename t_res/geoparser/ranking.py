@@ -168,7 +168,7 @@ class Ranker:
             return self.cache[mention]
         
         # Get the list of candidate string matches for this mention.
-        string_matches = self.match_candidates(mention)
+        string_matches = self.matches(mention)
 
         # Get the potential Wikidata links for each string match.
         matches = []
@@ -182,7 +182,7 @@ class Ranker:
         self.cache[mention] = candidates
         return candidates
 
-    def match_candidates(self, mention: str) -> List[StringMatch]:
+    def matches(self, mention: str) -> List[StringMatch]:
         """
         Identify string matching candidates for the given toponym mention.
         
@@ -218,7 +218,7 @@ class PerfectMatchRanker(Ranker):
     # Override the method_name class attribute.
     method_name: str = "perfectmatch"
 
-    def match_candidates(self, mention: str) -> List[StringMatch]:
+    def matches(self, mention: str) -> List[StringMatch]:
         """
         Perform perfect matching between a provided list of mentions
         (``queries``) and the altnames in the knowledge base.
@@ -283,7 +283,7 @@ class PartialMatchRanker(PerfectMatchRanker):
         pandarallel.initialize(nb_workers=10)
         os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-    def match_candidates(self, mention: str) -> List[StringMatch]:
+    def matches(self, mention: str) -> List[StringMatch]:
         """
         Perform partial string matching for a given toponym mention.
 
@@ -299,7 +299,7 @@ class PartialMatchRanker(PerfectMatchRanker):
             If a perfect match exists, partial matching is skipped.
         """
         # First attempt a perfect string match.
-        candidates = super().match_candidates(mention)
+        candidates = super().matches(mention)
         if candidates:
             return candidates
         
@@ -548,7 +548,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
             self.train()
         return ret
 
-    def match_candidates(self, mention: str) -> List[StringMatch]:
+    def matches(self, mention: str) -> List[StringMatch]:
         """
         Perform DeezyMatch ranking on-the-fly for a given toponym mention.
 
@@ -583,7 +583,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
         dm_output = self.deezy_parameters["dm_output"]
 
         # First attempt a perfect string match.
-        candidates = super().match_candidates(mention)
+        candidates = super().matches(mention)
         if candidates:
             return candidates
         
