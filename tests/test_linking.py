@@ -121,9 +121,8 @@ def test_linking_most_popular():
     # Construct a CandidateMatches instance (to simulate the output from the Ranker).
     wqid_links = ["Q84", "Q92561"]
     matches = [StringMatchLinks("London", 1.0, wqid_links)]
-    dict_mention = {"candidates": CandidateMatches("London", "perfectmatch", matches)}
 
-    candidates = linker.run(dict_mention)
+    candidates = linker.run(CandidateMatches("London", "perfectmatch", matches))
 
     # Check best string match.
     assert candidates.best_match().string_match.variation == "London"
@@ -137,9 +136,7 @@ def test_linking_most_popular():
     assert "Q92561" in candidates.best_match().disambiguation_scores().keys()
     candidates.best_match().disambiguation_scores()["Q92561"] == pytest.approx(0.018726835294882633, abs=1e-3)
 
-    dict_mention = {"candidates": CandidateMatches("London", "perfectmatch", [])}
-    candidates = linker.run(dict_mention)
-
+    candidates = linker.run(CandidateMatches("London", "perfectmatch", []))
     assert candidates.is_empty()
 
 # This test replaces the legacy unit test named `test_by_distance` and
@@ -260,12 +257,9 @@ def test_linking_by_distance():
     # Construct a CandidateMatches instance (to simulate the output from the Ranker).
     wqid_links = ["Q84", "Q92561"]
     matches = [StringMatchLinks("London", 0.397048, wqid_links)]
-    dict_mention = {
-        "candidates": CandidateMatches("London", "perfectmatch", matches),
-        "place_wqid": "Q84",
-    }
 
-    candidates = linker.run(dict_mention)
+    origin_wqid = "Q84"
+    candidates = linker.run(CandidateMatches("London", "perfectmatch", matches), origin_wqid)
 
     # Check best string match.
     assert candidates.best_match().string_match.variation == "London"
@@ -277,11 +271,8 @@ def test_linking_by_distance():
     assert candidates.best_match().disambiguation_scores().keys() == {"Q84", "Q92561"}
 
     # Test dependence on the place of publication.
-    dict_mention = {
-        "candidates": CandidateMatches("London", "perfectmatch", matches),
-        "place_wqid": "Q92561",
-    }
-    candidates = linker.run(dict_mention)
+    origin_wqid = "Q92561"
+    candidates = linker.run(CandidateMatches("London", "perfectmatch", matches), origin_wqid)
 
     # Check that the best Wikidata link is now London, Ontario "Q92561".
     assert candidates.best_wqid() == "Q92561"
@@ -289,11 +280,8 @@ def test_linking_by_distance():
     assert candidates.best_match().disambiguation_scores().keys() == {"Q84", "Q92561"}
 
     # Test with an empty list of candidates.
-    dict_mention = {
-        "candidates": CandidateMatches("London", "perfectmatch", []),
-        "place_wqid": "Q2365261",
-    }
-    candidates = linker.run(dict_mention)
+    origin_wqid = "Q2365261"
+    candidates = linker.run(CandidateMatches("London", "perfectmatch", []), origin_wqid)
 
     assert candidates.best_wqid() == None
     assert candidates.best_match() == None

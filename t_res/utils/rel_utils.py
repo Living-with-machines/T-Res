@@ -351,9 +351,9 @@ def prepare_rel_trainset(
 
     # Run entity linking per mention to convert each CandidatesMatches 
     # instance into a Candidates instance.
+
     # TODO: extract place_wqid from rel_json if needed for training.
-    dict_mentions = [{"candidates": wk, "place_wqid": None} for wk in wk_cands.values()]
-    wk_cands = {d["candidates"].mention : linker.run(d) for d in dict_mentions}
+    wk_cands = {wk.mention: linker.run(wk, None) for wk in wk_cands.values()}
 
     # Rank the candidates:
     rel_json = rank_candidates(

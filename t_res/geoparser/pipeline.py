@@ -245,8 +245,7 @@ class Pipeline:
 
             # Run entity linking per mention to convert each CandidatesMatches 
             # instance into a Candidates instance.
-            dict_mentions = [{"candidates": wk, "place_wqid": place_wqid} for wk in wk_cands.values()]
-            wk_cands = {d["candidates"].mention : self.linker.run(d) for d in dict_mentions}
+            wk_cands = {wk.mention: self.linker.run(wk, place_wqid) for wk in wk_cands.values()}
 
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
@@ -342,12 +341,7 @@ class Pipeline:
                 mention = mentions_dataset["linking"][i]
 
                 # Run entity linking per mention:
-                selected_cand = self.linker.run(
-                    {
-                        "candidates": wk_cands[mention["mention"]],
-                        "place_wqid": place_wqid,
-                    }
-                )
+                selected_cand = self.linker.run(wk_cands[mention["mention"]], place_wqid)
 
                 # If there are no candidates for this mention, skip the rest.
                 if not mention["mention"] in wk_cands.keys():
@@ -775,8 +769,7 @@ class Pipeline:
 
         # Run entity linking per mention to convert each CandidatesMatches 
         # instance into a Candidates instance.
-        dict_mentions = [{"candidates": wk, "place_wqid": place_wqid} for wk in wk_cands.values()]
-        wk_cands = {d["candidates"].mention : self.linker.run(d) for d in dict_mentions}
+        wk_cands = {wk.mention: self.linker.run(wk, place_wqid) for wk in wk_cands.values()}
 
         # If the linking method is "reldisamb", rank and format candidates,
         # and produce a prediction:
@@ -868,12 +861,7 @@ class Pipeline:
                 mention = mentions_dataset["linking"][i]
 
                 # Run entity linking per mention:
-                selected_cand = self.linker.run(
-                    {
-                        "candidates": wk_cands[mention["mention"]],
-                        "place_wqid": place_wqid,
-                    }
-                )
+                selected_cand = self.linker.run(wk_cands[mention["mention"]], place_wqid)
 
                 mention["prediction"] = selected_cand.best_wqid()
 

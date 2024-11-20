@@ -1,8 +1,7 @@
 import json
 import os
-import sys
 from pathlib import Path
-from typing import Literal, Optional, Tuple, List, Dict
+from typing import Optional, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -118,30 +117,17 @@ class Linker:
 
         print("*** Linking resources loaded!\n")
 
-    # TODO: replace dict_mention argument with two args:
-    # 1. Mention dataclass instance (Recogniser output)
-    # 2. CandidateMatches dataclass instance (Ranker output)
-    def run(self, dict_mention: dict) -> Candidates:
+    def run(self, matches: CandidateMatches, origin_wqid: Optional[str]=None) -> Candidates:
         """
         Execute the linking process. Each Linker subclass must implement a 
         linking method by overriding this function.
 
         Arguments:
-            dict_mention: Dictionary containing the mention information.
+            matches: A CandidatesMatches instance.
+            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
 
         Returns:
-            Tuple[str, float, dict]:
-                The result of the linking process. For details, see below:
-
-                - If the ``method`` provided when initialising the
-                  :py:meth:`~geoparser.linking.Linker` object was
-                  ``"mostpopular"``, see
-                  :py:meth:`~geoparser.linking.Linker.most_popular`.
-                - If the ``method`` provided when initialising the
-                  :py:meth:`~geoparser.linking.Linker` object was
-                  ``"bydistance"``, see
-                  :py:meth:`~geoparser.linking.Linker.by_distance`.
-
+            Candidates: The candidates identified by the linking process.
         """
         raise NotImplementedError("Subclass implementation required.")
 
@@ -171,20 +157,16 @@ class MostPopularLinker(Linker):
         return closure
 
     # TODO: update docstring
-    def run(self, dict_mention: dict) -> Candidates:
+    def run(self, matches: CandidateMatches, origin_wqid: Optional[str]=None) -> Candidates:
         """
         Select most popular candidate, given Wikipedia's in-link structure.
 
         Arguments:
-            dict_mention (dict): dictionary with all the relevant information
-                needed to disambiguate a certain mention.
+            matches: A CandidatesMatches instance.
+            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
 
         Returns:
-            Tuple[str, float, dict]:
-                A tuple containing the most popular candidate's Wikidata ID
-                (e.g. ``"Q84"``) or ``"NIL"``, the confidence score of the
-                predicted link as a float, and a dictionary of all candidates
-                and their confidence scores.
+            Candidates: The candidates identified by the linking process.
 
         .. note::
 
@@ -193,17 +175,12 @@ class MostPopularLinker(Linker):
             function returns as a prediction the more relevant Wikidata
             candidate, determined from the in-link structure of Wikipedia.
         """
-        candidate_matches = dict_mention["candidates"]
-
-        if not isinstance(candidate_matches, CandidateMatches):
-            raise ValueError("Expected CandidateMatches instance")
-
-        if candidate_matches.is_empty():
-            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, list())
+        if matches.is_empty():
+            return Candidates(matches.mention, matches.ranking_method, self.method_name, list())
 
         wikidata_links = []
         candidate_links = []
-        for match in candidate_matches.matches:
+        for match in matches.matches:
             if not isinstance(match, StringMatchLinks):
                 raise ValueError("Expected StringMatchLinks instance.")
             
@@ -215,7 +192,7 @@ class MostPopularLinker(Linker):
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, candidate_links)
+        return Candidates(matches.mention, matches.ranking_method, self.method_name, candidate_links)
 
 class ByDistanceLinker(Linker):
     """
@@ -260,25 +237,16 @@ class ByDistanceLinker(Linker):
         
         return closure
     
-    def run(
-        self, dict_mention: dict, origin_wqid: Optional[str] = ""
-    ) -> Candidates:
+    def run(self, matches: CandidateMatches, origin_wqid: str) -> Candidates:
         """
-        Select candidate based on distance to the place of publication.
+        Select candidates based on distance to the place of publication.
 
         Arguments:
-            dict_mention (dict): dictionary with all the relevant information
-                needed to disambiguate a certain mention.
-            origin_wqid (str, optional): The origin Wikidata ID for distance
-                calculation. Defaults to ``""``.
+            matches: A CandidatesMatches instance.
+            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
 
         Returns:
-            Tuple[str, float, dict]:
-                A tuple containing the Wikidata ID of the closest candidate
-                to the place of publication (e.g. ``"Q84"``) or ``"NIL"``,
-                the confidence score of the predicted link as a float (rounded
-                to 3 decimals), and a dictionary of all candidates and their
-                confidence scores.
+            Candidates: The candidates identified by the linking process.
 
         .. note::
 
@@ -288,27 +256,18 @@ class ByDistanceLinker(Linker):
             location closest to the place of publication, for a provided set
             of candidates and the place of publication of the original text.
         """
-        candidate_matches = dict_mention["candidates"]
-
-        if not isinstance(candidate_matches, CandidateMatches):
-            raise ValueError("Expected CandidateMatches instance")
-
-        if candidate_matches.is_empty():
-            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, list())
-
-        # TODO: fix this duplication in the method args.
-        if not(origin_wqid):
-            origin_wqid = dict_mention["place_wqid"]
+        if matches.is_empty():
+            return Candidates(matches.mention, matches.ranking_method, self.method_name, list())
 
         origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
         if not origin_coords:
             origin_coords = self.linking_resources["wqid_to_coords"].get(
-                dict_mention["place_wqid"]
+                origin_wqid
             )
 
         wikidata_links = []
         candidate_links = []
-        for match in candidate_matches.matches:
+        for match in matches.matches:
             if not isinstance(match, StringMatchLinks):
                 raise ValueError("Expected StringMatchLinks instance.")
             # for i, wikidata_link in enumerate(match.wikidata_links):
@@ -331,7 +290,7 @@ class ByDistanceLinker(Linker):
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, candidate_links)
+        return Candidates(matches.mention, matches.ranking_method, self.method_name, candidate_links)
 
 class RelDisambLinker(Linker):
     """
@@ -454,20 +413,27 @@ class RelDisambLinker(Linker):
             raise NotImplementedError("Not yet implemented.")
         return closure
 
-    # TODO: refactor linking logic into this run method.
-    def run(self, dict_mention: dict) -> Candidates:
-        
-        candidate_matches = dict_mention["candidates"]
+    # TODO: refactor linking logic into this run method (from pipeline.py), including
+    # making use of the `origin_wqid` if provided.
+    # TODO: split into two subclasses, one without the `origin_wqid` 
+    # and the other requiring the `origin_wqid`.
+    def run(self, matches: CandidateMatches, origin_wqid: Optional[str]) -> Candidates:
+        """
+        Select candidates using the Radboud Entity Linker (REL) model.
 
-        if not isinstance(candidate_matches, CandidateMatches):
-            raise ValueError("Expected CandidateMatches instance")
+        Arguments:
+            matches: A CandidatesMatches instance.
+            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
 
-        if candidate_matches.is_empty():
-            return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, list())
+        Returns:
+            Candidates: The candidates identified by the linking process.
+        """        
+        if matches.is_empty():
+            return Candidates(matches.mention, matches.ranking_method, self.method_name, list())
 
         wikidata_links = []
         candidate_links = []
-        for match in candidate_matches.matches:
+        for match in matches.matches:
             if not isinstance(match, StringMatchLinks):
                 raise ValueError("Expected StringMatchLinks instance.")
             
@@ -482,7 +448,7 @@ class RelDisambLinker(Linker):
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(candidate_matches.mention, candidate_matches.ranking_method, self.method_name, candidate_links)
+        return Candidates(matches.mention, matches.ranking_method, self.method_name, candidate_links)
         
     def train_load_model(
         self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"

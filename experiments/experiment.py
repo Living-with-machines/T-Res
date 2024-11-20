@@ -767,10 +767,9 @@ class Experiment:
 
                             # Convert `prediction` into a CandidatesMatches instance.
                             candidate_matches = self.ranker.run(prediction["mention"])
-                            dict_mentions = {"candidates": candidate_matches, "place_wqid": prediction["place_wqid"]}
 
                             # Run entity linking per mention:
-                            selected_cand = self.linker.run(dict_mentions)
+                            selected_cand = self.linker.run(candidate_matches, prediction["place_wqid"])
 
                             prediction["prediction"] = selected_cand.best_wqid()
                             # TODO: replace this with a call to `disambiguation_scores` on the Candidate.
