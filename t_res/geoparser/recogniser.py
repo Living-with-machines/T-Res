@@ -17,6 +17,7 @@ from transformers import (
 )
 
 from ..utils import ner_utils
+from .dataclasses import Mention, SentenceMentions
 
 class Recogniser:
     """
@@ -74,7 +75,65 @@ class Recogniser:
         print("*** Creating and loading a NER pipeline.")
         self.pipe = pipeline("ner", model=self.model(), ignore_labels=[])
 
-    # TODO: rename as `run` for consistency with Linker and Ranker. 
+    # The run method combines `ner_predict` with the `aggregate_mentions`
+    # function from `ner_utils.py` (eventually making those redundant).
+    def run(self, sentence: str) -> SentenceMentions:
+        """
+        Identifies named entities in a given sentence using the NER pipeline.
+
+        Arguments:
+            sentence (str): The input sentence.
+
+        Returns:
+            SentenceMentions: An instance of the SentenceMentions dataclass.
+
+        Note:
+            Any n-dash characters (``—``) in the provided sentence are
+            replaced with a comma (``,``) to handle parsing issues related to
+            the n-dash in OCR from historical newspapers.
+        """
+        if len(sentence) <= 1:
+            return SentenceMentions(sentence, [])
+
+        # The n-dash is a very frequent character in historical newspapers,
+        # but the NER pipeline does not process it well: Plymouth—Kingston
+        # is parsed as "Plymouth (B-LOC), — (B-LOC), Kingston (B-LOC)", instead
+        # of the n-dash being interpreted as a word separator. Therefore, we
+        # replace it by a comma, except when the n-dash occurs in the opening
+        # position of a sentence.
+        sentence = sentence[0] + sentence[1:].replace("—", ",")
+
+        # Run the NER pipeline to predict mentions:
+        ner_preds = self.pipe(sentence)
+
+        # Post-process the predictions, fixing potential grouping errors:
+        lEntities = []
+        predictions = []
+        for pred_ent in ner_preds:
+            pred_ent["score"] = float(pred_ent["score"])
+            pred_ent["entity"] = pred_ent["entity"]
+            pred_ent = ner_utils.fix_capitalization(pred_ent, sentence)
+            predictions = ner_utils.aggregate_entities(pred_ent, lEntities)
+
+        if len(predictions) > 0:
+            predictions = ner_utils.fix_hyphens(predictions)
+            predictions = ner_utils.fix_nested(predictions)
+            predictions = ner_utils.fix_startEntity(predictions)
+
+        # Process predictions (moved from pipeline.py::run_sentence_recognition):
+        procpreds = [
+            [x["word"], x["entity"], "O", x["start"], x["end"], x["score"]]
+            for x in predictions
+        ]
+
+        # Aggregate mentions:
+        mentions = ner_utils.aggregate_mentions(procpreds, "pred")
+
+        mentions = [Mention.from_dict(m) for m in mentions]
+        return SentenceMentions(sentence, mentions=mentions)
+
+
+    # Deprecated: use the `run` method instead.
     def ner_predict(self, sentence: str) -> List[dict]:
         """
         Predicts named entities in a given sentence using the NER pipeline.

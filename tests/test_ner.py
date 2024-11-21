@@ -68,6 +68,46 @@ def test_ner_predict():
     assert predictions[0]["word"] == "-"
     assert predictions[6]["word"] == ","
 
+@pytest.mark.skip(reason="Needs large model file")
+def test_run():
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
+    ner = recogniser.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        base_model="Livingwithmachines/bert_1760_1900", 
+        model_path=model_path,
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,
+        do_test=False,
+    )
+    ner.create_pipeline()
+    assert isinstance(ner.pipe, TokenClassificationPipeline)
+
+    sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield, but also in Leeds."
+    result = ner.run(sentence)
+
+    assert result.sentence == sentence
+
+    assert result.len() == 2
+    assert result.mentions[0].mention == "Sheffield"
+    assert result.mentions[0].start_offset == 13
+    assert result.mentions[0].end_offset == 13
+    assert result.mentions[0].start_char == 74
+    assert result.mentions[0].end_char() == 83
+
+    assert result.mentions[1].mention == "Leeds"
+    assert result.mentions[1].start_offset == 18
+    assert result.mentions[1].end_offset == 18
+    assert result.mentions[1].start_char == 97
+    assert result.mentions[1].end_char() == 102
 
 def test_ner_from_hub():
     ner = recogniser.PretrainedRecogniser(

@@ -3,8 +3,64 @@ from pydantic.dataclasses import dataclass as pdataclass
 from dataclasses import field, InitVar
 from collections.abc import Callable
 
+# TODO: move this module to the `utils` subdirectory.
 # TODO: add __str__ methods
 
+################################
+# Dataclasses for Recogniser
+################################
+
+@pdataclass(order=True, frozen=True)
+class Mention:
+    """Data class representing a toponym mention in text."""
+    sort_index: float = field(init=False)
+    # The toponym mention.
+    mention: str
+    # The token offset inside the text marking the start of the mention.
+    start_offset: int
+    # The token offset inside the text marking the end of the mention.
+    end_offset: int
+    # The character offset inside the text marking the start of the mention.
+    start_char: int
+    # The NER confidence score.
+    ner_score: float
+    # The NER label of the mention.
+    ner_label: str
+    # The consolidated entity link of the mention ('O' for predicted mentions).
+    entity_link: str
+
+    def __post_init__(self):
+        object.__setattr__(self, 'sort_index', self.start_char)
+
+    def from_dict(dict) -> 'Mention':
+        return Mention(
+            mention=dict['mention'],
+            start_offset=dict['start_offset'],
+            end_offset=dict['end_offset'],
+            start_char=dict['start_char'],
+            ner_score=dict['ner_score'],
+            ner_label=dict['ner_label'],
+            entity_link=dict['entity_link'],
+        )
+    
+    def end_char(self) -> int:
+        return self.start_char + len(self.mention)
+
+# Recogniser::run method output type.
+@pdataclass(frozen=True)
+class SentenceMentions:
+    # The sentence.
+    sentence: str
+    # A list of toponym mentions, ordered by start 
+    # character offset within the sentence.
+    mentions: List[Mention]
+
+    def is_empty(self) -> bool:
+        return len(self.mentions) == 0
+
+    def len(self) -> int:
+        return len(self.mentions)
+    
 ################################
 # Dataclasses for Ranker
 ################################
@@ -266,7 +322,7 @@ class Candidates:
         return self.links[0]
 
     # Returns the Wikidata link with the highest disambiguation score.
-    def best_wikidata_link(self) -> 'WikidataLink':
+    def best_wikidata_link(self) -> WikidataLink:
         # Get the CandidateLinks instance with highest string similarity.
         best_match = self.best_match()
         if not best_match or best_match.is_empty():
