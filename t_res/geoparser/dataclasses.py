@@ -1,6 +1,6 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Tuple, Optional
 from pydantic.dataclasses import dataclass as pdataclass
-from dataclasses import field
+from dataclasses import field, InitVar
 from collections.abc import Callable
 
 # TODO: add __str__ methods
@@ -72,15 +72,35 @@ class WikidataLink:
     """Data class representing a potential toponym link in Wikidata."""
     # The Wikidata ID.
     wqid: str
+    # The lat-lon coordinates of this Wikidata entry.
+    lat_lon: Optional[Tuple[float, float]] = field(init=False)
+    # The Wikidata class of this Wikidata entry.
+    wkdt_class: Optional[str] = field(init=False)
+    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
+    wqid_to_coords: InitVar[Optional[dict]]
+    # Dictionary mapping Wikidata IDs to Wikidata classes.
+    entity2class: InitVar[Optional[dict]]
 
+    def __post_init__(self, wqid_to_coords=None, entity2class=None):
+        # Set the lat_lon & wkdt_class fields using the dict init variables.
+        lat_lon = wqid_to_coords.get(self.wqid) if wqid_to_coords else None
+        wkdt_class = entity2class.get(self.wqid) if entity2class else None
+        object.__setattr__(self, 'lat_lon', lat_lon)
+        object.__setattr__(self, 'wkdt_class', wkdt_class)
+        
 @pdataclass(frozen=True)
 class MostPopularLink(WikidataLink):
     """Data class representing a string match and potential links in 
     Wikidata under the `mostpopular` linking method."""
     # The mention-to-wikidata link frequency.
     freq: int
+    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
+    wqid_to_coords: InitVar[Optional[dict]]
+    # Dictionary mapping Wikidata IDs to Wikidata classes.
+    entity2class: InitVar[Optional[dict]]
 
-    def __post_init__(self):
+    def __post_init__(self, wqid_to_coords=None, entity2class=None):
+        super().__post_init__(wqid_to_coords, entity2class)
         if not isinstance(self.freq, int):
             raise ValueError("freq must be an integer.")
 
@@ -97,8 +117,13 @@ class ByDistanceLink(WikidataLink):
     geodist: Optional[float]
     # The normalized score from resource `mentions_to_wikidata_normalized.json`.
     normalized_score: float
+    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
+    wqid_to_coords: InitVar[Optional[dict]]
+    # Dictionary mapping Wikidata IDs to Wikidata classes.
+    entity2class: InitVar[Optional[dict]]
 
-    def __post_init__(self):
+    def __post_init__(self, wqid_to_coords=None, entity2class=None):
+        super().__post_init__(wqid_to_coords, entity2class)
         if not isinstance(self.normalized_score, float):
             raise ValueError("normalized_score must be an float.")
 
@@ -111,8 +136,13 @@ class RelDisambLink(WikidataLink):
     freq: int
     # The normalized score from resource `mentions_to_wikidata_normalized.json`.
     normalized_score: float
+    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
+    wqid_to_coords: InitVar[Optional[dict]]
+    # Dictionary mapping Wikidata IDs to Wikidata classes.
+    entity2class: InitVar[Optional[dict]]
 
-    def __post_init__(self):
+    def __post_init__(self, wqid_to_coords=None, entity2class=None):
+        super().__post_init__(wqid_to_coords, entity2class)
         if not isinstance(self.freq, int):
             raise ValueError("freq must be an integer.")
         if not isinstance(self.normalized_score, float):

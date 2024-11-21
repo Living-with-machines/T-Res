@@ -186,7 +186,11 @@ class MostPopularLinker(Linker):
             
             for wqid in match.wqid_links:
                 freq = self.linking_resources["mentions_to_wikidata"][match.variation][wqid]
-                wikidata_links.append(MostPopularLink(wqid, freq))
+                wikidata_links.append(MostPopularLink(
+                    wqid, 
+                    freq=freq, 
+                    wqid_to_coords=self.linking_resources["wqid_to_coords"], 
+                    entity2class=self.linking_resources["entity2class"]))
 
             closure = MostPopularLinker.disambiguation_scores(wikidata_links)
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
@@ -284,7 +288,13 @@ class ByDistanceLinker(Linker):
                 normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
                     wqid
                 ]
-                wikidata_links.append(ByDistanceLink(wqid, origin_wqid, geodist, normalized_score))
+                wikidata_links.append(ByDistanceLink(
+                    wqid, 
+                    origin_wqid=origin_wqid, 
+                    geodist=geodist, 
+                    normalized_score=normalized_score,
+                    wqid_to_coords=self.linking_resources["wqid_to_coords"],
+                    entity2class=self.linking_resources["entity2class"]))
 
             closure = ByDistanceLinker.disambiguation_scores(wikidata_links, match.string_similarity)
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
@@ -442,7 +452,11 @@ class RelDisambLinker(Linker):
                 normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
                     wqid
                 ]
-                wikidata_links.append(RelDisambLink(wqid, freq, normalized_score))
+                wikidata_links.append(RelDisambLink(wqid, 
+                                                    freq=freq, 
+                                                    normalized_score=normalized_score,
+                                                    wqid_to_coords=self.linking_resources["wqid_to_coords"],
+                                                    entity2class=self.linking_resources["entity2class"]))
 
             closure = RelDisambLinker.disambiguation_scores(wikidata_links)
             candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
