@@ -43,7 +43,7 @@ async def read_root(request: Request):
 
 @app.get("/test")
 async def test_pipeline():
-    resolved = geoparser.run_sentence(
+    resolved = geoparser.run_sentence_deprecated(
         "Harvey, from London;Thomas and Elizabeth, Barnett.",
         place="Manchester",
         place_wqid="Q18125",
@@ -56,7 +56,7 @@ async def test_pipeline():
 async def run_sentence(api_query: APIQuery, request_id: Union[str, None] = None):
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_sentence(
+    resolved = geoparser.run_sentence_deprecated(
         api_query.text, place=place, place_wqid=place_wqid
     )
 

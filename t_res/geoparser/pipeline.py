@@ -7,7 +7,7 @@ from sentence_splitter import split_text_into_sentences
 
 from ..utils import ner_utils, rel_utils
 from . import linking, ranking, recogniser
-from .dataclasses import Candidates
+from .dataclasses import Candidates, Predictions, SentenceContext, SentenceCandidates
 
 class Pipeline:
     """
@@ -132,7 +132,27 @@ class Pipeline:
                 self.ranker
             )
 
+    def run(self, text: str, place: Optional[str]=None, place_wqid: Optional[str]=None) -> Predictions:
+
+        # Split the text into its sentences and run the pipeline on each one.
+        sentences = SentenceContext.from_text(text, language="en")
+        sentence_candidates = [self.run_sentence(sentence, place, place_wqid) for sentence in sentences]
+        return self.linker.disambiguate(sentence_candidates)
+
     def run_sentence(
+            self,
+            sentence: SentenceContext, 
+            place: Optional[str]=None, 
+            place_wqid: Optional[str]=None
+    ) -> SentenceCandidates:
+        
+        mentions = self.ner.run(sentence.sentence)
+        matches = [self.ranker.run(mention) for mention in mentions.mentions]
+        candidates = [self.linker.run(m, place_wqid, place) for m in matches if not m.is_empty()]
+        return SentenceCandidates(sentence.sentence, [c for c in candidates if not c.is_empty()])
+
+    # Deprecated:
+    def run_sentence_deprecated(
         self,
         sentence: str,
         sent_idx: Optional[int] = 0,
@@ -204,6 +224,7 @@ class Pipeline:
 
         mentions = self.run_sentence_recognition(sentence)
 
+        # NOTE: this handling of microtoponyms is now done inside the Linker:
         # List of mentions for the ranker:
         rmentions = []
         without_microtoponyms = self.linker.method_name == "reldisamb" \
@@ -250,10 +271,11 @@ class Pipeline:
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
-                self.linker.linking_resources["mentions_to_wikidata"],
+                # self.linker.linking_resources["mentions_to_wikidata"],
             )
 
             if self.linker.rel_params["with_publication"]:
+                # NOTE: this setting the defaults is now done in the linker run method.
                 if place_wqid == "" or place == "":
                     place_wqid = self.linker.rel_params["default_publwqid"]
                     place = self.linker.rel_params["default_publname"]
@@ -265,12 +287,17 @@ class Pipeline:
                     place_wqid,
                 )
 
+            # Note: this call to `predict` has been moved to the Predictions dataclass:
             predicted = self.linker.rel_params["ed_model"].predict(mentions_dataset)
+
+            # print("predicted:")
+            # print(predicted)
 
             if self.linker.rel_params["with_publication"]:
                 # ... and if "publ", now remove the artificial publication entry!
                 mentions_dataset["linking"].pop()
 
+            # TODO: check cross_cand_score and prior_cand_score are unchanged after refactoring.
             # TODO: fix this brittle iteration with shared index i:
             for i in range(len(mentions_dataset["linking"])):
                 mention = mentions_dataset["linking"][i]
@@ -369,7 +396,7 @@ class Pipeline:
                 # (same returned by REL):
                 # NOTE: these are the relative frequencies when linking is `most_popular`.
                 # and tmp_cands is just used as an inbetween stop to populate `cross_cand_score`
-                mention["cross_cand_score"] = selected_cand.best_match().cross_cand_score()
+                mention["cross_cand_score"] = selected_cand.best_match().cross_cand_scores()
 
         if not postprocess_output:
             return mentions_dataset
@@ -490,7 +517,7 @@ class Pipeline:
                 context[1] = sentences[idx + 1]
 
             # Run pipeline on sentence:
-            sentence_dataset = self.run_sentence(
+            sentence_dataset = self.run_sentence_deprecated(
                 sentence,
                 sent_idx=idx,
                 context=context,
@@ -519,6 +546,7 @@ class Pipeline:
         mentions = ner_utils.aggregate_mentions(procpreds, "pred")
         return mentions
 
+    # deprecated:
     def format_prediction(
         self,
         mention,
@@ -777,7 +805,7 @@ class Pipeline:
             mentions_dataset = rel_utils.rank_candidates(
                 mentions_dataset,
                 wk_cands,
-                self.linker.linking_resources["mentions_to_wikidata"],
+                # self.linker.linking_resources["mentions_to_wikidata"],
             )
 
             if self.linker.rel_params["with_publication"]:
@@ -883,7 +911,7 @@ class Pipeline:
                 mention["prior_cand_score"] = dict()
 
                 # Return candidates scores for top n=7 candidates
-                mention["cross_cand_score"] = selected_cand.best_match().cross_cand_score()
+                mention["cross_cand_score"] = selected_cand.best_match().cross_cand_scores()
 
         # Process output, add coordinates and wikidata class from
         # prediction:

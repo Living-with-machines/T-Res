@@ -724,7 +724,7 @@ class Experiment:
                     article_dataset = rel_utils.rank_candidates(
                         article_dataset,
                         all_cands,
-                        self.linker.linking_resources["mentions_to_wikidata"],
+                        # self.linker.linking_resources["mentions_to_wikidata"],
                     )
                     if self.linker.rel_params["with_publication"]:
                         # If "publ", add an artificial publication entry:

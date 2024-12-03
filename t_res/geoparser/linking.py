@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-from .dataclasses import StringMatchLinks, Candidates, CandidateMatches, CandidateLinks, MostPopularLink, ByDistanceLink, RelDisambLink
+from .dataclasses import *
 
 class Linker:
     """
@@ -66,15 +66,28 @@ class Linker:
         s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
 
-    def load_resources(self) -> dict:
+    def wkdt_class(self, wqid: str) -> Optional[str]:
+        """Returns the Wikidata class for the given Wikidata entry, if available."""
+        wkdt_class = self.linking_resources["entity2class"].get(wqid)
+        if wkdt_class:
+            return wkdt_class
+        return None
+    
+    def wkdt_coords(self, wqid: str) -> Optional[Tuple[float, float]]:
+        """Returns the lat-lon coordinates for the given Wikidata entry, if available."""
+        coords = self.linking_resources["wqid_to_coords"].get(wqid)
+        if coords:
+            return coords
+        return None
+
+    def empty_candidates(self, mention: Mention, ranking_method: str, place_of_pub_wqid: str, place_of_pub: str):
+        """Returns an empty `Candidates` instance."""
+        return Candidates(mention, ranking_method, self.method_name, list(), place_of_pub_wqid, place_of_pub, False)
+
+    # TODO: rename as `load`.
+    def load_resources(self):
         """
-        Loads the linking resources.
-
-        Returns:
-            dict: Dictionary containing loaded necessary linking resources.
-
-        Note:
-            Different methods will require different resources.
+        Loads the linking resources and assigns them to instance variables.
         """
         print("*** Load linking resources.")
 
@@ -117,7 +130,12 @@ class Linker:
 
         print("*** Linking resources loaded!\n")
 
-    def run(self, matches: CandidateMatches, origin_wqid: Optional[str]=None) -> Candidates:
+    def run(
+            self, 
+            matches: CandidateMatches, 
+            place_of_pub_wqid: Optional[str]=None,
+            place_of_pub: Optional[str]=None,
+        ) -> Candidates:
         """
         Execute the linking process. Each Linker subclass must implement a 
         linking method by overriding this function.
@@ -128,6 +146,39 @@ class Linker:
 
         Returns:
             Candidates: The candidates identified by the linking process.
+        """
+        raise NotImplementedError("Subclass implementation required.")
+
+    def disambiguate(self, candidates: List[SentenceCandidates]) -> Predictions:
+        """
+        Perform entity disambiguation given a list of already identified
+        toponyms and selected candidates.
+
+        Arguments:
+            candidates: A list of SentenceCandidates instances.
+
+        Returns:
+            Predictions: A Predictions instance representing the identified and
+                linked toponyms.
+        """
+        # Replace each CandidatesLinks instance with a PredictedLinks instance.
+        for scs in candidates:
+            for cs in scs.candidates:
+                for i, links in enumerate(cs.links):
+                    scores = self.disambiguation_scores(links.wikidata_links, links.string_match.string_similarity)
+                    cs.links[i] = links.attach_scores(scores)
+        return Predictions(candidates)
+
+    def disambiguation_scores(self, links: List[WikidataLink], string_similarity: float) -> Dict[str, float]:
+        """
+        Compute disambiguation scores for a given list Wikidata links.
+
+        Arguments:
+            links: A list of WikidataLink instances.
+            string_similarity: (Optional) the string similarity score for the candidate match.
+
+        Returns:
+            dict: A dictionary containing disambiguation scores, keyed by Wikidata ID.
         """
         raise NotImplementedError("Subclass implementation required.")
 
@@ -149,15 +200,13 @@ class MostPopularLinker(Linker):
     # Override the method_name class attribute.
     method_name: str = "mostpopular"
 
-    # Define a closure for computing the disambiguation scores.
-    def disambiguation_scores(wikidata_links: List[MostPopularLink]) -> Dict[str, float]:
-        def closure():
-            total = sum([m.freq for m in wikidata_links])
-            return {link.wqid: link.freq / total for link in wikidata_links}
-        return closure
-
     # TODO: update docstring
-    def run(self, matches: CandidateMatches, origin_wqid: Optional[str]=None) -> Candidates:
+    def run(
+            self, 
+            matches: CandidateMatches, 
+            place_of_pub_wqid: Optional[str]=None,
+            place_of_pub: Optional[str]=None,
+        ) -> Candidates:
         """
         Select most popular candidate, given Wikipedia's in-link structure.
 
@@ -176,7 +225,7 @@ class MostPopularLinker(Linker):
             candidate, determined from the in-link structure of Wikipedia.
         """
         if matches.is_empty():
-            return Candidates(matches.mention, matches.ranking_method, self.method_name, list())
+            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
 
         wikidata_links = []
         candidate_links = []
@@ -187,16 +236,31 @@ class MostPopularLinker(Linker):
             for wqid in match.wqid_links:
                 freq = self.linking_resources["mentions_to_wikidata"][match.variation][wqid]
                 wikidata_links.append(MostPopularLink(
-                    wqid, 
-                    freq=freq, 
-                    wqid_to_coords=self.linking_resources["wqid_to_coords"], 
-                    entity2class=self.linking_resources["entity2class"]))
+                    wqid,
+                    wkdt_class=self.wkdt_class(wqid),
+                    freq=freq)
+                )
 
-            closure = MostPopularLinker.disambiguation_scores(wikidata_links)
-            candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
+            candidate_links.append(CandidateLinks(
+                match.as_string_match(), 
+                wikidata_links, 
+            ))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(matches.mention, matches.ranking_method, self.method_name, candidate_links)
+        return Candidates(
+            matches.mention, 
+            matches.ranking_method, 
+            self.method_name, 
+            candidate_links,
+            place_of_pub_wqid,
+            place_of_pub,
+            False,
+        )
+    
+    # Computes disambiguation scores for a collection of potential Wikidata links.
+    def disambiguation_scores(self, links: List[MostPopularLink], string_similarity=None) -> Dict[str, float]:
+        total = sum([m.freq for m in links])
+        return {link.wqid: link.freq / total for link in links}
 
 class ByDistanceLinker(Linker):
     """
@@ -216,32 +280,12 @@ class ByDistanceLinker(Linker):
     # Override the method_name class attribute.
     method_name: str = "bydistance"
 
-    # Define a closure for computing the disambiguation scores.
-    def disambiguation_scores(wikidata_links: List[ByDistanceLink], matching_score: float) -> Dict[str, float]:
-        def closure():
-            max_on_gb = 1000  # 1000 km, max on GB
-            ret = dict()
-            for link in wikidata_links:
-                
-                distance = min(max_on_gb, link.geodist if link.geodist is not None else max_on_gb)
-                
-                if distance == 0.0:
-                    distance_score = 1.0
-                else:
-                    distance = (max_on_gb if distance > max_on_gb else distance)
-                    distance_score = 1.0 - (distance / max_on_gb)
-
-                relv_score = min(1.0, (matching_score + link.normalized_score) / 2.0)
-
-                final_score = 0.0
-                if link.geodist is not None:
-                    final_score = round((relv_score + distance_score) / 2, 3)
-                ret[link.wqid] = final_score
-            return ret
-        
-        return closure
-    
-    def run(self, matches: CandidateMatches, origin_wqid: str) -> Candidates:
+    def run(
+            self, 
+            matches: CandidateMatches, 
+            place_of_pub_wqid: Optional[str],
+            place_of_pub: Optional[str]=None,
+        ) -> Candidates:
         """
         Select candidates based on distance to the place of publication.
 
@@ -261,23 +305,20 @@ class ByDistanceLinker(Linker):
             of candidates and the place of publication of the original text.
         """
         if matches.is_empty():
-            return Candidates(matches.mention, matches.ranking_method, self.method_name, list())
+            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
 
-        origin_coords = self.linking_resources["wqid_to_coords"].get(origin_wqid)
-        if not origin_coords:
-            origin_coords = self.linking_resources["wqid_to_coords"].get(
-                origin_wqid
-            )
+        origin_coords = self.wkdt_coords(place_of_pub_wqid)
 
         wikidata_links = []
         candidate_links = []
         for match in matches.matches:
             if not isinstance(match, StringMatchLinks):
                 raise ValueError("Expected StringMatchLinks instance.")
-            # for i, wikidata_link in enumerate(match.wikidata_links):
             for wqid in match.wqid_links:
 
-                candidate_coords = self.linking_resources["wqid_to_coords"][wqid]
+                # TODO NEXT: Consider moving the geodist computation into the disambiguation_scores 
+                # closure, else we're duplicating the information (both coords and geodist).
+                candidate_coords = self.wkdt_coords(wqid)
                 # If coordinates are known for origin and candidate, compute the geodesic distance.
                 try:
                     geodist = haversine(origin_coords, candidate_coords)
@@ -289,19 +330,52 @@ class ByDistanceLinker(Linker):
                     wqid
                 ]
                 wikidata_links.append(ByDistanceLink(
-                    wqid, 
-                    origin_wqid=origin_wqid, 
-                    geodist=geodist, 
+                    wqid,
+                    wkdt_class=self.wkdt_class(wqid),
+                    coords=self.wkdt_coords(wqid),
+                    place_of_pub_coords=origin_coords,
+                    geodist=geodist,
                     normalized_score=normalized_score,
-                    wqid_to_coords=self.linking_resources["wqid_to_coords"],
-                    entity2class=self.linking_resources["entity2class"]))
+                    )
+                )
+            candidate_links.append(CandidateLinks(
+                match.as_string_match(), 
+                wikidata_links, 
+            ))
 
-            closure = ByDistanceLinker.disambiguation_scores(wikidata_links, match.string_similarity)
-            candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
+        # TODO: create a Linker cache and add the resulting candidates to it.
+        return Candidates(
+            matches.mention, 
+            matches.ranking_method, 
+            self.method_name, 
+            candidate_links,
+            place_of_pub_wqid,
+            place_of_pub,
+            False,
+        )
 
-        # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(matches.mention, matches.ranking_method, self.method_name, candidate_links)
+    def disambiguation_scores(self, wikidata_links: List[ByDistanceLink], string_similarity: float) -> Dict[str, float]:
+        max_on_gb = 1000  # 1000 km, max on GB
+        ret = dict()
+        for link in wikidata_links:
+            
+            distance = min(max_on_gb, link.geodist if link.geodist is not None else max_on_gb)
+            
+            if distance == 0.0:
+                distance_score = 1.0
+            else:
+                distance = (max_on_gb if distance > max_on_gb else distance)
+                distance_score = 1.0 - (distance / max_on_gb)
 
+            relv_score = min(1.0, (string_similarity + link.normalized_score) / 2.0)
+
+            final_score = 0.0
+            if link.geodist is not None:
+                final_score = round((relv_score + distance_score) / 2, 3)
+            ret[link.wqid] = final_score
+        return ret
+    
+# TODO: update docstring.
 class RelDisambLinker(Linker):
     """
     Linker subclass implementing an entity linking method that selects the 
@@ -389,6 +463,7 @@ class RelDisambLinker(Linker):
     def __init__(
         self,
         resources_path: str,
+        ranker: ranking.Ranker,
         experiments_path: Optional[str] = "../experiments",
         linking_resources: Optional[dict] = dict(),
         overwrite_training: Optional[bool] = False,
@@ -412,22 +487,24 @@ class RelDisambLinker(Linker):
             }
 
         self.rel_params = rel_params
+        self.ranker = ranker
 
-    # Define a closure for computing the disambiguation scores.
-    def disambiguation_scores(wikidata_links: List[RelDisambLink]) -> Dict[str, float]:
-        # TODO (refactor "reldisamb" score computation into this closure.)
-        def closure():
-            # TODO: these are dummy scores copied from MostPopularLinker (not yet implemented).
-            total = sum([m.freq for m in wikidata_links])
-            return {link.wqid: link.freq / total for link in wikidata_links}
-            raise NotImplementedError("Not yet implemented.")
-        return closure
+    # Override the load_resources method to load the entity disambiguation model.
+    def load_resources(
+        self, split: Optional[str] = "originalsplit"
+    ):
+        """
+        Loads the linking resources and assigns them to instance variables.
+        """
+        super().load_resources()
+        self.train_load_model(ranker=self.ranker, split=split)
 
-    # TODO: refactor linking logic into this run method (from pipeline.py), including
-    # making use of the `origin_wqid` if provided.
-    # TODO: split into two subclasses, one without the `origin_wqid` 
-    # and the other requiring the `origin_wqid`.
-    def run(self, matches: CandidateMatches, origin_wqid: Optional[str]) -> Candidates:
+    def run(
+            self, 
+            matches: CandidateMatches, 
+            place_of_pub_wqid: Optional[str]=None,
+            place_of_pub: Optional[str]=None,
+        ) -> Candidates:
         """
         Select candidates using the Radboud Entity Linker (REL) model.
 
@@ -439,8 +516,16 @@ class RelDisambLinker(Linker):
             Candidates: The candidates identified by the linking process.
         """        
         if matches.is_empty():
-            return Candidates(matches.mention, matches.ranking_method, self.method_name, list())
+            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
+        
+        if not self.entity_disambiguation_model:
+            ValueError("Entity disambiguation model not yet loaded. Call `load` method.")
 
+        # Skip microtoponyms if configured to do so.
+        if self.rel_params["without_microtoponyms"]:
+            if matches.mention.is_microtoponym():
+                return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
+        
         wikidata_links = []
         candidate_links = []
         for match in matches.matches:
@@ -452,33 +537,90 @@ class RelDisambLinker(Linker):
                 normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
                     wqid
                 ]
-                wikidata_links.append(RelDisambLink(wqid, 
-                                                    freq=freq, 
-                                                    normalized_score=normalized_score,
-                                                    wqid_to_coords=self.linking_resources["wqid_to_coords"],
-                                                    entity2class=self.linking_resources["entity2class"]))
 
-            closure = RelDisambLinker.disambiguation_scores(wikidata_links)
-            candidate_links.append(CandidateLinks(match.as_string_match(), wikidata_links, closure))
+                wikidata_links.append(RelDisambLink(
+                    wqid,
+                    wkdt_class=self.wkdt_class(wqid),
+                    freq=freq,
+                    normalized_score=normalized_score,
+                ))
+
+            candidate_links.append(CandidateLinks(
+                match.as_string_match(), 
+                wikidata_links, 
+            ))
+
+        # If configured to link "with publication" (i.e. with an additional sentence
+        # containing an artificial mention of the place of publication), use default 
+        # values for place_of_pub_wqid and place_of_pub unless they are already populated.
+        if self.rel_params["with_publication"]:
+            if not (place_of_pub_wqid and place_of_pub):
+                place_of_pub_wqid = self.rel_params["default_publwqid"]
+                place_of_pub = self.rel_params["default_publname"]
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(matches.mention, matches.ranking_method, self.method_name, candidate_links)
-        
+        return Candidates(
+            matches.mention,
+            matches.ranking_method,
+            self.method_name,
+            candidate_links,
+            place_of_pub_wqid,
+            place_of_pub,
+            self.rel_params["with_publication"],
+        )
+
+    # Override the disambiguate method to include REL linking.
+    def disambiguate(self, candidates: List[SentenceCandidates]) -> Predictions:
+
+        # Generate interim predictions as inputs to the REL model.
+        predictions = super().disambiguate(candidates)
+
+        # Apply the REL model to the interim predictions.
+        return predictions.apply_rel_disambiguation(self.entity_disambiguation_model, self.rel_params["with_publication"])
+
+    # Computes disambiguation scores for a collection of potential Wikidata links.
+    # IMP NOTE: this replaces the rank_candidates function from rel_utils.py:
+    def disambiguation_scores(self, links: List[RelDisambLink], string_similarity: float) -> Dict[str, float]:
+
+        ret = dict()
+        # copied from rank_candidates (with edits):
+        max_cand_freq = max([m.freq for m in links])
+        for wikidata_link in links:
+
+            # Mention-to-wikidata absolute relevance:
+            qcrlv_score = wikidata_link.freq
+            qcm2w_score = wikidata_link.normalized_score
+            # Average of CS conf score and mention2wiki norm relv:
+            if string_similarity:
+                qcm2w_score = (qcm2w_score + string_similarity) / 2
+            # tmp_cands.append((wqid, qcrlv_score, qcm2w_score))
+
+            # Normalize absolute mention-to-wikidata relevance by entity:
+            qc_score_1 = qcrlv_score / max_cand_freq
+            # Candidate selection confidence:
+            qc_score_2 = qcm2w_score
+            # Averaged relevances and normalize between 0 and 0.9:
+            score = ((qc_score_1 + qc_score_2) / 2) * 0.9
+            # old: score = round(qc_score, 3)
+
+            ret[wikidata_link.wqid] = score
+
+        # TODO: put the above logic in a function and replace with something like this:
+        # return {link.wqid: link.freq / total for link in links}
+        return ret
+
     def train_load_model(
         self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"
-    ) -> entity_disambiguation.EntityDisambiguation:
+    ):
         """
-        Trains or loads the entity disambiguation model.
+        Trains or loads the entity disambiguation model and assigns to the
+        `entity_disambiguation_model` field.
 
         Arguments:
             ranker (geoparser.ranking.Ranker): The ranker object used for
                 training.
             split (str, optional): The split type for training. Defaults to
                 ``"originalsplit"``.
-
-        Returns:
-            entity_disambiguation.EntityDisambiguation:
-                A trained Entity Disambiguation model.
 
         .. note::
 
@@ -587,8 +729,6 @@ class RelDisambLinker(Linker):
 
             # Train and predict using LR (to obtain confidence scores)
             model.train_LR(train_json, dev_json, linker_name)
-
-            return model
         else:
             # Setting disambiguation model mode to "eval":
             config_rel = {
@@ -601,4 +741,4 @@ class RelDisambLinker(Linker):
                 config_rel,
             )
 
-            return model
+        self.entity_disambiguation_model = model

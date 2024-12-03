@@ -1,7 +1,9 @@
 from typing import List, Dict, Tuple, Optional
 from pydantic.dataclasses import dataclass as pdataclass
 from dataclasses import field, InitVar
-from collections.abc import Callable
+
+from sentence_splitter import SentenceSplitter
+# from ..utils.REL import entity_disambiguation
 
 # TODO: move this module to the `utils` subdirectory.
 # TODO: add __str__ methods
@@ -32,7 +34,7 @@ class Mention:
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.start_char)
 
-    def from_dict(dict) -> 'Mention':
+    def from_dict(dict: dict) -> 'Mention':
         return Mention(
             mention=dict['mention'],
             start_offset=dict['start_offset'],
@@ -45,6 +47,10 @@ class Mention:
     
     def end_char(self) -> int:
         return self.start_char + len(self.mention)
+    
+    def is_microtoponym(self) -> bool:
+        # A microtoponym is any mention whose `ner_label` is not `LOC`.
+        return self.ner_label != "LOC"
 
 # Recogniser::run method output type.
 @pdataclass(frozen=True)
@@ -61,6 +67,35 @@ class SentenceMentions:
     def len(self) -> int:
         return len(self.mentions)
     
+    def exclude_microtoponyms(self) -> 'SentenceMentions':
+        mentions = list(filter(lambda m: not m.is_microtoponym(), self.mentions))
+        return SentenceMentions(self.sentence, mentions)
+
+@pdataclass(frozen=True)
+class SentenceContext:
+    # The sentencee.
+    sentence: str
+    # The preceding sentence context.
+    preceding_sentence: Optional[str]
+    # The following sentence context.
+    following_sentence: Optional[str]
+
+    def from_text(text: str, language: str="en", non_breaking_prefix_file: str=None) -> List['SentenceContext']:
+        splitter = SentenceSplitter(language=language, non_breaking_prefix_file=non_breaking_prefix_file)
+        sentences = splitter.split(text)
+        return [SentenceContext(s, sentences[i - 1] if i > 0 else None, 
+                                sentences[i + 1] if i < len(sentences) - 1 else None) 
+                                for i, s in enumerate(sentences)]
+    
+    def from_sentence(sentence: str, language: str="en") -> 'SentenceContext':
+        return SentenceContext(sentence, None, None)
+    
+    # Helper method for the Predictions as_dict method.
+    def context_as_list(self):
+        preceding = self.preceding_sentence if self.preceding_sentence is not None else ''
+        following = self.following_sentence if self.following_sentence is not None else ''
+        return [preceding, following]
+
 ################################
 # Dataclasses for Ranker
 ################################
@@ -91,8 +126,8 @@ class StringMatchLinks(StringMatch):
 @pdataclass(frozen=True)
 class CandidateMatches:
     """Data class representing candidate matches for a toponym."""
-    # The toponym as mentioned in the text.
-    mention: str
+    # The toponym mention in the text.
+    mention: Mention
     # The string matching method used.
     ranking_method: str
     # A dictionary of potential toponym matches, keyed by (each of which may contain a list of Wikidata candidates).
@@ -128,61 +163,36 @@ class WikidataLink:
     """Data class representing a potential toponym link in Wikidata."""
     # The Wikidata ID.
     wqid: str
-    # The lat-lon coordinates of this Wikidata entry.
-    lat_lon: Optional[Tuple[float, float]] = field(init=False)
-    # The Wikidata class of this Wikidata entry.
-    wkdt_class: Optional[str] = field(init=False)
-    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
-    wqid_to_coords: InitVar[Optional[dict]]
-    # Dictionary mapping Wikidata IDs to Wikidata classes.
-    entity2class: InitVar[Optional[dict]]
+    # The Wikidata class of this Wikidata entry (if available).
+    wkdt_class: Optional[str]
 
-    def __post_init__(self, wqid_to_coords=None, entity2class=None):
-        # Set the lat_lon & wkdt_class fields using the dict init variables.
-        lat_lon = wqid_to_coords.get(self.wqid) if wqid_to_coords else None
-        wkdt_class = entity2class.get(self.wqid) if entity2class else None
-        object.__setattr__(self, 'lat_lon', lat_lon)
-        object.__setattr__(self, 'wkdt_class', wkdt_class)
-        
 @pdataclass(frozen=True)
 class MostPopularLink(WikidataLink):
     """Data class representing a string match and potential links in 
     Wikidata under the `mostpopular` linking method."""
     # The mention-to-wikidata link frequency.
     freq: int
-    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
-    wqid_to_coords: InitVar[Optional[dict]]
-    # Dictionary mapping Wikidata IDs to Wikidata classes.
-    entity2class: InitVar[Optional[dict]]
 
-    def __post_init__(self, wqid_to_coords=None, entity2class=None):
-        super().__post_init__(wqid_to_coords, entity2class)
+    def __post_init__(self):
         if not isinstance(self.freq, int):
             raise ValueError("freq must be an integer.")
-
-    # def disambiguation_score(self, total: float) -> float:
-    #     return self.freq / total
 
 @pdataclass(frozen=True)
 class ByDistanceLink(WikidataLink):
     """Data class representing a string match and potential links in 
     Wikidata under the `bydistance` linking method."""
-    # The Wikidata ID of the reference point (or "origin"). 
-    origin_wqid: str
+    # The lat-lon coordinates of the link in Wikidata.
+    coords: Optional[Tuple[float, float]]
+    # The lat-lon coordinates of the place of publication. 
+    place_of_pub_coords: Optional[Tuple[float, float]]
     # The geodesic distance between the wqid and the origin wqid.
     geodist: Optional[float]
     # The normalized score from resource `mentions_to_wikidata_normalized.json`.
     normalized_score: float
-    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
-    wqid_to_coords: InitVar[Optional[dict]]
-    # Dictionary mapping Wikidata IDs to Wikidata classes.
-    entity2class: InitVar[Optional[dict]]
 
-    def __post_init__(self, wqid_to_coords=None, entity2class=None):
-        super().__post_init__(wqid_to_coords, entity2class)
+    def __post_init__(self):
         if not isinstance(self.normalized_score, float):
             raise ValueError("normalized_score must be an float.")
-
 
 @pdataclass(frozen=True)
 class RelDisambLink(WikidataLink):
@@ -192,18 +202,13 @@ class RelDisambLink(WikidataLink):
     freq: int
     # The normalized score from resource `mentions_to_wikidata_normalized.json`.
     normalized_score: float
-    # Dictionary mapping Wikidata IDs to lat-lon coordinates.
-    wqid_to_coords: InitVar[Optional[dict]]
-    # Dictionary mapping Wikidata IDs to Wikidata classes.
-    entity2class: InitVar[Optional[dict]]
 
-    def __post_init__(self, wqid_to_coords=None, entity2class=None):
-        super().__post_init__(wqid_to_coords, entity2class)
+    def __post_init__(self):
         if not isinstance(self.freq, int):
             raise ValueError("freq must be an integer.")
         if not isinstance(self.normalized_score, float):
             raise ValueError("normalized_score must be an float.")
-
+        
 @pdataclass(order=True, frozen=True)
 class CandidateLinks:
     """Data class representing a collection of potential links in Wikidata for a given string match."""
@@ -212,32 +217,34 @@ class CandidateLinks:
     string_match: StringMatch
     # A list of candidate WikidataLink instances.
     wikidata_links: List[WikidataLink]
-    # Closure used to compute disambiguation.
-    disambiguation_scores: Callable[..., Dict[str, float]]
-
-    # # Associated private field to reconcile dataclasses & properties.
-    # # (See https://florimond.dev/en/posts/2018/10/reconciling-dataclasses-and-properties-in-python)
-    # _wikidata_links: List[WikidataLink] = field(init=False, repr=False)
 
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.string_match.string_similarity)
 
-    # # Custom getter for the wikidata_matches attribute to ensure correct ordering.
-    # @property
-    # def wikidata_links(self) -> List[WikidataLink]:
-    #     return sorted(self._wikidata_links, reverse=True)
-
-    # @wikidata_links.setter
-    # def wikidata_links(self, wikidata_links: List[WikidataLink]):
-    #     object.__setattr__(self, '_wikidata_links', wikidata_links)
-
     def is_empty(self) -> bool:
         return not self.wikidata_links
+
+    # Transforms this CandidateLinks instance into a PredictedLinks instance
+    # by attaching disambiguation scores.
+    def attach_scores(self, scores: Dict[str, float]) -> 'PredictedLinks':
+        # Check that there is one score for each link.
+        if scores.keys() != {link.wqid for link in self.wikidata_links}:
+            raise ValueError("Incompatible disambiguation scores.")
+        return PredictedLinks(self.string_match, self.wikidata_links, scores)
+
+# Extend CandidateLinks to include disambigution scores. Note that we use 
+# inheritance, rather than composition, for compatibility with the `links`
+# field in the Candidates dataclass.
+@pdataclass(order=True, frozen=True)
+class PredictedLinks(CandidateLinks):
+    """Data class representing a collection of potential links in Wikidata with scores for each."""
+    # A disambiguation score for each potential link in Wikidata.
+    disambiguation_scores: Dict[str, float]
 
     def best_disambiguation_score(self) -> float:
         if self.is_empty():
             return None
-        return max(self.disambiguation_scores().values())
+        return max(self.disambiguation_scores.values())
     
     # TODO: use min(self.wikidata_links, key=lambda link: link....) if poss.
     def best_wikidata_link(self) -> WikidataLink:
@@ -250,30 +257,46 @@ class CandidateLinks:
     def best_wqid(self) -> float:
         if self.is_empty():
             return None
-        scores = self.disambiguation_scores()
+        scores = self.disambiguation_scores
         return max(scores, key=lambda key: scores[key])
 
     # Returns the top 7 Wikidata links in order of their disambiguation score
     # (as reported as `cross_cand_score` in the T-Res pipeline output).
-    def cross_cand_score(self, len=7) -> dict:
-        scores = {k: round(v, 3) for (k, v) in self.disambiguation_scores().items()}
+    def cross_cand_scores(self, len=7) -> dict:
+        scores = {k: round(v, 3) for (k, v) in self.disambiguation_scores.items()}
         return dict(sorted(scores.items(), key=lambda x: x[1], reverse=True)[:len])
+    
+    # Helper method for the Predictions as_dict method.
+    def scores_as_list(self) -> list:
+        ret = [[k, round(v, 3)] for k, v in self.disambiguation_scores.items()]
+        return sorted(ret, key=lambda x: (x[1], x[0]), reverse=True)
 
 # Linker::run method output type.
-@pdataclass(frozen=True)
+@pdataclass(order=True, frozen=True)
 class Candidates:
     """Data class representing candidate string matches for a toponym, 
     each with candidate Wikidata links."""
-    # The toponym as mentioned in the text.
-    mention: str
+    sort_index: float = field(init=False)
+    # The toponym mention in the text.
+    mention: Mention
     # The string matching method used.
     ranking_method: str
     # The linking method used.
     linking_method: str
     # A list of CandidateLinks instances.
     links: List[CandidateLinks]
+    # TODO NEXT: move the place_of_pub and place_of_pub_wqid here as Optional fields.
+    # This avoids duplication (and should entail no loss)
+    # NEW:
+    # Place of publication Wikidata ID.
+    place_of_pub_wqid: Optional[str]
+    # Place of publication.
+    place_of_pub: Optional[str]
+    # With publication flag.
+    with_publication: bool
 
     def __post_init__(self):
+        object.__setattr__(self, 'sort_index', self.mention.start_char)
         # Check that the variations are unique in self.links.
         variations = [m.string_match.variation for m in self.links]
         if len(variations) != len(set(variations)):
@@ -293,7 +316,7 @@ class Candidates:
             if len(m.wikidata_links) > 0:
                 s += ": "
                 # for wqid, score in m.disambiguation_scores().items()[:2]:
-                for wqid, score in m.cross_cand_score(len=2).items():
+                for wqid, score in m.cross_cand_scores(len=2).items():
                     s += f"({wqid}, {score}), "
                 if len(m.wikidata_links) > 2:
                     s += "..."
@@ -344,3 +367,204 @@ class Candidates:
     #         return None
     #     return best_match....
 
+
+################################
+# Dataclasses for Pipeline
+################################
+
+# @pdataclass(order=True, frozen=True)
+# class MentionCandidates:
+#     sort_index: float = field(init=False)
+#     # The toponym mention.
+#     mention: Mention
+#     # The candidates for this mention.
+#     candidates: Candidates
+
+#     def __post_init__(self):
+#         if self.candidates.mention != self.mention.mention:
+#             raise ValueError("Toponym Mention & Candidates are inconsistent.")
+#         object.__setattr__(self, 'sort_index', self.mention.start_char)
+
+@pdataclass(frozen=True)
+class SentenceCandidates:
+    """Data class representing candidate matches for all toponym mentions 
+    in a sentence."""
+    # The sentence.
+    sentence: str
+    # List of candidates for each toponym mention in the sentence.
+    candidates: List[Candidates]
+
+    def __post_init__(self):
+        if len(self.candidates) == 0:
+            raise ValueError("Empty list of Candidates in SentenceCandidates constructor.")
+        
+    def is_empty(self) -> bool:
+        return all([c.is_empty() for c in self.candidates])
+
+# Pipeline::run_sentence method output type.
+@pdataclass(frozen=True)
+class Predictions:
+    """Data class representing toponym predictions in text."""
+    # # The text.
+    # text: str
+    # List of setence candidates for each sentence in the text.
+    sentence_candidates: List[SentenceCandidates]
+
+    def __post_init__(self):
+        if len(self.sentence_candidates) == 0:
+            raise ValueError("Empty list of SentenceCandidates in Predictions constructor.")
+        for c in self.candidates():
+            if not all([isinstance(links, PredictedLinks) for links in c.links]):
+                raise ValueError("Candidate links must be scored.")
+        # Check that all place of publication data is consistent.
+        if {self.place_of_pub_wqid()} != {c.place_of_pub_wqid for c in self.candidates()}:
+            raise ValueError("Inconsistent place of publication Wikidata IDs.")
+        if {self.place_of_pub()} != {c.place_of_pub for c in self.candidates()}:
+            raise ValueError("Inconsistent place of publication data.")
+
+    def candidates(self) -> List[Candidates]:
+        return [c for sc in self.sentence_candidates for c in sc.candidates]
+
+    def is_empty(self) -> bool:
+        return all([sc.is_empty() for sc in self.sentence_candidates])
+    
+    def text(self) -> str:
+        raise NotImplementedError("TODO.")
+        return "" # TODO: return the text (sequence of sentences as a single string).
+    
+    # TODO: unit test needed.
+    def sentence_contexts(self) -> List[SentenceContext]:
+        scs = self.sentence_candidates
+        return [SentenceContext(sc.sentence, 
+                         scs[i - 1].sentence if i > 0 else None, 
+                         scs[i + 1].sentence if i < len(scs) - 1 else None) 
+         for i, sc in enumerate(scs)]
+
+    def place_of_pub_wqid(self) -> str:
+        return self.candidates()[0].place_of_pub_wqid
+
+    def place_of_pub(self) -> str:
+        return self.candidates()[0].place_of_pub
+
+    def apply_rel_disambiguation(
+            self, 
+            # model: entity_disambiguation.EntityDisambiguation, 
+            model,
+            with_publication: bool) -> 'RelPredictions':
+        
+        rel_predictions = model.predict(self.as_dict(with_publication))
+
+        # If with_publication is True, drop the "artificial" final toponym mention.
+        if with_publication:
+            del rel_predictions["linking"][-1]
+
+        # Incoroporate the REL model predictions.
+        rel_scores = [RelScores(
+            mention=d["mention"],
+            scores={wqid: score for wqid, score in zip(d["candidates"], d["scores"])},
+            confidence=d["conf_ed"]) for d in rel_predictions["linking"]]
+
+        return RelPredictions(self.sentence_candidates, rel_scores)
+
+    # Converts to a dictionary for backwards compatibility with entity_disambiguation.py
+    # (similar to the deprecated `format_prediction` method in pipeline.py)
+    def as_dict(self, with_publication: bool) -> dict:
+
+        d = dict()
+        d["linking"] = []
+        contexts = self.sentence_contexts()
+        for i, sc in enumerate(self.sentence_candidates):
+            for c in sc.candidates:
+                predicted_links = c.best_match()
+                # Raise an error unless the disambiguation scores are already populated.
+                if not isinstance(predicted_links, PredictedLinks):
+                    raise ValueError("Expected PredictedLinks instance.")
+                mention_dict = {
+                    "mention": c.mention.mention,
+                    "context": contexts[i].context_as_list(),
+                    "candidates": predicted_links.scores_as_list(),
+                    "gold": ["NONE"],
+                    "ner_score": c.mention.ner_score,
+                    "pos": c.mention.start_char,
+                    "sent_idx": i,
+                    "end_pos": c.mention.end_char(),
+                    "ngram": c.mention.mention,
+                    "conf_md": c.mention.ner_score,
+                    "tag": c.mention.ner_label,
+                    "sentence": sc.sentence,
+                    "place": c.place_of_pub,
+                    "place_wqid": c.place_of_pub_wqid,
+                    # TODO: Do we need to include `string_match_candidates`?  It's not used 
+                    # in `entity_disambiguation.py` and entails repetition of the wikidata links:
+                    # "string_match_candidates": [link.string_match for link in self.links], 
+                }
+                d["linking"].append(mention_dict)
+
+        # Replaces add_publication from rel_utils.py:
+        if with_publication:
+            place_of_pub = self.place_of_pub()
+            place_of_pub_wqid = self.place_of_pub_wqid()
+            prefix = "This article is published in "
+            place_of_pub_sentence = f"{prefix}{place_of_pub}."
+            # NOTE: this dict is slightly inconsistent versus the mention_dicts above:
+            # - "ner_score" and "conf_md" are missing
+            # - "tag" is instead named "ner_label"
+            # These inconsistencies are preserved from an earlier version and perhaps
+            # should be fixed in future.
+            place_mention_dict = {
+                "mention": place_of_pub,
+                "sent_idx": 0,
+                "sentence": place_of_pub_sentence,
+                "gold": [place_of_pub_wqid],
+                "ngram": place_of_pub,
+                "context": ["", ""],
+                "pos": len(prefix),
+                "end_pos": len(prefix) + len(place_of_pub),
+                "candidates": [[place_of_pub_wqid, 1.0]],
+                "place": place_of_pub,
+                "place_wqid": place_of_pub_wqid,
+                "ner_label": "LOC",
+            }
+            d["linking"].append(place_mention_dict)
+        return d
+    
+@pdataclass(frozen=True)
+class RelScores:
+    """Data class representing scores produced by the REL entity disambiguation model."""
+    # The toponym mention.
+    mention: str
+    # REL entity disambiguation scores.
+    scores: Dict[str, float]
+    # REL entity disambiguation confidence score.
+    confidence: float
+
+@pdataclass(frozen=True)
+class RelPredictions(Predictions):
+    """Data class representing toponym predictions in text produced by REL entity disambiguation."""
+    # A list of Rel
+    rel_scores: List[RelScores]
+
+    def __post_init__(self):
+        if len(self.rel_scores) != len(self.candidates()):
+            raise ValueError("Expected one RelScores instance per toponym mention.")
+
+    # Override the candidates method to return REL linking predictions.
+    def candidates(self) -> List[Candidates]:
+
+        # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
+        candidates = super().candidates()
+        ret = list()
+        for c, rs in zip(candidates, self.rel_scores):
+            predicted_links = c.best_match()
+            # Get the list of WikidataLink instances for which REL scores are available.
+            wikidata_links = [wl for wl in predicted_links.wikidata_links if wl.wqid in rs.scores.keys()]
+            links = [PredictedLinks(predicted_links.string_match, wikidata_links, rs.scores)]
+            ret.append(Candidates(
+                c.mention, 
+                c.ranking_method, 
+                c.linking_method, 
+                links, 
+                c.place_of_pub_wqid, 
+                c.place_of_pub, 
+                c.with_publication))
+        return ret

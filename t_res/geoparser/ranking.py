@@ -9,7 +9,7 @@ from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 from ..utils import deezy_processing
-from .dataclasses import StringMatch, StringMatchLinks, CandidateMatches
+from .dataclasses import StringMatch, StringMatchLinks, CandidateMatches, Mention
 
 class Ranker:
     """
@@ -146,7 +146,8 @@ class Ranker:
         del mentions_to_wikidata_filtered
         del wikidata_to_mentions_filtered
 
-    def run(self, query: str) -> CandidateMatches:
+    # TODO: docstring
+    def run(self, mention: Mention) -> CandidateMatches:
         """
         Execute the ranking process for a given toponym query.
 
@@ -160,15 +161,12 @@ class Ranker:
 
         Note: the result is added to the cache for efficient retrieval.
         """
-        if not isinstance(query, str):
-            raise ValueError("`query` argument must have type `str`")
-
         # Use the cache if possible.
-        if query in self.cache:
-            return self.cache[query]
+        if mention.mention in self.cache:
+            return self.cache[mention.mention]
         
         # Get the list of candidate string matches for this query.
-        string_matches = self.matches(query)
+        string_matches = self.matches(mention.mention)
 
         # Get the potential Wikidata links for each string match.
         matches = []
@@ -176,10 +174,10 @@ class Ranker:
             wqid_links = list(self.mentions_to_wikidata.get(match.variation, dict()).keys())
             matches.append(StringMatchLinks(match.variation, match.string_similarity, wqid_links))
 
-        candidates = CandidateMatches(query, self.method_name, matches)
+        candidates = CandidateMatches(mention, self.method_name, matches)
 
         # Update the cache.
-        self.cache[query] = candidates
+        self.cache[mention.mention] = candidates
         return candidates
 
     def matches(self, query: str) -> List[StringMatch]:

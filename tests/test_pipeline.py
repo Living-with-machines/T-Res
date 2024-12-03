@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from t_res.geoparser import linking, pipeline, ranking, recogniser
-from t_res.geoparser.dataclasses import Candidates, CandidateMatches
+from t_res.geoparser.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -29,11 +29,19 @@ def test_pipeline_basic():
     )
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
-    resolved = geoparser.run_text(sentence)
-    assert len(resolved)==1
-    assert resolved[0]["mention"]=="Sheffield"
-    assert resolved[0]["ner_score"]==1.0
-    assert resolved[0]["prediction"]=="Q42448"
+    # OLD: 
+    # resolved = geoparser.run_text(sentence)
+    # assert len(resolved)==1
+    # assert resolved[0]["mention"]=="Sheffield"
+    # assert resolved[0]["ner_score"]==1.0
+    # assert resolved[0]["prediction"]=="Q42448"
+    predictions = geoparser.run(sentence)
+    assert len(predictions.sentence_candidates) == 1
+    assert len(predictions.sentence_candidates[0].candidates) == 1
+    assert len(predictions.candidates()) == 1
+    assert predictions.candidates()[0].mention.mention == "Sheffield"
+    assert predictions.candidates()[0].mention.ner_score == 1.0
+    assert predictions.candidates()[0].best_wqid() == "Q42448"
 
 def test_pipeline_modular():
     ranker = ranking.PerfectMatchRanker(
@@ -47,11 +55,19 @@ def test_pipeline_modular():
     geoparser = pipeline.Pipeline(ranker=ranker, linker=linker)
     
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
-    resolved = geoparser.run_text(sentence)
-    assert len(resolved)==1
-    assert resolved[0]["mention"]=="Sheffield"
-    assert resolved[0]["ner_score"]==1.0
-    assert resolved[0]["prediction"]=="Q42448"
+    # # OLD:
+    # resolved = geoparser.run_text(sentence)
+    # assert len(resolved)==1
+    # assert resolved[0]["mention"]=="Sheffield"
+    # assert resolved[0]["ner_score"]==1.0
+    # assert resolved[0]["prediction"]=="Q42448"
+    predictions = geoparser.run(sentence)
+    assert len(predictions.sentence_candidates) == 1
+    assert len(predictions.sentence_candidates[0].candidates) == 1
+    assert len(predictions.candidates()) == 1
+    assert predictions.candidates()[0].mention.mention == "Sheffield"
+    assert predictions.candidates()[0].mention.ner_score == 1.0
+    assert predictions.candidates()[0].best_wqid() == "Q42448"
 
 @pytest.mark.skip(reason="Needs deezy model")
 def test_deezy_mostpopular(tmp_path):
@@ -113,29 +129,47 @@ def test_deezy_mostpopular(tmp_path):
     geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
     assert len(geoparser.ranker.mentions_to_wikidata.keys())>0
 
-    resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
-    )
-    assert len(resolved) == 3
-    assert resolved[0]["mention"] == "Shefiield"
-    assert resolved[0]["prior_cand_score"] == dict()
-    assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
-    assert resolved[0]["string_match_score"]["Sheffield"][0] == 0.999
-    assert resolved[0]["prediction"] == "Q42448"
-    assert resolved[0]["ed_score"] == 0.903
-    assert resolved[0]["ner_score"] == 1.0
+    # # OLD:
+    # resolved = geoparser.run_text(
+    #     "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
+    # )
+    # assert len(resolved) == 3
+    # assert resolved[0]["mention"] == "Shefiield"
+    # assert resolved[0]["prior_cand_score"] == dict()
+    # assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
+    # assert resolved[0]["string_match_score"]["Sheffield"][0] == 0.999
+    # assert resolved[0]["prediction"] == "Q42448"
+    # assert resolved[0]["ed_score"] == 0.903
+    # assert resolved[0]["ner_score"] == 1.0
+    text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
+    predictions = geoparser.run(text)
+    assert len(predictions.sentence_candidates) == 2
+    assert len(predictions.sentence_candidates[0].candidates) == 2
+    assert len(predictions.sentence_candidates[1].candidates) == 1
+    assert len(predictions.candidates()) == 3
+    assert predictions.candidates()[0].mention.mention == "Shefiield"
+    assert predictions.candidates()[0].best_match().string_match.variation == "Sheffield"
+    assert predictions.candidates()[0].best_match().string_match.string_similarity == 0.999494
+    assert predictions.candidates()[0].best_wqid() == "Q42448"
+    assert predictions.candidates()[0].best_match().cross_cand_scores()["Q42448"] == 0.903
+    assert predictions.candidates()[0].best_match().best_disambiguation_score() == pytest.approx(0.903, abs=1e-3)
+    assert predictions.candidates()[0].mention.ner_score == 1.0
 
-    resolved = geoparser.run_sentence("")
-    assert resolved == []
+    assert geoparser.run_sentence(SentenceContext.from_sentence("")).is_empty()
 
-    resolved = geoparser.run_sentence(" ")
-    assert resolved == []
+    assert geoparser.run_sentence(SentenceContext.from_sentence(" ")).is_empty()
+
+    # # OLD:
+    # # asserting behaviour with • character
+    # resolved = geoparser.run_text(
+    #     " • - S G pOllO-P• FERRIS - • - , i ",
+    # )
+    # assert resolved == []
 
     # asserting behaviour with • character
-    resolved = geoparser.run_text(
-        " • - S G pOllO-P• FERRIS - • - , i ",
-    )
-    assert resolved == []
+    text = " • - S G pOllO-P• FERRIS - • - , i "
+    assert geoparser.run(text).is_empty()
+
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_deezy_rel_wpubl_wmtops(tmp_path):
@@ -196,6 +230,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
         cursor = conn.cursor()
         linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
@@ -213,19 +248,43 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
-    resolved = geoparser.run_text(
-        "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
-        place="Sheffield",
-        place_wqid="Q42448",
-    )
+    # # OLD (TODO: reproduce the same numbers via the new `run` method):
+    # text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
+    # resolved = geoparser.run_text(text, place="Sheffield", place_wqid="Q42448")
 
-    assert len(resolved) == 3
-    assert resolved[0]["mention"] == "Shefiield"
-    assert resolved[0]["prior_cand_score"]["Q42448"] == pytest.approx(0.891, abs=1e-3)
-    assert resolved[0]["cross_cand_score"]["Q42448"] == pytest.approx(0.766, abs=1e-3)
-    assert resolved[0]["prediction"] == "Q42448"
-    # assert resolved[0]["ed_score"] == 0.039 # TODO: reproduce this number.
-    assert resolved[0]["ner_score"] == 1.0
+    # assert len(resolved) == 3
+    # assert resolved[0]["mention"] == "Shefiield"
+    # assert resolved[0]["prior_cand_score"]["Q42448"] == pytest.approx(0.891, abs=1e-3)
+    # assert resolved[0]["cross_cand_score"]["Q42448"] == pytest.approx(0.766, abs=1e-3)
+    # assert resolved[0]["prediction"] == "Q42448"
+    # # assert resolved[0]["ed_score"] == 0.039 # TODO: reproduce this number.
+    # assert resolved[0]["ner_score"] == 1.0
+
+    # NEW:
+    text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
+    predictions = geoparser.run(text, place="Sheffield", place_wqid="Q42448")
+
+    assert isinstance(predictions, RelPredictions)
+    assert len(predictions.sentence_candidates) == 2
+    assert len(predictions.sentence_candidates[0].candidates) == 2
+    assert len(predictions.sentence_candidates[1].candidates) == 1
+    assert len(predictions.candidates()) == 3
+    assert predictions.candidates()[0].mention.mention == "Shefiield"
+    assert predictions.candidates()[0].best_match().string_match.variation == "Sheffield"
+    assert predictions.candidates()[0].best_match().string_match.string_similarity == 0.999494
+    assert predictions.candidates()[0].best_wqid() == "Q42448"
+
+    # # tmp:
+    # print("cross_cand_scores:")
+    # print(predictions.candidates()[0].best_match().cross_cand_scores())
+
+    # TODO NEXT: update the Pipeline `run` method so this number is reproduced:
+    # (NOTE: currently we're getting 0.903 which is the `mostpopular` linker score, because the `disambiguation_scores`
+    # closure for the `reldisamb` linking method has a temp implementation that's just a copy of the `mostpopular` case.)
+    assert predictions.candidates()[0].best_match().cross_cand_scores()["Q42448"] == pytest.approx(0.766, abs=1e-3)
+    # TODO: add a new method to CandidateLinks to return the prior_cand_score results.
+    # assert predictions.candidates()[0].best_match().best_disambiguation_score() == 0.039 # TODO: reproduce this number.
+    assert predictions.candidates()[0].mention.ner_score == 1.0
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_perfect_rel_wpubl_wmtops(tmp_path):

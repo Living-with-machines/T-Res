@@ -109,6 +109,11 @@ def test_run():
     assert result.mentions[1].start_char == 97
     assert result.mentions[1].end_char() == 102
 
+    sentence = ', thence to Emery Down,crowing to Minesteed Manor ; he ther tacked back to Notherwood, and from thence back again to the Manor, where, after a brilliant run (Arnie hour and forty-five minutes, Reynold was compelled to succumb to his pursuers. '
+    result = ner.run(sentence)
+
+    print(result)
+
 def test_ner_from_hub():
     ner = recogniser.PretrainedRecogniser(
         model_name="Livingwithmachines/toponym-19thC-en",

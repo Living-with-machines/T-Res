@@ -176,14 +176,8 @@ def prepare_initial_data(df: pd.DataFrame) -> dict:
 
     return dict_mentions
 
-# TODO NEXT: Before each call to the `rank_candidates` function, use the linker to
-# attach the normalized_score data to wk_cands, so that ranker_cands (below) is a
-# CandidateLinks instance instead of a CandidateMathches instance. Then make the 
-# obvious changes so this function works.
-
-# TODO: move this logic into the RelDisambLinker run method and delete this function.
-# def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) -> dict:
-def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) -> dict:
+# Deprecated (this logic has been moved to the RelDisambLinker):
+def rank_candidates(rel_json: dict, wk_cands: dict) -> dict:
     """
     Rank the candidates for each mention in the provided JSON data.
 
@@ -221,7 +215,8 @@ def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) 
                 for wikidata_link in m.wikidata_links:
                     wqid = wikidata_link.wqid
                     # Mention-to-wikidata absolute relevance:
-                    qcrlv_score = mentions_to_wikidata[m.string_match.variation][wqid]
+                    # Here we assume that wikidata_link is a RelDisambLink instance:
+                    qcrlv_score = wikidata_link.freq
                     if qcrlv_score > max_cand_freq:
                         max_cand_freq = qcrlv_score
                     qcm2w_score = wikidata_link.normalized_score
@@ -230,7 +225,6 @@ def rank_candidates(rel_json: dict, wk_cands: dict, mentions_to_wikidata: dict) 
                         qcm2w_score = (qcm2w_score + cand_selection_score) / 2
                     tmp_cands.append((wqid, qcrlv_score, qcm2w_score))
 
-            # TODO: unchanged from original (yet to be refactored):
             # Append candidate and normalized score weighted by candidate selection conf:
             for cand in tmp_cands:
                 qc_id = cand[0]
@@ -355,11 +349,14 @@ def prepare_rel_trainset(
     # TODO: extract place_wqid from rel_json if needed for training.
     wk_cands = {wk.mention: linker.run(wk, None) for wk in wk_cands.values()}
 
+    # TODO: rank_candidates and add_publication are called here. Update as 
+    # in pipeline.py methods `run_sentence` and `run_disambiguation`.
+
     # Rank the candidates:
     rel_json = rank_candidates(
         rel_json,
         wk_cands,
-        mentions_to_wikidata,
+        # mentions_to_wikidata,
     )
     # If "publ" is taken into account for the disambiguation, add the place
     # of publication as an additional already disambiguated entity per row:

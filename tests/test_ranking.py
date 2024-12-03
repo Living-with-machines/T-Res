@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from t_res.geoparser import ranking
-from t_res.geoparser.dataclasses import StringMatch, StringMatchLinks, CandidateMatches
+from t_res.geoparser.dataclasses import *
+# from t_res.geoparser.dataclasses import StringMatch, StringMatchLinks, CandidateMatches, Mention
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -39,11 +40,10 @@ def test_ranking_data_classes():
     ]
 
     # Ranker `run` method returns a CandidateMatches instance.
-    candidates = CandidateMatches('Sheftield', "levenshtein", matches)
-    assert candidates.mention == 'Sheftield'
-    assert len(candidates.matches) == 3
+    mention_str = {'mention': 'Sheftield', 'start_offset': 3, 'end_offset': 4, 'start_char': 12, 'ner_score': 0.699, 'ner_label': 'LOC', 'entity_link': 'O'}
+    candidates = CandidateMatches(Mention.from_dict(mention_str), "levenshtein", matches)
 
-    assert candidates.mention == 'Sheftield'
+    assert candidates.mention.mention == 'Sheftield'
     assert candidates.ranking_method == 'levenshtein'
     assert len(candidates.matches) == 3
 
@@ -73,10 +73,12 @@ def test_ranking_perfect_match():
     # Check the cache is empty.
     assert len(ranker.cache) == 0
 
-    candidates = ranker.run("London")
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
     assert candidates.ranking_method == "perfectmatch"
-    assert candidates.mention == "London"
+    assert candidates.mention.mention == "London"
     assert candidates.get("London").variation == "London"
     assert candidates.get("London").string_similarity == 1.0 
 
@@ -84,22 +86,23 @@ def test_ranking_perfect_match():
     assert len(ranker.cache) == 1
     assert ranker.cache["London"] == candidates
 
-    # candidates = ranker.run(["Lvndon"])
-    # assert candidates["Lvndon"] == {}
-    candidates = ranker.run("Lvndon")
+    mention = Mention("Lvndon", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
     assert candidates.ranking_method == "perfectmatch"
-    assert candidates.mention == "Lvndon"
+    assert candidates.mention.mention == "Lvndon"
     assert candidates.is_empty()
 
     # Check the cache has been updated.
     assert len(ranker.cache) == 2
     assert ranker.cache["Lvndon"] == candidates
 
-    candidates = ranker.run("Paperopoli")
+    # Construct a dummy mention for the test.
+    mention = Mention("Paperopoli", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
     assert candidates.ranking_method == "perfectmatch"
-    assert candidates.mention == "Paperopoli"
+    assert candidates.mention.mention == "Paperopoli"
     assert candidates.is_empty()
 
     # Check the cache has been updated.
@@ -157,10 +160,12 @@ def test_ranking_partial_match():
     ranker.mentions_to_wikidata = {"London": {"Q84": 0.922}}
     ranker.cache = {}
 
-    candidates = ranker.run("London")
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
     assert candidates.ranking_method == "partialmatch"
-    assert candidates.mention == "London"
+    assert candidates.mention.mention == "London"
     assert candidates.get("London").variation == "London"
     assert candidates.get("London").string_similarity == 1.0 
 
@@ -168,16 +173,19 @@ def test_ranking_partial_match():
     ranker.mentions_to_wikidata = {"New York City": {"Q60": 0.884}}
 
     ranker.cache = {}
-    candidates = ranker.run("New York")
+    # Construct a dummy mention for the test.
+    mention = Mention("New York", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
-    assert candidates.mention == "New York"
+    assert candidates.mention.mention == "New York"
     assert candidates.get("New York City").variation == "New York City"
     assert candidates.get("New York City").string_similarity == pytest.approx(0.615384, abs=10e-6)
 
     ranker.cache = {}
-    candidates = ranker.run("Lvndvn")
+    mention = Mention("Lvndvn", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
-    assert candidates.mention == "Lvndvn"
+    assert candidates.mention.mention == "Lvndvn"
     assert candidates.is_empty()
 
 
@@ -196,29 +204,37 @@ def test_ranking_levenshtein():
     ranker.mentions_to_wikidata = {"London": {"Q84": 0.922}}
     ranker.cache = {}
 
-    candidates = ranker.run("London")
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
     assert candidates.get("London").string_similarity == 1.0
 
     ranker.cache = {}
-    candidates = ranker.run("Lvndvn")
+    # Construct a dummy mention for the test.
+    mention = Mention("Lvndvn", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
     assert candidates.get("London").string_similarity == pytest.approx(0.66666665, abs=10e-6)
 
     # Test that overlap works properly
     ranker.mentions_to_wikidata = {"New York City": {"Q60": 0.884}}
 
     ranker.cache = {}
-    candidates = ranker.run("New York")
-    assert candidates.mention == "New York"
+    # Construct a dummy mention for the test.
+    mention = Mention("New York", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+    assert candidates.mention.mention == "New York"
     assert candidates.get("New York City").string_similarity == pytest.approx(0.615384615, abs=10e-6)
 
     ranker.cache = {}
-    candidates = ranker.run("Lvndvn")
-    assert candidates.mention == "Lvndvn"
+    mention = Mention("Lvndvn", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+    assert candidates.mention.mention == "Lvndvn"
     assert candidates.get("New York City").string_similarity == 0.0
 
     ranker.cache = {}
-    candidates = ranker.run("asdasd")
-    assert candidates.mention == "asdasd"
+    mention = Mention("asdasd", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+    assert candidates.mention.mention == "asdasd"
     assert candidates.get("New York City").string_similarity == 0.0
 
 
@@ -259,15 +275,20 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     
     ranker.load()
 
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+
     # Test that perfect_match acts before deezy
-    candidates = ranker.run("London")
-    assert candidates.mention == "London"
+    assert candidates.mention.mention == "London"
     assert candidates.get("London").string_similarity == 1.0
 
     # Test that deezy works
     ranker.cache = {}
-    candidates = ranker.run("Ashton-cnderLyne")
-    assert candidates.mention == "Ashton-cnderLyne"
+    # Construct a dummy mention for the test.
+    mention = Mention("Ashton-cnderLyne", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+    assert candidates.mention.mention == "Ashton-cnderLyne"
     assert candidates.ranking_method == "deezymatch"
 
     assert len(candidates.matches) == 3
@@ -314,9 +335,11 @@ def test_ranking_attach_wikidata(tmp_path):
     # Check the cache is empty.
     assert len(ranker.cache) == 0
 
-    candidates = ranker.run("London")
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
 
-    assert candidates.mention == "London"
+    assert candidates.mention.mention == "London"
     assert isinstance(candidates.get("London"), StringMatchLinks)
     assert candidates.get("London").variation == "London"
     # Test that perfect_match acts before deezy
@@ -331,8 +354,11 @@ def test_ranking_attach_wikidata(tmp_path):
     # Test that deezy works
     # TODO: add a ranker.clear_cache() method.
     ranker.cache = {}
-    candidates = ranker.run("Sheftield")
-    assert candidates.mention == "Sheftield"
+
+    # Construct a dummy mention for the test.
+    mention = Mention("Sheftield", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+    assert candidates.mention.mention == "Sheftield"
     assert isinstance(candidates.get("Sheffield"), StringMatchLinks)
     assert candidates.get("Sheffield").variation == "Sheffield"
     assert (0.0 < candidates.get("Sheffield").string_similarity < 1.0)
@@ -345,13 +371,16 @@ def test_ranking_attach_wikidata(tmp_path):
     )
     ranker.load()
 
-    candidates = ranker.run("Sheffield")
+    # Construct a dummy mention for the test.
+    mention = Mention("Sheffield", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
     assert candidates.get("Sheffield").variation == "Sheffield"
     assert candidates.get("Sheffield").string_similarity == 1.0
     assert "Q42448" in candidates.get("Sheffield").wqid_links
 
     ranker.cache = {}
-    candidates = ranker.run("Sheftield")
+    mention = Mention("Sheftield", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
     assert candidates.is_empty()
 
     # Test that check if contained works
@@ -366,13 +395,16 @@ def test_ranking_attach_wikidata(tmp_path):
     )
     ranker.load()
 
-    candidates = ranker.run("Sheffield")
+    # Construct a dummy mention for the test.
+    mention = Mention("Sheffield", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
     assert candidates.get("Sheffield").variation == "Sheffield"
     assert candidates.get("Sheffield").string_similarity == 1.0
     assert "Q42448" in candidates.get("Sheffield").wqid_links
 
     ranker.cache = {}
-    candidates = ranker.run("Sheftield")
-    assert candidates.mention == "Sheftield"
+    mention = Mention("Sheftield", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = ranker.run(mention)
+    assert candidates.mention.mention == "Sheftield"
     assert (0.0 < candidates.get("Sheffield").string_similarity < 1.0)
     assert "Q42448" in candidates.get("Sheffield").wqid_links

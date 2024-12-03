@@ -102,6 +102,7 @@ def test_train(tmp_path):
         cursor = conn.cursor()
         linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir, "../resources/models/disambiguation/"),

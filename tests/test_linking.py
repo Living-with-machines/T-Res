@@ -1,68 +1,115 @@
 import os
-import sqlite3
-import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from t_res.geoparser import linking
-from t_res.geoparser.dataclasses import RelDisambLink, StringMatch, StringMatchLinks, MostPopularLink, ByDistanceLink, CandidateMatches, CandidateLinks
+from t_res.geoparser import linking, ranking
+from t_res.geoparser.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
 
 def test_linking_data_classes():
 
-    wikidata_match = MostPopularLink('Q619055', freq=22, wqid_to_coords=None, entity2class=None)
-    assert wikidata_match.wqid == 'Q619055'
-    assert wikidata_match.freq == 22
+    wikidata_link = MostPopularLink('Q619055', wkdt_class='Q1076486', freq=22)
+    assert wikidata_link.wqid == 'Q619055'
+    assert wikidata_link.freq == 22
 
-    wikidata_match = ByDistanceLink('Q619055', origin_wqid='Q84', normalized_score=0.03571428571428571, geodist=1255.45, wqid_to_coords=None, entity2class=None)
-    assert wikidata_match.wqid == 'Q619055'
-    assert wikidata_match.origin_wqid == 'Q84'
-    assert wikidata_match.normalized_score == 0.03571428571428571
-    assert wikidata_match.geodist == 1255.45
+    wikidata_link = ByDistanceLink(
+        'Q619055', 
+        wkdt_class='Q1076486',
+        coords=(55.76, -2.01583),
+        place_of_pub_coords=(51.507222, -0.1275), 
+        normalized_score=0.03571428571428571, 
+        geodist=1255.45
+    )
+    assert wikidata_link.wqid == 'Q619055'
+    assert wikidata_link.normalized_score == 0.03571428571428571
+    assert wikidata_link.geodist == 1255.45
 
     # Legacy example:
     # {'Q619055': 0.03571428571428571}
-    wikidata_match = RelDisambLink('Q619055', normalized_score=0.03571428571428571, freq=22, wqid_to_coords=None, entity2class=None)
-    assert wikidata_match.wqid == 'Q619055'
-    assert wikidata_match.normalized_score == 0.03571428571428571
-    assert wikidata_match.freq == 22
-
-    # old:
-    # # Check that the field types prevent accidental mis-ordering of arguments.
-    # with pytest.raises(Exception):
-    #     wikidata_match = RelDisambLink('Q619055', wqid_to_coords=None, entity2class=None, 0.03571428571428571, 22)
+    wikidata_link = RelDisambLink(
+        'Q619055',
+        wkdt_class='Q1076486',
+        freq=22,
+        normalized_score=0.03571428571428571,
+    )
+    assert wikidata_link.wqid == 'Q619055'
+    assert wikidata_link.normalized_score == 0.03571428571428571
+    assert wikidata_link.freq == 22
 
     # Legacy example:
     # {'Shielfield': {'Score': 0.9387, 'Candidates': {'Q619055': 0.03571428571428571, 'Q5953687': 0.22857142857142856}}
     wikidata_links = [
-        RelDisambLink('Q619055', freq=5, normalized_score=0.03571428571428571, wqid_to_coords=None, entity2class=None),
-        RelDisambLink('Q5953687', freq=33, normalized_score=0.22857142857142856, wqid_to_coords=None, entity2class=None),
+        RelDisambLink(
+            'Q619055',
+            wkdt_class='Q1076486',
+            freq=5,
+            normalized_score=0.03571428571428571,
+        ),
+        RelDisambLink(
+            'Q5953687',
+            wkdt_class='Q23764314',
+            freq=33,
+            normalized_score=0.22857142857142856,
+        ),
     ]
-    closure = linking.RelDisambLinker.disambiguation_scores(wikidata_links)
-    candidate_links = CandidateLinks(StringMatch("Shielfield", 0.9387), wikidata_links, closure)
+    candidate_links = CandidateLinks(
+        StringMatch("Shielfield", 0.9387), 
+        wikidata_links, 
+    )
 
     assert candidate_links.string_match.variation == 'Shielfield'
     assert candidate_links.string_match.string_similarity == 0.9387
 
     # Test disambiguation score methods.
     wikidata_links = [
-        MostPopularLink('Q619055', freq=5, wqid_to_coords=None, entity2class=None),
-        MostPopularLink('Q5953687', freq=33, wqid_to_coords=None, entity2class=None),
+        MostPopularLink(
+            'Q619055', 
+            wkdt_class='Q1076486',
+            freq=5
+        ),
+        MostPopularLink(
+            'Q5953687', 
+            wkdt_class='Q23764314',
+            freq=33,
+        ),
     ]
-    closure = linking.MostPopularLinker.disambiguation_scores(wikidata_links)
-    candidate_links = CandidateLinks(StringMatch("Shielfield", 0.9387), wikidata_links, closure)
+    candidate_links = CandidateLinks(
+        StringMatch("Shielfield", 0.9387), 
+        wikidata_links, 
+    )
 
     assert candidate_links.string_match.variation == 'Shielfield'
     assert candidate_links.string_match.string_similarity == 0.9387
 
-    assert candidate_links.best_wqid() == 'Q5953687'
-    assert candidate_links.best_wikidata_link() == MostPopularLink('Q5953687', freq=33, wqid_to_coords=None, entity2class=None)
+    linker = linking.MostPopularLinker(
+        resources_path="path/to/resources/",
+        experiments_path="path/to/experiments/",
+        linking_resources={'resource': 'value'},
+    )
 
-    assert candidate_links.disambiguation_scores() == {'Q619055': 5.0 / 38, 'Q5953687': 33.0 / 38}
-    assert candidate_links.best_disambiguation_score() == 33.0 / 38
+    scores = linker.disambiguation_scores(wikidata_links)
+    assert scores == {'Q619055': 5.0 / 38, 'Q5953687': 33.0 / 38}
+
+    # Attach the disambiguation scores to the candidate links 
+    # to obtain predicted links.
+    predicted_links = candidate_links.attach_scores(scores)
+
+    assert predicted_links.best_wqid() == 'Q5953687'
+    assert predicted_links.best_wikidata_link() == MostPopularLink(
+        'Q5953687', 
+        wkdt_class='Q23764314',
+        freq=33
+    )
+
+    assert predicted_links.disambiguation_scores == {'Q619055': 5.0 / 38, 'Q5953687': 33.0 / 38}
+    assert predicted_links.best_disambiguation_score() == 33.0 / 38
+
+    # Disambiguation scores as a list are ordered from highest to lowest score
+    # and rounded to 3 decimal places.
+    assert predicted_links.scores_as_list() == [['Q5953687', round(33.0 / 38, 3)], ['Q619055', round(5.0 / 38, 3)]]
 
 def test_init():
 
@@ -88,6 +135,7 @@ def test_init():
     # Test the extra parameters in the RelDisambLinker
     linker = linking.RelDisambLinker(
         resources_path="path/to/resources/",
+        ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
         rel_params={'param': 'value'},
@@ -104,6 +152,7 @@ def test_init():
 
     linker = linking.RelDisambLinker(
         resources_path="path/to/resources/",
+        ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
         rel_params={'param': 'value'},
         linking_resources={'resource': 'value'},
@@ -123,24 +172,31 @@ def test_linking_most_popular():
     wqid_links = ["Q84", "Q92561"]
     matches = [StringMatchLinks("London", 1.0, wqid_links)]
 
-    candidates = linker.run(CandidateMatches("London", "perfectmatch", matches))
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = linker.run(CandidateMatches(mention, "perfectmatch", matches))
 
     # Check best string match.
     assert candidates.best_match().string_match.variation == "London"
     assert candidates.best_match().string_match.string_similarity == 1.0
     
-    # Check best Wikidata link.
-    assert candidates.best_wqid() == "Q84"
-    assert candidates.best_match().best_disambiguation_score() == pytest.approx(0.9812731647051174, abs=1e-3)
+    # Create a dummy sentence to test the disambiguate method.
+    sentence = "A sentence about London."
+    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    predictions = linker.disambiguate([sentence_candidates])
 
-    assert candidates.best_wikidata_link().lat_lon == (51.507222, -0.1275)
-    assert candidates.best_wikidata_link().wkdt_class == "Q515" # London has Wikidata class 'City'
+    # Check best Wikidata link.
+    candidate = predictions.candidates()[0]
+    assert candidate.best_wqid() == "Q84"
+    assert isinstance(candidate.best_match(), PredictedLinks)
+    assert candidate.best_match().best_disambiguation_score() == pytest.approx(0.9812731647051174, abs=1e-3)
+    assert candidate.best_wikidata_link().wkdt_class == "Q515" # London has Wikidata class 'City'
 
     # Check other Wikidata link.
-    assert "Q92561" in candidates.best_match().disambiguation_scores().keys()
-    candidates.best_match().disambiguation_scores()["Q92561"] == pytest.approx(0.018726835294882633, abs=1e-3)
+    assert "Q92561" in candidate.best_match().disambiguation_scores.keys()
+    candidate.best_match().disambiguation_scores["Q92561"] == pytest.approx(0.018726835294882633, abs=1e-3)
 
-    candidates = linker.run(CandidateMatches("London", "perfectmatch", []))
+    candidates = linker.run(CandidateMatches(mention, "perfectmatch", []))
     assert candidates.is_empty()
 
 # This test replaces the legacy unit test named `test_by_distance` and
@@ -159,96 +215,153 @@ def test_disambiguation_scores_by_distance():
     # the same values for test assertions. The actual normalized scores in the 
     # Wikidata resources are different.
     wikidata_links = [
-        ByDistanceLink("Q84", origin_wqid="Q84", geodist=0.0, normalized_score=0.9, wqid_to_coords=None, entity2class=None),
-        ByDistanceLink("Q92561", origin_wqid="Q84", geodist=5876.70916049723, normalized_score=0.1, wqid_to_coords=None, entity2class=None)
+        ByDistanceLink(
+            "Q84",
+            wkdt_class='Q515',
+            coords=(51.507222, -0.1275),
+            place_of_pub_coords=(51.507222, -0.1275),
+            normalized_score=0.9,
+            geodist=0.0,
+        ),
+        ByDistanceLink(
+            "Q92561",
+            wkdt_class='Q515',
+            coords=(42.9837, -81.2497),
+            place_of_pub_coords=(51.507222, -0.1275),
+            normalized_score=0.1,
+            geodist=5876.70916049723,
+        )
     ]
 
-    # Get the closure for computing disambiguation scores by distance.
-    disambiguation_scores = linking.ByDistanceLinker.disambiguation_scores(wikidata_links, matching_score=0.397048)
+    scores = linker.disambiguation_scores(wikidata_links, string_similarity=0.397048)
 
-    # Compute disambiguation scores.
-    result = disambiguation_scores()
-
-    assert len(result) == 2
+    assert len(scores) == 2
 
     # London, UK is the top scoring candidate.
-    assert max(result, key = lambda key: result[key]) == "Q84"
-    assert max(result.values()) == 0.824
+    assert max(scores, key = lambda key: scores[key]) == "Q84"
+    assert max(scores.values()) == 0.824
 
-    assert min(result, key = lambda key: result[key]) == "Q92561"
-    assert min(result.values()) == 0.124
+    assert min(scores, key = lambda key: scores[key]) == "Q92561"
+    assert min(scores.values()) == 0.124
 
     # Test on London, Ontario. Wikidata ID "Q92561".
     wikidata_links = [
-        ByDistanceLink("Q84", origin_wqid="Q92561", geodist=5876.70916049723, normalized_score=0.9, wqid_to_coords=None, entity2class=None),
-        ByDistanceLink("Q92561", origin_wqid="Q92561", geodist=0.0, normalized_score=0.1, wqid_to_coords=None, entity2class=None)
+        ByDistanceLink(
+            "Q84", 
+            wkdt_class='Q515',
+            coords=(51.507222, -0.1275),
+            place_of_pub_coords=(42.9837, -81.2497),
+            normalized_score=0.9,
+            geodist=5876.70916049723, 
+        ),
+        ByDistanceLink(
+            "Q92561",
+            wkdt_class='Q515',
+            coords=(42.9837, -81.2497),
+            place_of_pub_coords=(42.9837, -81.2497),
+            normalized_score=0.1,
+            geodist=0.0, 
+        )
     ]
 
-    # Get the closure for computing disambiguation scores by distance.
-    disambiguation_scores = linking.ByDistanceLinker.disambiguation_scores(wikidata_links, matching_score=0.397048)
-
-    # Compute disambiguation scores.
-    result = disambiguation_scores()
+    scores = linker.disambiguation_scores(wikidata_links, string_similarity=0.397048)
 
     # London, Ontario is the top scoring candidate.
-    assert max(result, key = lambda key: result[key]) == "Q92561"
-    assert max(result.values()) == 0.624
+    assert max(scores, key = lambda key: scores[key]) == "Q92561"
+    assert max(scores.values()) == 0.624
 
-    assert min(result, key = lambda key: result[key]) == "Q84"
-    assert min(result.values()) == 0.324
+    assert min(scores, key = lambda key: scores[key]) == "Q84"
+    assert min(scores.values()) == 0.324
 
     # Test when not all geodesic distances are available.
     wikidata_links = [
-        ByDistanceLink("Q84", origin_wqid="Q84", geodist=0.0, normalized_score=0.9, wqid_to_coords=None, entity2class=None),
-        ByDistanceLink("Q92561", origin_wqid="Q84", geodist=None, normalized_score=0.1, wqid_to_coords=None, entity2class=None)
+        ByDistanceLink(
+            "Q84", 
+            wkdt_class='Q515',
+            coords=(51.507222, -0.1275),
+            place_of_pub_coords=(51.507222, -0.1275),
+            normalized_score=0.9,
+            geodist=0.0, 
+        ),
+        ByDistanceLink(
+            "Q92561", 
+            wkdt_class='Q515',
+            coords=None,
+            place_of_pub_coords=(51.507222, -0.1275),
+            normalized_score=0.1, 
+            geodist=None, 
+        )
     ]
-    disambiguation_scores = linking.ByDistanceLinker.disambiguation_scores(wikidata_links, matching_score=0.397048)
-    result = disambiguation_scores()
+    scores = linker.disambiguation_scores(wikidata_links, string_similarity=0.397048)
 
     # The score for London UK is unchanged.
-    assert max(result, key = lambda key: result[key]) == "Q84"
-    assert max(result.values()) == 0.824
+    assert max(scores, key = lambda key: scores[key]) == "Q84"
+    assert max(scores.values()) == 0.824
 
     # The score for London, Ontario is now zero (default when no geodist is present).
-    assert min(result, key = lambda key: result[key]) == "Q92561"
-    assert min(result.values()) == 0.0
+    assert min(scores, key = lambda key: scores[key]) == "Q92561"
+    assert min(scores.values()) == 0.0
 
     # Implausible case, but worth testing.
     wikidata_links = [
-        ByDistanceLink("Q84", origin_wqid="Q84", geodist=None, normalized_score=0.9, wqid_to_coords=None, entity2class=None),
-        ByDistanceLink("Q92561", origin_wqid="Q84", geodist=5876.70916049723, normalized_score=0.1, wqid_to_coords=None, entity2class=None)
+        ByDistanceLink(
+            "Q84",
+            wkdt_class='Q515',
+            coords=None,
+            place_of_pub_coords=None,
+            normalized_score=0.9,
+            geodist=None, 
+        ),
+        ByDistanceLink(
+            "Q92561", 
+            wkdt_class='Q515',
+            coords=(42.9837, -81.2497),
+            place_of_pub_coords=(51.507222, -0.1275),
+            normalized_score=0.1,
+            geodist=5876.70916049723, 
+        )
     ]
 
-    disambiguation_scores = linking.ByDistanceLinker.disambiguation_scores(wikidata_links, matching_score=0.397048)
-    result = disambiguation_scores()
+    scores = linker.disambiguation_scores(wikidata_links, string_similarity=0.397048)
 
     # The score for London, Ontario is unchanged.
-    assert max(result, key = lambda key: result[key]) == "Q92561"
-    assert max(result.values()) == 0.124
+    assert max(scores, key = lambda key: scores[key]) == "Q92561"
+    assert max(scores.values()) == 0.124
 
     # The score for London UK is now zero (default when no geodist is present).
-    assert min(result, key = lambda key: result[key]) == "Q84"
-    assert min(result.values()) == 0.0
+    assert min(scores, key = lambda key: scores[key]) == "Q84"
+    assert min(scores.values()) == 0.0
 
     # Test when no geodesic distances are available.
     wikidata_links = [
-        ByDistanceLink("Q84", origin_wqid="Q84", geodist=None, normalized_score=0.9, wqid_to_coords=None, entity2class=None),
-        ByDistanceLink("Q92561", origin_wqid="Q84", geodist=None, normalized_score=0.1, wqid_to_coords=None, entity2class=None)
+        ByDistanceLink(
+            "Q84", 
+            wkdt_class='Q515',
+            coords=None,
+            place_of_pub_coords=None,
+            normalized_score=0.9,
+            geodist=None, 
+        ),
+        ByDistanceLink(
+            "Q92561", 
+            wkdt_class='Q515',
+            coords=None,
+            place_of_pub_coords=None,
+            normalized_score=0.1,
+            geodist=None, 
+        )
     ]
 
-    disambiguation_scores = linking.ByDistanceLinker.disambiguation_scores(wikidata_links, matching_score=0.397048)
-    result = disambiguation_scores()
+    scores = linker.disambiguation_scores(wikidata_links, string_similarity=0.397048)
 
-    assert result == {"Q84": 0.0, "Q92561": 0.0}
+    assert scores == {"Q84": 0.0, "Q92561": 0.0}
 
     # Test when no candidates are provided.
-    # Get the closure for computing disambiguation scores by distance.
     wikidata_links = list()
-    disambiguation_scores = linking.ByDistanceLinker.disambiguation_scores(wikidata_links, matching_score=0.397048)
+    scores = linker.disambiguation_scores(wikidata_links, string_similarity=0.397048)
 
-    # Compute disambiguation scores. Expect an empty result.
-    result = disambiguation_scores()
-    assert result == dict()
+    # Expect an empty dictionary.
+    assert scores == dict()
 
 def test_linking_by_distance():
     linker = linking.ByDistanceLinker(
@@ -263,32 +376,47 @@ def test_linking_by_distance():
     matches = [StringMatchLinks("London", 0.397048, wqid_links)]
 
     origin_wqid = "Q84"
-    candidates = linker.run(CandidateMatches("London", "perfectmatch", matches), origin_wqid)
+    # Construct a dummy mention for the test.
+    mention = Mention("London", 0, 0, 0, 0.0, 'LOC', 'O')
+    candidates = linker.run(CandidateMatches(mention, "perfectmatch", matches), origin_wqid)
 
     # Check best string match.
     assert candidates.best_match().string_match.variation == "London"
     assert candidates.best_match().string_match.string_similarity == 0.397048
     
-    # Check that the best Wikidata link is London, UK "Q84".
-    assert candidates.best_wqid() == "Q84"
-    assert candidates.best_match().best_disambiguation_score() == 0.845
-    assert candidates.best_match().disambiguation_scores().keys() == {"Q84", "Q92561"}
+    # Create a dummy sentence to test the disambiguate method.
+    sentence = "A sentence about London."
+    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    predictions = linker.disambiguate([sentence_candidates])
 
-    assert candidates.best_wikidata_link().lat_lon == (51.507222, -0.1275)
-    assert candidates.best_wikidata_link().wkdt_class == "Q515" # London has Wikidata class 'City'
+    # Check that the best Wikidata link is London, UK "Q84".
+    candidate = predictions.candidates()[0]
+    assert candidate.best_wqid() == "Q84"
+    assert candidate.best_match().best_disambiguation_score() == 0.845
+    assert candidate.best_match().disambiguation_scores.keys() == {"Q84", "Q92561"}
+    assert candidate.best_wikidata_link().coords == (51.507222, -0.1275)
+    assert candidate.best_wikidata_link().wkdt_class == "Q515" # London has Wikidata class 'City'
 
     # Test dependence on the place of publication.
     origin_wqid = "Q92561"
-    candidates = linker.run(CandidateMatches("London", "perfectmatch", matches), origin_wqid)
+    candidates = linker.run(CandidateMatches(mention, "perfectmatch", matches), origin_wqid)
+
+    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    predictions = linker.disambiguate([sentence_candidates])
 
     # Check that the best Wikidata link is now London, Ontario "Q92561".
-    assert candidates.best_wqid() == "Q92561"
-    assert candidates.best_match().best_disambiguation_score() == 0.694
-    assert candidates.best_match().disambiguation_scores().keys() == {"Q84", "Q92561"}
+    candidate = predictions.candidates()[0]
+    assert candidate.best_wqid() == "Q92561"
+    assert candidate.best_match().best_disambiguation_score() == 0.694
+    assert candidate.best_match().disambiguation_scores.keys() == {"Q84", "Q92561"}
 
     # Test with an empty list of candidates.
     origin_wqid = "Q2365261"
-    candidates = linker.run(CandidateMatches("London", "perfectmatch", []), origin_wqid)
+    candidates = linker.run(CandidateMatches(mention, "perfectmatch", []), origin_wqid)
 
-    assert candidates.best_wqid() == None
-    assert candidates.best_match() == None
+    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    predictions = linker.disambiguate([sentence_candidates])
+
+    print(predictions)
+
+    assert predictions.is_empty()
