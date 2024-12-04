@@ -574,9 +574,11 @@ class RelDisambLinker(Linker):
 
         # Generate interim predictions as inputs to the REL model.
         predictions = super().disambiguate(candidates)
-
         # Apply the REL model to the interim predictions.
-        return predictions.apply_rel_disambiguation(self.entity_disambiguation_model, self.rel_params["with_publication"])
+        rel_predictions = self.entity_disambiguation_model.predict(
+            predictions.as_dict(self.rel_params["with_publication"]))
+        # Incorporate the REL model predictions.
+        return predictions.apply_rel_disambiguation(rel_predictions, self.rel_params["with_publication"])
 
     # Computes disambiguation scores for a collection of potential Wikidata links.
     # IMP NOTE: this replaces the rank_candidates function from rel_utils.py:

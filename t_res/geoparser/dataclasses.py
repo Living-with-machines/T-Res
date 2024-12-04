@@ -3,7 +3,6 @@ from pydantic.dataclasses import dataclass as pdataclass
 from dataclasses import field, InitVar
 
 from sentence_splitter import SentenceSplitter
-# from ..utils.REL import entity_disambiguation
 
 # TODO: move this module to the `utils` subdirectory.
 # TODO: add __str__ methods
@@ -448,12 +447,9 @@ class Predictions:
 
     def apply_rel_disambiguation(
             self, 
-            # model: entity_disambiguation.EntityDisambiguation, 
-            model,
+            rel_predictions: dict,
             with_publication: bool) -> 'RelPredictions':
         
-        rel_predictions = model.predict(self.as_dict(with_publication))
-
         # If with_publication is True, drop the "artificial" final toponym mention.
         if with_publication:
             del rel_predictions["linking"][-1]
