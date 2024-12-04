@@ -328,7 +328,7 @@ class Candidates:
     
     # Returns the CandidateLinks instance with the given spelling 
     # variation, or None if no such match exists.
-    def get(self, variation: str):
+    def get(self, variation: str) -> Optional[CandidateLinks]:
         for m in self.links:
             if m.string_match.variation == variation:
                 return m
@@ -337,14 +337,14 @@ class Candidates:
     # TODO: rename this as `best_candidate` (and it's understood this means the best 
     # StringMatch with associated candidate WikidataLink instances).
     # Returns the CandidateLinks instance whose StringMatch has the highest string similarity.
-    def best_match(self) -> CandidateLinks:
+    def best_match(self) -> Optional[CandidateLinks]:
         if self.is_empty():
             return None
         # The list of CandidateLinks instances is ordered by decreasing string similarity.
         return self.links[0]
 
     # Returns the Wikidata link with the highest disambiguation score.
-    def best_wikidata_link(self) -> WikidataLink:
+    def best_wikidata_link(self) -> Optional[WikidataLink]:
         # Get the CandidateLinks instance with highest string similarity.
         best_match = self.best_match()
         if not best_match or best_match.is_empty():
@@ -353,7 +353,7 @@ class Candidates:
             raise ValueError("Expected CandidateLinks instance.")
         return best_match.best_wikidata_link()
 
-    def best_wqid(self) -> str:
+    def best_wqid(self) -> Optional[str]:
         best_wikidata_link = self.best_wikidata_link()
         if not best_wikidata_link:
             return None
@@ -393,25 +393,19 @@ class SentenceCandidates:
     # List of candidates for each toponym mention in the sentence.
     candidates: List[Candidates]
 
-    def __post_init__(self):
-        if len(self.candidates) == 0:
-            raise ValueError("Empty list of Candidates in SentenceCandidates constructor.")
-        
     def is_empty(self) -> bool:
-        return all([c.is_empty() for c in self.candidates])
+        return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
 
 # Pipeline::run_sentence method output type.
 @pdataclass(frozen=True)
 class Predictions:
     """Data class representing toponym predictions in text."""
-    # # The text.
-    # text: str
     # List of setence candidates for each sentence in the text.
     sentence_candidates: List[SentenceCandidates]
 
     def __post_init__(self):
-        if len(self.sentence_candidates) == 0:
-            raise ValueError("Empty list of SentenceCandidates in Predictions constructor.")
+        if self.is_empty():
+            return
         for c in self.candidates():
             if not all([isinstance(links, PredictedLinks) for links in c.links]):
                 raise ValueError("Candidate links must be scored.")
@@ -425,7 +419,7 @@ class Predictions:
         return [c for sc in self.sentence_candidates for c in sc.candidates]
 
     def is_empty(self) -> bool:
-        return all([sc.is_empty() for sc in self.sentence_candidates])
+        return len(self.sentence_candidates) == 0 or all([sc.is_empty() for sc in self.sentence_candidates])
     
     def text(self) -> str:
         raise NotImplementedError("TODO.")
@@ -439,10 +433,14 @@ class Predictions:
                          scs[i + 1].sentence if i < len(scs) - 1 else None) 
          for i, sc in enumerate(scs)]
 
-    def place_of_pub_wqid(self) -> str:
+    def place_of_pub_wqid(self) -> Optional[str]:
+        if self.is_empty():
+            return None
         return self.candidates()[0].place_of_pub_wqid
 
-    def place_of_pub(self) -> str:
+    def place_of_pub(self) -> Optional[str]:
+        if self.is_empty():
+            return None
         return self.candidates()[0].place_of_pub
 
     def apply_rel_disambiguation(

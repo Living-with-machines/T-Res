@@ -161,6 +161,8 @@ class Linker:
             Predictions: A Predictions instance representing the identified and
                 linked toponyms.
         """
+        if len(candidates) == 0:
+            return Predictions(list())
         # Replace each CandidatesLinks instance with a PredictedLinks instance.
         for scs in candidates:
             for cs in scs.candidates:
