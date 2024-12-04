@@ -24,18 +24,12 @@ def test_pipeline_constructor():
     assert geoparser.linker.resources_path == resources_path
 
 def test_pipeline_basic():
-    geoparser = pipeline.Pipeline(
-        resources_path=os.path.join(current_dir, "sample_files/resources")
-    )
-
+    resources_path=os.path.join(current_dir, "sample_files/resources")
+    geoparser = pipeline.Pipeline(resources_path=resources_path)
+    
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
-    # OLD: 
-    # resolved = geoparser.run_text(sentence)
-    # assert len(resolved)==1
-    # assert resolved[0]["mention"]=="Sheffield"
-    # assert resolved[0]["ner_score"]==1.0
-    # assert resolved[0]["prediction"]=="Q42448"
     predictions = geoparser.run(sentence)
+
     assert len(predictions.sentence_candidates) == 1
     assert len(predictions.sentence_candidates[0].candidates) == 1
     assert len(predictions.candidates()) == 1
@@ -47,21 +41,14 @@ def test_pipeline_modular():
     ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir, "sample_files/resources"),
     )
-    
     linker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir, "sample_files/resources"),
     )
-
     geoparser = pipeline.Pipeline(ranker=ranker, linker=linker)
     
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
-    # # OLD:
-    # resolved = geoparser.run_text(sentence)
-    # assert len(resolved)==1
-    # assert resolved[0]["mention"]=="Sheffield"
-    # assert resolved[0]["ner_score"]==1.0
-    # assert resolved[0]["prediction"]=="Q42448"
     predictions = geoparser.run(sentence)
+
     assert len(predictions.sentence_candidates) == 1
     assert len(predictions.sentence_candidates[0].candidates) == 1
     assert len(predictions.candidates()) == 1
@@ -129,20 +116,9 @@ def test_deezy_mostpopular(tmp_path):
     geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
     assert len(geoparser.ranker.mentions_to_wikidata.keys())>0
 
-    # # OLD:
-    # resolved = geoparser.run_text(
-    #     "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
-    # )
-    # assert len(resolved) == 3
-    # assert resolved[0]["mention"] == "Shefiield"
-    # assert resolved[0]["prior_cand_score"] == dict()
-    # assert resolved[0]["cross_cand_score"]["Q42448"] == 0.903
-    # assert resolved[0]["string_match_score"]["Sheffield"][0] == 0.999
-    # assert resolved[0]["prediction"] == "Q42448"
-    # assert resolved[0]["ed_score"] == 0.903
-    # assert resolved[0]["ner_score"] == 1.0
     text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
     predictions = geoparser.run(text)
+
     assert len(predictions.sentence_candidates) == 2
     assert len(predictions.sentence_candidates[0].candidates) == 2
     assert len(predictions.sentence_candidates[1].candidates) == 1
@@ -159,17 +135,9 @@ def test_deezy_mostpopular(tmp_path):
 
     assert geoparser.run_sentence(SentenceContext.from_sentence(" ")).is_empty()
 
-    # # OLD:
-    # # asserting behaviour with • character
-    # resolved = geoparser.run_text(
-    #     " • - S G pOllO-P• FERRIS - • - , i ",
-    # )
-    # assert resolved == []
-
     # asserting behaviour with • character
     text = " • - S G pOllO-P• FERRIS - • - , i "
     assert geoparser.run(text).is_empty()
-
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_deezy_rel_wpubl_wmtops(tmp_path):
