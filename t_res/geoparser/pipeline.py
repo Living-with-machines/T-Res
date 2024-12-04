@@ -134,9 +134,11 @@ class Pipeline:
 
     def run(self, text: str, place: Optional[str]=None, place_wqid: Optional[str]=None) -> Predictions:
 
-        # Split the text into its sentences and run the pipeline on each one.
+        # Split the text into its sentences.
         sentences = SentenceContext.from_text(text, language="en")
+        # Run the pipeline on each sentence.
         sentence_candidates = [self.run_sentence(sentence, place, place_wqid) for sentence in sentences]
+        # Compute disambiguation scores and return the predictions.
         return self.linker.disambiguate(sentence_candidates)
 
     def run_sentence(
@@ -146,10 +148,13 @@ class Pipeline:
             place_wqid: Optional[str]=None
     ) -> SentenceCandidates:
         
+        # Run the named entity recogniser.
         mentions = self.ner.run(sentence.sentence)
+        # Run the candidate ranker.
         matches = [self.ranker.run(mention) for mention in mentions.mentions]
-        candidates = [self.linker.run(m, place_wqid, place) for m in matches if not m.is_empty()]
-        return SentenceCandidates(sentence.sentence, [c for c in candidates if not c.is_empty()])
+        # Run the linker.
+        candidates = [self.linker.run(m, place_wqid, place) for m in matches]
+        return SentenceCandidates(sentence.sentence, candidates)
 
     # Deprecated:
     def run_sentence_deprecated(

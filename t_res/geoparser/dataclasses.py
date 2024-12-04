@@ -350,7 +350,7 @@ class Candidates:
         if not best_match or best_match.is_empty():
             return None
         if not isinstance(best_match, CandidateLinks):
-            raise ValueError("Expected CandidateLinks instance.")
+            raise ValueError(f"Expected CandidateLinks instance. Got {type(best_match)}")
         return best_match.best_wikidata_link()
 
     def best_wqid(self) -> Optional[str]:
@@ -469,14 +469,18 @@ class Predictions:
         contexts = self.sentence_contexts()
         for i, sc in enumerate(self.sentence_candidates):
             for c in sc.candidates:
-                predicted_links = c.best_match()
-                # Raise an error unless the disambiguation scores are already populated.
-                if not isinstance(predicted_links, PredictedLinks):
-                    raise ValueError("Expected PredictedLinks instance.")
+                if c.is_empty():
+                    candidates = []
+                else:
+                    predicted_links = c.best_match()
+                    # Raise an error unless the disambiguation scores are already populated.
+                    if not isinstance(predicted_links, PredictedLinks):
+                        raise ValueError(f"Expected PredictedLinks instance. Got {type(predicted_links)}")
+                    candidates = predicted_links.scores_as_list()
                 mention_dict = {
                     "mention": c.mention.mention,
                     "context": contexts[i].context_as_list(),
-                    "candidates": predicted_links.scores_as_list(),
+                    "candidates": candidates,
                     "gold": ["NONE"],
                     "ner_score": c.mention.ner_score,
                     "pos": c.mention.start_char,
@@ -535,20 +539,23 @@ class RelScores:
 @pdataclass(frozen=True)
 class RelPredictions(Predictions):
     """Data class representing toponym predictions in text produced by REL entity disambiguation."""
-    # A list of Rel
+    # A list of REL entity disambiguation scores.
     rel_scores: List[RelScores]
 
     def __post_init__(self):
-        if len(self.rel_scores) != len(self.candidates()):
-            raise ValueError("Expected one RelScores instance per toponym mention.")
+        if len(self.rel_scores) != len(super().candidates()):
+            raise ValueError(f"""Expected one RelScores instance per linked toponym mention.
+                             Got {len(self.rel_scores)} instances and {len(super().candidates())} mentions.""")
 
     # Override the candidates method to return REL linking predictions.
     def candidates(self) -> List[Candidates]:
 
         # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
-        candidates = super().candidates()
         ret = list()
-        for c, rs in zip(candidates, self.rel_scores):
+        for c, rs in zip(super().candidates(), self.rel_scores):
+            if c.is_empty():
+                ret.append(c)
+                continue
             predicted_links = c.best_match()
             # Get the list of WikidataLink instances for which REL scores are available.
             wikidata_links = [wl for wl in predicted_links.wikidata_links if wl.wqid in rs.scores.keys()]
