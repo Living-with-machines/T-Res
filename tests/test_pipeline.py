@@ -26,7 +26,7 @@ def test_pipeline_constructor():
 def test_pipeline_basic():
     resources_path=os.path.join(current_dir, "sample_files/resources")
     geoparser = pipeline.Pipeline(resources_path=resources_path)
-    
+
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
     predictions = geoparser.run(sentence)
 
@@ -131,9 +131,9 @@ def test_deezy_mostpopular(tmp_path):
     assert predictions.candidates()[0].best_match().best_disambiguation_score() == pytest.approx(0.903, abs=1e-3)
     assert predictions.candidates()[0].mention.ner_score == 1.0
 
-    assert geoparser.run_sentence(SentenceContext.from_sentence("")).is_empty()
+    assert geoparser.run("").is_empty()
 
-    assert geoparser.run_sentence(SentenceContext.from_sentence(" ")).is_empty()
+    assert geoparser.run(" ").is_empty()
 
     # asserting behaviour with • character
     text = " • - S G pOllO-P• FERRIS - • - , i "
@@ -230,7 +230,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     # NEW:
     text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
-    predictions = geoparser.run(text, place="Sheffield", place_wqid="Q42448")
+    predictions = geoparser.run(text, place_of_pub_wqid="Q42448", place_of_pub="Sheffield")
 
     assert isinstance(predictions, RelPredictions)
     assert len(predictions.sentence_candidates) == 2
@@ -308,8 +308,8 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
 
     resolved = geoparser.run(
         "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
-        place="Sheffield",
-        place_wqid="Q42448",
+        place_of_pub_wqid="Q42448",
+        place_of_pub="Sheffield",
     )
 
     assert isinstance(resolved, RelPredictions)
@@ -415,36 +415,28 @@ def test_modular_deezy_rel(tmp_path):
     geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
     sentence = "STOCKTON AND MIDDLESBROUGH WATER IVARD.  The monthly meeting of the Sr-id:toe and bladtiltwitrough Water Lkerd was held at the Corp.acit:o.i liniklinga, Middlesbrough, on Monday."
-    wikidata_id = "Q989418"
-    location = "Stockton-on-Tees, Cleveland, England"
+    place_of_pub_wqid = "Q989418"
+    place_of_pub = "Stockton-on-Tees, Cleveland, England"
 
-    toponyms = geoparser.run_text_recognition(
-        sentence,
-        place_wqid=wikidata_id,
-        place=location,
-    )
+    toponyms = geoparser.run_text_recognition(sentence)
 
     assert isinstance(toponyms, list)
-    assert len(toponyms) == 4
+    # Two sentences:
+    assert len(toponyms) == 2
+    # Two toponyms identified in the first sentence:
+    assert len(toponyms[0].mentions) == 2
+    # Three toponyms identified in the second sentence:
+    assert len(toponyms[1].mentions) == 3
 
-    cands = geoparser.run_candidate_selection(toponyms)
+    cands = geoparser.run_candidate_selection(toponyms, place_of_pub_wqid, place_of_pub)
 
-    assert isinstance(cands, list)
-    assert len(cands) == 4
-    for c in cands:
-        assert isinstance(c, CandidateMatches)
+    assert isinstance(cands, TextCandidates)
+    assert len(cands.candidates()) == 5
+    for c in cands.candidates():
+        assert isinstance(c, Candidates)
 
-    # Put the candidates in a dictionary for easier access inside run_disambiguation.
-    wk_cands = {c.mention : c for c in cands}
+    disambiguation = geoparser.run_disambiguation(cands.sentence_candidates)
 
-    disambiguation = geoparser.run_disambiguation(
-        toponyms,
-        wk_cands,
-        place_wqid=wikidata_id,
-        place=location,
-    )
-
-    assert isinstance(disambiguation,list)
-
-    assert disambiguation[0]["prediction"] == "Q989418"
-    assert disambiguation[-1]["prediction"] == "Q171866"
+    assert isinstance(disambiguation, Predictions)
+    assert disambiguation.candidates()[0].best_wqid() == "Q989418"
+    assert disambiguation.candidates()[-1].best_wqid() == "Q171866"

@@ -82,7 +82,7 @@ async def run_text(api_query: APIQuery):
 
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_text(api_query.text, place=place, place_wqid=place_wqid)
+    resolved = geoparser.run_text_deprecated(api_query.text, place=place, place_wqid=place_wqid)
 
     return resolved
 
@@ -92,7 +92,7 @@ async def run_ner(api_query: APIQuery):
 
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    ner_output = geoparser.run_text_recognition(
+    ner_output = geoparser.run_text_recognition_deprecated(
         api_query.text, place=place, place_wqid=place_wqid
     )
 
@@ -102,7 +102,7 @@ async def run_ner(api_query: APIQuery):
 @app.get("/run_candidate_selection")
 async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
 
-    wk_cands = geoparser.run_candidate_selection(cand_api_query.toponyms)
+    wk_cands = geoparser.run_candidate_selection_deprecated(cand_api_query.toponyms)
     return wk_cands
 
 
@@ -110,7 +110,7 @@ async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
 async def run_disambiguation(api_query: DisambiguationAPIQuery):
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    disamb_output = geoparser.run_disambiguation(
+    disamb_output = geoparser.run_disambiguation_deprecated(
         api_query.dataset, api_query.wk_cands, place, place_wqid
     )
     return disamb_output

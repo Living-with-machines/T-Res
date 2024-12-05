@@ -284,9 +284,6 @@ class Candidates:
     linking_method: str
     # A list of CandidateLinks instances.
     links: List[CandidateLinks]
-    # TODO NEXT: move the place_of_pub and place_of_pub_wqid here as Optional fields.
-    # This avoids duplication (and should entail no loss)
-    # NEW:
     # Place of publication Wikidata ID.
     place_of_pub_wqid: Optional[str]
     # Place of publication.
@@ -301,6 +298,9 @@ class Candidates:
         if len(variations) != len(set(variations)):
             raise ValueError("StringMatch variations must be unique.")
         object.__setattr__(self, 'links', sorted(self.links, reverse=True))
+        if self.place_of_pub_wqid:
+            if self.place_of_pub_wqid[0] != "Q":
+                raise ValueError(f"Invalid Wikidata ID: {self.place_of_pub_wqid}")
 
     def __str__(self) -> str:
         s = f"Candidates for '{self.mention}':"
@@ -396,19 +396,17 @@ class SentenceCandidates:
     def is_empty(self) -> bool:
         return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
 
-# Pipeline::run_sentence method output type.
+# Pipeline::run_candidate_selection method output type.
 @pdataclass(frozen=True)
-class Predictions:
-    """Data class representing toponym predictions in text."""
+class TextCandidates:
+    """Data class representing candidate matches for all toponym mentions 
+    in a block of text."""
     # List of setence candidates for each sentence in the text.
     sentence_candidates: List[SentenceCandidates]
 
     def __post_init__(self):
         if self.is_empty():
             return
-        for c in self.candidates():
-            if not all([isinstance(links, PredictedLinks) for links in c.links]):
-                raise ValueError("Candidate links must be scored.")
         # Check that all place of publication data is consistent.
         if {self.place_of_pub_wqid()} != {c.place_of_pub_wqid for c in self.candidates()}:
             raise ValueError("Inconsistent place of publication Wikidata IDs.")
@@ -442,6 +440,17 @@ class Predictions:
         if self.is_empty():
             return None
         return self.candidates()[0].place_of_pub
+
+# Pipeline::run_disambiguation method output type.
+@pdataclass(frozen=True)
+class Predictions(TextCandidates):
+    """Data class representing toponym predictions in text."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        for c in self.candidates():
+            if not all([isinstance(links, PredictedLinks) for links in c.links]):
+                raise ValueError("Candidate links must be scored.")
 
     def apply_rel_disambiguation(
             self, 

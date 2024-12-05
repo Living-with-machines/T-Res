@@ -7,7 +7,7 @@ from sentence_splitter import split_text_into_sentences
 
 from ..utils import ner_utils, rel_utils
 from . import linking, ranking, recogniser
-from .dataclasses import Candidates, Predictions, SentenceContext, SentenceCandidates
+from .dataclasses import *
 
 class Pipeline:
     """
@@ -132,29 +132,39 @@ class Pipeline:
                 self.ranker
             )
 
-    def run(self, text: str, place: Optional[str]=None, place_wqid: Optional[str]=None) -> Predictions:
+    # TODO: docstring
+    def run(self, text: str, place_of_pub: Optional[str]=None, place_of_pub_wqid: Optional[str]=None) -> Predictions:
 
+        mentions = self.run_text_recognition(text)
+        candidates = self.run_candidate_selection(mentions, place_of_pub_wqid, place_of_pub)
+        return self.run_disambiguation(candidates.sentence_candidates)
+
+    ### Modular/stepwise methods:
+
+    def run_text_recognition(self, text: str) -> List[SentenceMentions]:
+        """Runs the named entity recognition step of the pipeline."""
         # Split the text into its sentences.
         sentences = SentenceContext.from_text(text, language="en")
-        # Run the pipeline on each sentence.
-        sentence_candidates = [self.run_sentence(sentence, place, place_wqid) for sentence in sentences]
-        # Compute disambiguation scores and return the predictions.
-        return self.linker.disambiguate(sentence_candidates)
+        return [self.ner.run(sentence.sentence) for sentence in sentences]
+    
+    def run_candidate_selection(
+            self, 
+            sentence_mentions: List[SentenceMentions], 
+            place_of_pub_wqid: Optional[str]=None,
+            place_of_pub: Optional[str]=None, 
+        ) ->  TextCandidates:
+        """Runs the candidate selection step of the pipeline."""
 
-    def run_sentence(
-            self,
-            sentence: SentenceContext, 
-            place: Optional[str]=None, 
-            place_wqid: Optional[str]=None
-    ) -> SentenceCandidates:
-        
-        # Run the named entity recogniser.
-        mentions = self.ner.run(sentence.sentence)
-        # Run the candidate ranker.
-        matches = [self.ranker.run(mention) for mention in mentions.mentions]
-        # Run the linker.
-        candidates = [self.linker.run(m, place_wqid, place) for m in matches]
-        return SentenceCandidates(sentence.sentence, candidates)
+        sentence_candidates = list()
+        for sms in sentence_mentions:
+            matches = [self.ranker.run(mention) for mention in sms.mentions]
+            candidates = [self.linker.run(m, place_of_pub_wqid, place_of_pub) for m in matches]
+            sentence_candidates.append(SentenceCandidates(sms.sentence, candidates))
+        return TextCandidates(sentence_candidates)
+
+    def run_disambiguation(self, sentence_candidates: List[SentenceCandidates]) -> Predictions:
+        """Runs the entity disambiguation step of the pipeline."""
+        return self.linker.disambiguate(sentence_candidates)
 
     # Deprecated:
     def run_sentence_deprecated(
@@ -436,7 +446,8 @@ class Pipeline:
                 sentence_dataset.append(md)
             return sentence_dataset
 
-    def run_text(
+    # Deprecated (use `run` instead).
+    def run_text_deprecated(
         self,
         text: str,
         place: Optional[str] = "",
@@ -583,7 +594,7 @@ class Pipeline:
             prediction["candidates"] = wk_cands
         return prediction
 
-    def run_text_recognition(
+    def run_text_recognition_deprecated(
         self,
         text: str,
         place: Optional[str] = "",
@@ -672,7 +683,7 @@ class Pipeline:
 
         return document_dataset
 
-    def run_candidate_selection(self, document_dataset: List[dict]) -> dict:
+    def run_candidate_selection_deprecated(self, document_dataset: List[dict]) -> dict:
         """
         Performs candidate selection on already identified toponyms,
         resulting from the ``run_text_recognition`` method. Given a
@@ -735,7 +746,7 @@ class Pipeline:
         wk_cands = [self.ranker.run(mention) for mention in mentions]
         return wk_cands
 
-    def run_disambiguation(
+    def run_disambiguation_deprecated(
         self,
         dataset,
         wk_cands, # TODO: udpate docstring: this is now Dict[str, Candidates]

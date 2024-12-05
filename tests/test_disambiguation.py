@@ -296,7 +296,7 @@ def test_predict(tmp_path):
 
     mypipe = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
-    predictions = mypipe.run_text(
+    predictions = mypipe.run_text_deprecated(
         "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
         place="London",
         place_wqid="Q84",
