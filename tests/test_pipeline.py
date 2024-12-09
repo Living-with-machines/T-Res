@@ -421,23 +421,26 @@ def test_modular_deezy_rel(tmp_path):
 
     geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
-    sentence = "STOCKTON AND MIDDLESBROUGH WATER IVARD.  The monthly meeting of the Sr-id:toe and bladtiltwitrough Water Lkerd was held at the Corp.acit:o.i liniklinga, Middlesbrough, on Monday."
+    text = "STOCKTON AND MIDDLESBROUGH WATER IVARD.  The monthly meeting of the Sr-id:toe and bladtiltwitrough Water Lkerd was held at the Corp.acit:o.i liniklinga, Middlesbrough, on Monday."
     place_of_pub_wqid = "Q989418"
     place_of_pub = "Stockton-on-Tees, Cleveland, England"
 
-    toponyms = geoparser.run_text_recognition(sentence)
+    sentence_mentions = geoparser.run_text_recognition(text)
 
-    assert isinstance(toponyms, list)
+    assert isinstance(sentence_mentions, list)
     # Two sentences:
-    assert len(toponyms) == 2
+    assert len(sentence_mentions) == 2
     # Two toponyms identified in the first sentence:
-    assert len(toponyms[0].mentions) == 2
+    assert len(sentence_mentions[0].mentions) == 2
     # Three toponyms identified in the second sentence:
-    assert len(toponyms[1].mentions) == 3
+    assert len(sentence_mentions[1].mentions) == 3
 
-    cands = geoparser.run_candidate_selection(toponyms, place_of_pub_wqid, place_of_pub)
+    cands = geoparser.run_candidate_selection(sentence_mentions, place_of_pub_wqid, place_of_pub)
 
     assert isinstance(cands, TextCandidates)
+    # The double space between sentences is lost:
+    assert cands.text() == ' '.join(text.split())
+
     assert len(cands.candidates()) == 5
     for c in cands.candidates():
         assert isinstance(c, Candidates)

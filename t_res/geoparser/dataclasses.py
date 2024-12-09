@@ -462,8 +462,7 @@ class TextCandidates:
         return len(self.sentence_candidates) == 0 or all([sc.is_empty() for sc in self.sentence_candidates])
     
     def text(self) -> str:
-        raise NotImplementedError("TODO.")
-        return "" # TODO: return the text (sequence of sentences as a single string).
+        return " ".join([scs.sentence.sentence for scs in self.sentence_candidates])
     
     # TODO: unit test needed.
     def sentence_contexts(self) -> List[SentenceContext]:
