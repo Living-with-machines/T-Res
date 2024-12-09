@@ -407,12 +407,13 @@ class Candidates:
             return None
         return best_wikidata_link.wqid
 
-    # TODO:
-    # def best_disambiguation_score(self):
-    #     best_match = self.best_match()
-    #     if not best_match:
-    #         return None
-    #     return best_match....
+    def best_disambiguation_score(self) -> Optional[float]:
+        best_match = self.best_match()
+        if not best_match or best_match.is_empty():
+            return None
+        if not isinstance(best_match, PredictedLinks):
+            return None
+        return best_match.best_disambiguation_score()
 
 
 ################################

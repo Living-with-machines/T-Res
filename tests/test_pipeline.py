@@ -36,6 +36,7 @@ def test_pipeline_basic():
     assert predictions.candidates()[0].mention.mention == "Sheffield"
     assert predictions.candidates()[0].mention.ner_score == 1.0
     assert predictions.candidates()[0].best_wqid() == "Q42448"
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.807, abs=1e-3)
 
 def test_pipeline_modular():
     ranker = ranking.PerfectMatchRanker(
@@ -55,6 +56,7 @@ def test_pipeline_modular():
     assert predictions.candidates()[0].mention.mention == "Sheffield"
     assert predictions.candidates()[0].mention.ner_score == 1.0
     assert predictions.candidates()[0].best_wqid() == "Q42448"
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.807, abs=1e-3)
 
 @pytest.mark.skip(reason="Needs deezy model")
 def test_deezy_mostpopular(tmp_path):
@@ -129,6 +131,7 @@ def test_deezy_mostpopular(tmp_path):
     assert predictions.candidates()[0].best_wqid() == "Q42448"
     assert predictions.candidates()[0].best_match().cross_cand_scores()["Q42448"] == 0.903
     assert predictions.candidates()[0].best_match().best_disambiguation_score() == pytest.approx(0.903, abs=1e-3)
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.903, abs=1e-3)
     assert predictions.candidates()[0].mention.ner_score == 1.0
 
     assert geoparser.run("").is_empty()
@@ -241,6 +244,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert predictions.candidates()[0].best_match().string_match.variation == "Sheffield"
     assert predictions.candidates()[0].best_match().string_match.string_similarity == 0.999494
     assert predictions.candidates()[0].best_wqid() == "Q42448"
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.766, abs=1e-3)
 
     # # tmp:
     # print("cross_cand_scores:")
@@ -318,6 +322,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.candidates()[0].mention.ner_score == 1.0
     assert resolved.candidates()[0].best_match() is None
     assert resolved.candidates()[0].best_wqid() is None
+    assert resolved.candidates()[0].best_disambiguation_score() is None
     assert resolved.rel_scores[0].mention == "Shefiield"
     assert resolved.rel_scores[0].confidence == 0.0
 
@@ -325,6 +330,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.candidates()[1].mention.ner_score == 1.0
     assert resolved.candidates()[1].best_match() is not None
     assert resolved.candidates()[1].best_wqid() == "Q39121"
+    assert resolved.candidates()[1].best_disambiguation_score() == pytest.approx(0.356, abs=1e-3)
     assert resolved.rel_scores[1].mention == "Leeds"
     assert resolved.rel_scores[1].confidence == pytest.approx(0.0445, abs=1e-3)
     assert resolved.rel_scores[1].scores["Q39121"] == pytest.approx(0.356, abs=1e-3)
@@ -333,6 +339,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.candidates()[2].mention.ner_score == 0.998
     assert resolved.candidates()[2].best_match() is not None
     assert resolved.candidates()[2].best_wqid() == "Q84"
+    assert resolved.candidates()[2].best_disambiguation_score() == pytest.approx(0.493, abs=1e-3)
     assert resolved.rel_scores[2].mention == "London"
     assert resolved.rel_scores[2].confidence == pytest.approx(0.0443, abs=1e-3)
     assert resolved.rel_scores[2].scores["Q84"] == pytest.approx(0.493, abs=1e-3)
@@ -439,4 +446,6 @@ def test_modular_deezy_rel(tmp_path):
 
     assert isinstance(disambiguation, Predictions)
     assert disambiguation.candidates()[0].best_wqid() == "Q989418"
+    assert disambiguation.candidates()[0].best_disambiguation_score() == pytest.approx(0.370, abs=1e-3)
     assert disambiguation.candidates()[-1].best_wqid() == "Q171866"
+    assert disambiguation.candidates()[-1].best_disambiguation_score() == pytest.approx(0.745, abs=1e-3)
