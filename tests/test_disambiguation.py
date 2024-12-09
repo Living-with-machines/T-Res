@@ -10,6 +10,7 @@ import pytest
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 from t_res.utils import rel_utils
 from t_res.utils.REL import entity_disambiguation
+from t_res.geoparser.dataclasses import Predictions
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -129,14 +130,14 @@ def test_train(tmp_path):
     # Linker loading resources:
     # Load linking resources:
     linker.load_resources()
+
     # Train a linking model if needed (it requires ranker to generate potential
     # candidates to the training set):
-    linker.rel_params["ed_model"] = linker.train_load_model(ranker)
-
-    assert isinstance(linker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
+    linker.train_load_model(ranker)
+    assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
     # assert expected performance on test set
-    assert linker.rel_params["ed_model"].best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
+    assert linker.entity_disambiguation_model.best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
 
 @pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
@@ -192,6 +193,7 @@ def test_load_eval_model(tmp_path):
         cursor = conn.cursor()
         linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "sample_files/resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir, "sample_files/resources/models/disambiguation/"),
@@ -218,11 +220,11 @@ def test_load_eval_model(tmp_path):
     # Linker loading resources:
     # Load linking resources:
     linker.load_resources()
+
     # Train a linking model if needed (it requires ranker to generate potential
     # candidates to the training set):
-    linker.rel_params["ed_model"] = linker.train_load_model(ranker)
-
-    assert isinstance(linker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
+    linker.train_load_model(ranker)
+    assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_predict(tmp_path):
@@ -281,6 +283,7 @@ def test_predict(tmp_path):
         cursor = conn.cursor()
         linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
@@ -296,17 +299,19 @@ def test_predict(tmp_path):
 
     mypipe = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
 
-    predictions = mypipe.run_text_deprecated(
+    predictions = mypipe.run(
         "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
-        place="London",
-        place_wqid="Q84",
+        place_of_pub_wqid="Q84",
+        place_of_pub="London",
     )
-    assert isinstance(predictions,list)
-    assert len(predictions) == 6
 
-    assert predictions[1]["prediction"] in predictions[1]["cross_cand_score"]
+    assert isinstance(predictions, Predictions)
+    assert len(predictions.candidates()) == 6
 
-    highest_cross_cand_score = max(
-        predictions[1]["cross_cand_score"], key=predictions[1]["cross_cand_score"].get
-    )
-    assert predictions[1]["prediction"] == highest_cross_cand_score
+    assert predictions.candidates()[1].best_wqid() in predictions.candidates()[1].best_match().cross_cand_scores().keys()
+
+    highest_cross_cand_score = max(predictions.candidates()[1].best_match().cross_cand_scores().values())
+    assert highest_cross_cand_score == 0.857
+
+    best_disambiguation_score = predictions.candidates()[1].best_match().best_disambiguation_score()
+    assert round(best_disambiguation_score, 3) == highest_cross_cand_score

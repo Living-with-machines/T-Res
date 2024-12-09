@@ -182,7 +182,7 @@ def test_linking_most_popular():
     
     # Create a dummy sentence to test the disambiguate method.
     sentence = "A sentence about London."
-    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    sentence_candidates = SentenceCandidates(Sentence(sentence), [candidates])
     predictions = linker.disambiguate([sentence_candidates])
 
     # Check best Wikidata link.
@@ -386,7 +386,7 @@ def test_linking_by_distance():
     
     # Create a dummy sentence to test the disambiguate method.
     sentence = "A sentence about London."
-    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    sentence_candidates = SentenceCandidates(Sentence(sentence), [candidates])
     predictions = linker.disambiguate([sentence_candidates])
 
     # Check that the best Wikidata link is London, UK "Q84".
@@ -401,7 +401,7 @@ def test_linking_by_distance():
     origin_wqid = "Q92561"
     candidates = linker.run(CandidateMatches(mention, "perfectmatch", matches), origin_wqid)
 
-    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    sentence_candidates = SentenceCandidates(Sentence(sentence), [candidates])
     predictions = linker.disambiguate([sentence_candidates])
 
     # Check that the best Wikidata link is now London, Ontario "Q92561".
@@ -414,7 +414,7 @@ def test_linking_by_distance():
     origin_wqid = "Q2365261"
     candidates = linker.run(CandidateMatches(mention, "perfectmatch", []), origin_wqid)
 
-    sentence_candidates = SentenceCandidates(sentence, [candidates])
+    sentence_candidates = SentenceCandidates(Sentence(sentence), [candidates])
     predictions = linker.disambiguate([sentence_candidates])
 
     print(predictions)

@@ -17,7 +17,7 @@ from transformers import (
 )
 
 from ..utils import ner_utils
-from .dataclasses import Mention, SentenceMentions
+from .dataclasses import Mention, Sentence, SentenceMentions
 
 class Recogniser:
     """
@@ -93,7 +93,7 @@ class Recogniser:
             the n-dash in OCR from historical newspapers.
         """
         if len(sentence) <= 1:
-            return SentenceMentions(sentence, [])
+            return SentenceMentions(Sentence(sentence), [])
 
         # The n-dash is a very frequent character in historical newspapers,
         # but the NER pipeline does not process it well: Plymouth—Kingston
@@ -130,7 +130,7 @@ class Recogniser:
         mentions = ner_utils.aggregate_mentions(procpreds, "pred")
 
         mentions = [Mention.from_dict(m) for m in mentions]
-        return SentenceMentions(sentence, mentions=mentions)
+        return SentenceMentions(Sentence(sentence), mentions=mentions)
 
 
     # Deprecated: use the `run` method instead.

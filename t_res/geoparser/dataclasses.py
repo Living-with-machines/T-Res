@@ -14,7 +14,7 @@ from sentence_splitter import SentenceSplitter
 @pdataclass(order=True, frozen=True)
 class Mention:
     """Data class representing a toponym mention in text."""
-    sort_index: float = field(init=False)
+    sort_index: int = field(init=False)
     # The toponym mention.
     mention: str
     # The token offset inside the text marking the start of the mention.
@@ -51,33 +51,44 @@ class Mention:
         # A microtoponym is any mention whose `ner_label` is not `LOC`.
         return self.ner_label != "LOC"
 
-# Recogniser::run method output type.
+# Helper class for backwards compatibility with training functions in rel_utils.py
 @pdataclass(frozen=True)
-class SentenceMentions:
+class TrainingMention(Mention):
+    # The Wikidata ID of the known ("gold standard") toponym, or 'NIL' if not known.
+    gold: str
+
+    def from_dict(dict: dict) -> 'TrainingMention':
+        if isinstance(dict['gold'], list) and len(dict['gold']) != 1:
+            raise ValueError(f"Multiple gold standard toponymn IDs: {dict['gold']}")
+        if 'tag' in dict.keys() and 'ner_label' not in dict.keys():
+            dict['ner_label'] = dict['tag']
+        return TrainingMention(
+            mention=dict['mention'],
+            start_offset=-1,
+            end_offset=-1,
+            start_char=dict['pos'],
+            ner_score=-1.0,
+            ner_label=dict['ner_label'],
+            entity_link='',
+            gold=dict['gold'][0] if isinstance(dict['gold'], list) else dict['gold'],
+        )
+
+@pdataclass(frozen=True)
+class Sentence:
     # The sentence.
     sentence: str
-    # A list of toponym mentions, ordered by start 
-    # character offset within the sentence.
-    mentions: List[Mention]
 
-    def is_empty(self) -> bool:
-        return len(self.mentions) == 0
-
-    def len(self) -> int:
-        return len(self.mentions)
-    
-    def exclude_microtoponyms(self) -> 'SentenceMentions':
-        mentions = list(filter(lambda m: not m.is_microtoponym(), self.mentions))
-        return SentenceMentions(self.sentence, mentions)
+    def __len__(self):
+        return len(self.sentence)
 
 @pdataclass(frozen=True)
-class SentenceContext:
-    # The sentencee.
-    sentence: str
+class SentenceContext(Sentence):
     # The preceding sentence context.
     preceding_sentence: Optional[str]
     # The following sentence context.
     following_sentence: Optional[str]
+    # Optional sentence index (within a block of text). Defaults to None.
+    sent_idx: Optional[int]=None
 
     def from_text(text: str, language: str="en", non_breaking_prefix_file: str=None) -> List['SentenceContext']:
         splitter = SentenceSplitter(language=language, non_breaking_prefix_file=non_breaking_prefix_file)
@@ -94,6 +105,43 @@ class SentenceContext:
         preceding = self.preceding_sentence if self.preceding_sentence is not None else ''
         following = self.following_sentence if self.following_sentence is not None else ''
         return [preceding, following]
+
+# Recogniser::run method output type.
+@pdataclass(frozen=True)
+class SentenceMentions:
+    # The sentence.
+    sentence: Sentence
+    # A list of toponym mentions, ordered by character offset within the sentence.
+    mentions: List[Mention]
+
+    def __post_init__(self):
+        if self.is_empty():
+            return
+        if max([m.end_char() for m in self.mentions]) > len(self.sentence):
+            raise ValueError("Max end char exceeds sentence length.")
+
+    def is_empty(self) -> bool:
+        return len(self.mentions) == 0
+
+    def len(self) -> int:
+        return len(self.mentions)
+    
+    def exclude_microtoponyms(self) -> 'SentenceMentions':
+        mentions = list(filter(lambda m: not m.is_microtoponym(), self.mentions))
+        return SentenceMentions(self.sentence, mentions)
+    
+    # Helper method for backwards compatibility with training functions in `rel_utils.py`.
+    def from_list(data: List[Dict]) -> 'SentenceMentions':
+        # The data are assumed to be in the format returned by the 
+        # `prepare_initial_data` method in `rel_utils.py`.
+        mentions = [TrainingMention.from_dict(d) for d in data]
+        # Check that all sentences in the list are identical.
+        if {d['sentence'] for d in data} != {data[0]['sentence']}:
+            raise ValueError("Inconsistent sentences.")
+        d = data[0]
+        context = SentenceContext(d['sentence'], d['context'][0], d['context'][1], d['sent_idx'])
+
+        return SentenceMentions(context, mentions)
 
 ################################
 # Dataclasses for Ranker
@@ -303,7 +351,7 @@ class Candidates:
                 raise ValueError(f"Invalid Wikidata ID: {self.place_of_pub_wqid}")
 
     def __str__(self) -> str:
-        s = f"Candidates for '{self.mention}':"
+        s = f"Candidates for '{self.mention.mention}':"
         if self.is_empty():
             s += " None"
             return s
@@ -371,27 +419,20 @@ class Candidates:
 # Dataclasses for Pipeline
 ################################
 
-# @pdataclass(order=True, frozen=True)
-# class MentionCandidates:
-#     sort_index: float = field(init=False)
-#     # The toponym mention.
-#     mention: Mention
-#     # The candidates for this mention.
-#     candidates: Candidates
-
-#     def __post_init__(self):
-#         if self.candidates.mention != self.mention.mention:
-#             raise ValueError("Toponym Mention & Candidates are inconsistent.")
-#         object.__setattr__(self, 'sort_index', self.mention.start_char)
-
 @pdataclass(frozen=True)
 class SentenceCandidates:
     """Data class representing candidate matches for all toponym mentions 
     in a sentence."""
     # The sentence.
-    sentence: str
+    sentence: Sentence
     # List of candidates for each toponym mention in the sentence.
     candidates: List[Candidates]
+
+    def __post_init__(self):
+        if self.is_empty():
+            return
+        if max([cs.mention.end_char() for cs in self.candidates]) > len(self.sentence):
+            raise ValueError("Inconsistent candidate mentions. Max end char exceeds sentence length.")
 
     def is_empty(self) -> bool:
         return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
@@ -426,9 +467,9 @@ class TextCandidates:
     # TODO: unit test needed.
     def sentence_contexts(self) -> List[SentenceContext]:
         scs = self.sentence_candidates
-        return [SentenceContext(sc.sentence, 
-                         scs[i - 1].sentence if i > 0 else None, 
-                         scs[i + 1].sentence if i < len(scs) - 1 else None) 
+        return [SentenceContext(sc.sentence.sentence, 
+                         scs[i - 1].sentence.sentence if i > 0 else None, 
+                         scs[i + 1].sentence.sentence if i < len(scs) - 1 else None) 
          for i, sc in enumerate(scs)]
 
     def place_of_pub_wqid(self) -> Optional[str]:
@@ -469,6 +510,34 @@ class Predictions(TextCandidates):
 
         return RelPredictions(self.sentence_candidates, rel_scores)
 
+    # Returns a dictionary containing a toponym mention for the place of publication.
+    def place_of_pub_mention(self) -> dict:
+        place_of_pub = self.place_of_pub()
+        place_of_pub_wqid = self.place_of_pub_wqid()
+        prefix = "This article is published in "
+        place_of_pub_sentence = f"{prefix}{place_of_pub}."
+        # NOTE: this dict is slightly inconsistent versus the mention_dicts 
+        # constructed in the as_dict method:
+        # - "ner_score" and "conf_md" are missing
+        # - "tag" is instead named "ner_label"
+        # These inconsistencies are preserved from an earlier version and perhaps
+        # should be fixed in future. Note that this format *is* consistent with
+        # the keys in the TrainingPredictions.as_list() method.
+        return {
+            "mention": place_of_pub,
+            "sent_idx": 0,
+            "sentence": place_of_pub_sentence,
+            "gold": [place_of_pub_wqid],
+            "ngram": place_of_pub,
+            "context": ["", ""],
+            "pos": len(prefix),
+            "end_pos": len(prefix) + len(place_of_pub),
+            "candidates": [[place_of_pub_wqid, 1.0]],
+            "place": place_of_pub,
+            "place_wqid": place_of_pub_wqid,
+            "ner_label": "LOC",
+        }
+
     # Converts to a dictionary for backwards compatibility with entity_disambiguation.py
     # (similar to the deprecated `format_prediction` method in pipeline.py)
     def as_dict(self, with_publication: bool) -> dict:
@@ -481,11 +550,7 @@ class Predictions(TextCandidates):
                 if c.is_empty():
                     candidates = []
                 else:
-                    predicted_links = c.best_match()
-                    # Raise an error unless the disambiguation scores are already populated.
-                    if not isinstance(predicted_links, PredictedLinks):
-                        raise ValueError(f"Expected PredictedLinks instance. Got {type(predicted_links)}")
-                    candidates = predicted_links.scores_as_list()
+                    candidates = c.best_match().scores_as_list()
                 mention_dict = {
                     "mention": c.mention.mention,
                     "context": contexts[i].context_as_list(),
@@ -498,7 +563,7 @@ class Predictions(TextCandidates):
                     "ngram": c.mention.mention,
                     "conf_md": c.mention.ner_score,
                     "tag": c.mention.ner_label,
-                    "sentence": sc.sentence,
+                    "sentence": sc.sentence.sentence,
                     "place": c.place_of_pub,
                     "place_wqid": c.place_of_pub_wqid,
                     # TODO: Do we need to include `string_match_candidates`?  It's not used 
@@ -509,32 +574,51 @@ class Predictions(TextCandidates):
 
         # Replaces add_publication from rel_utils.py:
         if with_publication:
-            place_of_pub = self.place_of_pub()
-            place_of_pub_wqid = self.place_of_pub_wqid()
-            prefix = "This article is published in "
-            place_of_pub_sentence = f"{prefix}{place_of_pub}."
-            # NOTE: this dict is slightly inconsistent versus the mention_dicts above:
-            # - "ner_score" and "conf_md" are missing
-            # - "tag" is instead named "ner_label"
-            # These inconsistencies are preserved from an earlier version and perhaps
-            # should be fixed in future.
-            place_mention_dict = {
-                "mention": place_of_pub,
-                "sent_idx": 0,
-                "sentence": place_of_pub_sentence,
-                "gold": [place_of_pub_wqid],
-                "ngram": place_of_pub,
-                "context": ["", ""],
-                "pos": len(prefix),
-                "end_pos": len(prefix) + len(place_of_pub),
-                "candidates": [[place_of_pub_wqid, 1.0]],
-                "place": place_of_pub,
-                "place_wqid": place_of_pub_wqid,
-                "ner_label": "LOC",
-            }
-            d["linking"].append(place_mention_dict)
+            d["linking"].append(self.place_of_pub_mention())
         return d
-    
+
+@pdataclass(frozen=True)
+class TrainingPredictions(Predictions):
+    """Data class representing toponym predictions for training a REL model."""
+
+    def __post_init__(self):
+        super().__post_init__()
+
+    # Similar to the as_dict method in Predictions, but now for backward 
+    # compatibility with the `prepare_rel_trainset` function in `rel_utils.py`.
+    def as_list(self, with_publication: bool) -> dict:
+        l = list()
+        for sc in self.sentence_candidates:
+            if not isinstance(sc.sentence, SentenceContext):
+                raise ValueError(f"Expected SentenceContext instance. Got: {type(sc)}")
+            for c in sc.candidates:
+                if not isinstance(c.mention, TrainingMention):
+                    raise ValueError(f"Expected TrainingMention instance. Got: {type(c)}")
+                if c.is_empty():
+                    candidates = []
+                else:
+                    candidates = c.best_match().scores_as_list()
+                mention_dict = {
+                    "mention": c.mention.mention,
+                    "sent_idx": sc.sentence.sent_idx,
+                    "sentence": sc.sentence.sentence,
+                    "ngram": c.mention.mention,
+                    "context": sc.sentence.context_as_list(),
+                    "pos": c.mention.start_char,
+                    "end_pos": c.mention.end_char(),
+                    "place": c.place_of_pub,
+                    "place_wqid": c.place_of_pub_wqid,
+                    "candidates": candidates,
+                    "ner_label": c.mention.ner_label,
+                    "gold": [c.mention.gold] if c.mention.gold != 'NIL' else 'NIL',
+                }
+                l.append(mention_dict)
+
+        # Replaces add_publication from rel_utils.py:
+        if with_publication:
+            l.append(self.place_of_pub_mention())
+        return l
+
 @pdataclass(frozen=True)
 class RelScores:
     """Data class representing scores produced by the REL entity disambiguation model."""

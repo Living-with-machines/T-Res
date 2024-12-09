@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from ..geoparser import ranking
-from ..geoparser.dataclasses import Candidates
+from ..geoparser.dataclasses import Candidates, SentenceMentions, SentenceCandidates, TextCandidates, TrainingPredictions
 
 RANDOM_SEED = 42
 """Constant representing the random seed used for generating pseudo-random
@@ -176,7 +176,7 @@ def prepare_initial_data(df: pd.DataFrame) -> dict:
 
     return dict_mentions
 
-# Deprecated (this logic has been moved to the RelDisambLinker):
+# Deprecated (this logic has been moved to the RelDisambLinker)
 def rank_candidates(rel_json: dict, wk_cands: dict) -> dict:
     """
     Rank the candidates for each mention in the provided JSON data.
@@ -290,7 +290,6 @@ def add_publication(
 def prepare_rel_trainset(
     df: pd.DataFrame,
     rel_params,
-    mentions_to_wikidata,
     ranker: ranking.Ranker,
     linker,
     dsplit: str,
@@ -322,56 +321,26 @@ def prepare_rel_trainset(
         This function stores the formatted dataset as a JSON file.
     """
     rel_json = prepare_initial_data(df)
+    sentence_mentions = {k: SentenceMentions.from_list(rel_json[k]) for k in rel_json.keys()}
 
-    # TODO: some refactoring needed.
+    sentence_candidates = list()
+    for k in rel_json.keys():
+        matches = [ranker.run(mention) for mention in sentence_mentions[k].mentions]
+        candidates = [linker.run(m, rel_json[k][0]["place_wqid"], rel_json[k][0]["place"]) for m in matches]
+        sentence_candidates.append(SentenceCandidates(sentence_mentions[k].sentence, candidates))
 
-    # Get unique mentions, to run them through the ranker:
-    all_mentions = []
-    for article in rel_json:
-        if rel_params["without_microtoponyms"]:
-            all_mentions += [
-                y["mention"] for y in rel_json[article] if y["ner_label"] == "LOC"
-            ]
-        else:
-            all_mentions += [y["mention"] for y in rel_json[article]]
+    # Get interim predictions (i.e. without applying the REL model).
+    predictions = [linker.disambiguate([scs], apply_rel=False) for scs in sentence_candidates]
+    training_predictions = [TrainingPredictions(p.sentence_candidates) for p in predictions]
 
-    all_mentions = list(set(all_mentions))
-    # Format the mentions are required by the ranker:
-    all_mentions = [{"mention": mention} for mention in all_mentions]
-    mentions = [m["mention"] for m in all_mentions]
-
-    # Use the ranker to find candidates:
-    wk_cands = {mention: ranker.run(mention) for mention in mentions}
-
-    # Run entity linking per mention to convert each CandidatesMatches 
-    # instance into a Candidates instance.
-
-    # TODO: extract place_wqid from rel_json if needed for training.
-    wk_cands = {wk.mention: linker.run(wk, None) for wk in wk_cands.values()}
-
-    # TODO: rank_candidates and add_publication are called here. Update as 
-    # in pipeline.py methods `run_sentence` and `run_disambiguation`.
-
-    # Rank the candidates:
-    rel_json = rank_candidates(
-        rel_json,
-        wk_cands,
-        # mentions_to_wikidata,
-    )
-    # If "publ" is taken into account for the disambiguation, add the place
-    # of publication as an additional already disambiguated entity per row:
-    if rel_params["with_publication"] == True:
-        rel_json = add_publication(
-            rel_json,
-            rel_params["default_publname"],
-            rel_params["default_publwqid"],
-        )
+    trainset = {k: p.as_list(rel_params["with_publication"]) 
+                for k, p in zip(rel_json.keys(), training_predictions)}
 
     ## TO DO
     with open(
         os.path.join(rel_params["data_path"], "rel_{}.json").format(dsplit),
         "w",
     ) as f:
-        json.dump(rel_json, f)
+        json.dump(trainset, f)
 
-    return rel_json
+    return trainset

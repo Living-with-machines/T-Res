@@ -94,7 +94,7 @@ def test_run():
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield, but also in Leeds."
     result = ner.run(sentence)
 
-    assert result.sentence == sentence
+    assert result.sentence.sentence == sentence
 
     assert result.len() == 2
     assert result.mentions[0].mention == "Sheffield"
@@ -112,8 +112,6 @@ def test_run():
     sentence = ', thence to Emery Down,crowing to Minesteed Manor ; he ther tacked back to Notherwood, and from thence back again to the Manor, where, after a brilliant run (Arnie hour and forty-five minutes, Reynold was compelled to succumb to his pursuers. '
     result = ner.run(sentence)
 
-    print(result)
-
 def test_ner_from_hub():
     ner = recogniser.PretrainedRecogniser(
         model_name="Livingwithmachines/toponym-19thC-en",
@@ -126,7 +124,6 @@ def test_ner_from_hub():
     assert isinstance(predictions, list)
     assert len(predictions) == 15
     assert predictions[13] == {'entity': 'B-LOC', 'score': pytest.approx(0.9996446371078491, abs=1e-3), 'word': 'Sheffield', 'start': 74, 'end': 83}
-
 
 def test_aggregate_mentions():
     ner = recogniser.PretrainedRecogniser(

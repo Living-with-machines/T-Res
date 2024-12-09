@@ -128,9 +128,10 @@ class Pipeline:
         # Train a linking model if needed (it requires ranker to generate
         # potential candidates to the training set):
         if self.linker.method_name == "reldisamb":
-            self.linker.rel_params["ed_model"] = self.linker.train_load_model(
+            self.linker.train_load_model(
                 self.ranker
             )
+
 
     # TODO: docstring
     def run(self, text: str, place_of_pub: Optional[str]=None, place_of_pub_wqid: Optional[str]=None) -> Predictions:

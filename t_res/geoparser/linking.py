@@ -471,7 +471,6 @@ class RelDisambLinker(Linker):
         overwrite_training: Optional[bool] = False,
         rel_params: Optional[dict] = None,
     ):
-        
         super().__init__(resources_path, experiments_path, linking_resources)
 
         self.overwrite_training = overwrite_training
@@ -490,6 +489,7 @@ class RelDisambLinker(Linker):
 
         self.rel_params = rel_params
         self.ranker = ranker
+        self.entity_disambiguation_model = None
 
     # Override the load_resources method to load the entity disambiguation model.
     def load_resources(
@@ -520,9 +520,6 @@ class RelDisambLinker(Linker):
         if matches.is_empty():
             return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
         
-        if not self.entity_disambiguation_model:
-            ValueError("Entity disambiguation model not yet loaded. Call `load` method.")
-
         # Skip microtoponyms if configured to do so.
         if self.rel_params["without_microtoponyms"]:
             if matches.mention.is_microtoponym():
@@ -572,10 +569,17 @@ class RelDisambLinker(Linker):
         )
 
     # Override the disambiguate method to include REL linking.
-    def disambiguate(self, candidates: List[SentenceCandidates]) -> Predictions:
+    def disambiguate(self, candidates: List[SentenceCandidates], apply_rel: bool=True) -> Predictions:
 
         # Generate interim predictions as inputs to the REL model.
         predictions = super().disambiguate(candidates)
+
+        if not apply_rel:
+            return predictions
+
+        if not self.entity_disambiguation_model:
+            ValueError("Entity disambiguation model not yet loaded. Call `load` method.")
+
         # Apply the REL model to the interim predictions.
         rel_predictions = self.entity_disambiguation_model.predict(
             predictions.as_dict(self.rel_params["with_publication"]))
@@ -701,7 +705,6 @@ class RelDisambLinker(Linker):
             train_json = rel_utils.prepare_rel_trainset(
                 train_df,
                 self.rel_params,
-                self.linking_resources["mentions_to_wikidata"],
                 ranker,
                 self,
                 "train",
@@ -709,7 +712,6 @@ class RelDisambLinker(Linker):
             dev_json = rel_utils.prepare_rel_trainset(
                 dev_df,
                 self.rel_params,
-                self.linking_resources["mentions_to_wikidata"],
                 ranker,
                 self,
                 "dev",

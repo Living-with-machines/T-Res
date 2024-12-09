@@ -84,7 +84,7 @@ def test_ranking_perfect_match():
 
     # Check the cache has been updated.
     assert len(ranker.cache) == 1
-    assert ranker.cache["London"] == candidates
+    assert ranker.cache["London"] == candidates.matches
 
     mention = Mention("Lvndon", 0, 0, 0, 0.0, 'LOC', 'O')
     candidates = ranker.run(mention)
@@ -95,7 +95,7 @@ def test_ranking_perfect_match():
 
     # Check the cache has been updated.
     assert len(ranker.cache) == 2
-    assert ranker.cache["Lvndon"] == candidates
+    assert ranker.cache["Lvndon"] == candidates.matches
 
     # Construct a dummy mention for the test.
     mention = Mention("Paperopoli", 0, 0, 0, 0.0, 'LOC', 'O')
@@ -107,7 +107,7 @@ def test_ranking_perfect_match():
 
     # Check the cache has been updated.
     assert len(ranker.cache) == 3
-    assert ranker.cache["Paperopoli"] == candidates
+    assert ranker.cache["Paperopoli"] == candidates.matches
 
 def test_ranking_matching_score():
     """
@@ -349,7 +349,7 @@ def test_ranking_attach_wikidata(tmp_path):
 
     # Check the cache has been updated.
     assert len(ranker.cache) == 1
-    assert ranker.cache["London"] == candidates
+    assert ranker.cache["London"] == candidates.matches
 
     # Test that deezy works
     # TODO: add a ranker.clear_cache() method.

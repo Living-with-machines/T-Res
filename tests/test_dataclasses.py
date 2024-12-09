@@ -1,5 +1,5 @@
 from ast import literal_eval
-from t_res.geoparser.dataclasses import SentenceContext, SentenceMentions, Mention
+from t_res.geoparser.dataclasses import SentenceContext, SentenceMentions, Sentence, Mention
 
 def test_sentence_context():
 
@@ -25,7 +25,7 @@ def test_sentence_mentions():
     mentions_str = "[{'mention': 'Emery Down', 'start_offset': 3, 'end_offset': 4, 'start_char': 12, 'ner_score': 0.999, 'ner_label': 'LOC', 'entity_link': 'O'}, {'mention': 'Minesteed Manor', 'start_offset': 8, 'end_offset': 9, 'start_char': 34, 'ner_score': 0.999, 'ner_label': 'BUILDING', 'entity_link': 'O'}, {'mention': 'Notherwood', 'start_offset': 16, 'end_offset': 16, 'start_char': 75, 'ner_score': 0.999, 'ner_label': 'BUILDING', 'entity_link': 'O'}]"
     mentions = [Mention.from_dict(d) for d in literal_eval(mentions_str)]
 
-    sentence_mentions = SentenceMentions(sentence, mentions=mentions)
+    sentence_mentions = SentenceMentions(Sentence(sentence), mentions=mentions)
     assert sentence_mentions.len() == 3
     assert sentence_mentions.exclude_microtoponyms().len() == 1
     assert sentence_mentions.exclude_microtoponyms().mentions[0].ner_label == 'LOC'

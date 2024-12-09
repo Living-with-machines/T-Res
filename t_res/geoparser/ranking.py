@@ -159,11 +159,11 @@ class Ranker:
                 containing potential string matches for the given toponym, 
                 each with a list of potential Wikidata ID links.
 
-        Note: the result is added to the cache for efficient retrieval.
+        Note: the string matches are added to the cache for efficient retrieval.
         """
         # Use the cache if possible.
         if mention.mention in self.cache:
-            return self.cache[mention.mention]
+            return CandidateMatches(mention, self.method_name, self.cache[mention.mention])
         
         # Get the list of candidate string matches for this query.
         string_matches = self.matches(mention.mention)
@@ -177,7 +177,7 @@ class Ranker:
         candidates = CandidateMatches(mention, self.method_name, matches)
 
         # Update the cache.
-        self.cache[mention.mention] = candidates
+        self.cache[mention.mention] = matches
         return candidates
 
     def matches(self, query: str) -> List[StringMatch]:
