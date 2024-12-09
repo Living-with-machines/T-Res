@@ -61,7 +61,7 @@ class Recogniser:
         """
         raise NotImplementedError("Subclass implementation required.")
 
-    def create_pipeline(self):
+    def load(self):
         """
         Creates a Named Entity Recognition (NER) pipeline and assigns it
         to the ``pipe`` attribute.
@@ -336,7 +336,7 @@ class CustomRecogniser(Recogniser):
         return os.path.join(self.model_path, f"{self.model_name}.model")
 
     # Override the create_pipeline method to train the model if necessary.
-    def create_pipeline(self):
+    def load(self):
         """
         Creates a Named Entity Recognition (NER) pipeline and assigns it
         to the ``pipe`` attribute.
@@ -359,7 +359,7 @@ class CustomRecogniser(Recogniser):
         else:
             self.train()
 
-        super().create_pipeline()
+        super().load()
 
     def train(self):
         """

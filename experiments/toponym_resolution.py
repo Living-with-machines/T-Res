@@ -180,7 +180,7 @@ for exp_param in experiments:
     # Train the NER models if needed:
     ner.train()
     # Load the NER pipeline:
-    ner.pipe = ner.create_pipeline()
+    ner.pipe = ner.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:

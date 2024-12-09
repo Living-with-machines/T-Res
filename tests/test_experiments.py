@@ -70,12 +70,12 @@ def test_load_data(tmp_path):
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    ner.create_pipeline()
+    ner.load()
 
     # Load the resources (and train a DeezyMatch model if needed):
     ranker.load()
 
-    linker.load_resources()
+    linker.load()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -154,12 +154,12 @@ def test_apply(tmp_path):
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    ner.create_pipeline()
+    ner.load()
 
     # Load the resources (and train a DeezyMatch model if needed):
     ranker.load()
 
-    linker.load_resources()
+    linker.load()
 
     # --------------------------------------
     # Instantiate the experiment:

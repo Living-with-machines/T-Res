@@ -111,7 +111,7 @@ class Pipeline:
 
         # -----------------------------------------
         # NER training and creating pipeline:
-        self.ner.create_pipeline()
+        self.ner.load()
 
         # -----------------------------------------
         # Ranker loading resources and training a model:
@@ -123,7 +123,7 @@ class Pipeline:
         # Linker loading resources:
 
         # Load linking resources:
-        self.linker.load_resources()
+        self.linker.load()
 
         # Train a linking model if needed (it requires ranker to generate
         # potential candidates to the training set):

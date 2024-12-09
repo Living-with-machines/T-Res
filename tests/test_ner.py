@@ -53,7 +53,7 @@ def test_ner_predict():
         overwrite_training=False,
         do_test=False,
     )
-    ner.create_pipeline()
+    ner.load()
     assert isinstance(ner.pipe, TokenClassificationPipeline)
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -88,7 +88,7 @@ def test_run():
         overwrite_training=False,
         do_test=False,
     )
-    ner.create_pipeline()
+    ner.load()
     assert isinstance(ner.pipe, TokenClassificationPipeline)
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield, but also in Leeds."
@@ -116,7 +116,7 @@ def test_ner_from_hub():
     ner = recogniser.PretrainedRecogniser(
         model_name="Livingwithmachines/toponym-19thC-en",
     )
-    ner.create_pipeline()
+    ner.load()
     assert isinstance(ner.pipe, TokenClassificationPipeline)
     
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
@@ -129,7 +129,7 @@ def test_aggregate_mentions():
     ner = recogniser.PretrainedRecogniser(
         model_name="Livingwithmachines/toponym-19thC-en",
     )
-    ner.create_pipeline()
+    ner.load()
     
     sentence = "I grew up in Bologna, a city near Florence, but way more interesting."
     predictions = ner.ner_predict(sentence)

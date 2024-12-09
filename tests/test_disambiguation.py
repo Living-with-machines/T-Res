@@ -119,7 +119,7 @@ def test_train(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    ner.create_pipeline()
+    ner.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
@@ -129,7 +129,7 @@ def test_train(tmp_path):
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    linker.load_resources()
+    linker.load()
 
     # Train a linking model if needed (it requires ranker to generate potential
     # candidates to the training set):
@@ -209,7 +209,7 @@ def test_load_eval_model(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    ner.create_pipeline()
+    ner.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
@@ -219,7 +219,7 @@ def test_load_eval_model(tmp_path):
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    linker.load_resources()
+    linker.load()
 
     # Train a linking model if needed (it requires ranker to generate potential
     # candidates to the training set):

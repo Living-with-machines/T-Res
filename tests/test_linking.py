@@ -166,7 +166,7 @@ def test_linking_most_popular():
         linking_resources=dict(),
     )
     assert linker.method_name  == "mostpopular"
-    linker.load_resources()
+    linker.load()
 
     # Construct a CandidateMatches instance (to simulate the output from the Ranker).
     wqid_links = ["Q84", "Q92561"]
@@ -369,7 +369,7 @@ def test_linking_by_distance():
         linking_resources=dict(),
     )
     assert linker.method_name  == "bydistance"
-    linker.load_resources()
+    linker.load()
 
     # Construct a CandidateMatches instance (to simulate the output from the Ranker).
     wqid_links = ["Q84", "Q92561"]

@@ -82,7 +82,7 @@ def test_align_gold(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    ner.create_pipeline()
+    ner.load()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -137,7 +137,7 @@ def test_ner_and_process(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    ner.create_pipeline()
+    ner.load()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),

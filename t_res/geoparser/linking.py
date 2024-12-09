@@ -84,8 +84,7 @@ class Linker:
         """Returns an empty `Candidates` instance."""
         return Candidates(mention, ranking_method, self.method_name, list(), place_of_pub_wqid, place_of_pub, False)
 
-    # TODO: rename as `load`.
-    def load_resources(self):
+    def load(self):
         """
         Loads the linking resources and assigns them to instance variables.
         """
@@ -491,14 +490,14 @@ class RelDisambLinker(Linker):
         self.ranker = ranker
         self.entity_disambiguation_model = None
 
-    # Override the load_resources method to load the entity disambiguation model.
-    def load_resources(
+    # Override the load method to load the entity disambiguation model.
+    def load(
         self, split: Optional[str] = "originalsplit"
     ):
         """
         Loads the linking resources and assigns them to instance variables.
         """
-        super().load_resources()
+        super().load()
         self.train_load_model(ranker=self.ranker, split=split)
 
     def run(
