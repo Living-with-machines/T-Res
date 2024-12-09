@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from t_res.geoparser import linking, ranking, recogniser
 from t_res.utils import process_data, rel_utils
-from t_res.geoparser.dataclasses import SentenceMentions, SentenceCandidates
+from t_res.utils.dataclasses import SentenceMentions, SentenceCandidates
 
 
 class Experiment:

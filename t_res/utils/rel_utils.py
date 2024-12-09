@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from ..geoparser import ranking
-from ..geoparser.dataclasses import Candidates, SentenceMentions, SentenceCandidates, TextCandidates, TrainingPredictions
+from .dataclasses import *
 
 RANDOM_SEED = 42
 """Constant representing the random seed used for generating pseudo-random

@@ -7,7 +7,7 @@ from sentence_splitter import split_text_into_sentences
 
 from ..utils import ner_utils, rel_utils
 from . import linking, ranking, recogniser
-from .dataclasses import *
+from ..utils.dataclasses import *
 
 class Pipeline:
     """

@@ -1,5 +1,5 @@
 from ast import literal_eval
-from t_res.geoparser.dataclasses import SentenceContext, SentenceMentions, Sentence, Mention
+from t_res.utils.dataclasses import *
 
 def test_sentence_context():
 

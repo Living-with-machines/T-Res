@@ -10,7 +10,7 @@ import pytest
 from t_res.geoparser import linking, pipeline, ranking, recogniser
 from t_res.utils import rel_utils
 from t_res.utils.REL import entity_disambiguation
-from t_res.geoparser.dataclasses import Predictions
+from t_res.utils.dataclasses import Predictions
 
 current_dir = Path(__file__).parent.resolve()
 

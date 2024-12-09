@@ -4,8 +4,7 @@ from pathlib import Path
 import pytest
 
 from t_res.geoparser import ranking
-from t_res.geoparser.dataclasses import *
-# from t_res.geoparser.dataclasses import StringMatch, StringMatchLinks, CandidateMatches, Mention
+from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
 

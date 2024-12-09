@@ -9,7 +9,7 @@ from pandarallel import pandarallel
 from pyxdameraulevenshtein import normalized_damerau_levenshtein_distance
 
 from ..utils import deezy_processing
-from .dataclasses import StringMatch, StringMatchLinks, CandidateMatches, Mention
+from ..utils.dataclasses import StringMatch, StringMatchLinks, CandidateMatches, Mention
 
 class Ranker:
     """

@@ -16,7 +16,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-from .dataclasses import *
+from ..utils.dataclasses import *
 
 class Linker:
     """

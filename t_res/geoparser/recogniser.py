@@ -17,7 +17,7 @@ from transformers import (
 )
 
 from ..utils import ner_utils
-from .dataclasses import Mention, Sentence, SentenceMentions
+from ..utils.dataclasses import Mention, Sentence, SentenceMentions
 
 class Recogniser:
     """
