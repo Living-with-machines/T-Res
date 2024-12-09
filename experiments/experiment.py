@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from t_res.geoparser import linking, ranking, recogniser
 from t_res.utils import process_data, rel_utils
+from t_res.geoparser.dataclasses import SentenceMentions, SentenceCandidates
 
 
 class Experiment:
@@ -765,18 +766,23 @@ class Experiment:
 
                         if self.linker.method_name in ["mostpopular", "bydistance"]:
 
-                            # Convert `prediction` into a CandidatesMatches instance.
-                            candidate_matches = self.ranker.run(prediction["mention"])
+                            # Convert `prediction` dictionary into a Predictions instance.
+                            sentence_mentions = SentenceMentions.from_list([prediction])
 
-                            # Run entity linking per mention:
-                            selected_cand = self.linker.run(candidate_matches, prediction["place_wqid"])
+                            if len(sentence_mentions.mentions) != 1:
+                                raise Exception("Expected precisely one mention.")
 
-                            prediction["prediction"] = selected_cand.best_wqid()
-                            # TODO: replace this with a call to `disambiguation_scores` on the Candidate.
-                            if selected_cand.best_match():
-                                prediction["ed_score"] = round(selected_cand.best_match().relative_frequencies()[0], 3)
+                            matches = self.ranker.run(sentence_mentions.mentions[0])
+                            candidates = self.linker.run(matches, prediction["place_wqid"], prediction["place"])
+                            sentence_candidates = SentenceCandidates(sentence_mentions.sentence, [candidates])
+                            pred = self.linker.disambiguate([sentence_candidates])
+
+                            if pred.candidates() and pred.candidates()[0].best_match():
+                                prediction["ed_score"] = round(pred.candidates()[0].best_match().best_disambiguation_score(), 3)
+                                prediction["prediction"] = pred.candidates()[0].best_wqid()
                             else:
                                 prediction["ed_score"] = None
+                                prediction["prediction"] = None
 
                 to_append.append(
                     [
