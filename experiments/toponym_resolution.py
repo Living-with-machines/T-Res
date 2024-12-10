@@ -96,37 +96,13 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the ranker:
-    ranker = ranking.Ranker(
-        method=cand_select_method,
-        resources_path=resources_dir,
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
-        strvar_parameters={
-            # Parameters to create the string pair dataset:
-            "ocr_threshold": 60,
-            "top_threshold": 85,
-            "min_len": 5,
-            "max_len": 15,
-            "w2v_ocr_path": os.path.join(resources_dir, "models/w2v/"),
-            "w2v_ocr_model": "w2v_*_news",
-            "overwrite_dataset": False,
-        },
-        deezy_parameters={
-            # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(resources_dir, "deezymatch/"),
-            "dm_cands": "wkdtalts",
-            "dm_model": "w2v_ocr",
-            "dm_output": "deezymatch_on_the_fly",
-            # Ranking measures:
-            "ranking_metric": "faiss",
-            "selection_threshold": 50,
-            "num_candidates": 1,
-            "verbose": False,
-            # DeezyMatch training:
-            "overwrite_training": False,
-            "do_test": False,
-        },
-    )
+    kwargs = {
+        'method_name': cand_select_method, 
+        'resources_path': resources_dir
+        }
+    # If deezymatch ranking is selected, use the default parameters,
+    # so no `strvar_parameters` or `deezy_parameters` are needed in the kwargs.
+    ranker = ranking.Ranker.new(**kwargs)
 
     # --------------------------------------
     # Instantiate the linker:
@@ -134,23 +110,27 @@ for exp_param in experiments:
         os.path.join(resources_dir, "rel_db/embeddings_database.db")
     ) as conn:
         cursor = conn.cursor()
-        linker = linking.Linker(
-            method=top_res_method,
-            resources_path=resources_dir,
-            linking_resources=dict(),
-            rel_params={
-                "model_path": os.path.join(resources_dir, "models/disambiguation/"),
-                "data_path": os.path.join(current_dir, "outputs/data/lwm/"),
-                "training_split": "",
-                "db_embeddings": cursor,
-                "with_publication": wpubl,
-                "without_microtoponyms": wmtops,
-                "do_test": False,
-                "default_publname": "",
-                "default_publwqid": "",
-            },
-            overwrite_training=False,
-        )
+        rel_params={
+            "model_path": os.path.join(resources_dir, "models/disambiguation/"),
+            "data_path": os.path.join(current_dir, "outputs/data/lwm/"),
+            "training_split": "",
+            "db_embeddings": cursor,
+            "with_publication": wpubl,
+            "without_microtoponyms": wmtops,
+            "do_test": False,
+            "default_publname": "",
+            "default_publwqid": "",
+            }
+        kwargs = {
+            'method_name': top_res_method, 
+            'resources_path': resources_dir
+        }
+        # Only include the `rel_params` if the linking method is `reldisamb`.
+        if top_res_method == 'reldisamb':
+            kwargs['ranker'] = ranker
+            kwargs['rel_params'] = rel_params
+            
+        linker = linking.Linker.new(**kwargs)
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -190,7 +170,7 @@ for exp_param in experiments:
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    linker.load_resources()
+    linker.load()
 
     # -----------------------------------------
     # Prepare experiment:
