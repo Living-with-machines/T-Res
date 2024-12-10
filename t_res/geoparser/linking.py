@@ -63,7 +63,6 @@ class Linker:
         """
         s = ">>> Entity Linking:\n"
         s += f"    * Method: {self.method_name}\n"
-        s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
 
     def new(**kwargs) -> 'Linker':
@@ -514,6 +513,17 @@ class RelDisambLinker(Linker):
         self.rel_params = rel_params
         self.ranker = ranker
         self.entity_disambiguation_model = None
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the Linker object.
+
+        Returns:
+            str: String representation of the Linker object.
+        """
+        s = super().__str__()
+        s += f"    * Overwrite training: {self.overwrite_training}\n"
+        return s
 
     # Override the load method to load the entity disambiguation model.
     def load(
