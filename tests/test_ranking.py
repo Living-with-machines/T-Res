@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from t_res.geoparser import ranking
+from t_res.geoparser.ranking import *
 from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
@@ -24,18 +24,18 @@ def test_ranking_data_classes():
 
     # Ranker `string_match` method returns a list[StringMatch].
     matches = [
-        ranking.StringMatch('Shielfield', 0.9387),
-        ranking.StringMatch('Sheffield', 0.9228),
-        ranking.StringMatch('Shelfield', 0.8947),
+        StringMatch('Shielfield', 0.9387),
+        StringMatch('Sheffield', 0.9228),
+        StringMatch('Shelfield', 0.8947),
     ]
 
     # Inside the Ranker `run` method, these StringMatch instances are 
     # converted into StringMatchLinks instances, by adding to each a
     # list of candidate Wikidata IDs.
     matches = [
-        ranking.StringMatchLinks('Shielfield', 0.9387, ['Q619055', 'Q5953687']),
-        ranking.StringMatchLinks('Sheffield', 0.9228, ['Q6707254', 'Q7492778', 'Q1421317']),
-        ranking.StringMatchLinks('Shelfield', 0.8947, ['Q7493600']),
+        StringMatchLinks('Shielfield', 0.9387, ['Q619055', 'Q5953687']),
+        StringMatchLinks('Sheffield', 0.9228, ['Q6707254', 'Q7492778', 'Q1421317']),
+        StringMatchLinks('Shelfield', 0.8947, ['Q7493600']),
     ]
 
     # Ranker `run` method returns a CandidateMatches instance.
@@ -57,12 +57,54 @@ def test_ranking_data_classes():
     assert candidates.matches[2].string_similarity == 0.8947
     assert len(candidates.matches[2].wqid_links) == 1
 
+def test_ranker_construction():
+    # Test Ranker construction via string parameters.
+
+    # If a required parameter is omitted, expect a TypeError.
+    kwargs = {
+        'method_name': 'perfectmatch',
+        }
+    with pytest.raises(TypeError):
+        ranker = Ranker.new(**kwargs)
+
+    kwargs = {
+        'method_name': 'perfectmatch',
+        'resources_path': 'sample_files/resources/',
+        }
+    ranker = Ranker.new(**kwargs)
+    assert isinstance(ranker, PerfectMatchRanker)
+    assert ranker.method_name == 'perfectmatch'
+    assert ranker.mentions_to_wikidata == dict()
+
+    kwargs = {
+        'method_name': 'levenshtein',
+        'resources_path': 'sample_files/resources/',
+        }
+    ranker = Ranker.new(**kwargs)
+    assert isinstance(ranker, LevenshteinRanker)
+    assert ranker.method_name == 'levenshtein'
+
+    kwargs = {
+        'method_name': 'deezymatch',
+        'resources_path': 'sample_files/resources/',
+        }
+    ranker = Ranker.new(**kwargs)
+    assert isinstance(ranker, DeezyMatchRanker)
+    assert ranker.method_name == 'deezymatch'
+
+    # If the ranking method is invalid, expect a ValueError.
+    kwargs = {
+        'method_name': 'nosuchmatch',
+        }
+    with pytest.raises(ValueError):
+        ranker = Ranker.new(**kwargs)
+
 def test_ranking_perfect_match():
     """
     Test that perfect_match returns only perfect matching cases
     """
-    ranker = ranking.PerfectMatchRanker(
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
+    ranker = PerfectMatchRanker(
+        resources_path=os.path.join(current_dir, "sample_files/resources/"),
     )
     assert ranker.method_name == "perfectmatch"
     
@@ -114,7 +156,7 @@ def test_ranking_matching_score():
     """
 
     # Test the overlap matching score.
-    ranker = ranking.PartialMatchRanker(
+    ranker = PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     assert ranker.method_name == "partialmatch"
@@ -130,7 +172,7 @@ def test_ranking_matching_score():
     assert score is None
 
     # Test the Levenshtein distance matching score.
-    ranker = ranking.LevenshteinRanker(
+    ranker = LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     ranker.load()
@@ -149,7 +191,7 @@ def test_ranking_partial_match():
     Test that partial match either returns results or {}
     """
 
-    ranker = ranking.PartialMatchRanker(
+    ranker = PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     assert ranker.method_name == "partialmatch"
@@ -193,7 +235,7 @@ def test_ranking_levenshtein():
     Test that Levenshtein partial match either returns results or {}
     """
 
-    ranker = ranking.LevenshteinRanker(
+    ranker = LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     assert ranker.method_name == "levenshtein"
@@ -239,7 +281,7 @@ def test_ranking_levenshtein():
 
 @pytest.mark.skip(reason="Needs deezy model")
 def test_ranking_deezy_on_the_fly(tmp_path):
-    ranker = ranking.DeezyMatchRanker(
+    ranker = DeezyMatchRanker(
         resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -298,7 +340,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
 
 @pytest.mark.skip(reason="Needs deezy model")
 def test_ranking_attach_wikidata(tmp_path):
-    ranker = ranking.DeezyMatchRanker(
+    ranker = DeezyMatchRanker(
         resources_path=os.path.join(current_dir,"../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -365,7 +407,7 @@ def test_ranking_attach_wikidata(tmp_path):
     assert "Q42448" in candidates.get("Sheffield").wqid_links
 
     # Test that Perfect Match works
-    ranker = ranking.PerfectMatchRanker(
+    ranker = PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     ranker.load()
@@ -383,13 +425,13 @@ def test_ranking_attach_wikidata(tmp_path):
     assert candidates.is_empty()
 
     # Test that check if contained works
-    ranker = ranking.PartialMatchRanker(
+    ranker = PartialMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     ranker.load()
 
     # Test that levenshtein works
-    ranker = ranking.LevenshteinRanker(
+    ranker = LevenshteinRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
     ranker.load()

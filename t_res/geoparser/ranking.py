@@ -71,6 +71,33 @@ class Ranker:
         s = ">>> Candidate selection:\n"
         s += f"    * Method: {self.method_name}\n"
         return s
+    
+    def new(**kwargs) -> 'Ranker':
+        """
+        Static constructor.
+
+        Args:
+            kwargs (dict): A dictionary of keyword arguments matching the
+                arguments to a subclass __init__ constructor, plus a 
+                `method_name` argument to specify the desired subclass.
+
+        Returns:
+            Ranker: A Ranker subclass instance.
+
+        """
+        if not 'method_name' in kwargs.keys():
+            raise ValueError("Expected `method_name` keyword argument.")
+        method_name = kwargs['method_name']
+        del kwargs['method_name']
+        if method_name == 'perfectmatch':
+            return PerfectMatchRanker(**kwargs)
+        if method_name == 'partialmatch':
+            return PartialMatchRanker(**kwargs)
+        if method_name == 'levenshtein':
+            return LevenshteinRanker(**kwargs)
+        if method_name == 'deezymatch':
+            return DeezyMatchRanker(**kwargs)
+        raise ValueError("Invalid ranking method: {method_name}")
 
     def load(self):
         """
