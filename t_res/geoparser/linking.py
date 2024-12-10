@@ -66,6 +66,31 @@ class Linker:
         s += f"    * Overwrite training: {self.overwrite_training}\n"
         return s
 
+    def new(**kwargs) -> 'Linker':
+        """
+        Static constructor.
+
+        Args:
+            kwargs (dict): A dictionary of keyword arguments matching the
+                arguments to a subclass __init__ constructor, plus a 
+                `method_name` argument to specify the desired subclass.
+
+        Returns:
+            Linker: A Linker subclass instance.
+
+        """
+        if not 'method_name' in kwargs.keys():
+            raise ValueError("Expected `method_name` keyword argument.")
+        method_name = kwargs['method_name']
+        del kwargs['method_name']
+        if method_name == 'mostpopular':
+            return MostPopularLinker(**kwargs)
+        if method_name == 'bydistance':
+            return ByDistanceLinker(**kwargs)
+        if method_name == 'reldisamb':
+            return RelDisambLinker(**kwargs)
+        raise ValueError("Invalid linking method: {method_name}")
+
     def wkdt_class(self, wqid: str) -> Optional[str]:
         """Returns the Wikidata class for the given Wikidata entry, if available."""
         wkdt_class = self.linking_resources["entity2class"].get(wqid)

@@ -4,7 +4,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from t_res.geoparser import linking, ranking
+from t_res.geoparser import ranking
+from t_res.geoparser.linking import *
 from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
@@ -84,7 +85,7 @@ def test_linking_data_classes():
     assert candidate_links.string_match.variation == 'Shielfield'
     assert candidate_links.string_match.string_similarity == 0.9387
 
-    linker = linking.MostPopularLinker(
+    linker = MostPopularLinker(
         resources_path="path/to/resources/",
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
@@ -114,7 +115,7 @@ def test_linking_data_classes():
 def test_init():
 
     # Test that parameters passed to the subclass constructor are propagated.
-    linker = linking.MostPopularLinker(
+    linker = MostPopularLinker(
         resources_path="path/to/resources/",
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
@@ -126,14 +127,14 @@ def test_init():
     assert linker.experiments_path  == "path/to/experiments/"
     assert linker.linking_resources['resource'] == 'value'
 
-    linker = linking.MostPopularLinker(
+    linker = MostPopularLinker(
         resources_path="path/to/resources/",
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
     )
 
     # Test the extra parameters in the RelDisambLinker
-    linker = linking.RelDisambLinker(
+    linker = RelDisambLinker(
         resources_path="path/to/resources/",
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
@@ -150,7 +151,7 @@ def test_init():
     assert linker.rel_params['param'] == 'value'
     assert linker.overwrite_training
 
-    linker = linking.RelDisambLinker(
+    linker = RelDisambLinker(
         resources_path="path/to/resources/",
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
@@ -160,8 +161,53 @@ def test_init():
 
     assert not linker.overwrite_training
 
+def test_new():
+    # Test Linker construction via string parameters.
+
+    # If a required parameter is omitted, expect a TypeError.
+    kwargs = {
+        'method_name': 'mostpopular',
+        }
+    with pytest.raises(TypeError):
+        linker = Linker.new(**kwargs)
+
+    kwargs = {
+        'method_name': 'mostpopular',
+        'resources_path': 'sample_files/resources/',
+        }
+    linker = Linker.new(**kwargs)
+    assert isinstance(linker, MostPopularLinker)
+    assert linker.method_name == 'mostpopular'
+    assert linker.linking_resources == dict()
+
+    kwargs = {
+        'method_name': 'bydistance',
+        'resources_path': 'sample_files/resources/',
+        }
+    linker = Linker.new(**kwargs)
+    assert isinstance(linker, ByDistanceLinker)
+    assert linker.method_name == 'bydistance'
+
+    kwargs = {
+        'method_name': 'reldisamb',
+        'resources_path': 'sample_files/resources/',
+        'ranker': ranking.PerfectMatchRanker("sample_files/resources/"),
+        'overwrite_training': True,
+        }
+    linker = Linker.new(**kwargs)
+    assert isinstance(linker, RelDisambLinker)
+    assert linker.method_name == 'reldisamb'
+    assert linker.overwrite_training
+
+    # If the ranking method is invalid, expect a ValueError.
+    kwargs = {
+        'method_name': 'nosuchlinker',
+        }
+    with pytest.raises(ValueError):
+        linker = Linker.new(**kwargs)
+
 def test_linking_most_popular():
-    linker = linking.MostPopularLinker(
+    linker = MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
     )
@@ -203,7 +249,7 @@ def test_linking_most_popular():
 # reproduces the same results.
 def test_disambiguation_scores_by_distance():
 
-    linker = linking.ByDistanceLinker(
+    linker = ByDistanceLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
     )
@@ -364,7 +410,7 @@ def test_disambiguation_scores_by_distance():
     assert scores == dict()
 
 def test_linking_by_distance():
-    linker = linking.ByDistanceLinker(
+    linker = ByDistanceLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
         linking_resources=dict(),
     )

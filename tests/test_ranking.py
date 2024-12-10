@@ -57,7 +57,7 @@ def test_ranking_data_classes():
     assert candidates.matches[2].string_similarity == 0.8947
     assert len(candidates.matches[2].wqid_links) == 1
 
-def test_ranker_construction():
+def test_new():
     # Test Ranker construction via string parameters.
 
     # If a required parameter is omitted, expect a TypeError.
