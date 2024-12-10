@@ -33,6 +33,8 @@ def test_pipeline_basic():
     assert len(predictions.sentence_candidates) == 1
     assert len(predictions.sentence_candidates[0].candidates) == 1
     assert len(predictions.candidates()) == 1
+    assert predictions.candidates()[0].best_string_match().variation == "Sheffield"
+    assert predictions.candidates()[0].best_string_match().string_similarity == 1.0
     assert predictions.candidates()[0].mention.mention == "Sheffield"
     assert predictions.candidates()[0].mention.ner_score == 1.0
     assert predictions.candidates()[0].best_wqid() == "Q42448"
@@ -127,12 +129,19 @@ def test_deezy_mostpopular(tmp_path):
     assert len(predictions.candidates()) == 3
     assert predictions.candidates()[0].mention.mention == "Shefiield"
     assert predictions.candidates()[0].best_match().string_match.variation == "Sheffield"
-    assert predictions.candidates()[0].best_match().string_match.string_similarity == 0.999494
+    assert predictions.candidates()[0].best_string_match().string_similarity == 0.999494
     assert predictions.candidates()[0].best_wqid() == "Q42448"
     assert predictions.candidates()[0].best_match().cross_cand_scores()["Q42448"] == 0.903
     assert predictions.candidates()[0].best_match().best_disambiguation_score() == pytest.approx(0.903, abs=1e-3)
     assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.903, abs=1e-3)
     assert predictions.candidates()[0].mention.ner_score == 1.0
+
+    # The predictions are Sheffield (Q42448), Leeds (Q39121) and London (Q84).
+    assert predictions.best_wqids() == ['Q42448', 'Q39121', 'Q84']
+    assert predictions.best_disambiguation_scores() == [
+        pytest.approx(0.903, abs=1e-3), 
+        pytest.approx(0.913, abs=1e-3), 
+        pytest.approx(0.972, abs=1e-3)]
 
     assert geoparser.run("").is_empty()
 
@@ -246,13 +255,33 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert predictions.candidates()[0].best_wqid() == "Q42448"
     assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.766, abs=1e-3)
 
+    # The predictions are Sheffield (Q42448), Leeds (Q39121) and London (Q84).
+    assert predictions.best_wqids() == ['Q42448', 'Q39121', 'Q84']
+    assert predictions.best_disambiguation_scores() == [
+        pytest.approx(0.766, abs=1e-3), 
+        pytest.approx(0.755, abs=1e-3), 
+        pytest.approx(0.734, abs=1e-3)]
+
+    # Compare with the interim predictions (produced before running the REL model).
+    interim_best_wqids = [c.best_wqid() 
+                          for scs in predictions.sentence_candidates 
+                          for c in scs.candidates]
+    interim_best_disambiguation_scores = [c.best_disambiguation_score() 
+                                          for scs in predictions.sentence_candidates 
+                                          for c in scs.candidates]
+
+    assert interim_best_wqids == ['Q42448', 'Q39121', 'Q84']
+    # Note that the interim disambiguation scores are higher, and are still available 
+    # after applying the REL model, but the REL scores take precedence (see above).
+    assert interim_best_disambiguation_scores == [
+        pytest.approx(0.891, abs=1e-3), 
+        pytest.approx(0.897, abs=1e-3), 
+        pytest.approx(0.895, abs=1e-3)]
+    
     # # tmp:
     # print("cross_cand_scores:")
     # print(predictions.candidates()[0].best_match().cross_cand_scores())
 
-    # TODO NEXT: update the Pipeline `run` method so this number is reproduced:
-    # (NOTE: currently we're getting 0.903 which is the `mostpopular` linker score, because the `disambiguation_scores`
-    # closure for the `reldisamb` linking method has a temp implementation that's just a copy of the `mostpopular` case.)
     assert predictions.candidates()[0].best_match().cross_cand_scores()["Q42448"] == pytest.approx(0.766, abs=1e-3)
     # TODO: add a new method to CandidateLinks to return the prior_cand_score results.
     # assert predictions.candidates()[0].best_match().best_disambiguation_score() == 0.039 # TODO: reproduce this number.
@@ -329,6 +358,8 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.candidates()[1].mention.mention == "Leeds"
     assert resolved.candidates()[1].mention.ner_score == 1.0
     assert resolved.candidates()[1].best_match() is not None
+    assert isinstance(resolved.candidates()[1].best_match(), PredictedLinks)
+    assert resolved.candidates()[1].best_match().best_disambiguation_score() == pytest.approx(0.356, abs=1e-3)
     assert resolved.candidates()[1].best_wqid() == "Q39121"
     assert resolved.candidates()[1].best_disambiguation_score() == pytest.approx(0.356, abs=1e-3)
     assert resolved.rel_scores[1].mention == "Leeds"
@@ -338,6 +369,8 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.candidates()[2].mention.mention == "London"
     assert resolved.candidates()[2].mention.ner_score == 0.998
     assert resolved.candidates()[2].best_match() is not None
+    assert isinstance(resolved.candidates()[1].best_match(), PredictedLinks)
+    assert resolved.candidates()[2].best_match().best_disambiguation_score() == pytest.approx(0.493, abs=1e-3)
     assert resolved.candidates()[2].best_wqid() == "Q84"
     assert resolved.candidates()[2].best_disambiguation_score() == pytest.approx(0.493, abs=1e-3)
     assert resolved.rel_scores[2].mention == "London"

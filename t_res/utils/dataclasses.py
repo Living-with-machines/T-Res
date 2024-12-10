@@ -4,7 +4,6 @@ from dataclasses import field, InitVar
 
 from sentence_splitter import SentenceSplitter
 
-# TODO: move this module to the `utils` subdirectory.
 # TODO: add __str__ methods
 
 ################################
@@ -390,6 +389,11 @@ class Candidates:
             return None
         # The list of CandidateLinks instances is ordered by decreasing string similarity.
         return self.links[0]
+    
+    def best_string_match(self) -> Optional[StringMatch]:
+        if self.is_empty():
+            return None
+        return self.best_match().string_match
 
     # Returns the Wikidata link with the highest disambiguation score.
     def best_wikidata_link(self) -> Optional[WikidataLink]:
@@ -492,6 +496,12 @@ class Predictions(TextCandidates):
         for c in self.candidates():
             if not all([isinstance(links, PredictedLinks) for links in c.links]):
                 raise ValueError("Candidate links must be scored.")
+
+    def best_wqids(self) -> List[Optional[str]]:
+        return [c.best_wqid() for c in self.candidates()]
+
+    def best_disambiguation_scores(self) -> List[Optional[float]]:
+        return [c.best_disambiguation_score() for c in self.candidates()]
 
     def apply_rel_disambiguation(
             self, 
