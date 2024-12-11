@@ -138,7 +138,7 @@ class Pipeline:
 
         mentions = self.run_text_recognition(text)
         candidates = self.run_candidate_selection(mentions, place_of_pub_wqid, place_of_pub)
-        return self.run_disambiguation(candidates.sentence_candidates)
+        return self.run_disambiguation(candidates)
 
     ### Modular/stepwise methods:
 
@@ -163,9 +163,9 @@ class Pipeline:
             sentence_candidates.append(SentenceCandidates(sms.sentence, candidates))
         return TextCandidates(sentence_candidates)
 
-    def run_disambiguation(self, sentence_candidates: List[SentenceCandidates]) -> Predictions:
+    def run_disambiguation(self, candidates: TextCandidates) -> Predictions:
         """Runs the entity disambiguation step of the pipeline."""
-        return self.linker.disambiguate(sentence_candidates)
+        return self.linker.disambiguate(candidates.sentence_candidates)
 
     # Deprecated:
     def run_sentence_deprecated(

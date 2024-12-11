@@ -4,7 +4,7 @@ from dataclasses import field, InitVar
 
 from sentence_splitter import SentenceSplitter
 
-# TODO: add __str__ methods
+# TODO NEXT: add __str__ methods and check them in the jupyter notebooks.
 
 ################################
 # Dataclasses for Recogniser

@@ -478,7 +478,7 @@ def test_modular_deezy_rel(tmp_path):
     for c in cands.candidates():
         assert isinstance(c, Candidates)
 
-    disambiguation = geoparser.run_disambiguation(cands.sentence_candidates)
+    disambiguation = geoparser.run_disambiguation(cands)
 
     assert isinstance(disambiguation, Predictions)
     assert disambiguation.candidates()[0].best_wqid() == "Q989418"
