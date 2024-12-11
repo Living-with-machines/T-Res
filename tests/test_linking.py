@@ -457,13 +457,12 @@ def test_linking_by_distance():
     assert candidate.best_match().best_disambiguation_score() == 0.694
     assert candidate.best_match().disambiguation_scores.keys() == {"Q84", "Q92561"}
 
-    # Test with an empty list of candidates.
+    # Test with a list of empty candidates.
     origin_wqid = "Q2365261"
     candidates = linker.run(CandidateMatches(mention, "perfectmatch", []), origin_wqid)
 
     sentence_candidates = SentenceCandidates(Sentence(sentence), [candidates])
     predictions = linker.disambiguate([sentence_candidates])
 
-    print(predictions)
-
     assert predictions.is_empty()
+    assert not predictions.is_empty(ignore_empty_candidates=False)

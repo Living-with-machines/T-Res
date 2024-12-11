@@ -439,8 +439,10 @@ class SentenceCandidates:
         if max([cs.mention.end_char() for cs in self.candidates]) > len(self.sentence):
             raise ValueError("Inconsistent candidate mentions. Max end char exceeds sentence length.")
 
-    def is_empty(self) -> bool:
-        return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
+    def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
+        if ignore_empty_candidates:
+            return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
+        return len(self.candidates) == 0
 
 # Pipeline::run_candidate_selection method output type.
 @pdataclass(frozen=True)
@@ -462,8 +464,10 @@ class TextCandidates:
     def candidates(self) -> List[Candidates]:
         return [c for sc in self.sentence_candidates for c in sc.candidates]
 
-    def is_empty(self) -> bool:
-        return len(self.sentence_candidates) == 0 or all([sc.is_empty() for sc in self.sentence_candidates])
+    def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
+        if ignore_empty_candidates:
+            return len(self.sentence_candidates) == 0 or all([sc.is_empty() for sc in self.sentence_candidates])
+        return len(self.candidates()) == 0
     
     def text(self) -> str:
         return " ".join([scs.sentence.sentence for scs in self.sentence_candidates])
@@ -477,12 +481,12 @@ class TextCandidates:
          for i, sc in enumerate(scs)]
 
     def place_of_pub_wqid(self) -> Optional[str]:
-        if self.is_empty():
+        if self.is_empty(ignore_empty_candidates=False):
             return None
         return self.candidates()[0].place_of_pub_wqid
 
     def place_of_pub(self) -> Optional[str]:
-        if self.is_empty():
+        if self.is_empty(ignore_empty_candidates=False):
             return None
         return self.candidates()[0].place_of_pub
 
@@ -524,6 +528,8 @@ class Predictions(TextCandidates):
     def place_of_pub_mention(self) -> dict:
         place_of_pub = self.place_of_pub()
         place_of_pub_wqid = self.place_of_pub_wqid()
+        if not place_of_pub or not place_of_pub_wqid:
+            raise ValueError("Missing place of publication info.")
         prefix = "This article is published in "
         place_of_pub_sentence = f"{prefix}{place_of_pub}."
         # NOTE: this dict is slightly inconsistent versus the mention_dicts 
