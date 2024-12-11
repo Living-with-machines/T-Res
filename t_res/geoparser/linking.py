@@ -651,6 +651,7 @@ class RelDisambLinker(Linker):
         # return {link.wqid: link.freq / total for link in links}
         return ret
 
+    # TODO: remove ranker argument (use self.ranker).
     def train_load_model(
         self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"
     ):
@@ -711,7 +712,7 @@ class RelDisambLinker(Linker):
             linker_name += "_test"
         linker_name = os.path.join(self.rel_params["model_path"], linker_name)
 
-        if self.overwrite_training == True or not Path(linker_name).is_dir():
+        if self.overwrite_training == True or not Path(linker_name).is_dir() or len(os.listdir(linker_name)) == 0:
             print(
                 "The entity disambiguation model does not exist or overwrite_training is set to True."
             )
