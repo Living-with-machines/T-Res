@@ -9,9 +9,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from . import ner_utils
-
-if TYPE_CHECKING:
-    from ..geoparser import ner
+from ..geoparser import ner
 
 
 def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
