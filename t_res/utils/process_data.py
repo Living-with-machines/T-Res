@@ -11,7 +11,7 @@ from tqdm import tqdm
 from . import ner_utils
 
 if TYPE_CHECKING:
-    from ..geoparser import recogniser
+    from ..geoparser import ner
 
 
 def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
@@ -203,7 +203,7 @@ def postprocess_predictions(
 
     Arguments:
         predictions (list): the output of the
-            :py:meth:`geoparser.recogniser.Recogniser.ner_predict` method,
+            :py:meth:`geoparser.ner.Recogniser.ner_predict` method,
             where, given a sentence, a list of dictionaries is returned, where
             each dictionary corresponds to a recognised token, e.g.:
 
@@ -253,9 +253,9 @@ def postprocess_predictions(
     return postprocessed_sentence
 
 
-# TODO/typing: set ``ner: recogniser.Recogniser`` here, but creates problem with Sphinx currently
+# TODO/typing: set ``ner: ner.Recogniser`` here, but creates problem with Sphinx currently
 def ner_and_process(
-    dSentences: dict, dAnnotated: dict, ner
+    dSentences: dict, dAnnotated: dict, recogniser: ner.Recogniser
 ) -> Tuple[dict, dict, dict, dict, dict]:
     """
     Perform named entity recognition in the LwM way, and postprocess the
@@ -272,7 +272,7 @@ def ner_and_process(
             key) and another tuple as its value, which consists of: the type
             of named entity (such as ``LOC`` or ``BUILDING``, the mention, and
             its annotated link), all extracted from the gold standard.
-        ner (recogniser.Recogniser): a Recogniser object, for NER.
+        recogniser (ner.Recogniser): a Recogniser object, for NER.
 
     Returns:
         Tuple[dict, dict, dict, dict, dict]:
@@ -371,7 +371,7 @@ def ner_and_process(
     for sent_id in tqdm(list(dSentences.keys())):
         sent = dSentences[sent_id]
         annotations = dAnnotated[sent_id]
-        predictions = ner.ner_predict(sent)
+        predictions = recogniser.ner_predict(sent)
         gold_positions = align_gold(predictions, annotations)
         sentence_postprocessing = postprocess_predictions(predictions, gold_positions)
         dPreds[sent_id] = sentence_postprocessing["sentence_preds"]

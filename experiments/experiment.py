@@ -7,7 +7,7 @@ from typing import Literal, Optional
 import pandas as pd
 from tqdm import tqdm
 
-from t_res.geoparser import linking, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking
 from t_res.utils import process_data, rel_utils
 from t_res.utils.dataclasses import SentenceMentions, SentenceCandidates
 
@@ -49,7 +49,7 @@ class Experiment:
         data_path: str,
         results_path: str,
         dataset_df: pd.DataFrame,
-        ner: recogniser.Recogniser,
+        recogniser: ner.Recogniser,
         ranker: ranking.Ranker,
         linker: linking.Linker,
         overwrite_processing: Optional[bool] = True,
@@ -64,7 +64,7 @@ class Experiment:
         self.dataset = dataset
         self.data_path = data_path
         self.results_path = results_path
-        self.ner = ner
+        self.recogniser = recogniser
         self.ranker = ranker
         self.linker = linker
         self.overwrite_processing = overwrite_processing
@@ -120,7 +120,7 @@ class Experiment:
             dict: A dictionary where the processed data is stored.
         """
 
-        output_path = os.path.join(self.data_path, self.dataset, self.ner.model_name)
+        output_path = os.path.join(self.data_path, self.dataset, self.recogniser.model_name)
 
         # Add the candidate experiment info to the path:
         cand_approach = self.ranker.method_name
@@ -189,7 +189,7 @@ class Experiment:
         # Parse with NER in the LwM way
         print("\nPerform NER with our model:")
         output_lwm_ner = process_data.ner_and_process(
-            dSentences, dAnnotated, self.ner
+            dSentences, dAnnotated, self.recogniser
         )
 
         dPreds = output_lwm_ner[0]
@@ -280,7 +280,7 @@ class Experiment:
         """
         data_path = self.data_path
         dataset = self.dataset
-        model_name = self.ner.model_name
+        model_name = self.recogniser.model_name
         output_path = data_path + dataset + "/" + model_name
 
         cand_approach = self.ranker.method_name
@@ -451,9 +451,9 @@ class Experiment:
             data=rows,
         )
 
-        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.ner.model_name}_{cand_approach}')}")
+        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.recogniser.model_name}_{cand_approach}')}")
         output_path = (
-            os.path.join(self.data_path,self.dataset,f"{self.ner.model_name}_{cand_approach}")
+            os.path.join(self.data_path,self.dataset,f"{self.recogniser.model_name}_{cand_approach}")
         )
 
 
@@ -525,7 +525,7 @@ class Experiment:
 
         scenario_name = ""
         if task == "ner":
-            scenario_name += task + "_" + self.ner.model_name + "_"
+            scenario_name += task + "_" + self.recogniser.model_name + "_"
 
             # Store predictions results formatted for CLEF-HIPE scorer:
             preds_name = "preds"
@@ -545,7 +545,7 @@ class Experiment:
             )
 
         if task == "linking":
-            scenario_name += task + "_" + self.ner.model_name + "_"
+            scenario_name += task + "_" + self.recogniser.model_name + "_"
             cand_approach = self.ranker.method_name
             if self.ranker.method_name == "deezymatch":
                 cand_approach += "+" + str(

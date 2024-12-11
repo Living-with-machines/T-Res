@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from t_res.geoparser import recogniser
+from t_res.geoparser import ner
 from t_res.utils import process_data
 
 current_dir = Path(__file__).parent.resolve()
@@ -65,7 +65,8 @@ def test_prepare_sents():
 
 
 def test_align_gold(tmp_path):
-    ner = recogniser.CustomRecogniser(
+
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -82,7 +83,7 @@ def test_align_gold(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    ner.load()
+    recogniser.load()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -95,7 +96,7 @@ def test_align_gold(tmp_path):
         if "3580760_2" == sent_id:
             sent = dSentences[sent_id]
             annotations = dAnnotated[sent_id]
-            predictions = ner.ner_predict(sent)
+            predictions = recogniser.ner_predict(sent)
             gold_positions = process_data.align_gold(predictions, annotations)
 
             I_elements = [
@@ -120,7 +121,8 @@ def test_align_gold(tmp_path):
 
 
 def test_ner_and_process(tmp_path):
-    ner = recogniser.CustomRecogniser(
+
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -137,7 +139,7 @@ def test_ner_and_process(tmp_path):
         do_test=False,  # Set to True if you want to train on test mode
     )
 
-    ner.load()
+    recogniser.load()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -153,7 +155,7 @@ def test_ner_and_process(tmp_path):
         gold_tokenization,
         dMentionsPred,
         dMentionsGold,
-    ) = process_data.ner_and_process(dSentences, dAnnotated, ner)
+    ) = process_data.ner_and_process(dSentences, dAnnotated, recogniser)
 
     B_els = [
         [z for z in range(len(y)) if "B-" in y[z]["entity"]]

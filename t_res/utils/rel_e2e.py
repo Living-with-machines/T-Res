@@ -192,7 +192,7 @@ def store_rel(
     scenario_name = (
         approach
         + "_"
-        + experiment.ner.model  # The model name is needed due to tokenization
+        + experiment.recogniser.model  # The model name is needed due to tokenization
         + "_"
         + how_split
     )

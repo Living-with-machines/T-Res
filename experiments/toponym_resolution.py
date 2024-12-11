@@ -7,7 +7,7 @@ from pathlib import Path
 import experiment
 import pandas as pd
 
-from t_res.geoparser import linking, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -64,7 +64,7 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the recogniser:
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-" + granularity,
         train_dataset=str(current_dir)
         + "/outputs/data/lwm/ner_"
@@ -139,7 +139,7 @@ for exp_param in experiments:
         data_path=os.path.join(current_dir, "outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=os.path.join(current_dir, "outputs/results/"),
-        ner=ner,
+        recogniser=recogniser,
         ranker=ranker,
         linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
@@ -151,16 +151,16 @@ for exp_param in experiments:
 
     # Print experiment information:
     print(myexperiment)
-    print(ner)
+    print(recogniser)
     print(ranker)
     print(linker)
 
     # -----------------------------------------
     # NER training and creating pipeline:
     # Train the NER models if needed:
-    ner.train()
+    recogniser.train()
     # Load the NER pipeline:
-    ner.pipe = ner.load()
+    recogniser.pipe = recogniser.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:

@@ -174,6 +174,7 @@ def test_new():
     kwargs = {
         'method_name': 'mostpopular',
         'resources_path': 'sample_files/resources/',
+        'linking_resources': dict(),
         }
     linker = Linker.new(**kwargs)
     assert isinstance(linker, MostPopularLinker)

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from t_res.geoparser import linking, pipeline, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking, pipeline
 from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
@@ -14,8 +14,8 @@ def test_pipeline_constructor():
     geoparser = pipeline.Pipeline(resources_path=resources_path)
 
     # Check default pipeline components.
-    assert isinstance(geoparser.ner, recogniser.PretrainedRecogniser)
-    assert geoparser.ner.model_name == "Livingwithmachines/toponym-19thC-en"
+    assert isinstance(geoparser.recogniser, ner.PretrainedRecogniser)
+    assert geoparser.recogniser.model_name == "Livingwithmachines/toponym-19thC-en"
 
     assert isinstance(geoparser.ranker, ranking.PerfectMatchRanker)
     assert geoparser.ranker.resources_path == resources_path
@@ -65,7 +65,7 @@ def test_deezy_mostpopular(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -117,7 +117,7 @@ def test_deezy_mostpopular(tmp_path):
         resources_path=os.path.join(current_dir, "../resources/"),
     )
 
-    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
     assert len(geoparser.ranker.mentions_to_wikidata.keys())>0
 
     text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
@@ -156,7 +156,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -226,7 +226,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
             overwrite_training=False,
         )
 
-    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
     # # OLD (TODO: reproduce the same numbers via the new `run` method):
     # text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
@@ -292,7 +292,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -337,7 +337,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
             overwrite_training=False,
         )
 
-    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
     resolved = geoparser.run(
         "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
@@ -382,7 +382,7 @@ def test_modular_deezy_rel(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -452,7 +452,7 @@ def test_modular_deezy_rel(tmp_path):
             overwrite_training=False,
         )
 
-    geoparser = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
     text = "STOCKTON AND MIDDLESBROUGH WATER IVARD.  The monthly meeting of the Sr-id:toe and bladtiltwitrough Water Lkerd was held at the Corp.acit:o.i liniklinga, Middlesbrough, on Monday."
     place_of_pub_wqid = "Q989418"

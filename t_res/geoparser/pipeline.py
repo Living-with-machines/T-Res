@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from sentence_splitter import split_text_into_sentences
 
 from ..utils import ner_utils, rel_utils
-from . import linking, ranking, recogniser
+from . import ner, ranking, linking
 from ..utils.dataclasses import *
 
 class Pipeline:
@@ -16,7 +16,7 @@ class Pipeline:
     to geoparse any entities in the text.
 
     Arguments:
-        ner (recogniser.Recogniser, optional): The NER (Named Entity
+        ner (ner.Recogniser, optional): The NER (Named Entity
             Recogniser) object to use in the pipeline. If None, a default
             ``Recogniser`` will be instantiated. For the default settings, see
             Notes below.
@@ -47,7 +47,7 @@ class Pipeline:
 
           .. code-block:: python
 
-            recogniser.PretrainedRecogniser(
+            ner.PretrainedRecogniser(
                 model="Livingwithmachines/toponym-19thC-en",
             )
 
@@ -72,7 +72,7 @@ class Pipeline:
 
     def __init__(
         self,
-        ner: Optional[recogniser.Recogniser] = None,
+        recogniser: Optional[ner.Recogniser] = None,
         ranker: Optional[ranking.Ranker] = None,
         linker: Optional[linking.Linker] = None,
         resources_path: Optional[str] = None,
@@ -82,13 +82,13 @@ class Pipeline:
         Instantiates a Pipeline object.
         """
 
-        self.ner = ner
+        self.recogniser = recogniser
         self.ranker = ranker
         self.linker = linker
 
         # If ner is None, instantiate the default Recogniser.
-        if not self.ner:
-            self.ner = recogniser.PretrainedRecogniser(
+        if not self.recogniser:
+            self.recogniser = ner.PretrainedRecogniser(
                 model_name="Livingwithmachines/toponym-19thC-en",
             )
 
@@ -111,7 +111,7 @@ class Pipeline:
 
         # -----------------------------------------
         # NER training and creating pipeline:
-        self.ner.load()
+        self.recogniser.load()
 
         # -----------------------------------------
         # Ranker loading resources and training a model:
@@ -146,7 +146,7 @@ class Pipeline:
         """Runs the named entity recognition step of the pipeline."""
         # Split the text into its sentences.
         sentences = SentenceContext.from_text(text, language="en")
-        return [self.ner.run(sentence.sentence) for sentence in sentences]
+        return [self.recogniser.run(sentence.sentence) for sentence in sentences]
     
     def run_candidate_selection(
             self, 
@@ -551,7 +551,7 @@ class Pipeline:
 
     def run_sentence_recognition(self, sentence) -> List[dict]:
         # Get predictions:
-        predictions = self.ner.ner_predict(sentence)
+        predictions = self.recogniser.ner_predict(sentence)
 
         # Process predictions:
         procpreds = [

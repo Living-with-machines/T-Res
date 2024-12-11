@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 import pytest
 
-from t_res.geoparser import linking, pipeline, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking, pipeline
 from t_res.utils import rel_utils
 from t_res.utils.REL import entity_disambiguation
 from t_res.utils.dataclasses import Predictions
@@ -51,7 +51,7 @@ def test_train(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="ner_test",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
@@ -119,7 +119,7 @@ def test_train(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    ner.load()
+    recogniser.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
@@ -141,7 +141,7 @@ def test_train(tmp_path):
 
 @pytest.mark.skip(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
@@ -209,7 +209,7 @@ def test_load_eval_model(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    ner.load()
+    recogniser.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
@@ -231,7 +231,7 @@ def test_predict(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
@@ -297,7 +297,7 @@ def test_predict(tmp_path):
             overwrite_training=False,
         )
 
-    mypipe = pipeline.Pipeline(ner=ner, ranker=ranker, linker=linker)
+    mypipe = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
     predictions = mypipe.run(
         "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",

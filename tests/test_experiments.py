@@ -11,7 +11,7 @@ current_dir = Path(__file__).parent.resolve()
 sys.path.insert(0, os.path.join(current_dir,"../"))
 from experiments import experiment
 
-from t_res.geoparser import linking, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking
 
 def test_experiments_wrong_dataset_path(tmp_path):
     with pytest.raises(SystemExit) as cm:
@@ -20,7 +20,7 @@ def test_experiments_wrong_dataset_path(tmp_path):
             data_path="wrong_path/",
             dataset_df=pd.DataFrame(),
             results_path=str(tmp_path),
-            ner="test",
+            recogniser="test",
             ranker="test",
             linker="test",
             test_split="dev",
@@ -42,7 +42,7 @@ def test_load_data(tmp_path):
         for sent in sents:
             ids.add(str(article_id) + "_" + str(sent["sentence_pos"]))
 
-    ner = recogniser.CustomRecogniser(
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -70,7 +70,7 @@ def test_load_data(tmp_path):
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    ner.load()
+    recogniser.load()
 
     # Load the resources (and train a DeezyMatch model if needed):
     ranker.load()
@@ -84,7 +84,7 @@ def test_load_data(tmp_path):
         data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=str(tmp_path),
-        ner=ner,
+        recogniser=recogniser,
         ranker=ranker,
         linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
@@ -126,7 +126,8 @@ def test_load_data(tmp_path):
 
 @pytest.mark.skip(reason="Needs large resources")
 def test_apply(tmp_path):
-    ner = recogniser.CustomRecogniser(
+    
+    recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
@@ -154,7 +155,7 @@ def test_apply(tmp_path):
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    ner.load()
+    recogniser.load()
 
     # Load the resources (and train a DeezyMatch model if needed):
     ranker.load()
@@ -168,7 +169,7 @@ def test_apply(tmp_path):
         data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=str(tmp_path),
-        ner=ner,
+        recogniser=recogniser,
         ranker=ranker,
         linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
