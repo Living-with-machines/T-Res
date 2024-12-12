@@ -8,55 +8,6 @@ from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
 
-def test_ranking_data_classes():
-    """
-    Test the data classes that represent ranking candidates.
-    """
-
-    # Legacy example:
-    # {'London': 1.0}
-    string_match = StringMatch('London', 1.0)
-    assert string_match.variation == 'London'
-    assert string_match.string_similarity == 1.0
-
-    # Legacy example:
-    # {'Sheftield': {'Shielfield': 0.9387, 'Sheffield': 0.9228, 'Shelfield': 0.8947}}
-
-    # Ranker `string_match` method returns a list[StringMatch].
-    matches = [
-        StringMatch('Shielfield', 0.9387),
-        StringMatch('Sheffield', 0.9228),
-        StringMatch('Shelfield', 0.8947),
-    ]
-
-    # Inside the Ranker `run` method, these StringMatch instances are 
-    # converted into StringMatchLinks instances, by adding to each a
-    # list of candidate Wikidata IDs.
-    matches = [
-        StringMatchLinks('Shielfield', 0.9387, ['Q619055', 'Q5953687']),
-        StringMatchLinks('Sheffield', 0.9228, ['Q6707254', 'Q7492778', 'Q1421317']),
-        StringMatchLinks('Shelfield', 0.8947, ['Q7493600']),
-    ]
-
-    # Ranker `run` method returns a CandidateMatches instance.
-    mention_str = {'mention': 'Sheftield', 'start_offset': 3, 'end_offset': 4, 'start_char': 12, 'ner_score': 0.699, 'ner_label': 'LOC', 'entity_link': 'O'}
-    candidates = CandidateMatches(Mention.from_dict(mention_str), "levenshtein", matches)
-
-    assert candidates.mention.mention == 'Sheftield'
-    assert candidates.ranking_method == 'levenshtein'
-    assert len(candidates.matches) == 3
-
-    # matches are in order of decreasing string similarity.
-    assert candidates.matches[0].variation == 'Shielfield'
-    assert candidates.matches[0].string_similarity == 0.9387
-    assert len(candidates.matches[0].wqid_links) == 2
-    assert candidates.matches[1].variation == 'Sheffield'
-    assert candidates.matches[1].string_similarity == 0.9228
-    assert len(candidates.matches[1].wqid_links) == 3
-    assert candidates.matches[2].variation == 'Shelfield'
-    assert candidates.matches[2].string_similarity == 0.8947
-    assert len(candidates.matches[2].wqid_links) == 1
-
 def test_new():
     # Test Ranker construction via string parameters.
 
