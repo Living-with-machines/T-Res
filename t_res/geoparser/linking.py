@@ -114,6 +114,8 @@ class Linker:
         """
         print("*** Load linking resources.")
 
+        # TODO: make this more consistent with the Ranker (which has a mentions_to_wikidata attribute).
+
         # Load Wikidata mentions-to-QID with absolute counts:
         print("  > Loading mentions to wikidata mapping.")
         with open(

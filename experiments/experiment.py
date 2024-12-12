@@ -2,14 +2,14 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 
 import pandas as pd
 from tqdm import tqdm
 
 from t_res.geoparser import ner, ranking, linking
 from t_res.utils import process_data, rel_utils
-from t_res.utils.dataclasses import SentenceMentions, SentenceCandidates
+from t_res.utils.dataclasses import SentenceMentions, SentenceCandidates, Mention
 
 
 class Experiment:
@@ -211,7 +211,7 @@ class Experiment:
         # Obtain candidates per sentence:
         for sentence_id in tqdm(dMentionsPred):
             pred_mentions_sent = dMentionsPred[sentence_id]
-            wk_cands = self.ranker.find_candidates(pred_mentions_sent)
+            wk_cands = self.find_candidates(pred_mentions_sent)
             dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
@@ -234,6 +234,71 @@ class Experiment:
 
         return self.processed_data
 
+    # Method retained from a previous version of the Ranker, for backwards
+    # compatibility (specifically, to support the prepare_data method).
+    def find_candidates(self, mentions: List[dict]) -> dict:
+        """
+        Find candidates for the given mentions using the selected ranking
+        method.
+
+        Arguments:
+            mentions (list): A list of predicted mentions as dictionaries.
+
+        Returns:
+            dict: A dictionary that maps each original mention to a
+               sub-dictionary, where the sub-dictionary maps the mention
+               variations to a sub-sub-dictionary with two keys: ``"Score"``
+               (the string matching similarity score) and ``"Candidates"``
+               (a dictionary containing the Wikidata candidates, where the
+               key is the Wikidata ID and value is the the relative mention-
+               to-wikidata frequency).
+
+               The variation is found by the candidate ranker in the knowledge
+               base, and for each variation, the candidate ranking score and
+               the candidates from Wikidata are provided. E.g. for mention
+               "Guadaloupe" in sentence "sn83030483-1790-03-31-a-i0004_1", the
+               candidates will show as follows:
+
+               .. code-block:: json
+
+                  {
+                    "Guadaloupe": {
+                        "Score": 1.0,
+                        "Candidates": {
+                            "Q17012": 0.003935458480913026,
+                            "Q3153836": 0.07407407407407407
+                        }
+                    }
+                }
+
+        Note:
+            This method takes a list of mentions and finds candidates for each
+            mention using the selected Ranker instance.
+
+            The method returns a dictionary that maps each original mention to
+            a sub-dictionary containing the mention variations as keys and
+            their corresponding Wikidata match scores as values.
+        """
+        # Extract the mentions
+        mentions = [Mention.from_dict(d) for d in mentions]
+
+        # Pass the mentions to the Ranker run method.
+        cands = [self.ranker.run(m) for m in mentions]
+
+        # Get Wikidata candidates
+        wk_cands = dict()
+        for cand in cands:
+            wk_cands[cand.mention.mention] = dict()
+            for match in cand.matches:
+                found_cands = self.ranker.mentions_to_wikidata.get(match.variation, dict())
+                if found_cands:
+                    wk_cands[cand.mention.mention][cand.mention.mention] = {
+                        "Score": match.string_similarity,
+                        "Candidates": found_cands,
+                    }
+
+        return wk_cands
+    
     def store_processed_data(
         self,
         preds: dict,

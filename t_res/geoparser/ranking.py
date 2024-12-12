@@ -50,6 +50,7 @@ class Ranker:
     # Class attribute for the name of the ranking method.
     method_name: str = None
 
+    # TODO: move wikidata_to_mentions arg to the DeezyMatchRanker __init__ only.
     def __init__(
         self,
         resources_path: str,
