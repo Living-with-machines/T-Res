@@ -501,6 +501,23 @@ class Predictions(Candidates):
             if not all([isinstance(links, PredictedLinks) for links in c.links]):
                 raise ValueError("Candidate links must be scored.")
 
+    def __str__(self):
+        split = self.text().split(' ')
+        s = f"Predictions for text: '{' '.join(split[:5])}...{' '.join(split[-5:])}':"
+        if self.is_empty():
+            s += " None"
+            return s
+        candidates = self.candidates()
+        l = max([len(c.mention.mention) for c in candidates])
+        for c in candidates:
+            if c.is_empty():
+                result_str = "None"
+            else:
+                score = round(c.best_disambiguation_score(), 3)
+                result_str = f"{c.best_string_match().variation} [{c.best_wqid()}], confidence: {score}"
+            s += f"\n    {c.mention.mention.ljust(l)} => {result_str}"
+        return s
+
     def best_wqids(self) -> List[Optional[str]]:
         return [c.best_wqid() for c in self.candidates()]
 
