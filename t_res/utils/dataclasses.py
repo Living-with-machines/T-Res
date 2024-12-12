@@ -319,7 +319,7 @@ class PredictedLinks(CandidateLinks):
 
 # Linker::run method output type.
 @pdataclass(order=True, frozen=True)
-class Candidates:
+class MentionCandidates:
     """Data class representing candidate string matches for a toponym, 
     each with candidate Wikidata links."""
     sort_index: float = field(init=False)
@@ -431,7 +431,7 @@ class SentenceCandidates:
     # The sentence.
     sentence: Sentence
     # List of candidates for each toponym mention in the sentence.
-    candidates: List[Candidates]
+    candidates: List[MentionCandidates]
 
     def __post_init__(self):
         if self.is_empty():
@@ -446,7 +446,7 @@ class SentenceCandidates:
 
 # Pipeline::run_candidate_selection method output type.
 @pdataclass(frozen=True)
-class TextCandidates:
+class Candidates:
     """Data class representing candidate matches for all toponym mentions 
     in a block of text."""
     # List of setence candidates for each sentence in the text.
@@ -461,7 +461,7 @@ class TextCandidates:
         if {self.place_of_pub()} != {c.place_of_pub for c in self.candidates()}:
             raise ValueError("Inconsistent place of publication data.")
 
-    def candidates(self) -> List[Candidates]:
+    def candidates(self) -> List[MentionCandidates]:
         return [c for sc in self.sentence_candidates for c in sc.candidates]
 
     def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
@@ -492,7 +492,7 @@ class TextCandidates:
 
 # Pipeline::run_disambiguation method output type.
 @pdataclass(frozen=True)
-class Predictions(TextCandidates):
+class Predictions(Candidates):
     """Data class representing toponym predictions in text."""
 
     def __post_init__(self):
@@ -657,7 +657,7 @@ class RelPredictions(Predictions):
                              Got {len(self.rel_scores)} instances and {len(super().candidates())} mentions.""")
 
     # Override the candidates method to return REL linking predictions.
-    def candidates(self) -> List[Candidates]:
+    def candidates(self) -> List[MentionCandidates]:
 
         # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
         ret = list()
@@ -669,7 +669,7 @@ class RelPredictions(Predictions):
             # Get the list of WikidataLink instances for which REL scores are available.
             wikidata_links = [wl for wl in predicted_links.wikidata_links if wl.wqid in rs.scores.keys()]
             links = [PredictedLinks(predicted_links.string_match, wikidata_links, rs.scores)]
-            ret.append(Candidates(
+            ret.append(MentionCandidates(
                 c.mention, 
                 c.ranking_method, 
                 c.linking_method, 

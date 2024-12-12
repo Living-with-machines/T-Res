@@ -106,7 +106,14 @@ class Linker:
 
     def empty_candidates(self, mention: Mention, ranking_method: str, place_of_pub_wqid: str, place_of_pub: str):
         """Returns an empty `Candidates` instance."""
-        return Candidates(mention, ranking_method, self.method_name, list(), place_of_pub_wqid, place_of_pub, False)
+        return MentionCandidates(
+            mention,
+            ranking_method,
+            self.method_name,
+            list(),
+            place_of_pub_wqid,
+            place_of_pub,
+            False)
 
     def load(self):
         """
@@ -160,7 +167,7 @@ class Linker:
             matches: CandidateMatches, 
             place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None,
-        ) -> Candidates:
+        ) -> MentionCandidates:
         """
         Execute the linking process. Each Linker subclass must implement a 
         linking method by overriding this function.
@@ -233,7 +240,7 @@ class MostPopularLinker(Linker):
             matches: CandidateMatches, 
             place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None,
-        ) -> Candidates:
+        ) -> MentionCandidates:
         """
         Select most popular candidate, given Wikipedia's in-link structure.
 
@@ -274,7 +281,7 @@ class MostPopularLinker(Linker):
             ))
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(
+        return MentionCandidates(
             matches.mention, 
             matches.ranking_method, 
             self.method_name, 
@@ -312,7 +319,7 @@ class ByDistanceLinker(Linker):
             matches: CandidateMatches, 
             place_of_pub_wqid: Optional[str],
             place_of_pub: Optional[str]=None,
-        ) -> Candidates:
+        ) -> MentionCandidates:
         """
         Select candidates based on distance to the place of publication.
 
@@ -371,10 +378,10 @@ class ByDistanceLinker(Linker):
             ))
 
         # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(
-            matches.mention, 
-            matches.ranking_method, 
-            self.method_name, 
+        return MentionCandidates(
+            matches.mention,
+            matches.ranking_method,
+            self.method_name,
             candidate_links,
             place_of_pub_wqid,
             place_of_pub,
@@ -542,7 +549,7 @@ class RelDisambLinker(Linker):
             matches: CandidateMatches, 
             place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None,
-        ) -> Candidates:
+        ) -> MentionCandidates:
         """
         Select candidates using the Radboud Entity Linker (REL) model.
 
@@ -594,7 +601,7 @@ class RelDisambLinker(Linker):
                 place_of_pub = self.rel_params["default_publname"]
 
         # # TODO: create a Linker cache and add the resulting candidates to it.
-        return Candidates(
+        return MentionCandidates(
             matches.mention,
             matches.ranking_method,
             self.method_name,

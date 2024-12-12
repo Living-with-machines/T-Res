@@ -470,13 +470,13 @@ def test_modular_deezy_rel(tmp_path):
 
     cands = geoparser.run_candidate_selection(sentence_mentions, place_of_pub_wqid, place_of_pub)
 
-    assert isinstance(cands, TextCandidates)
+    assert isinstance(cands, Candidates)
     # The double space between sentences is lost:
     assert cands.text() == ' '.join(text.split())
 
     assert len(cands.candidates()) == 5
     for c in cands.candidates():
-        assert isinstance(c, Candidates)
+        assert isinstance(c, MentionCandidates)
 
     disambiguation = geoparser.run_disambiguation(cands)
 

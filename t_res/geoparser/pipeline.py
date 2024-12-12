@@ -153,7 +153,7 @@ class Pipeline:
             sentence_mentions: List[SentenceMentions], 
             place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None, 
-        ) ->  TextCandidates:
+        ) ->  Candidates:
         """Runs the candidate selection step of the pipeline."""
 
         sentence_candidates = list()
@@ -161,9 +161,9 @@ class Pipeline:
             matches = [self.ranker.run(mention) for mention in sms.mentions]
             candidates = [self.linker.run(m, place_of_pub_wqid, place_of_pub) for m in matches]
             sentence_candidates.append(SentenceCandidates(sms.sentence, candidates))
-        return TextCandidates(sentence_candidates)
+        return Candidates(sentence_candidates)
 
-    def run_disambiguation(self, candidates: TextCandidates) -> Predictions:
+    def run_disambiguation(self, candidates: Candidates) -> Predictions:
         """Runs the entity disambiguation step of the pipeline."""
         return self.linker.disambiguate(candidates.sentence_candidates)
 
@@ -568,7 +568,7 @@ class Pipeline:
         self,
         mention,
         sentence: str,
-        wk_cands: Optional[Candidates],
+        wk_cands: Optional[MentionCandidates],
         context: Optional[Tuple[str, str]] = ("", ""),
         sent_idx: Optional[int] = 0,
         place: Optional[str] = "",
