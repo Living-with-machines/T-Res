@@ -32,6 +32,12 @@ class Mention:
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.start_char)
 
+    def __str__(self, pad_mention: int=0, pad_label: int=0):
+        s = f"{self.mention.ljust(pad_mention)} {self.ner_label.ljust(pad_label)}"
+        s += f" chars: {self.start_char}-{self.end_char()}"
+        s += f" confidence: {self.ner_score}"
+        return s
+
     def from_dict(dict: dict) -> 'Mention':
         return Mention(
             mention=dict['mention'],
@@ -118,6 +124,17 @@ class SentenceMentions:
             return
         if max([m.end_char() for m in self.mentions]) > len(self.sentence):
             raise ValueError("Max end char exceeds sentence length.")
+
+    def __str__(self):
+        s = f"NER toponym mentions:"
+        if self.is_empty():
+            s += "\n\tNone"
+            return s
+        pad_mention = max([len(m.mention) for m in self.mentions])
+        pad_label = max([len(m.ner_label) for m in self.mentions])
+        for m in self.mentions:
+            s += f"\n    {m.__str__(pad_mention, pad_label)}"
+        return s
 
     def is_empty(self) -> bool:
         return len(self.mentions) == 0
@@ -505,7 +522,7 @@ class Predictions(Candidates):
         split = self.text().split(' ')
         s = f"Predictions for text: '{' '.join(split[:5])}...{' '.join(split[-5:])}':"
         if self.is_empty():
-            s += " None"
+            s += "\n\tNone"
             return s
         candidates = self.candidates()
         l = max([len(c.mention.mention) for c in candidates])
