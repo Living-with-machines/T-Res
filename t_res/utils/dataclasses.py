@@ -126,7 +126,7 @@ class SentenceMentions:
             raise ValueError("Max end char exceeds sentence length.")
 
     def __str__(self):
-        s = f"NER toponym mentions:"
+        s = f"Toponym mentions for sentence: {self.sentence}"
         if self.is_empty():
             s += "\n    None"
             return s
@@ -284,12 +284,16 @@ class CandidateLinks:
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.string_match.string_similarity)
 
-    def __str__(self) -> str:
-        s = f"{self.string_match.variation} [{'{:.3f}'.format(self.string_match.string_similarity)}]"
+    # One liner.
+    def __str__(self, pad_variation: int=0) -> str:
+        s = f"{self.string_match.variation.ljust(pad_variation)}"
+        s += f" [{'{:.3f}'.format(self.string_match.string_similarity)}]"
         s += f": {self.links_str()}"
         return s
     
     def links_str(self) -> str:
+        if self.is_empty():
+            return "None"
         s = ', '.join(link.wqid for link in self.wikidata_links[:3])
         if len(self.wikidata_links) > 3:
             s += ", ..."
@@ -316,6 +320,8 @@ class PredictedLinks(CandidateLinks):
     disambiguation_scores: Dict[str, float]
 
     def links_str(self) -> str:
+        if self.is_empty():
+            return "None"
         l = [f"{s} ({v})" for s, v in self.cross_cand_scores().items()]
         s = ', '.join(l[:3])
         if len(self.wikidata_links) > 3:
@@ -384,37 +390,16 @@ class MentionCandidates:
             if self.place_of_pub_wqid[0] != "Q":
                 raise ValueError(f"Invalid Wikidata ID: {self.place_of_pub_wqid}")
 
-    # TODO: call the __str__ method for each link.
     def __str__(self) -> str:
         s = f"Candidates for toponym mention: '{self.mention.mention}':"
         if self.is_empty():
             s += "\n    None"
             return s
-        l = max([len(m.string_match.variation) for m in self.links])
+        pad_variation = max([len(l.string_match.variation) for l in self.links])
         for link in self.links:
             if link.is_empty():
                 continue
-            s += f"\n    {link.__str__()}"
-
-        # s = f"Candidates for toponym mention: '{self.mention.mention}':"
-        # if self.is_empty():
-        #     s += "\n    None"
-        #     return s
-        # l = max([len(m.string_match.variation) for m in self.links])
-        # # TODO: call m.__str__(pad_variation=l)
-        # for m in self.links:
-        #     if m.is_empty():
-        #         continue
-        #     s += f"\n    {m.string_match.variation.ljust(l)} [{'{:.3f}'.format(m.string_match.string_similarity)}]"
-        #     if len(m.wikidata_links) > 0:
-        #         s += ": "
-        #         # for wqid, score in m.disambiguation_scores().items()[:2]:
-        #         for wqid, score in m.cross_cand_scores(len=2).items():
-        #             s += f"({wqid}, {score}), "
-        #         if len(m.wikidata_links) > 2:
-        #             s += "..."
-        #         else:
-        #             s = s[:-2]
+            s += f"\n    {link.__str__(pad_variation)}"
         return s
     
     def is_empty(self) -> bool:
@@ -508,48 +493,16 @@ class Candidates:
         if {self.place_of_pub()} != {c.place_of_pub for c in self.candidates()}:
             raise ValueError("Inconsistent place of publication data.")
 
-    def __str__(self) -> str:
-        # TODO (this is for *mention* candidates):
-        s = f"Candidates for toponym mention: '{self.mention.mention}':"
+    def __str__(self):
+        split = self.text().split(' ')
+        s = f"{type(self).__name__} for text: '{' '.join(split[:3])}...{' '.join(split[-3:])}':"
         if self.is_empty():
             s += "\n    None"
             return s
-        l = max([len(m.string_match.variation) for m in self.links])
-        for link in self.links:
-            if link.is_empty():
-                continue
-            s += f"\n    {link.__str__()}"
-            # s += f"\n    {m.string_match.variation.ljust(l)} [{'{:.3f}'.format(m.string_match.string_similarity)}]"
-            # if len(m.wikidata_links) > 0:
-            #     s += ": "
-            #     # for wqid, score in m.disambiguation_scores().items()[:2]:
-            #     for wqid, score in m.cross_cand_scores(len=2).items():
-            #         s += f"({wqid}, {score}), "
-            #     if len(m.wikidata_links) > 2:
-            #         s += "..."
-            #     else:
-            #         s = s[:-2]
-
-        # s = f"Candidates for toponym mention: '{self.mention.mention}':"
-        # if self.is_empty():
-        #     s += "\n    None"
-        #     return s
-        # l = max([len(m.string_match.variation) for m in self.links])
-        # # TODO: call m.__str__(pad_variation=l)
-        # for m in self.links:
-        #     if m.is_empty():
-        #         continue
-        #     s += f"\n    {m.string_match.variation.ljust(l)} [{'{:.3f}'.format(m.string_match.string_similarity)}]"
-        #     if len(m.wikidata_links) > 0:
-        #         s += ": "
-        #         # for wqid, score in m.disambiguation_scores().items()[:2]:
-        #         for wqid, score in m.cross_cand_scores(len=2).items():
-        #             s += f"({wqid}, {score}), "
-        #         if len(m.wikidata_links) > 2:
-        #             s += "..."
-        #         else:
-        #             s = s[:-2]
-
+        mention_candidates = self.candidates()
+        pad_variation = max([len(c.best_match().string_match.variation) for c in mention_candidates])
+        for c in mention_candidates:
+            s += f"\n    {c.best_match().__str__(pad_variation)}"
         return s
     
     def candidates(self) -> List[MentionCandidates]:
@@ -592,22 +545,22 @@ class Predictions(Candidates):
             if not all([isinstance(links, PredictedLinks) for links in c.links]):
                 raise ValueError("Candidate links must be scored.")
 
-    def __str__(self):
-        split = self.text().split(' ')
-        s = f"Predictions for text: '{' '.join(split[:5])}...{' '.join(split[-5:])}':"
-        if self.is_empty():
-            s += "\n    None"
-            return s
-        candidates = self.candidates()
-        l = max([len(c.mention.mention) for c in candidates])
-        for c in candidates:
-            if c.is_empty():
-                result_str = "None"
-            else:
-                score = round(c.best_disambiguation_score(), 3)
-                result_str = f"{c.best_string_match().variation} [{c.best_wqid()}], confidence: {score}"
-            s += f"\n    {c.mention.mention.ljust(l)} => {result_str}"
-        return s
+    # def __str__(self):
+    #     split = self.text().split(' ')
+    #     s = f"Predictions for text: '{' '.join(split[:5])}...{' '.join(split[-5:])}':"
+    #     if self.is_empty():
+    #         s += "\n    None"
+    #         return s
+    #     candidates = self.candidates()
+    #     l = max([len(c.mention.mention) for c in candidates])
+    #     for c in candidates:
+    #         if c.is_empty():
+    #             result_str = "None"
+    #         else:
+    #             score = round(c.best_disambiguation_score(), 3)
+    #             result_str = f"{c.best_string_match().variation} [{c.best_wqid()}], confidence: {score}"
+    #         s += f"\n    {c.mention.mention.ljust(l)} => {result_str}"
+    #     return s
 
     def best_wqids(self) -> List[Optional[str]]:
         return [c.best_wqid() for c in self.candidates()]
