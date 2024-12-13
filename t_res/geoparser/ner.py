@@ -104,6 +104,8 @@ class Recogniser:
         sentence = sentence[0] + sentence[1:].replace("—", ",")
 
         # Run the NER pipeline to predict mentions:
+        if not hasattr(self, 'pipe'):
+            raise ValueError("Missing NER pipeline. Try calling the load() method.")
         ner_preds = self.pipe(sentence)
 
         # Post-process the predictions, fixing potential grouping errors:
