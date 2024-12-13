@@ -478,10 +478,10 @@ def test_modular_deezy_rel(tmp_path):
     for c in cands.candidates():
         assert isinstance(c, MentionCandidates)
 
-    disambiguation = geoparser.run_disambiguation(cands)
+    predictions = geoparser.run_disambiguation(cands)
 
-    assert isinstance(disambiguation, Predictions)
-    assert disambiguation.candidates()[0].best_wqid() == "Q989418"
-    assert disambiguation.candidates()[0].best_disambiguation_score() == pytest.approx(0.370, abs=1e-3)
-    assert disambiguation.candidates()[-1].best_wqid() == "Q171866"
-    assert disambiguation.candidates()[-1].best_disambiguation_score() == pytest.approx(0.745, abs=1e-3)
+    assert isinstance(predictions, Predictions)
+    assert predictions.candidates()[0].best_wqid() == "Q989418"
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.370, abs=1e-3)
+    assert predictions.candidates()[-1].best_wqid() == "Q171866"
+    assert predictions.candidates()[-1].best_disambiguation_score() == pytest.approx(0.745, abs=1e-3)

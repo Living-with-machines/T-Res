@@ -126,7 +126,7 @@ class SentenceMentions:
             raise ValueError("Max end char exceeds sentence length.")
 
     def __str__(self):
-        s = f"Toponym mentions for sentence: {self.sentence}"
+        s = f"Toponym mentions for sentence: '{self.sentence.sentence}'"
         if self.is_empty():
             s += "\n    None"
             return s
@@ -500,11 +500,24 @@ class Candidates:
             s += "\n    None"
             return s
         mention_candidates = self.candidates()
-        pad_variation = max([len(c.best_match().string_match.variation) for c in mention_candidates])
+        def len_variation(c: MentionCandidates) -> int:
+            if c.best_match():
+                return len(c.best_match().string_match.variation)
+            return 0
+        pad_mention = max([len(c.mention.mention) for c in mention_candidates])
+        pad_variation = max([len_variation(c) for c in mention_candidates])
         for c in mention_candidates:
-            s += f"\n    {c.best_match().__str__(pad_variation)}"
+            s += f"\n    {self.candidates_str(c, pad_mention, pad_variation)}"
         return s
     
+    def candidates_str(self, candidates: MentionCandidates, pad_mention: int=0, pad_variation: int=0) -> str:
+        s = f"{candidates.mention.mention.ljust(pad_mention)} => "
+        if candidates.best_match():
+            s += f"{candidates.best_match().__str__(pad_variation)}"
+        else:
+            s += f"None"
+        return s
+
     def candidates(self) -> List[MentionCandidates]:
         return [c for sc in self.sentence_candidates for c in sc.candidates]
 
@@ -544,23 +557,6 @@ class Predictions(Candidates):
         for c in self.candidates():
             if not all([isinstance(links, PredictedLinks) for links in c.links]):
                 raise ValueError("Candidate links must be scored.")
-
-    # def __str__(self):
-    #     split = self.text().split(' ')
-    #     s = f"Predictions for text: '{' '.join(split[:5])}...{' '.join(split[-5:])}':"
-    #     if self.is_empty():
-    #         s += "\n    None"
-    #         return s
-    #     candidates = self.candidates()
-    #     l = max([len(c.mention.mention) for c in candidates])
-    #     for c in candidates:
-    #         if c.is_empty():
-    #             result_str = "None"
-    #         else:
-    #             score = round(c.best_disambiguation_score(), 3)
-    #             result_str = f"{c.best_string_match().variation} [{c.best_wqid()}], confidence: {score}"
-    #         s += f"\n    {c.mention.mention.ljust(l)} => {result_str}"
-    #     return s
 
     def best_wqids(self) -> List[Optional[str]]:
         return [c.best_wqid() for c in self.candidates()]
