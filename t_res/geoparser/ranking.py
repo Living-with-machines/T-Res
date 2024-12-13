@@ -673,8 +673,10 @@ class DeezyMatchRanker(PerfectMatchRanker):
 
         Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
         if self.deezy_parameters["do_test"] == True:
-            self.deezy_parameters["dm_model"] += "_test"
-            self.deezy_parameters["dm_cands"] += "_test"
+            if self.deezy_parameters["dm_model"][-5:] != "_test":
+                self.deezy_parameters["dm_model"] += "_test"
+            if self.deezy_parameters["dm_cands"][-5:] != "_test":
+                self.deezy_parameters["dm_cands"] += "_test"
         deezy_processing.train_deezy_model(
             self.deezy_parameters, self.strvar_parameters, self.wikidata_to_mentions
         )
