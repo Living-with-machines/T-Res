@@ -5,8 +5,7 @@ from t_res.geoparser import linking, pipeline, ranking
 
 # --------------------------------------
 # Instantiate the ranker:
-myranker = ranking.Ranker(
-    method="deezymatch",
+ranker = ranking.DeezyMatchRanker(
     resources_path="./resources/",
     strvar_parameters={
         # Parameters to create the string pair dataset:
@@ -37,9 +36,9 @@ myranker = ranking.Ranker(
 
 with sqlite3.connect("./resources/rel_db/embeddings_database.db") as conn:
     cursor = conn.cursor()
-    mylinker = linking.Linker(
-        method="reldisamb",
+    linker = linking.RelDisambLinker(
         resources_path="./resources/",
+        ranker=ranker,
         experiments_path="./experiments/",
         linking_resources=dict(),
         rel_params={
@@ -56,5 +55,5 @@ with sqlite3.connect("./resources/rel_db/embeddings_database.db") as conn:
         overwrite_training=False,
     )
 
-# geoparser = pipeline.Pipeline(myranker=myranker, mylinker=mylinker)
-CONFIG = {"myranker": myranker, "mylinker": mylinker}
+# geoparser = pipeline.Pipeline(ranker=ranker, linker=linker)
+CONFIG = {"ranker": ranker, "linker": linker}
