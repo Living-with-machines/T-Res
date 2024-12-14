@@ -2,10 +2,16 @@ import os
 import pytest
 import requests
 
+from t_res.utils.dataclasses import SentenceMentions
 
-# API_URL = "http://127.0.0.1:8123"
-API_URL = f"http://{os.getenv('HOST_URL')}:8000/v2/t-res_deezy_reldisamb-wpubl-wmtops"
+API_URL = "http://127.0.0.1:8123"
+# API_URL = f"http://{os.getenv('HOST_URL')}:8000/v2/t-res_deezy_reldisamb-wpubl-wmtops"
 
+@pytest.mark.skip(reason="integration test")
+def test_root():
+    response = requests.get(f'{API_URL}/')
+    assert response.status_code == 200
+    assert 'Title' in response.json().keys()
 
 @pytest.mark.skip(reason="integration test")
 def test_health():
@@ -13,6 +19,24 @@ def test_health():
     assert response.status_code == 200
     assert response.json() == {'status': 'ok'}
 
+@pytest.mark.skip(reason="integration test")
+def test_run_ner():
+    test_body = {"text": "Harvey, from London;Thomas and Elizabeth, Barnett."}
+    expected_response = [{'sentence': {'sentence': 'Harvey, from London;Thomas and Elizabeth, Barnett.'}, 'mentions': [{'sort_index': 13, 'mention': 'London', 'start_offset': 3, 'end_offset': 3, 'start_char': 13, 'ner_score': 0.997, 'ner_label': 'LOC', 'entity_link': 'O'}]}]
+
+    response = requests.get(f'{API_URL}/run_ner', json=test_body)
+
+    assert response.status_code == 200
+    assert response.json() == expected_response
+    
+    # Test deserialisation:
+    result = SentenceMentions.from_json(response.json())
+    assert len(result) == 1
+    assert result[0].sentence.sentence == test_body['text']
+    assert len(result[0].mentions) == 1
+    assert result[0].mentions[0].mention == "London"
+
+### OLD:
 
 @pytest.mark.skip(reason="integration test")
 def test_t_res():

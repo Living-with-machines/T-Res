@@ -104,10 +104,19 @@ class SentenceContext(Sentence):
         return SentenceContext(sentence, None, None)
     
     # Helper method for the Predictions as_dict method.
-    def context_as_list(self):
+    def context_as_list(self) -> List[str]:
         preceding = self.preceding_sentence if self.preceding_sentence is not None else ''
         following = self.following_sentence if self.following_sentence is not None else ''
         return [preceding, following]
+
+    # For API deserialisation.
+    def from_dict(data: dict) -> Sentence:
+        ps = data['preceding_sentence'] if 'preceding_sentence' in data.keys() else None
+        fs = data['following_sentence'] if 'following_sentence' in data.keys() else None
+        sent_idx = data['sent_idx'] if 'sent_idx' in data.keys() else None
+        if ps or fs or sent_idx:
+            return SentenceContext(data['sentence'], ps, fs, sent_idx)
+        return Sentence(data['sentence'])
 
 # Recogniser::run method output type.
 @pdataclass(frozen=True)
@@ -156,6 +165,19 @@ class SentenceMentions:
         context = SentenceContext(d['sentence'], d['context'][0], d['context'][1], d['sent_idx'])
 
         return SentenceMentions(context, mentions)
+
+    # For API deserialisation.
+    def from_dict(data: Dict) -> 'SentenceMentions':
+        return SentenceMentions(
+            # TODO: handle context.
+            sentence=SentenceContext.from_dict(data['sentence']),
+            mentions=[Mention.from_dict(d) for d in data['mentions']],
+            )
+
+    # For API deserialisation.
+    def from_json(data: List[Dict]) -> List['SentenceMentions']:
+        return [SentenceMentions.from_dict(d) for d in data]
+
 
 ################################
 # Dataclasses for Ranker

@@ -23,8 +23,8 @@ geoparser = pipeline.Pipeline(**pipeline_config)
 
 class APIQuery(BaseModel):
     text: str
-    place: Optional[Union[str, None]] = None
-    place_wqid: Optional[Union[str, None]] = None
+    # place: Optional[Union[str, None]] = None
+    # place_wqid: Optional[Union[str, None]] = None
 
 
 class CandidatesAPIQuery(BaseModel):
@@ -54,6 +54,12 @@ async def read_root(request: Request):
         "worker_id": os.getpid(),
     }
 
+@app.get("/run_ner")
+async def run_ner(api_query: APIQuery):
+    ner_output = geoparser.run_text_recognition(
+        api_query.text
+    )
+    return ner_output
 
 @app.get("/test")
 async def test_pipeline():
@@ -62,9 +68,7 @@ async def test_pipeline():
         place="Manchester",
         place_wqid="Q18125",
     )
-
     return resolved
-
 
 @app.get("/resolve_sentence")
 async def run_sentence(api_query: APIQuery, request_id: Union[str, None] = None):
@@ -73,7 +77,6 @@ async def run_sentence(api_query: APIQuery, request_id: Union[str, None] = None)
     resolved = geoparser.run_sentence_deprecated(
         api_query.text, place=place, place_wqid=place_wqid
     )
-
     return resolved
 
 
@@ -83,28 +86,13 @@ async def run_text(api_query: APIQuery):
     place = "" if api_query.place is None else api_query.place
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
     resolved = geoparser.run_text_deprecated(api_query.text, place=place, place_wqid=place_wqid)
-
     return resolved
-
-
-@app.get("/run_ner")
-async def run_ner(api_query: APIQuery):
-
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    ner_output = geoparser.run_text_recognition_deprecated(
-        api_query.text, place=place, place_wqid=place_wqid
-    )
-
-    return ner_output
-
 
 @app.get("/run_candidate_selection")
 async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
 
     wk_cands = geoparser.run_candidate_selection_deprecated(cand_api_query.toponyms)
     return wk_cands
-
 
 @app.get("/run_disambiguation")
 async def run_disambiguation(api_query: DisambiguationAPIQuery):
@@ -115,11 +103,9 @@ async def run_disambiguation(api_query: DisambiguationAPIQuery):
     )
     return disamb_output
 
-
 @app.get("/health")
 async def healthcheck():
     return {"status": "ok"}
-
 
 if __name__ == "__main__":
     # poetry run uvicorn app.run_local_app:app --port 8123
