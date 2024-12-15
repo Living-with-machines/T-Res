@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
 from t_res.geoparser import pipeline
+from t_res.utils.dataclasses import SentenceMentions
 
 os.environ["APP_CONFIG_NAME"] = "t-res_deezy_reldisamb-wpubl-wmtops"
 
@@ -23,12 +24,12 @@ geoparser = pipeline.Pipeline(**pipeline_config)
 
 class APIQuery(BaseModel):
     text: str
-    # place: Optional[Union[str, None]] = None
-    # place_wqid: Optional[Union[str, None]] = None
 
 
 class CandidatesAPIQuery(BaseModel):
-    toponyms: List[dict]
+    sentence_mentions: List[dict]
+    place_of_pub_wqid: Optional[str] = None
+    place_of_pub: Optional[str] = None
 
 
 class DisambiguationAPIQuery(BaseModel):
@@ -61,6 +62,19 @@ async def run_ner(api_query: APIQuery):
     )
     return ner_output
 
+@app.get("/run_candidate_selection")
+async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
+    sentence_mentions = SentenceMentions.from_json(cand_api_query.sentence_mentions)
+    candidates = geoparser.run_candidate_selection(
+        sentence_mentions,
+        place_of_pub_wqid=cand_api_query.place_of_pub_wqid,
+        place_of_pub=cand_api_query.place_of_pub,
+        )
+    return candidates
+
+
+# ---
+
 @app.get("/test")
 async def test_pipeline():
     resolved = geoparser.run_sentence_deprecated(
@@ -87,12 +101,6 @@ async def run_text(api_query: APIQuery):
     place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
     resolved = geoparser.run_text_deprecated(api_query.text, place=place, place_wqid=place_wqid)
     return resolved
-
-@app.get("/run_candidate_selection")
-async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
-
-    wk_cands = geoparser.run_candidate_selection_deprecated(cand_api_query.toponyms)
-    return wk_cands
 
 @app.get("/run_disambiguation")
 async def run_disambiguation(api_query: DisambiguationAPIQuery):

@@ -204,7 +204,7 @@ def rank_candidates(rel_json: dict, wk_cands: dict) -> dict:
             linker_cands = wk_cands.get(mention_dict["mention"], default)
 
             if not isinstance(linker_cands, MentionCandidates):
-                raise ValueError(f"Expected Candidates instance. Found: {type(linker_cands)}")
+                raise ValueError(f"Expected MentionCandidates instance. Found: {type(linker_cands)}")
 
             # NOTE: mentions_to_wikidata here is the absolute link frequency data.
 

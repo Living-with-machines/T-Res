@@ -2,7 +2,7 @@ import os
 import pytest
 import requests
 
-from t_res.utils.dataclasses import SentenceMentions
+from t_res.utils.dataclasses import SentenceMentions, Candidates
 
 API_URL = "http://127.0.0.1:8123"
 # API_URL = f"http://{os.getenv('HOST_URL')}:8000/v2/t-res_deezy_reldisamb-wpubl-wmtops"
@@ -35,6 +35,38 @@ def test_run_ner():
     assert result[0].sentence.sentence == test_body['text']
     assert len(result[0].mentions) == 1
     assert result[0].mentions[0].mention == "London"
+
+@pytest.mark.skip(reason="integration test")
+def test_run_candidate_selection():
+    test_body = {"sentence_mentions": [{'sentence': {'sentence': 'Harvey, from London;Thomas and Elizabeth, Barnett.'}, 'mentions': [{'sort_index': 13, 'mention': 'London', 'start_offset': 3, 'end_offset': 3, 'start_char': 13, 'ner_score': 0.997, 'ner_label': 'LOC', 'entity_link': 'O'}]}]}
+
+    response = requests.get(f'{API_URL}/run_candidate_selection', json=test_body)
+
+    assert response.status_code == 200
+
+    # Test deserialisation:
+    result = Candidates.from_dict(response.json())
+    assert result.text() == 'Harvey, from London;Thomas and Elizabeth, Barnett.'
+    assert result.place_of_pub_wqid() is None
+    assert result.place_of_pub() is None
+    assert len(result.candidates()) == 1
+    assert result.candidates()[0].mention.mention == "London"
+    assert result.candidates()[0].best_string_match().variation == "London"
+    assert result.candidates()[0].best_string_match().string_similarity == 1.0
+
+    # Test with place of publication info.
+    test_body['place_of_pub'] = 'Poole, Dorset'
+    test_body['place_of_pub_wqid'] = 'Q203349'
+
+    response = requests.get(f'{API_URL}/run_candidate_selection', json=test_body)
+
+    assert response.status_code == 200
+
+    # Test deserialisation:
+    result = Candidates.from_dict(response.json())
+    assert result.text() == 'Harvey, from London;Thomas and Elizabeth, Barnett.'
+    assert result.place_of_pub_wqid() == 'Q203349'
+    assert result.place_of_pub() == 'Poole, Dorset'
 
 ### OLD:
 

@@ -36,16 +36,10 @@ class Mention:
         s += f" confidence: {self.ner_score}"
         return s
 
-    def from_dict(dict: dict) -> 'Mention':
-        return Mention(
-            mention=dict['mention'],
-            start_offset=dict['start_offset'],
-            end_offset=dict['end_offset'],
-            start_char=dict['start_char'],
-            ner_score=dict['ner_score'],
-            ner_label=dict['ner_label'],
-            entity_link=dict['entity_link'],
-        )
+    def from_dict(data: dict) -> 'Mention':
+        if 'sort_index' in data.keys():
+            del data['sort_index']
+        return Mention(**data)
     
     def end_char(self) -> int:
         return self.start_char + len(self.mention)
@@ -169,7 +163,6 @@ class SentenceMentions:
     # For API deserialisation.
     def from_dict(data: Dict) -> 'SentenceMentions':
         return SentenceMentions(
-            # TODO: handle context.
             sentence=SentenceContext.from_dict(data['sentence']),
             mentions=[Mention.from_dict(d) for d in data['mentions']],
             )
@@ -194,6 +187,14 @@ class StringMatch:
 
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.string_similarity)
+
+    # For API deserialisation.
+    def from_dict(data: dict) -> 'StringMatch':
+        if 'sort_index' in data.keys():
+            del data['sort_index']
+        if 'wqid_links' in data.keys():
+            return StringMatchLinks(**data)
+        return StringMatch(**data)
 
 @pdataclass(order=True, frozen=True)
 class StringMatchLinks(StringMatch):
@@ -249,6 +250,14 @@ class WikidataLink:
     # The Wikidata class of this Wikidata entry (if available).
     wkdt_class: Optional[str]
 
+    # For API deserialisation.
+    def from_dict(data: dict) -> 'WikidataLink':
+        if 'freq' in data.keys():
+            if 'normalized_score' in data.keys():
+                return RelDisambLink(**data)
+            return MostPopularLink(**data)
+        return ByDistanceLink(**data)
+    
 @pdataclass(frozen=True)
 class MostPopularLink(WikidataLink):
     """Data class representing a string match and potential links in 
@@ -329,6 +338,19 @@ class CandidateLinks:
         if scores.keys() != {link.wqid for link in self.wikidata_links}:
             raise ValueError("Incompatible disambiguation scores.")
         return PredictedLinks(self.string_match, self.wikidata_links, scores)
+
+    # For API deserialisation.
+    def from_dict(data: dict) -> 'CandidateLinks':
+        if 'disambiguation_scores' in data.keys():
+            return PredictedLinks(
+                string_match=StringMatch.from_dict(data['string_match']),
+                wikidata_links=[WikidataLink.from_dict(d) for d in data['wikidata_links']],
+                disambiguation_scores=data['disambiguation_scores'],
+            )
+        return CandidateLinks(
+            string_match=StringMatch.from_dict(data['string_match']),
+            wikidata_links=[WikidataLink.from_dict(d) for d in data['wikidata_links']],
+        )
 
 # Extend CandidateLinks to include disambigution scores. Note that we use 
 # inheritance, rather than composition, for compatibility with the `links`
@@ -449,12 +471,12 @@ class MentionCandidates:
 
     # Returns the Wikidata link with the highest disambiguation score.
     def best_wikidata_link(self) -> Optional[WikidataLink]:
-        # Get the CandidateLinks instance with highest string similarity.
+        # Get the candidate with highest string similarity.
         best_match = self.best_match()
         if not best_match or best_match.is_empty():
             return None
-        if not isinstance(best_match, CandidateLinks):
-            raise ValueError(f"Expected CandidateLinks instance. Got {type(best_match)}")
+        if not isinstance(best_match, PredictedLinks):
+            raise ValueError(f"Expected PredictedLinks instance. Got {type(best_match)}")
         return best_match.best_wikidata_link()
 
     def best_wqid(self) -> Optional[str]:
@@ -471,6 +493,19 @@ class MentionCandidates:
             return None
         return best_match.best_disambiguation_score()
 
+    # For API deserialisation.
+    def from_dict(data: dict) -> 'MentionCandidates':
+        place_of_pub_wqid=data['place_of_pub_wqid'] if 'place_of_pub_wqid' in data.keys() and len(data['place_of_pub_wqid']) > 0 else None
+        place_of_pub=data['place_of_pub'] if 'place_of_pub' in data.keys() and len(data['place_of_pub']) > 0 else None
+        return MentionCandidates(
+            mention=Mention.from_dict(data['mention']),
+            ranking_method=data['ranking_method'],
+            linking_method=data['linking_method'],
+            links=[CandidateLinks.from_dict(d) for d in data['links']],
+            place_of_pub_wqid=place_of_pub_wqid,
+            place_of_pub=place_of_pub,
+            with_publication=data['with_publication'],
+        )
 
 ################################
 # Dataclasses for Pipeline
@@ -495,6 +530,13 @@ class SentenceCandidates:
         if ignore_empty_candidates:
             return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
         return len(self.candidates) == 0
+    
+    # For API deserialisation.
+    def from_dict(data: dict) -> 'SentenceCandidates':
+        return SentenceCandidates(
+            sentence=SentenceContext.from_dict(data['sentence']),
+            candidates=[MentionCandidates.from_dict(d) for d in data['candidates']]
+        )
 
 # Pipeline::run_candidate_selection method output type.
 @pdataclass(frozen=True)
@@ -566,6 +608,11 @@ class Candidates:
         if self.is_empty(ignore_empty_candidates=False):
             return None
         return self.candidates()[0].place_of_pub
+
+    # For API deserialisation.
+    def from_dict(data: dict) -> 'Candidates':
+        # TODO NEXT: handle the Predictions case (probably best with a subclass version of this function.)
+        return Candidates([SentenceCandidates.from_dict(d) for d in data['sentence_candidates']])
 
 # Pipeline::run_disambiguation method output type.
 @pdataclass(frozen=True)
