@@ -2,7 +2,8 @@ import os
 import pytest
 import requests
 
-from t_res.utils.dataclasses import SentenceMentions, Candidates
+from t_res.utils.dataclasses import SentenceMentions, Candidates, Predictions
+from .app_fixtures import dict_candidates
 
 API_URL = "http://127.0.0.1:8123"
 # API_URL = f"http://{os.getenv('HOST_URL')}:8000/v2/t-res_deezy_reldisamb-wpubl-wmtops"
@@ -21,11 +22,11 @@ def test_health():
 
 @pytest.mark.skip(reason="integration test")
 def test_run_ner():
+
     test_body = {"text": "Harvey, from London;Thomas and Elizabeth, Barnett."}
     expected_response = [{'sentence': {'sentence': 'Harvey, from London;Thomas and Elizabeth, Barnett.'}, 'mentions': [{'sort_index': 13, 'mention': 'London', 'start_offset': 3, 'end_offset': 3, 'start_char': 13, 'ner_score': 0.997, 'ner_label': 'LOC', 'entity_link': 'O'}]}]
 
     response = requests.get(f'{API_URL}/run_ner', json=test_body)
-
     assert response.status_code == 200
     assert response.json() == expected_response
     
@@ -38,10 +39,10 @@ def test_run_ner():
 
 @pytest.mark.skip(reason="integration test")
 def test_run_candidate_selection():
+
     test_body = {"sentence_mentions": [{'sentence': {'sentence': 'Harvey, from London;Thomas and Elizabeth, Barnett.'}, 'mentions': [{'sort_index': 13, 'mention': 'London', 'start_offset': 3, 'end_offset': 3, 'start_char': 13, 'ner_score': 0.997, 'ner_label': 'LOC', 'entity_link': 'O'}]}]}
 
     response = requests.get(f'{API_URL}/run_candidate_selection', json=test_body)
-
     assert response.status_code == 200
 
     # Test deserialisation:
@@ -55,11 +56,10 @@ def test_run_candidate_selection():
     assert result.candidates()[0].best_string_match().string_similarity == 1.0
 
     # Test with place of publication info.
-    test_body['place_of_pub'] = 'Poole, Dorset'
     test_body['place_of_pub_wqid'] = 'Q203349'
+    test_body['place_of_pub'] = 'Poole, Dorset'
 
     response = requests.get(f'{API_URL}/run_candidate_selection', json=test_body)
-
     assert response.status_code == 200
 
     # Test deserialisation:
@@ -67,6 +67,55 @@ def test_run_candidate_selection():
     assert result.text() == 'Harvey, from London;Thomas and Elizabeth, Barnett.'
     assert result.place_of_pub_wqid() == 'Q203349'
     assert result.place_of_pub() == 'Poole, Dorset'
+
+@pytest.mark.skip(reason="integration test")
+def test_run_disambiguation():
+    test_body = {"candidates": dict_candidates}
+
+    response = requests.get(f'{API_URL}/run_disambiguation', json=test_body)
+    assert response.status_code == 200
+
+    # Test deserialisation:
+    result = Predictions.from_dict(response.json())
+
+    # Note: test server is configured to require place of 
+    # publication info for disambiguation.
+    assert result.place_of_pub_wqid() == 'Q203349'
+    assert result.place_of_pub() == 'Poole, Dorset'
+
+    assert len(result.candidates()) == 1
+    assert result.candidates()[0].mention.mention == "London"
+    assert result.candidates()[0].best_string_match().variation == "London"
+    assert result.candidates()[0].best_string_match().string_similarity == 1.0
+    assert result.candidates()[0].best_wqid() == 'Q84'
+    assert result.candidates()[0].best_disambiguation_score() == pytest.approx(0.894, 1e-3)
+
+@pytest.mark.skip(reason="integration test")
+def test_run_pipeline():
+    test_body = {"text": "A remarkable case of rattening has just occurred in the building trade at Sheffield, but also in Leeds. Not in London, though."}
+    test_body['place_of_pub_wqid'] = 'Q84'
+    test_body['place_of_pub'] = 'London'
+
+    response = requests.get(f'{API_URL}/run_pipeline', json=test_body)
+    assert response.status_code == 200
+
+    # Test deserialisation:
+    result = Predictions.from_dict(response.json())
+
+    assert result.place_of_pub_wqid() == 'Q84'
+    assert result.place_of_pub() == 'London'
+    assert len(result.candidates()) == 3
+    assert result.best_wqids() == ['Q42448', 'Q39121', 'Q84'] # Sheffield, Leeds, London
+
+@pytest.mark.skip(reason="integration test")
+def test_test_pipeline():
+
+    response = requests.get(f'{API_URL}/test')
+    assert response.status_code == 200
+
+    # Test deserialisation:
+    result = Predictions.from_dict(response.json())
+    assert isinstance(result, Predictions)
 
 ### OLD:
 

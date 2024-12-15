@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
 from t_res.geoparser import pipeline
-from t_res.utils.dataclasses import SentenceMentions
+from t_res.utils.dataclasses import SentenceMentions, Candidates
 
 os.environ["APP_CONFIG_NAME"] = "t-res_deezy_reldisamb-wpubl-wmtops"
 
@@ -33,10 +33,13 @@ class CandidatesAPIQuery(BaseModel):
 
 
 class DisambiguationAPIQuery(BaseModel):
-    dataset: List[dict]
-    wk_cands: dict
-    place: Optional[Union[str, None]] = None
-    place_wqid: Optional[Union[str, None]] = None
+    candidates: dict
+
+
+class PipelineAPIQuery(BaseModel):
+    text: str
+    place_of_pub_wqid: Optional[str] = None
+    place_of_pub: Optional[str] = None
 
 
 app_config_name = os.environ["APP_CONFIG_NAME"]
@@ -72,44 +75,29 @@ async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
         )
     return candidates
 
+@app.get("/run_disambiguation")
+async def run_disambiguation(api_query: DisambiguationAPIQuery):
+    candidates = Candidates.from_dict(api_query.candidates)
+    predictions = geoparser.run_disambiguation(candidates)
+    return predictions
 
-# ---
+@app.get("/run_pipeline")
+async def run_pipeline(api_query: PipelineAPIQuery):
+    predictions = geoparser.run(
+        text=api_query.text,
+        place_of_pub=api_query.place_of_pub,
+        place_of_pub_wqid=api_query.place_of_pub_wqid,
+    )
+    return predictions
 
 @app.get("/test")
 async def test_pipeline():
-    resolved = geoparser.run_sentence_deprecated(
+    predictions = geoparser.run(
         "Harvey, from London;Thomas and Elizabeth, Barnett.",
-        place="Manchester",
-        place_wqid="Q18125",
+        place_of_pub_wqid="Q18125",
+        place_of_pub="Manchester",
     )
-    return resolved
-
-@app.get("/resolve_sentence")
-async def run_sentence(api_query: APIQuery, request_id: Union[str, None] = None):
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_sentence_deprecated(
-        api_query.text, place=place, place_wqid=place_wqid
-    )
-    return resolved
-
-
-@app.get("/resolve_full_text")
-async def run_text(api_query: APIQuery):
-
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_text_deprecated(api_query.text, place=place, place_wqid=place_wqid)
-    return resolved
-
-@app.get("/run_disambiguation")
-async def run_disambiguation(api_query: DisambiguationAPIQuery):
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    disamb_output = geoparser.run_disambiguation_deprecated(
-        api_query.dataset, api_query.wk_cands, place, place_wqid
-    )
-    return disamb_output
+    return predictions
 
 @app.get("/health")
 async def healthcheck():

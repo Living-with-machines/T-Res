@@ -611,8 +611,14 @@ class Candidates:
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'Candidates':
-        # TODO NEXT: handle the Predictions case (probably best with a subclass version of this function.)
-        return Candidates([SentenceCandidates.from_dict(d) for d in data['sentence_candidates']])
+        sentence_candidates = [SentenceCandidates.from_dict(d) for d in data['sentence_candidates']]
+        is_predicted_links = [isinstance(links, PredictedLinks) 
+                              for scs in sentence_candidates 
+                              for mc in scs.candidates 
+                              for links in mc.links]
+        if any(is_predicted_links):
+            return Predictions(sentence_candidates)
+        return Candidates(sentence_candidates)
 
 # Pipeline::run_disambiguation method output type.
 @pdataclass(frozen=True)
