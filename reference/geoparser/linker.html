@@ -95,245 +95,133 @@
 <h1><code class="docutils literal notranslate"><span class="pre">t_res.geoparser.linking.Linker</span></code><a class="headerlink" href="#t-res-geoparser-linking-linker" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="t_res.geoparser.linking.Linker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">t_res.geoparser.linking.</span></span><span class="sig-name descname"><span class="pre">Linker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.13)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mostpopular'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'reldisamb'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bydistance'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'../experiments'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linking_resources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#t_res.geoparser.linking.Linker" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">t_res.geoparser.linking.</span></span><span class="sig-name descname"><span class="pre">Linker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resources_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'../experiments'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linking_resources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#t_res.geoparser.linking.Linker" title="Permalink to this definition"></a></dt>
 <dd><p>The Linker class provides methods for entity linking, which is the task of
 associating mentions in text with their corresponding entities in a
 knowledge base.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>method</strong> (<em>Literal</em><em>[</em><em>&quot;mostpopular&quot;</em><em>, </em><em>&quot;reldisamb&quot;</em><em>, </em><em>&quot;bydistance&quot;</em><em>]</em>) – The
-linking method to use.</p></li>
 <li><p><strong>resources_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The path to the linking resources.</p></li>
 <li><p><strong>experiments_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – The path to the experiments
 directory. Default is “../experiments/”.</p></li>
 <li><p><strong>linking_resources</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>, </em><em>optional</em>) – Dictionary containing the
 necessary linking resources. Defaults to <code class="docutils literal notranslate"><span class="pre">dict()</span></code> (an empty
 dictionary).</p></li>
-<li><p><strong>overwrite_training</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Flag indicating whether to overwrite the
-training. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>rel_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>, </em><em>optional</em>) – Dictionary containing the parameters
-for performing entity disambiguation using the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code>
-approach (adapted from the Radboud Entityt Linker, REL).
-For the default settings, see Notes below.</p></li>
 </ul>
 </dd>
 </dl>
-<p>Example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">linker</span> <span class="o">=</span> <span class="n">Linker</span><span class="p">(</span>
-  <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mostpopular&quot;</span><span class="p">,</span>
-  <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;/path/to/resources/&quot;</span><span class="p">,</span>
-  <span class="n">experiments_path</span><span class="o">=</span><span class="s2">&quot;/path/to/experiments/&quot;</span><span class="p">,</span>
-  <span class="n">linking_resources</span><span class="o">=</span><span class="p">{},</span>
-  <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-  <span class="n">rel_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>Note that, in order to instantiate the Linker with the <code class="docutils literal notranslate"><span class="pre">reldisamb</span></code></p></li>
-</ul>
-<p>method, the Linker needs to be wrapped by a context manager in which
-a connection to the entity embeddings database is established and a
-cursor is created:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;../resources/rel_db/embeddings_database.db&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-  <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-  <span class="n">mylinker</span> <span class="o">=</span> <span class="n">linking</span><span class="o">.</span><span class="n">Linker</span><span class="p">(</span>
-  <span class="n">method</span><span class="o">=</span><span class="s2">&quot;reldisamb&quot;</span><span class="p">,</span>
-  <span class="n">resources_path</span><span class="o">=</span><span class="s2">&quot;../resources/&quot;</span><span class="p">,</span>
-  <span class="n">experiments_path</span><span class="o">=</span><span class="s2">&quot;../experiments/&quot;</span><span class="p">,</span>
-  <span class="n">linking_resources</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
-  <span class="n">rel_params</span><span class="o">=</span><span class="p">{</span>
-    <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../resources/models/disambiguation/&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../experiments/outputs/data/lwm/&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="n">cursor</span><span class="p">,</span>
-    <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="n">wpubl</span><span class="p">,</span>
-    <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="n">wmtops</span><span class="p">,</span>
-    <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-  <span class="p">},</span>
-  <span class="n">overwrite_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>See below the default settings for <code class="docutils literal notranslate"><span class="pre">rel_params</span></code>. Note that
-<cite>db_embeddings</cite> defaults to None, but it should be assigned a
-cursor to the entity embeddings database, as described above:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rel_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../resources/models/disambiguation/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;../experiments/outputs/data/lwm/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;training_split&quot;</span><span class="p">:</span> <span class="s2">&quot;originalsplit&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;db_embeddings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s2">&quot;with_publication&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="s2">&quot;without_microtoponyms&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="s2">&quot;do_test&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-  <span class="s2">&quot;default_publname&quot;</span><span class="p">:</span> <span class="s2">&quot;United Kingdom&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;default_publwqid&quot;</span><span class="p">:</span> <span class="s2">&quot;Q145&quot;</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
+<p>This base class should not be instatiated directly. Instead use a subclass
+constructor.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.by_distance">
-<span class="sig-name descname"><span class="pre">by_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_mention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin_wqid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.by_distance" title="Permalink to this definition"></a></dt>
-<dd><p>Select candidate based on distance to the place of publication.</p>
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.disambiguate">
+<span class="sig-name descname"><span class="pre">disambiguate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><span class="pre">SentenceCandidates</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Predictions</span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.disambiguate" title="Permalink to this definition"></a></dt>
+<dd><p>Perform entity disambiguation given a list of already identified
+toponyms and selected candidates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>candidates</strong> – A list of SentenceCandidates instances.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A Predictions instance representing the identified and</dt><dd><p>linked toponyms.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Predictions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.disambiguation_scores">
+<span class="sig-name descname"><span class="pre">disambiguation_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">links</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><span class="pre">WikidataLink</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string_similarity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.disambiguation_scores" title="Permalink to this definition"></a></dt>
+<dd><p>Compute disambiguation scores for a given list Wikidata links.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dict_mention</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – dictionary with all the relevant information
-needed to disambiguate a certain mention.</p></li>
-<li><p><strong>origin_wqid</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – The origin Wikidata ID for distance
-calculation. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p></li>
+<li><p><strong>links</strong> – A list of WikidataLink instances.</p></li>
+<li><p><strong>string_similarity</strong> – (Optional) the string similarity score for the candidate match.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A tuple containing the Wikidata ID of the closest candidate
-to the place of publication (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Q84&quot;</span></code>) or <code class="docutils literal notranslate"><span class="pre">&quot;NIL&quot;</span></code>,
-the confidence score of the predicted link as a float (rounded
-to 3 decimals), and a dictionary of all candidates and their
-confidence scores.</p>
+<dd class="field-even"><p>A dictionary containing disambiguation scores, keyed by Wikidata ID.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Applying the “by distance” disambiguation method for linking
-entities, based on geographical distance. It undertakes an
-unsupervised disambiguation, which returns a prediction of a
-location closest to the place of publication, for a provided set
-of candidates and the place of publication of the original text.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.load_resources">
-<span class="sig-name descname"><span class="pre">load_resources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.load_resources" title="Permalink to this definition"></a></dt>
-<dd><p>Loads the linking resources.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dictionary containing loaded necessary linking resources.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Different methods will require different resources.</p>
-</div>
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.empty_candidates">
+<span class="sig-name descname"><span class="pre">empty_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mention</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_of_pub_wqid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_of_pub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#t_res.geoparser.linking.Linker.empty_candidates" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an empty <cite>Candidates</cite> instance.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.most_popular">
-<span class="sig-name descname"><span class="pre">most_popular</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_mention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.most_popular" title="Permalink to this definition"></a></dt>
-<dd><p>Select most popular candidate, given Wikipedia’s in-link structure.</p>
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#t_res.geoparser.linking.Linker.load" title="Permalink to this definition"></a></dt>
+<dd><p>Loads the linking resources and assigns them to instance variables.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.method_name">
+<span class="sig-name descname"><span class="pre">method_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#t_res.geoparser.linking.Linker.method_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.new">
+<span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#t_res.geoparser.linking.Linker" title="t_res.geoparser.linking.Linker"><span class="pre">Linker</span></a></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.new" title="Permalink to this definition"></a></dt>
+<dd><p>Static constructor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dict_mention</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – dictionary with all the relevant information
-needed to disambiguate a certain mention.</p>
+<dd class="field-odd"><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – A dictionary of keyword arguments matching the
+arguments to a subclass __init__ constructor, plus a
+<cite>method_name</cite> argument to specify the desired subclass.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A tuple containing the most popular candidate’s Wikidata ID
-(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Q84&quot;</span></code>) or <code class="docutils literal notranslate"><span class="pre">&quot;NIL&quot;</span></code>, the confidence score of the
-predicted link as a float, and a dictionary of all candidates
-and their confidence scores.</p>
+<dd class="field-even"><p>A Linker subclass instance.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>]</p>
+<dd class="field-odd"><p><a class="reference internal" href="#t_res.geoparser.linking.Linker" title="t_res.geoparser.linking.Linker">Linker</a></p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Applying the “most popular” disambiguation method for linking
-entities. Given a set of candidates for a given mention, the
-function returns as a prediction the more relevant Wikidata
-candidate, determined from the in-link structure of Wikipedia.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_mention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.run" title="Permalink to this definition"></a></dt>
-<dd><p>Executes the linking process based on the specified unsupervised
-method.</p>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CandidateMatches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_of_pub_wqid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_of_pub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MentionCandidates</span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.run" title="Permalink to this definition"></a></dt>
+<dd><p>Execute the linking process. Each Linker subclass must implement a
+linking method by overriding this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dict_mention</strong> – Dictionary containing the mention information.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matches</strong> – A CandidatesMatches instance.</p></li>
+<li><p><strong>origin_wqid</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – The Wikidata ID of the place of publication.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>The result of the linking process. For details, see below:</p>
-<ul class="simple">
-<li><p>If the <code class="docutils literal notranslate"><span class="pre">method</span></code> provided when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Linker()</span></code> object was
-<code class="docutils literal notranslate"><span class="pre">&quot;mostpopular&quot;</span></code>, see
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">most_popular()</span></code>.</p></li>
-<li><p>If the <code class="docutils literal notranslate"><span class="pre">method</span></code> provided when initialising the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Linker()</span></code> object was
-<code class="docutils literal notranslate"><span class="pre">&quot;bydistance&quot;</span></code>, see
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">by_distance()</span></code>.</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>The candidates identified by the linking process.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>]</p>
+<dd class="field-odd"><p>Candidates</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.train_load_model">
-<span class="sig-name descname"><span class="pre">train_load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">myranker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ranker.html#t_res.geoparser.ranking.Ranker" title="t_res.geoparser.ranking.Ranker"><span class="pre">Ranker</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'originalsplit'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../utils/rel/entity_disambiguation.html#t_res.utils.REL.entity_disambiguation.EntityDisambiguation" title="t_res.utils.REL.entity_disambiguation.EntityDisambiguation"><span class="pre">EntityDisambiguation</span></a></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.train_load_model" title="Permalink to this definition"></a></dt>
-<dd><p>Trains or loads the entity disambiguation model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>myranker</strong> (<a class="reference internal" href="ranker.html#t_res.geoparser.ranking.Ranker" title="t_res.geoparser.ranking.Ranker"><em>geoparser.ranking.Ranker</em></a>) – The ranker object used for
-training.</p></li>
-<li><p><strong>split</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – The split type for training. Defaults to
-<code class="docutils literal notranslate"><span class="pre">&quot;originalsplit&quot;</span></code>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A trained Entity Disambiguation model.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="../utils/rel/entity_disambiguation.html#t_res.utils.REL.entity_disambiguation.EntityDisambiguation" title="t_res.utils.REL.entity_disambiguation.EntityDisambiguation">entity_disambiguation.EntityDisambiguation</a></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The training will be skipped if the model already exists and
-<code class="docutils literal notranslate"><span class="pre">overwrite_training</span></code> was set to False when initiating the Linker
-object, or if the disambiguation method is unsupervised. The
-training will be run on test mode if <code class="docutils literal notranslate"><span class="pre">rel_params</span></code> had a
-<code class="docutils literal notranslate"><span class="pre">do_test</span></code> key’s value set to True when initiating the Linker
-object.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><strong>Credit:</strong></p>
-<p>This method is adapted from the <a class="reference external" href="https://github.com/informagi/REL/">REL: Radboud Entity Linker</a> Github repository:
-Copyright (c) 2020 Johannes Michael van Hulst. See the <a class="reference external" href="https://github.com/informagi/REL/blob/main/LICENSE">permission
-notice</a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Reference</span><span class="p">:</span>
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.wkdt_class">
+<span class="sig-name descname"><span class="pre">wkdt_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wqid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.wkdt_class" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the Wikidata class for the given Wikidata entry, if available.</p>
+</dd></dl>
 
-<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">vanHulst</span><span class="p">:</span><span class="mi">2020</span><span class="p">:</span><span class="n">REL</span><span class="p">,</span>
-<span class="n">author</span> <span class="o">=</span>    <span class="p">{</span><span class="n">van</span> <span class="n">Hulst</span><span class="p">,</span> <span class="n">Johannes</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Hasibi</span><span class="p">,</span> <span class="n">Faegheh</span> <span class="ow">and</span> <span class="n">Dercksen</span><span class="p">,</span> <span class="n">Koen</span> <span class="ow">and</span> <span class="n">Balog</span><span class="p">,</span> <span class="n">Krisztian</span> <span class="ow">and</span> <span class="n">de</span> <span class="n">Vries</span><span class="p">,</span> <span class="n">Arjen</span> <span class="n">P</span><span class="o">.</span><span class="p">},</span>
-<span class="n">title</span> <span class="o">=</span>     <span class="p">{</span><span class="n">REL</span><span class="p">:</span> <span class="n">An</span> <span class="n">Entity</span> <span class="n">Linker</span> <span class="n">Standing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Shoulders</span> <span class="n">of</span> <span class="n">Giants</span><span class="p">},</span>
-<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">43</span><span class="n">rd</span> <span class="n">International</span> <span class="n">ACM</span> <span class="n">SIGIR</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Research</span> <span class="ow">and</span> <span class="n">Development</span> <span class="ow">in</span> <span class="n">Information</span> <span class="n">Retrieval</span><span class="p">},</span>
-<span class="n">series</span> <span class="o">=</span>    <span class="p">{</span><span class="n">SIGIR</span> <span class="s1">&#39;20},</span>
-<span class="n">year</span> <span class="o">=</span>      <span class="p">{</span><span class="mi">2020</span><span class="p">},</span>
-<span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">ACM</span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="t_res.geoparser.linking.Linker.wkdt_coords">
+<span class="sig-name descname"><span class="pre">wkdt_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wqid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#t_res.geoparser.linking.Linker.wkdt_coords" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the lat-lon coordinates for the given Wikidata entry, if available.</p>
 </dd></dl>
 
 </dd></dl>
