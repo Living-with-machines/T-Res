@@ -548,7 +548,7 @@ class RelDisambLinker(Linker):
         Loads the linking resources and assigns them to instance variables.
         """
         super().load()
-        self.train_load_model(ranker=self.ranker, split=split)
+        self.train_load_model(split=split)
 
     def run(
             self, 
@@ -666,17 +666,12 @@ class RelDisambLinker(Linker):
         # return {link.wqid: link.freq / total for link in links}
         return ret
 
-    # TODO: remove ranker argument (use self.ranker).
-    def train_load_model(
-        self, ranker: ranking.Ranker, split: Optional[str] = "originalsplit"
-    ):
+    def train_load_model(self, split: Optional[str] = "originalsplit"):
         """
         Trains or loads the entity disambiguation model and assigns to the
         `entity_disambiguation_model` field.
 
         Arguments:
-            ranker (geoparser.ranking.Ranker): The ranker object used for
-                training.
             split (str, optional): The split type for training. Defaults to
                 ``"originalsplit"``.
 
@@ -712,11 +707,11 @@ class RelDisambLinker(Linker):
                 }
         """
         # Generate ED model name:
-        linker_name = ranker.method_name
-        if ranker.method_name == "deezymatch":
-            linker_name += "+" + str(ranker.deezy_parameters["num_candidates"])
+        linker_name = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
+            linker_name += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             linker_name += "+" + str(
-                ranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
         linker_name += f"_{split}"
         if self.rel_params["with_publication"]:

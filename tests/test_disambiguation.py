@@ -132,9 +132,8 @@ def test_train(tmp_path):
     # Load linking resources:
     linker.load()
 
-    # Train a linking model if needed (it requires ranker to generate potential
-    # candidates to the training set):
-    linker.train_load_model(ranker)
+    # Train a linking model if needed:
+    linker.train_load_model()
     assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
     # assert expected performance on test set
@@ -223,9 +222,8 @@ def test_load_eval_model(tmp_path):
     # Load linking resources:
     linker.load()
 
-    # Train a linking model if needed (it requires ranker to generate potential
-    # candidates to the training set):
-    linker.train_load_model(ranker)
+    # Train a linking model if needed:
+    linker.train_load_model()
     assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
 @pytest.mark.resources(reason="Needs large resources")
