@@ -312,10 +312,7 @@ class ByDistanceLinker(Linker):
 
     def wkdt_coords(self, wqid: str) -> Optional[Tuple[float, float]]:
         """Returns the lat-lon coordinates for the given Wikidata entry, if available."""
-        coords = self.linking_resources["wqid_to_coords"].get(wqid)
-        if coords:
-            return coords
-        return None
+        return self.linking_resources["wqid_to_coords"].get(wqid, None)
 
     def run(
             self, 
