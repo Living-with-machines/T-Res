@@ -153,7 +153,7 @@ def test_lwm_linking_conversion():
     # Test articles of the original split and without test should not overlap:
     assert not (test_withouttest & test_originalsplit)
 
-@pytest.mark.skip(reason="Requires HIPE data")
+@pytest.mark.resources(reason="Requires HIPE data")
 def test_hipe_linking_conversion():
     """
     Test process_hipe_for_linking is not missing articles.

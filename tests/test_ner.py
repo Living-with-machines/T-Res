@@ -9,6 +9,7 @@ from t_res.utils import ner_utils
 
 current_dir = Path(__file__).parent.resolve()
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_ner_local_train(tmp_path):
     model_path = os.path.join(tmp_path,"ner_test.model")
     
@@ -33,7 +34,7 @@ def test_ner_local_train(tmp_path):
     print(os.listdir(tmp_path))
     assert os.path.exists(model_path) is True
 
-@pytest.mark.skip(reason="Needs large model file")
+@pytest.mark.resources(reason="Needs large model file")
 def test_ner_predict():
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
@@ -68,7 +69,7 @@ def test_ner_predict():
     assert predictions[0]["word"] == "-"
     assert predictions[6]["word"] == ","
 
-@pytest.mark.skip(reason="Needs large model file")
+@pytest.mark.resources(reason="Needs large model file")
 def test_run():
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True

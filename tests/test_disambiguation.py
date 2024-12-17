@@ -14,7 +14,7 @@ from t_res.utils.dataclasses import Predictions
 
 current_dir = Path(__file__).parent.resolve()
 
-@pytest.mark.skip(reason="Needs embeddings database")
+@pytest.mark.resources(reason="Needs embeddings database")
 def test_embeddings():
     """
     Test embeddings are loaded correctly.
@@ -46,7 +46,8 @@ def test_embeddings():
         embs = rel_utils.get_db_emb(cursor, mentions, "entity")
         assert embs == [None]
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.train(reason="Trains a DeezyMatch model")
+@pytest.mark.resources(reason="Needs large resources")
 def test_train(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
@@ -139,7 +140,8 @@ def test_train(tmp_path):
     # assert expected performance on test set
     assert linker.entity_disambiguation_model.best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
 
-@pytest.mark.skip(reason="Needs embeddings database")
+@pytest.mark.train(reason="Trains an NER model")
+@pytest.mark.resources(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
     recogniser = ner.CustomRecogniser(
         model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
@@ -226,7 +228,7 @@ def test_load_eval_model(tmp_path):
     linker.train_load_model(ranker)
     assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.resources(reason="Needs large resources")
 def test_predict(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True

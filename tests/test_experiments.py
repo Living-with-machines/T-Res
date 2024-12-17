@@ -32,6 +32,7 @@ def test_experiments_wrong_dataset_path(tmp_path):
     )
 
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_load_data(tmp_path):
     data = pd.read_csv(os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"), sep="\t")
     ids = set()
@@ -124,7 +125,7 @@ def test_load_data(tmp_path):
         assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.resources(reason="Needs large resources")
 def test_apply(tmp_path):
     
     recogniser = ner.CustomRecogniser(

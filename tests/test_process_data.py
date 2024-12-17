@@ -64,6 +64,7 @@ def test_prepare_sents():
     assert len([x for x, y in dMetadata.items() if len(y) == 0]) == 0
 
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_align_gold(tmp_path):
 
     recogniser = ner.CustomRecogniser(
@@ -120,6 +121,7 @@ def test_align_gold(tmp_path):
     assert len(empty_list) == 0
 
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_ner_and_process(tmp_path):
 
     recogniser = ner.CustomRecogniser(

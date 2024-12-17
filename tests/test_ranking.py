@@ -230,7 +230,7 @@ def test_ranking_levenshtein():
     assert candidates.get("New York City").string_similarity == 0.0
 
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.resources(reason="Needs deezy model")
 def test_ranking_deezy_on_the_fly(tmp_path):
     ranker = DeezyMatchRanker(
         resources_path=os.path.join(current_dir,"../resources/"),
@@ -289,7 +289,7 @@ def test_ranking_deezy_on_the_fly(tmp_path):
     assert (0.0 < candidates.get("Aston-under-Lynne").string_similarity < 1.0)
 
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.resources(reason="Needs deezy model")
 def test_ranking_attach_wikidata(tmp_path):
     ranker = DeezyMatchRanker(
         resources_path=os.path.join(current_dir,"../resources/"),

@@ -60,7 +60,7 @@ def test_pipeline_modular():
     assert predictions.candidates()[0].best_wqid() == "Q42448"
     assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.807, abs=1e-3)
 
-@pytest.mark.skip(reason="Needs deezy model")
+@pytest.mark.resources(reason="Needs deezy model")
 def test_deezy_mostpopular(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
@@ -151,7 +151,7 @@ def test_deezy_mostpopular(tmp_path):
     text = " • - S G pOllO-P• FERRIS - • - , i "
     assert geoparser.run(text).is_empty()
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.resources(reason="Needs large resources")
 def test_deezy_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
@@ -287,7 +287,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     # assert predictions.candidates()[0].best_match().best_disambiguation_score() == 0.039 # TODO: reproduce this number.
     assert predictions.candidates()[0].mention.ner_score == 1.0
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.resources(reason="Needs large resources")
 def test_perfect_rel_wpubl_wmtops(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
@@ -377,7 +377,7 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.rel_scores[2].confidence == pytest.approx(0.0443, abs=1e-3)
     assert resolved.rel_scores[2].scores["Q84"] == pytest.approx(0.493, abs=1e-3)
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.resources(reason="Needs large resources")
 def test_modular_deezy_rel(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
