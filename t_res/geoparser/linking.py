@@ -92,10 +92,7 @@ class Linker:
 
     def wkdt_class(self, wqid: str) -> Optional[str]:
         """Returns the Wikidata class for the given Wikidata entry, if available."""
-        wkdt_class = self.linking_resources["entity2class"].get(wqid)
-        if wkdt_class:
-            return wkdt_class
-        return None
+        return self.linking_resources["entity2class"].get(wqid, None)
     
     def empty_candidates(self, mention: Mention, ranking_method: str, place_of_pub_wqid: str, place_of_pub: str):
         """Returns an empty `Candidates` instance."""
