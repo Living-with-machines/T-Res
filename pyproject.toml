@@ -65,5 +65,7 @@ profile = "black"
 
 [tool.pytest.ini_options]
 markers = [
-    "deezy: tests which need a deezy model",
+    "resources: tests which depend on files in the resources directory",
+    "train: tests which train a model",
+    "app: tests which require access to the HTTP API",
 ]
