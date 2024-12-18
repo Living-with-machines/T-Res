@@ -49,7 +49,7 @@ class Linker:
         """
         self.resources_path = resources_path
         self.experiments_path = experiments_path
-        self.linking_resources = linking_resources
+        self.resources = linking_resources
 
         # TODO:
         # self.cache = dict()
@@ -92,7 +92,7 @@ class Linker:
 
     def wkdt_class(self, wqid: str) -> Optional[str]:
         """Returns the Wikidata class for the given Wikidata entry, if available."""
-        return self.linking_resources["entity2class"].get(wqid, None)
+        return self.resources["entity2class"].get(wqid, None)
     
     def empty_candidates(self, mention: Mention, ranking_method: str, place_of_pub_wqid: str, place_of_pub: str):
         """Returns an empty `Candidates` instance."""
@@ -103,7 +103,7 @@ class Linker:
             list(),
             place_of_pub_wqid,
             place_of_pub,
-            False)
+            self.with_publication())
 
     def load(self):
         """
@@ -118,24 +118,25 @@ class Linker:
         with open(
             os.path.join(self.resources_path, "wikidata/mentions_to_wikidata.json"), "r"
         ) as f:
-            self.linking_resources["mentions_to_wikidata"] = json.load(f)
+            self.resources["mentions_to_wikidata"] = json.load(f)
 
         # Load Wikidata mentions-to-QID with normalized counts:
         print("  > Loading mentions to normalized wikidata mapping.")
         with open(
             os.path.join(self.resources_path, "wikidata/mentions_to_wikidata_normalized.json"), "r"
         ) as f:
-            self.linking_resources["mentions_to_wikidata_normalized"] = json.load(f)
+            self.resources["mentions_to_wikidata_normalized"] = json.load(f)
 
         # The entity2class.txt file is created as the last step in
         # wikipedia processing:
         with open(
             os.path.join(self.resources_path, "wikidata/entity2class.txt"), "r"
         ) as f:
-            self.linking_resources["entity2class"] = json.load(f)
+            self.resources["entity2class"] = json.load(f)
 
         print("*** Linking resources loaded!\n")
 
+    # TODO: docstring
     def run(
             self, 
             matches: CandidateMatches, 
@@ -153,7 +154,33 @@ class Linker:
         Returns:
             Candidates: The candidates identified by the linking process.
         """
+        if matches.is_empty():
+            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
+
+        candidate_links = [CandidateLinks(m.as_string_match(), self.wikidata_links(m, place_of_pub_wqid)) 
+                           for m in matches.matches]
+
+        # # TODO: create a Linker cache and add the resulting candidates to it.
+        return MentionCandidates(
+            matches.mention, 
+            matches.ranking_method, 
+            self.method_name, 
+            candidate_links,
+            place_of_pub_wqid,
+            place_of_pub,
+            self.with_publication(),
+        )
+    
+    # TODO: docstring
+    def wikidata_links(
+            self, 
+            match: StringMatchLinks,
+            place_of_pub_wqid: Optional[str]=None,
+            ) -> List[WikidataLink]:
         raise NotImplementedError("Subclass implementation required.")
+
+    def with_publication(self) -> bool:
+        return False
 
     def disambiguate(self, candidates: List[SentenceCandidates]) -> Predictions:
         """
@@ -208,63 +235,19 @@ class MostPopularLinker(Linker):
     # Override the method_name class attribute.
     method_name: str = "mostpopular"
 
-    # TODO: update docstring
-    def run(
+    # TODO: docstring
+    def wikidata_links(
             self, 
-            matches: CandidateMatches, 
+            match: StringMatchLinks,
             place_of_pub_wqid: Optional[str]=None,
-            place_of_pub: Optional[str]=None,
-        ) -> MentionCandidates:
-        """
-        Select most popular candidate, given Wikipedia's in-link structure.
+            ) -> List[WikidataLink]:
+        links = [MostPopularLink(
+            wqid=wqid,
+            wkdt_class=self.wkdt_class(wqid),
+            freq=self.resources["mentions_to_wikidata"][match.variation][wqid]) 
+            for wqid in match.wqid_links]
+        return links
 
-        Arguments:
-            matches: A CandidatesMatches instance.
-            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
-
-        Returns:
-            Candidates: The candidates identified by the linking process.
-
-        .. note::
-
-            Applying the "most popular" disambiguation method for linking
-            entities. Given a set of candidates for a given mention, the
-            function returns as a prediction the more relevant Wikidata
-            candidate, determined from the in-link structure of Wikipedia.
-        """
-        if matches.is_empty():
-            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
-
-        wikidata_links = []
-        candidate_links = []
-        for match in matches.matches:
-            if not isinstance(match, StringMatchLinks):
-                raise ValueError("Expected StringMatchLinks instance.")
-            
-            for wqid in match.wqid_links:
-                freq = self.linking_resources["mentions_to_wikidata"][match.variation][wqid]
-                wikidata_links.append(MostPopularLink(
-                    wqid,
-                    wkdt_class=self.wkdt_class(wqid),
-                    freq=freq)
-                )
-
-            candidate_links.append(CandidateLinks(
-                match.as_string_match(), 
-                wikidata_links, 
-            ))
-
-        # # TODO: create a Linker cache and add the resulting candidates to it.
-        return MentionCandidates(
-            matches.mention, 
-            matches.ranking_method, 
-            self.method_name, 
-            candidate_links,
-            place_of_pub_wqid,
-            place_of_pub,
-            False,
-        )
-    
     # Computes disambiguation scores for a collection of potential Wikidata links.
     def disambiguation_scores(self, links: List[MostPopularLink], string_similarity=None) -> Dict[str, float]:
         total = sum([m.freq for m in links])
@@ -303,90 +286,44 @@ class ByDistanceLinker(Linker):
         gaz["longitude"] = gaz["longitude"].astype(float)
         gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
         wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
-        self.linking_resources["wqid_to_coords"] = wqid_to_coords
+        self.resources["wqid_to_coords"] = wqid_to_coords
         gaz_ids = set(gaz["wikidata_id"].tolist())
         # Keep only wikipedia entities in the gazetteer:
-        self.linking_resources["wikidata_locs"] = gaz_ids
+        self.resources["wikidata_locs"] = gaz_ids
         gaz_ids = ""
         gaz = ""
 
     def wkdt_coords(self, wqid: str) -> Optional[Tuple[float, float]]:
         """Returns the lat-lon coordinates for the given Wikidata entry, if available."""
-        return self.linking_resources["wqid_to_coords"].get(wqid, None)
+        return self.resources["wqid_to_coords"].get(wqid, None)
 
-    def run(
+    # TODO: docstring
+    def wikidata_links(
             self, 
-            matches: CandidateMatches, 
-            place_of_pub_wqid: Optional[str],
-            place_of_pub: Optional[str]=None,
-        ) -> MentionCandidates:
-        """
-        Select candidates based on distance to the place of publication.
-
-        Arguments:
-            matches: A CandidatesMatches instance.
-            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
-
-        Returns:
-            Candidates: The candidates identified by the linking process.
-
-        .. note::
-
-            Applying the "by distance" disambiguation method for linking
-            entities, based on geographical distance. It undertakes an
-            unsupervised disambiguation, which returns a prediction of a
-            location closest to the place of publication, for a provided set
-            of candidates and the place of publication of the original text.
-        """
-        if matches.is_empty():
-            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
-
+            match: StringMatchLinks,
+            place_of_pub_wqid: Optional[str]=None,
+            ) -> List[WikidataLink]:
+        
         origin_coords = self.wkdt_coords(place_of_pub_wqid)
-
-        wikidata_links = []
-        candidate_links = []
-        for match in matches.matches:
-            if not isinstance(match, StringMatchLinks):
-                raise ValueError("Expected StringMatchLinks instance.")
-            for wqid in match.wqid_links:
-
-                # TODO NEXT: Consider moving the geodist computation into the disambiguation_scores 
-                # closure, else we're duplicating the information (both coords and geodist).
-                candidate_coords = self.wkdt_coords(wqid)
-                # If coordinates are known for origin and candidate, compute the geodesic distance.
-                try:
-                    geodist = haversine(origin_coords, candidate_coords)
-                except ValueError:
-                    # We have one candidate with coordinates in Venus!
-                    geodist = None
-
-                normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
-                    wqid
-                ]
-                wikidata_links.append(ByDistanceLink(
-                    wqid,
-                    wkdt_class=self.wkdt_class(wqid),
-                    coords=self.wkdt_coords(wqid),
-                    place_of_pub_coords=origin_coords,
-                    geodist=geodist,
-                    normalized_score=normalized_score,
-                    )
-                )
-            candidate_links.append(CandidateLinks(
-                match.as_string_match(), 
-                wikidata_links, 
-            ))
-
-        # TODO: create a Linker cache and add the resulting candidates to it.
-        return MentionCandidates(
-            matches.mention,
-            matches.ranking_method,
-            self.method_name,
-            candidate_links,
-            place_of_pub_wqid,
-            place_of_pub,
-            False,
-        )
+        links = [ByDistanceLink(
+            wqid=wqid,
+            wkdt_class=self.wkdt_class(wqid),
+            coords=self.wkdt_coords(wqid),
+            place_of_pub_coords=origin_coords,
+            geodist=self.haversine(origin_coords, self.wkdt_coords(wqid)),
+            normalized_score=self.resources["mentions_to_wikidata_normalized"][match.variation][
+                wqid
+            ]) for wqid in match.wqid_links]
+        return links
+    
+    def haversine(self, origin_coords: Optional[Tuple[float, float]], coords: Optional[Tuple[float, float]]) -> Optional[float]:
+        if not origin_coords:
+            print("Missing place of publication coordinates.")
+            return None
+        try:
+            return haversine(origin_coords, coords)
+        except ValueError:
+            return None
 
     def disambiguation_scores(self, wikidata_links: List[ByDistanceLink], string_similarity: float) -> Dict[str, float]:
         max_on_gb = 1000  # 1000 km, max on GB
@@ -544,6 +481,8 @@ class RelDisambLinker(Linker):
         super().load()
         self.train_load_model(split=split)
 
+    # TODO: docstring
+    # Override the run method to include handling of REL config parameters.
     def run(
             self, 
             matches: CandidateMatches, 
@@ -551,7 +490,8 @@ class RelDisambLinker(Linker):
             place_of_pub: Optional[str]=None,
         ) -> MentionCandidates:
         """
-        Select candidates using the Radboud Entity Linker (REL) model.
+        Execute the linking process. Each Linker subclass must implement a 
+        linking method by overriding this function.
 
         Arguments:
             matches: A CandidatesMatches instance.
@@ -559,57 +499,39 @@ class RelDisambLinker(Linker):
 
         Returns:
             Candidates: The candidates identified by the linking process.
-        """        
-        if matches.is_empty():
-            return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
-        
+        """
         # Skip microtoponyms if configured to do so.
         if self.rel_params["without_microtoponyms"]:
             if matches.mention.is_microtoponym():
                 return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
-        
-        wikidata_links = []
-        candidate_links = []
-        for match in matches.matches:
-            if not isinstance(match, StringMatchLinks):
-                raise ValueError("Expected StringMatchLinks instance.")
-            
-            for wqid in match.wqid_links:
-                freq = self.linking_resources["mentions_to_wikidata"][match.variation][wqid]
-                normalized_score = self.linking_resources["mentions_to_wikidata_normalized"][match.variation][
-                    wqid
-                ]
-
-                wikidata_links.append(RelDisambLink(
-                    wqid,
-                    wkdt_class=self.wkdt_class(wqid),
-                    freq=freq,
-                    normalized_score=normalized_score,
-                ))
-
-            candidate_links.append(CandidateLinks(
-                match.as_string_match(), 
-                wikidata_links, 
-            ))
 
         # If configured to link "with publication" (i.e. with an additional sentence
         # containing an artificial mention of the place of publication), use default 
         # values for place_of_pub_wqid and place_of_pub unless they are already populated.
-        if self.rel_params["with_publication"]:
+        if self.with_publication():
             if not (place_of_pub_wqid and place_of_pub):
                 place_of_pub_wqid = self.rel_params["default_publwqid"]
                 place_of_pub = self.rel_params["default_publname"]
 
-        # # TODO: create a Linker cache and add the resulting candidates to it.
-        return MentionCandidates(
-            matches.mention,
-            matches.ranking_method,
-            self.method_name,
-            candidate_links,
-            place_of_pub_wqid,
-            place_of_pub,
-            self.rel_params["with_publication"],
-        )
+        return super().run(matches, place_of_pub_wqid, place_of_pub)
+
+    # TODO: docstring        
+    def wikidata_links(
+            self, 
+            match: StringMatchLinks,
+            place_of_pub_wqid: Optional[str]=None,
+            ) -> List[WikidataLink]:
+        links = [RelDisambLink(
+            wqid=wqid,
+            wkdt_class=self.wkdt_class(wqid),
+            freq=self.resources["mentions_to_wikidata"][match.variation][wqid],
+            normalized_score=self.resources["mentions_to_wikidata_normalized"][match.variation][
+                wqid
+            ]) for wqid in match.wqid_links]
+        return links
+
+    def with_publication(self) -> bool:
+        return self.rel_params["with_publication"]
 
     # Override the disambiguate method to include REL linking.
     def disambiguate(self, candidates: List[SentenceCandidates], apply_rel: bool=True) -> Predictions:
@@ -744,14 +666,14 @@ class RelDisambLinker(Linker):
             train_json = rel_utils.prepare_rel_trainset(
                 train_df,
                 self.rel_params,
-                ranker,
+                self.ranker,
                 self,
                 "train",
             )
             dev_json = rel_utils.prepare_rel_trainset(
                 dev_df,
                 self.rel_params,
-                ranker,
+                self.ranker,
                 self,
                 "dev",
             )

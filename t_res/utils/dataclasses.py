@@ -419,7 +419,7 @@ class MentionCandidates:
     # Place of publication.
     place_of_pub: Optional[str]
     # With publication flag.
-    with_publication: bool
+    with_publication: bool # TODO: remove this field as superfluous
 
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.mention.start_char)

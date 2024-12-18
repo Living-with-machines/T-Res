@@ -9,6 +9,9 @@ from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
 
+# TODO: add a test with & without microtoponyms. 
+# Check that the predictions exclude them if configured.
+
 def test_pipeline_constructor():
     resources_path=os.path.join(current_dir, "sample_files/resources")
     geoparser = pipeline.Pipeline(resources_path=resources_path)

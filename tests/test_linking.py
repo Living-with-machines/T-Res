@@ -23,7 +23,7 @@ def test_init():
 
     assert linker.resources_path  == "path/to/resources/"
     assert linker.experiments_path  == "path/to/experiments/"
-    assert linker.linking_resources['resource'] == 'value'
+    assert linker.resources['resource'] == 'value'
 
     linker = MostPopularLinker(
         resources_path="path/to/resources/",
@@ -45,7 +45,7 @@ def test_init():
 
     assert linker.resources_path  == "path/to/resources/"
     assert linker.experiments_path  == "path/to/experiments/"
-    assert linker.linking_resources['resource'] == 'value'
+    assert linker.resources['resource'] == 'value'
     assert linker.rel_params['param'] == 'value'
     assert linker.overwrite_training
 
@@ -77,7 +77,7 @@ def test_new():
     linker = Linker.new(**kwargs)
     assert isinstance(linker, MostPopularLinker)
     assert linker.method_name == 'mostpopular'
-    assert linker.linking_resources == dict()
+    assert linker.resources == dict()
 
     kwargs = {
         'method_name': 'bydistance',
