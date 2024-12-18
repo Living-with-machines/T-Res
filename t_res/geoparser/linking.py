@@ -102,8 +102,7 @@ class Linker:
             self.method_name,
             list(),
             place_of_pub_wqid,
-            place_of_pub,
-            self.with_publication())
+            place_of_pub)
 
     def load(self):
         """
@@ -168,7 +167,6 @@ class Linker:
             candidate_links,
             place_of_pub_wqid,
             place_of_pub,
-            self.with_publication(),
         )
     
     # TODO: docstring
@@ -178,9 +176,6 @@ class Linker:
             place_of_pub_wqid: Optional[str]=None,
             ) -> List[WikidataLink]:
         raise NotImplementedError("Subclass implementation required.")
-
-    def with_publication(self) -> bool:
-        return False
 
     def disambiguate(self, candidates: List[SentenceCandidates]) -> Predictions:
         """
@@ -323,6 +318,7 @@ class ByDistanceLinker(Linker):
         try:
             return haversine(origin_coords, coords)
         except ValueError:
+            # We have one candidate with coordinates in Venus!
             return None
 
     def disambiguation_scores(self, wikidata_links: List[ByDistanceLink], string_similarity: float) -> Dict[str, float]:
@@ -508,7 +504,7 @@ class RelDisambLinker(Linker):
         # If configured to link "with publication" (i.e. with an additional sentence
         # containing an artificial mention of the place of publication), use default 
         # values for place_of_pub_wqid and place_of_pub unless they are already populated.
-        if self.with_publication():
+        if self.rel_params["with_publication"]:
             if not (place_of_pub_wqid and place_of_pub):
                 place_of_pub_wqid = self.rel_params["default_publwqid"]
                 place_of_pub = self.rel_params["default_publname"]
@@ -529,9 +525,6 @@ class RelDisambLinker(Linker):
                 wqid
             ]) for wqid in match.wqid_links]
         return links
-
-    def with_publication(self) -> bool:
-        return self.rel_params["with_publication"]
 
     # Override the disambiguate method to include REL linking.
     def disambiguate(self, candidates: List[SentenceCandidates], apply_rel: bool=True) -> Predictions:

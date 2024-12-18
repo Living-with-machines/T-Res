@@ -418,8 +418,6 @@ class MentionCandidates:
     place_of_pub_wqid: Optional[str]
     # Place of publication.
     place_of_pub: Optional[str]
-    # With publication flag.
-    with_publication: bool # TODO: remove this field as superfluous
 
     def __post_init__(self):
         object.__setattr__(self, 'sort_index', self.mention.start_char)
@@ -805,6 +803,5 @@ class RelPredictions(Predictions):
                 c.linking_method, 
                 links, 
                 c.place_of_pub_wqid, 
-                c.place_of_pub, 
-                c.with_publication))
+                c.place_of_pub))
         return ret
