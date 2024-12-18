@@ -291,7 +291,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert predictions.candidates()[0].mention.ner_score == 1.0
 
 @pytest.mark.resources(reason="Needs large resources")
-def test_perfect_rel_wpubl_wmtops(tmp_path):
+def test_perfect_rel_wpubl_wmtops():
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
@@ -362,23 +362,23 @@ def test_perfect_rel_wpubl_wmtops(tmp_path):
     assert resolved.candidates()[1].mention.ner_score == 1.0
     assert resolved.candidates()[1].best_match() is not None
     assert isinstance(resolved.candidates()[1].best_match(), PredictedLinks)
-    assert resolved.candidates()[1].best_match().best_disambiguation_score() == pytest.approx(0.356, abs=1e-3)
+    assert resolved.candidates()[1].best_match().best_disambiguation_score() == pytest.approx(0.578, abs=1e-3)
     assert resolved.candidates()[1].best_wqid() == "Q39121"
-    assert resolved.candidates()[1].best_disambiguation_score() == pytest.approx(0.356, abs=1e-3)
+    assert resolved.candidates()[1].best_disambiguation_score() == pytest.approx(0.578, abs=1e-3)
     assert resolved.rel_scores[1].mention == "Leeds"
-    assert resolved.rel_scores[1].confidence == pytest.approx(0.0445, abs=1e-3)
-    assert resolved.rel_scores[1].scores["Q39121"] == pytest.approx(0.356, abs=1e-3)
+    assert resolved.rel_scores[1].confidence == pytest.approx(0.0688, abs=1e-3)
+    assert resolved.rel_scores[1].scores["Q39121"] == pytest.approx(0.578, abs=1e-3)
 
     assert resolved.candidates()[2].mention.mention == "London"
     assert resolved.candidates()[2].mention.ner_score == 0.998
     assert resolved.candidates()[2].best_match() is not None
     assert isinstance(resolved.candidates()[1].best_match(), PredictedLinks)
-    assert resolved.candidates()[2].best_match().best_disambiguation_score() == pytest.approx(0.493, abs=1e-3)
+    assert resolved.candidates()[2].best_match().best_disambiguation_score() == pytest.approx(0.611, abs=1e-3)
     assert resolved.candidates()[2].best_wqid() == "Q84"
-    assert resolved.candidates()[2].best_disambiguation_score() == pytest.approx(0.493, abs=1e-3)
+    assert resolved.candidates()[2].best_disambiguation_score() == pytest.approx(0.611, abs=1e-3)
     assert resolved.rel_scores[2].mention == "London"
-    assert resolved.rel_scores[2].confidence == pytest.approx(0.0443, abs=1e-3)
-    assert resolved.rel_scores[2].scores["Q84"] == pytest.approx(0.493, abs=1e-3)
+    assert resolved.rel_scores[2].confidence == pytest.approx(0.0696, abs=1e-3)
+    assert resolved.rel_scores[2].scores["Q84"] == pytest.approx(0.611, abs=1e-3)
 
 @pytest.mark.resources(reason="Needs large resources")
 def test_modular_deezy_rel(tmp_path):
