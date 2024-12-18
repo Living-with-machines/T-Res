@@ -335,13 +335,7 @@ class PartialMatchRanker(PerfectMatchRanker):
             lambda row: self.matching_score(query, row), axis=1
         )
         mention_df = mention_df.dropna()
-
-        # currently hardcoded cutoff
-        top_scores = sorted(
-            list(set(list(mention_df["score"].unique()))), reverse=True
-        )[:1]
-
-        mention_df = mention_df[mention_df["score"].isin(top_scores)]
+        mention_df = mention_df.query('score == score.max()')
         cands_dict = mention_df.set_index("mentions").to_dict()["score"]
         matches = [StringMatch(k, v) for (k, v) in cands_dict.items()]
         return matches
