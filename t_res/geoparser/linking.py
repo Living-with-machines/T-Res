@@ -335,10 +335,8 @@ class ByDistanceLinker(Linker):
                 distance_score = 1.0 - (distance / max_on_gb)
 
             relv_score = min(1.0, (string_similarity + link.normalized_score) / 2.0)
+            final_score = round((relv_score + distance_score) / 2, 3) if link.geodist is not None else 0.0
 
-            final_score = 0.0
-            if link.geodist is not None:
-                final_score = round((relv_score + distance_score) / 2, 3)
             ret[link.wqid] = final_score
         return ret
     
