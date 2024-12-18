@@ -543,34 +543,22 @@ class RelDisambLinker(Linker):
         return predictions.apply_rel_disambiguation(rel_predictions, self.rel_params["with_publication"])
 
     # Computes disambiguation scores for a collection of potential Wikidata links.
-    # IMP NOTE: this replaces the rank_candidates function from rel_utils.py:
+    # (Note: this replaces the rank_candidates function from rel_utils.py)
     def disambiguation_scores(self, links: List[RelDisambLink], string_similarity: float) -> Dict[str, float]:
 
         ret = dict()
-        # copied from rank_candidates (with edits):
         max_cand_freq = max([m.freq for m in links])
         for wikidata_link in links:
 
-            # Mention-to-wikidata absolute relevance:
-            qcrlv_score = wikidata_link.freq
-            qcm2w_score = wikidata_link.normalized_score
-            # Average of CS conf score and mention2wiki norm relv:
-            if string_similarity:
-                qcm2w_score = (qcm2w_score + string_similarity) / 2
-            # tmp_cands.append((wqid, qcrlv_score, qcm2w_score))
+            # Normalize absolute mention-to-Wikidata relevance by entity:
+            candidate_score_1 = wikidata_link.freq / max_cand_freq
+            # Average of string similarity and mention-to-Wikidata normalized relevance:
+            candidate_score_2 = (wikidata_link.normalized_score + string_similarity) / 2
 
-            # Normalize absolute mention-to-wikidata relevance by entity:
-            qc_score_1 = qcrlv_score / max_cand_freq
-            # Candidate selection confidence:
-            qc_score_2 = qcm2w_score
-            # Averaged relevances and normalize between 0 and 0.9:
-            score = ((qc_score_1 + qc_score_2) / 2) * 0.9
-            # old: score = round(qc_score, 3)
-
+            # Average of two candidate scores, normalized between 0 and 0.9:
+            score = ((candidate_score_1 + candidate_score_2) / 2) * 0.9
             ret[wikidata_link.wqid] = score
 
-        # TODO: put the above logic in a function and replace with something like this:
-        # return {link.wqid: link.freq / total for link in links}
         return ret
 
     def train_load_model(self, split: Optional[str] = "originalsplit"):
