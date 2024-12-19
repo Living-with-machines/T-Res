@@ -112,8 +112,8 @@ class Pipeline:
     # TODO: docstring
     def run(self, 
             text: str, 
+            place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None, 
-            place_of_pub_wqid: Optional[str]=None
         ) -> Predictions:
 
         mentions = self.run_text_recognition(text)
@@ -134,7 +134,6 @@ class Pipeline:
             place_of_pub: Optional[str]=None, 
         ) ->  Candidates:
         """Runs the candidate selection step of the pipeline."""
-
         sentence_candidates = list()
         for sms in sentence_mentions:
             matches = [self.ranker.run(mention) for mention in sms.mentions]

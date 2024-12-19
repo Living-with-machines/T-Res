@@ -85,8 +85,8 @@ async def run_disambiguation(api_query: DisambiguationAPIQuery):
 async def run_pipeline(api_query: PipelineAPIQuery):
     predictions = geoparser.run(
         text=api_query.text,
-        place_of_pub=api_query.place_of_pub,
         place_of_pub_wqid=api_query.place_of_pub_wqid,
+        place_of_pub=api_query.place_of_pub,
     )
     return predictions
 
