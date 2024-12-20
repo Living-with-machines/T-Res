@@ -94,7 +94,7 @@ class SentenceContext(Sentence):
                                 sentences[i + 1] if i < len(sentences) - 1 else None) 
                                 for i, s in enumerate(sentences)]
     
-    def from_sentence(sentence: str, language: str="en") -> 'SentenceContext':
+    def from_sentence(sentence: str) -> 'SentenceContext':
         return SentenceContext(sentence, None, None)
     
     # Helper method for the Predictions as_dict method.
@@ -807,3 +807,8 @@ class RelPredictions(Predictions):
                 c.place_of_pub_wqid, 
                 c.place_of_pub))
         return ret
+    
+    # Returns the MentionCandidates with their interim disambiguation scores,
+    # that is, the scores obtained before applying the REL disambiguation method.
+    def interim_candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
+        return super().candidates(ignore_empty_candidates)

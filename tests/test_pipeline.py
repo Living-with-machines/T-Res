@@ -231,19 +231,6 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
 
     geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
-    # # OLD (TODO: reproduce the same numbers via the new `run` method):
-    # text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
-    # resolved = geoparser.run_text(text, place="Sheffield", place_wqid="Q42448")
-
-    # assert len(resolved) == 3
-    # assert resolved[0]["mention"] == "Shefiield"
-    # assert resolved[0]["prior_cand_score"]["Q42448"] == pytest.approx(0.891, abs=1e-3)
-    # assert resolved[0]["cross_cand_score"]["Q42448"] == pytest.approx(0.766, abs=1e-3)
-    # assert resolved[0]["prediction"] == "Q42448"
-    # # assert resolved[0]["ed_score"] == 0.039 # TODO: reproduce this number.
-    # assert resolved[0]["ner_score"] == 1.0
-
-    # NEW:
     text = "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though."
     predictions = geoparser.run(text, place_of_pub_wqid="Q42448", place_of_pub="Sheffield")
 
@@ -257,6 +244,16 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert predictions.candidates()[0].best_match().string_match.string_similarity == 0.999494
     assert predictions.candidates()[0].best_wqid() == "Q42448"
     assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.766, abs=1e-3)
+
+    # Check the interim disambiguation score (i.e. before applying the REL model).
+    # The only difference is in the best_disambiguation_score result.
+    # Note: previously the term "prior_cand_score" was used to refer to the interim score.
+    assert len(predictions.interim_candidates()) == 3
+    assert predictions.interim_candidates()[0].mention.mention == "Shefiield"
+    assert predictions.interim_candidates()[0].best_match().string_match.variation == "Sheffield"
+    assert predictions.interim_candidates()[0].best_match().string_match.string_similarity == 0.999494
+    assert predictions.interim_candidates()[0].best_wqid() == "Q42448"
+    assert predictions.interim_candidates()[0].best_disambiguation_score() == pytest.approx(0.891, abs=1e-3)
 
     # The predictions are Sheffield (Q42448), Leeds (Q39121) and London (Q84).
     assert predictions.best_wqids() == ['Q42448', 'Q39121', 'Q84']
@@ -281,13 +278,7 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
         pytest.approx(0.897, abs=1e-3), 
         pytest.approx(0.895, abs=1e-3)]
     
-    # # tmp:
-    # print("cross_cand_scores:")
-    # print(predictions.candidates()[0].best_match().cross_cand_scores())
-
     assert predictions.candidates()[0].best_match().cross_cand_scores()["Q42448"] == pytest.approx(0.766, abs=1e-3)
-    # TODO: add a new method to CandidateLinks to return the prior_cand_score results.
-    # assert predictions.candidates()[0].best_match().best_disambiguation_score() == 0.039 # TODO: reproduce this number.
     assert predictions.candidates()[0].mention.ner_score == 1.0
 
 @pytest.mark.resources(reason="Needs large resources")

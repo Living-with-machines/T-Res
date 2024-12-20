@@ -51,9 +51,6 @@ class Linker:
         self.experiments_path = experiments_path
         self.resources = linking_resources
 
-        # TODO:
-        # self.cache = dict()
-
     def __str__(self) -> str:
         """
         Returns a string representation of the Linker object.
@@ -159,7 +156,6 @@ class Linker:
         candidate_links = [CandidateLinks(m.as_string_match(), self.wikidata_links(m, place_of_pub_wqid)) 
                            for m in matches.matches]
 
-        # # TODO: create a Linker cache and add the resulting candidates to it.
         return MentionCandidates(
             matches.mention, 
             matches.ranking_method, 
