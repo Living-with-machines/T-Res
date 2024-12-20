@@ -578,8 +578,10 @@ class Candidates:
             s += f"None"
         return s
 
-    def candidates(self) -> List[MentionCandidates]:
-        return [c for sc in self.sentence_candidates for c in sc.candidates]
+    def candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
+        if ignore_empty_candidates:
+            return [c for sc in self.sentence_candidates for c in sc.candidates]
+        return [c for sc in self.sentence_candidates for c in sc.candidates if not c.is_empty()]
 
     def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
         if ignore_empty_candidates:
@@ -785,13 +787,14 @@ class RelPredictions(Predictions):
                              Got {len(self.rel_scores)} instances and {len(super().candidates())} mentions.""")
 
     # Override the candidates method to return REL linking predictions.
-    def candidates(self) -> List[MentionCandidates]:
+    def candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
 
         # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
         ret = list()
         for c, rs in zip(super().candidates(), self.rel_scores):
             if c.is_empty():
-                ret.append(c)
+                if not ignore_empty_candidates:
+                    ret.append(c)
                 continue
             predicted_links = c.best_match()
             # Get the list of WikidataLink instances for which REL scores are available.

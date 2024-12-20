@@ -291,6 +291,112 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
     assert predictions.candidates()[0].mention.ner_score == 1.0
 
 @pytest.mark.resources(reason="Needs large resources")
+def test_deezy_rel_wpubl(tmp_path):
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path=model_path,
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,  # Set to True if you want to overwrite model if existing
+        do_test=False,  # Set to True if you want to train on test mode
+    )
+
+    # --------------------------------------
+    # Instantiate the ranker:
+    ranker = ranking.DeezyMatchRanker(
+        resources_path=os.path.join(current_dir, "../resources/"),
+        mentions_to_wikidata=dict(),
+        wikidata_to_mentions=dict(),
+        strvar_parameters={
+            # Parameters to create the string pair dataset:
+            "ocr_threshold": 60,
+            "top_threshold": 85,
+            "min_len": 5,
+            "max_len": 15,
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800s_news",
+            "overwrite_dataset": False,
+        },
+        deezy_parameters={
+            # Paths and filenames of DeezyMatch models and data:
+            "dm_path": os.path.join(current_dir,"../resources/deezymatch/"),
+            "dm_cands": "wkdtalts",
+            "dm_model": "w2v_ocr",
+            "dm_output": "deezymatch_on_the_fly",
+            # Ranking measures:
+            "ranking_metric": "faiss",
+            "selection_threshold": 50,
+            "num_candidates": 1,
+            "verbose": False,
+            # DeezyMatch training:
+            "overwrite_training": False,
+            "do_test": False,
+        },
+    )
+
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
+        linker = linking.RelDisambLinker(
+            resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
+            linking_resources=dict(),
+            rel_params={
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
+                "training_split": "originalsplit",
+                "db_embeddings": cursor,
+                "with_publication": True,
+                "without_microtoponyms": False,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+            },
+            overwrite_training=False,
+        )
+
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
+    text = "The charming seaside town of Swanage is noted for its Town Hall whose distinctive façade was designed by Edward Jerman, a pupil of Sir Christopher Wren. Also the Grosvenor Hotel, with its clock tower originally erected at the south end of London Bridge as a memorial to the Duke of Wellington."
+
+    # Test with microtoponyms.
+    predictions = geoparser.run(text, place_of_pub_wqid="Q203349", place_of_pub="Poole, Dorset")
+    assert isinstance(predictions, RelPredictions)
+
+    # When the "without_microtoponyms" parameter set to False, there are four candidates:
+    assert len(predictions.candidates()) == 4
+    assert predictions.candidates()[0].mention.mention == "Swanage"
+    assert predictions.candidates()[1].mention.mention == "Town Hall"
+    assert predictions.candidates()[2].mention.mention == "Grosvenor Hotel"
+    assert predictions.candidates()[3].mention.mention == "London Bridge"
+
+    # Test without microtoponyms.
+    geoparser.linker.rel_params["without_microtoponyms"] = True
+    predictions = geoparser.run(text, place_of_pub_wqid="Q203349", place_of_pub="Poole, Dorset")
+    assert isinstance(predictions, RelPredictions)
+    
+    # When the "without_microtoponyms" parameter set to False, only one candidate remains:
+    assert len(predictions.candidates()) == 1
+    assert predictions.candidates()[0].mention.mention == "Swanage"
+
+    # The MentionCandidates for the microtoponyms still exist, but they are empty 
+    # (i.e. contain no candidate links) because the Linker was configured to ignore them.
+    assert len(predictions.candidates(ignore_empty_candidates=False)) == 4
+    assert predictions.candidates(ignore_empty_candidates=False)[0].mention.mention == "Swanage"
+    assert predictions.candidates(ignore_empty_candidates=False)[1].mention.mention == "Town Hall"
+    assert predictions.candidates(ignore_empty_candidates=False)[2].mention.mention == "Grosvenor Hotel"
+    assert predictions.candidates(ignore_empty_candidates=False)[3].mention.mention == "London Bridge"
+
+@pytest.mark.resources(reason="Needs large resources")
 def test_perfect_rel_wpubl_wmtops():
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
