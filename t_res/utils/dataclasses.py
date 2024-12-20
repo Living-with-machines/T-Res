@@ -501,7 +501,6 @@ class MentionCandidates:
             links=[CandidateLinks.from_dict(d) for d in data['links']],
             place_of_pub_wqid=place_of_pub_wqid,
             place_of_pub=place_of_pub,
-            with_publication=data['with_publication'],
         )
 
 ################################

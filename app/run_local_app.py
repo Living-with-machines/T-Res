@@ -22,7 +22,7 @@ pipeline_config = config_mod.CONFIG
 geoparser = pipeline.Pipeline(**pipeline_config)
 
 
-class APIQuery(BaseModel):
+class RecognitionAPIQuery(BaseModel):
     text: str
 
 
@@ -59,7 +59,7 @@ async def read_root(request: Request):
     }
 
 @app.get("/run_ner")
-async def run_ner(api_query: APIQuery):
+async def run_ner(api_query: RecognitionAPIQuery):
     ner_output = geoparser.run_text_recognition(
         api_query.text
     )
