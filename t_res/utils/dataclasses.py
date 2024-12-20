@@ -214,7 +214,7 @@ class CandidateMatches:
     mention: Mention
     # The string matching method used.
     ranking_method: str
-    # A dictionary of potential toponym matches, keyed by (each of which may contain a list of Wikidata candidates).
+    # A list of potential toponym matches, each with potential Wikidata links.
     matches: List[StringMatchLinks]
 
     def __post_init__(self):
@@ -453,8 +453,6 @@ class MentionCandidates:
                 return m
         return None
     
-    # TODO: rename this as `best_candidate` (and it's understood this means the best 
-    # StringMatch with associated candidate WikidataLink instances).
     # Returns the CandidateLinks instance whose StringMatch has the highest string similarity.
     def best_match(self) -> Optional[CandidateLinks]:
         if self.is_empty():
@@ -467,7 +465,8 @@ class MentionCandidates:
             return None
         return self.best_match().string_match
 
-    # Returns the Wikidata link with the highest disambiguation score.
+    # Returns the Wikidata link with the highest disambiguation score,
+    # associated with the best string match candidate.
     def best_wikidata_link(self) -> Optional[WikidataLink]:
         # Get the candidate with highest string similarity.
         best_match = self.best_match()
