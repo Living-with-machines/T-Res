@@ -2,12 +2,16 @@ site_name: T-Res Docs
 site_url: https://living-with-machines.github.io/T-Res
 theme:
   name: material
+  palette: 
+    scheme: default
+    primary: custom
   features:
     - navigation.sections
     - navigation.footer
     - navigation.instant
     # - toc.integrate
     - navigation.top
+    
 nav:
   - 'T-Res toponym resolution pipeline': index.md
   - Getting Started:
@@ -32,6 +36,7 @@ nav:
   - Experiments:
     - experiments/index.md
     - experiments/evaluation.md
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -41,6 +46,9 @@ markdown_extensions:
   - admonition
   - tables
   - attr_list
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
