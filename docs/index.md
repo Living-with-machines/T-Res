@@ -12,19 +12,40 @@ The pipeline has three main components:
 
 The three components are used in combination in the **Pipeline** class.
 
-We also provide the code to deploy T-Res as an API, and show how to use it. Each of these elements are described in this documentation.
+We also provide the code to deploy T-Res as an HTTP API, and show how to use it. Each of these elements are described in this documentation.
 
 <div class="grid cards" markdown>
 
--   [Getting started](getting-started/index.md)
--   [Reference](reference/index.md)
--   [T Res Api](t-res-api/index.md)
--   [Experiments and evaluation](experiments/index.md)
+-   :material-cog-outline:{ .lg .middle } __Installation & Setup__
+
+    ---
+
+    Install T-Res and get up and running
+
+    [:octicons-arrow-right-24: Getting started](getting-started/index.md)
+
+-   :material-text-box-outline:{ .lg .middle } __Reference__
+
+    ---
+
+    Complete reference for the T-Res codebase
+
+    [:octicons-arrow-right-24: Reference](reference/index.md)
+
+-   :material-swap-vertical:{ .lg .middle } __HTTP API__
+
+    ---
+
+    Deploy & use the T-Res HTTP API
+
+    [:octicons-arrow-right-24: Customization](t-res-api/index.md)
+
+-   :material-flask-outline:{ .lg .middle } __Experiments__
+
+    ---
+
+    Reproduce experimental benchmarks
+
+    [:octicons-arrow-right-24: License](experiments/index.md)
 
 </div>
-
-## Indices and tables
-
--   [Genindex](genindex-broken.md)
--   [Modindex](modindex-broken.md)
--   [Search](search-broken.md)
