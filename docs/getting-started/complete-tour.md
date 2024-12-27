@@ -6,12 +6,9 @@ An additional class, the **Pipeline**, wraps these three components into one, th
 
 In the following sections, we provide a complete tour: including an in-depth description of each of the four classes. We recommend that you start with the Pipeline, which wraps the three other classes, and refer to the description of each of the other classes to learn more about them. We also recommend that you first try to run T-Res using the default pipeline, and then change it accordingly to your needs.
 
-:::: warning
-!!! title "Warning"
+!!! Warning
 
-
-Note that, before being able to run the pipeline, you will need to make sure you have all the required resources. Refer to the "[Resources and directory structure](resources.md)" page in the documentation.
-::::
+    Note that, before being able to run the pipeline, you will need to make sure you have all the required resources. Refer to the "[Resources and directory structure](resources.md)" page in the documentation.
 
 ## The Pipeline
 
@@ -33,12 +30,9 @@ from geoparser import pipeline
 geoparser = pipeline.Pipeline(resources_path="../resources/")
 ```
 
-:::: note
 !!! title "Note"
 
-
-You should update the resources path argument to reflect your set up.
-::::
+    You should update the resources path argument to reflect your set up.
 
 You can also instantiate a pipeline using a customised Recogniser, Ranker and Linker. To see the different options, refer to the sections on instantiating each of them: `Recogniser <The Recogniser>`{.interpreted-text role="ref"}, `Ranker <The Ranker>`{.interpreted-text role="ref"} and `Linker <The Linker>`{.interpreted-text role="ref"}.
 
@@ -54,19 +48,13 @@ mylinker = linking.Linker(...)
 geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 ```
 
-:::: warning
-!!! title "Warning"
+!!! Warning
 
+    Note that the default Pipeline expects to be run from the `experiments/` or the `examples` folder (or any other folder in the same level). The Pipeline will look for the resources at `../resources/`. Make sure all the required resources are in the right locations.
 
-Note that the default Pipeline expects to be run from the `experiments/` or the `examples` folder (or any other folder in the same level). The Pipeline will look for the resources at `../resources/`. Make sure all the required resources are in the right locations.
-::::
-
-:::: note
 !!! title "Note"
 
-
-If a model needs to be trained, the Pipeline itself will take care of it. Therefore, you should expect that the first time the Pipeline is used (or if you change certain input parameters) T-Res will take long to be ready to be used for prediction, as it will train the models if the approaches require so.
-::::
+    If a model needs to be trained, the Pipeline itself will take care of it. Therefore, you should expect that the first time the Pipeline is used (or if you change certain input parameters) T-Res will take long to be ready to be used for prediction, as it will train the models if the approaches require so.
 
 ### 2. Use the Pipeline
 
@@ -421,12 +409,9 @@ myner.train()
 
 Note that if `load_to_hub` is set to `True` or the model already exists (and `overwrite_training` is set to `False`), the training will be skipped, even if you call the `train()` method.
 
-:::: note
 !!! title "Note"
 
-
-Note that this step is already taken care of if you use the T-Res `Pipeline`.
-::::
+    Note that this step is already taken care of if you use the T-Res `Pipeline`.
 
 [back to top](#top-tour)
 
@@ -637,12 +622,9 @@ The following line of code loads the resources (i.e. the `mentions-to-wikidata_n
 myranker.mentions_to_wikidata = myranker.load_resources()
 ```
 
-:::: note
 !!! title "Note"
 
-
-Note that this step is already taken care of if you use the `Pipeline`.
-::::
+    Note that this step is already taken care of if you use the `Pipeline`.
 
 ### 3. Train a DeezyMatch model
 
@@ -674,12 +656,9 @@ The resulting model will be stored in the specified path. In this case, the resu
     │   └── wikipedia/
     └── ...
 
-:::: note
 !!! title "Note"
 
-
-Note that this step is already taken care of if you use the `Pipeline`.
-::::
+    Note that this step is already taken care of if you use the `Pipeline`.
 
 ### 4. Retrieve candidates for a given mention
 
@@ -810,12 +789,9 @@ The following line of code loads the resources required by the Linker, regardles
 mylinker.linking_resources = mylinker.load_resources()
 ```
 
-:::: note
 !!! title "Note"
 
-
-Note that this step is already taken care of if you use the `Pipeline`.
-::::
+    Note that this step is already taken care of if you use the `Pipeline`.
 
 ### 3. Train an entity disambiguation model
 
@@ -829,11 +805,8 @@ Note that if the model already exists and `overwrite_training` is set to `False`
 
 The resulting model will be stored in the location specified when instantiating the Linker (i.e. `resources/models/disambiguation/` in the example) in a new folder whose name combines information about the ranking and linking arguments used in training the method.
 
-:::: note
 !!! title "Note"
 
-
-Note that this step is already taken care of if you use the `Pipeline`.
-::::
+    Note that this step is already taken care of if you use the `Pipeline`.
 
 [back to top](#top-tour)

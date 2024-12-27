@@ -55,6 +55,8 @@ mkdocs-material = "^9.5.49"
 mkdocs-include-markdown-plugin= "^6.0.4"
 mkdocs-exclude = "^1.0.2"
 mkdocs-macros-plugin = "^1.0.4"
+mkdocs-awesome-pages-plugin = "^2.10.1"
+mkdocstrings-python = "^1.12.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

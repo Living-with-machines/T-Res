@@ -6,12 +6,9 @@ T-Res requires several resources to work. Some resources can be downloaded and l
 
 We provide the dataset we used to train T-Res for the tasks of toponym recognition (i.e. a named entity recognition task) and toponym disambiguation (i.e. an entity linking task focused on geographical entities) in English. The dataset is based on the [TopRes19th dataset](https://openhumanitiesdata.metajnl.com/articles/10.5334/johd.56).
 
-:::: note
 !!! title "Note"
 
-
-You can download the data (in the format required by T-Res) from the [British Library research repository](https://bl.iro.bl.uk/concern/datasets/ef537c70-87cb-495a-86c8-edffefa6bdc6).
-::::
+    You can download the data (in the format required by T-Res) from the [British Library research repository](https://bl.iro.bl.uk/concern/datasets/ef537c70-87cb-495a-86c8-edffefa6bdc6).
 
 By default, T-Res assumes the files are stored in the following location:
 
@@ -28,12 +25,9 @@ Continue reading the sections below to learn more about the datasets, and for a 
 
 ### 1. Toponym recognition dataset
 
-:::: note
 !!! title "Note"
 
-
-You don't need a toponym recognition dataset if you load a NER model directly from the HuggingFace hub, or from a local folder. In that case, you can skip this section.
-::::
+    You don't need a toponym recognition dataset if you load a NER model directly from the HuggingFace hub, or from a local folder. In that case, you can skip this section.
 
 T-Res allows directly loading a pre-trained BERT-based NER model, either locally or from the HuggingFace models hub. If this is your option, you can skip this section. Otherwise, if you want to train your own NER model using either our dataset or a different dataset, you should continue reading.
 
@@ -49,12 +43,9 @@ Note that the list of NER labels will be automatically detected from the trainin
 
 ### 2. Toponym disambiguation dataset
 
-:::: note
 !!! title "Note"
 
-
-You won't need a toponym disambiguation dataset if you use the unsupervised approach for linking (i.e `mostpopular`). You will need a toponym disambiguation dataset if you want to use one of the REL-based approaches.
-::::
+    You won't need a toponym disambiguation dataset if you use the unsupervised approach for linking (i.e `mostpopular`). You will need a toponym disambiguation dataset if you want to use one of the REL-based approaches.
 
 Train and test data examples are required for training a new entity disambiguation (ED) model. They should be provided in a single tsv file, named `linking_df_split.tsv`, one document per row, with the following required columns:
 
@@ -118,12 +109,9 @@ T-Res requires a series of Wikipedia- and Wikidata-based resources:
 -   `wikidata_gazetteer.csv`
 -   `entity2class.txt`
 
-:::: note
 !!! title "Note"
 
-
-These files can be generated using the [wiki2gaz](https://github.com/Living-with-machines/wiki2gaz) GitHub repository (**[coming soon]**). For more information on how they are built, refer to the `wiki2gaz` documentation.
-::::
+    These files can be generated using the [wiki2gaz](https://github.com/Living-with-machines/wiki2gaz) GitHub repository (**[coming soon]**). For more information on how they are built, refer to the `wiki2gaz` documentation.
 
 T-Res assumes these files in the following default location:
 
@@ -235,12 +223,9 @@ You can load the csv, and show the first five rows, as follows:
 
 Each row corresponds to a Wikidata geographic entity (i.e. a Wikidata entity with coordinates).
 
-:::: note
 !!! title "Note"
 
-
-Note that the latitude and longitude are not used by the disambiguation method: they are only provided as a post-processing step when rendering the output of the linking. Therefore, the columns can have dummy values (of type `float`) if the user is not interested in obtaining the coordinates: the linking to Wikidata will not be affected. Column `english_label` can likewise be left empty.
-::::
+    Note that the latitude and longitude are not used by the disambiguation method: they are only provided as a post-processing step when rendering the output of the linking. Therefore, the columns can have dummy values (of type `float`) if the user is not interested in obtaining the coordinates: the linking to Wikidata will not be affected. Column `english_label` can likewise be left empty.
 
 ### `entity2class.txt`
 
@@ -258,23 +243,17 @@ You can load the dictionary, and access it, as follows:
 
 For example, Wiltshire ([Q23183](https://www.wikidata.org/wiki/Q23183)) is mapped to [Q180673](https://www.wikidata.org/wiki/Q180673), i.e. "cerimonial county of England", whereas London ([Q84](https://www.wikidata.org/wiki/Q84)) is mapped to [Q515](https://www.wikidata.org/wiki/Q515), i.e. "city".
 
-:::: note
 !!! title "Note"
 
-
-Note that the entity2class mapping is not used by the disambiguation method: the Wikidata class is only provided as a post-processing step when rendering the output of the linking. T-Res will complain if the file is not there, but values can be left empty if the user is not interested in obtaining the wikidata class of the predicted entity. The linking to Wikidata will not be affected.
-::::
+    Note that the entity2class mapping is not used by the disambiguation method: the Wikidata class is only provided as a post-processing step when rendering the output of the linking. T-Res will complain if the file is not there, but values can be left empty if the user is not interested in obtaining the wikidata class of the predicted entity. The linking to Wikidata will not be affected.
 
 [back to top](#top-resources)
 
 ## Entity and word embeddings
 
-:::: note
 !!! title "Note"
 
-
-Note that you will not need this if you use the `mostpopular` disambiguation approach.
-::::
+    Note that you will not need this if you use the `mostpopular` disambiguation approach.
 
 In order to perform toponym linking and resolution using the REL-based approaches, T-Res requires a database of word2vec and wiki2vec embeddings.
 
@@ -285,14 +264,11 @@ By default, T-Res expects a database file called `embeddings_database.db` with, 
 
 In our experiments, we derived the embeddings database from REL's shared resources.
 
-:::: note
 !!! title "Note"
 
+    We are working towards improving this step in the pipeline. Meanwhile, to generate the `embeddings_database.db`, please follow these steps:
 
-We are working towards improving this step in the pipeline. Meanwhile, to generate the `embeddings_database.db`, please follow these steps:
-
-#\. Make sure you have `wikidata_gazetteer.csv` in `./resources/wikidata/` (see [above](#wikipedia-and-wikidata-based-resources)). #. Generate a Wikipedia-to-Wikidata index, following [this instructions](https://github.com/jcklie/wikimapper#create-your-own-index), save it as: `./resources/wikipedia/index_enwiki-latest.db`. #. Run [this script](https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py) to create the embeddings database (**[coming soon]**).
-::::
+    #\. Make sure you have `wikidata_gazetteer.csv` in `./resources/wikidata/` (see [above](#wikipedia-and-wikidata-based-resources)). #. Generate a Wikipedia-to-Wikidata index, following [this instructions](https://github.com/jcklie/wikimapper#create-your-own-index), save it as: `./resources/wikipedia/index_enwiki-latest.db`. #. Run [this script](https://github.com/Living-with-machines/wiki2gaz/blob/main/download_and_merge_embeddings_databases.py) to create the embeddings database (**[coming soon]**).
 
 You can load the file, and access a token embedding, as follows:
 
@@ -331,12 +307,9 @@ T-Res expects the `embeddings_database.db` file to be stored as follows:
 
 In order to train a DeezyMatch model, a training set consisting of positive and negative string pairs is required. We provide a dataset of positive and negative OCR variations, which can be used to train a DeezyMatch model, which can then be used to perform fuzzy string matching to find candidates for entity linking.
 
-:::: note
 !!! title "Note"
 
-
-The DeezyMatch training set can be downloaded from the [British Library research repository](https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63). This dataset is only necessary if you want to use the DeezyMatch approach to perform candidate selection. This is not needed if you use `perfectmatch`.
-::::
+    The DeezyMatch training set can be downloaded from the [British Library research repository](https://bl.iro.bl.uk/concern/datasets/12208b77-74d6-44b5-88f9-df04db881d63). This dataset is only necessary if you want to use the DeezyMatch approach to perform candidate selection. This is not needed if you use `perfectmatch`.
 
 T-Res assumes by default the DeezyMatch training set to be named `w2v_ocr_pairs.txt` and to be in the following location:
 
@@ -363,12 +336,9 @@ The dataset we provide consists of 1,085,514 string pairs.
 
 ### 2. Word2Vec embeddings trained on noisy data
 
-:::: note
 !!! title "Note"
 
-
-The 19thC word2vec embeddings **are not needed** if you already have the DeezyMatch training set `w2v_ocr_pairs.txt` (described in the [section above](#deezymatch-training-set)).
-::::
+    The 19thC word2vec embeddings **are not needed** if you already have the DeezyMatch training set `w2v_ocr_pairs.txt` (described in the [section above](#deezymatch-training-set)).
 
 To create a new DeezyMatch training set using T-Res, you need to provide Word2Vec models that have been trained on digitised historical news texts. In our experiments, we used the embeddings trained on a 4.2-billion-word corpus of 19th-century British newspapers using Word2Vec (you can download them from [Zenodo](https://doi.org/10.5281/zenodo.7887305)), but you can also do this with your own word2vec embeddings. The embeddings are divided into periods of ten years each. By default, T-Res assumes that the word2vec models are stored in `./resources/models/w2v/`, in directories named `w2v_xxxxs_news/`, where `xxxx` corresponds to the decade (e.g. 1800 or 1810) of the models.
 

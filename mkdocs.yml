@@ -1,3 +1,53 @@
 site_name: T-Res Docs
+site_url: https://living-with-machines.github.io/T-Res
 theme:
   name: material
+  features:
+    - navigation.sections
+    - navigation.footer
+    - navigation.instant
+    # - toc.integrate
+    - navigation.top
+nav:
+  - 'T-Res toponym resolution pipeline': index.md
+  - Getting Started:
+    - getting-started/index.md
+    - getting-started/installation.md
+    - getting-started/complete-tour.md
+  - Reference:
+    - reference/index.md
+    - utils module:
+      - reference/utils/index.md
+      - 'Dataclasses': reference/utils/dataclasses.md
+      - 'Deezy processing': reference/utils/deezy_processing.md
+      - 'Get data': reference/utils/get_data.md
+      - 'NER': reference/utils/ner.md
+      - 'Preprocess data': reference/utils/preprocess_data.md
+      - 'Process data': reference/utils/process_data.md
+      - 'Process Wikipedia': reference/utils/process_wikipedia.md
+  - T-Res API:
+    - t-res-api/index.md
+    - t-res-api/installation.md
+    - t-res-api/usage.md
+  - Experiments:
+    - experiments/index.md
+    - experiments/evaluation.md
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - tables
+  - attr_list
+
+plugins:
+  - search
+  - section-index
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_root_toc_entry: false
