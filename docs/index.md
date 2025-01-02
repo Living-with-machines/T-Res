@@ -10,7 +10,7 @@ The pipeline has three main components:
 2.  **The Ranker** performs candidate selection and ranking.
 3.  **The Linker** performs entity linking and resolution.
 
-The three components are used in combination in the **Pipeline** class.
+These three components are used in combination in the **Pipeline** class.
 
 We also provide the code to deploy T-Res as an HTTP API, and show how to use it. Each of these elements are described in this documentation.
 
@@ -36,7 +36,7 @@ We also provide the code to deploy T-Res as an HTTP API, and show how to use it.
 
     ---
 
-    Deploy & use the T-Res HTTP API
+    Deploy & use T-Res via an HTTP API
 
     [:octicons-arrow-right-24: Customization](t-res-api/index.md)
 
@@ -46,6 +46,6 @@ We also provide the code to deploy T-Res as an HTTP API, and show how to use it.
 
     Reproduce experimental benchmarks
 
-    [:octicons-arrow-right-24: License](experiments/index.md)
+    [:octicons-arrow-right-24: Experiments](experiments/index.md)
 
 </div>
