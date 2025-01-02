@@ -67,21 +67,21 @@ class TrainingMention(Mention):
     """
     gold: str
 
-    def from_dict(dict: dict) -> 'TrainingMention':
+    def from_dict(data: dict) -> 'TrainingMention':
         """Constructs a `TrainingMention` instance from a dictionary."""
-        if isinstance(dict['gold'], list) and len(dict['gold']) != 1:
-            raise ValueError(f"Multiple gold standard toponymn IDs: {dict['gold']}")
-        if 'tag' in dict.keys() and 'ner_label' not in dict.keys():
-            dict['ner_label'] = dict['tag']
+        if isinstance(data['gold'], list) and len(data['gold']) != 1:
+            raise ValueError(f"Multiple gold standard toponymn IDs: {data['gold']}")
+        if 'tag' in data.keys() and 'ner_label' not in data.keys():
+            data['ner_label'] = data['tag']
         return TrainingMention(
-            mention=dict['mention'],
+            mention=data['mention'],
             start_offset=-1,
             end_offset=-1,
-            start_char=dict['pos'],
+            start_char=data['pos'],
             ner_score=-1.0,
-            ner_label=dict['ner_label'],
+            ner_label=data['ner_label'],
             entity_link='',
-            gold=dict['gold'][0] if isinstance(dict['gold'], list) else dict['gold'],
+            gold=data['gold'][0] if isinstance(data['gold'], list) else data['gold'],
         )
 
 @pdataclass(frozen=True)
@@ -197,7 +197,7 @@ class SentenceMentions:
         return SentenceMentions(context, mentions)
 
     # For API deserialisation.
-    def from_dict(data: Dict) -> 'SentenceMentions':
+    def from_dict(data: dict) -> 'SentenceMentions':
         """Constructs a `SentenceMentions` instance from a dictionary."""
         return SentenceMentions(
             sentence=SentenceContext.from_dict(data['sentence']),
