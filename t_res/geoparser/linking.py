@@ -1,3 +1,7 @@
+"""
+The `t_res.geoparser.linking` module defines the Linker class structure.
+"""
+
 import json
 import os
 from pathlib import Path
@@ -16,7 +20,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-from ..utils.dataclasses import *
+from ..utils.dataclasses import Mention, MentionCandidates, StringMatchLinks, WikidataLink, MostPopularLink, ByDistanceLink, RelDisambLink, CandidateMatches, CandidateLinks, SentenceCandidates, Predictions
 
 class Linker:
     """

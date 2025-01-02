@@ -3,7 +3,7 @@ from typing import List, Optional
 from sentence_splitter import split_text_into_sentences
 
 from . import ner, ranking, linking
-from ..utils.dataclasses import *
+from ..utils.dataclasses import SentenceContext, SentenceMentions, SentenceCandidates, Candidates, Predictions
 
 class Pipeline:
     """
