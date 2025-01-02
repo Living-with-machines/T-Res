@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple, Optional
 from pydantic.dataclasses import dataclass as pdataclass
-from dataclasses import field, InitVar
+from dataclasses import field
 
 from sentence_splitter import SentenceSplitter
 
@@ -10,21 +10,24 @@ from sentence_splitter import SentenceSplitter
 
 @pdataclass(order=True, frozen=True)
 class Mention:
-    """Data class representing a toponym mention in text."""
+    """Dataclass representing a toponym mention in text.
+    
+    Attributes:
+        mention (str): The toponym mention.
+        start_offset (int): The token offset inside the text marking the start of the mention.
+        end_offset (int): The token offset inside the text marking the end of the mention.
+        start_char (int): The character offset inside the text marking the start of the mention.
+        ner_score (float): The NER confidence score.
+        ner_label (float): The NER label of the mention.
+        entity_link (str): The consolidated entity link of the mention ('O' for predicted mentions).
+    """
     sort_index: int = field(init=False)
-    # The toponym mention.
     mention: str
-    # The token offset inside the text marking the start of the mention.
     start_offset: int
-    # The token offset inside the text marking the end of the mention.
     end_offset: int
-    # The character offset inside the text marking the start of the mention.
     start_char: int
-    # The NER confidence score.
     ner_score: float
-    # The NER label of the mention.
     ner_label: str
-    # The consolidated entity link of the mention ('O' for predicted mentions).
     entity_link: str
 
     def __post_init__(self):
@@ -37,24 +40,31 @@ class Mention:
         return s
 
     def from_dict(data: dict) -> 'Mention':
+        """Constructs a `Mention` instance from a dictionary."""
         if 'sort_index' in data.keys():
             del data['sort_index']
         return Mention(**data)
     
     def end_char(self) -> int:
+        """Returns the character offset inside the text marking the end of the mention."""
         return self.start_char + len(self.mention)
     
     def is_microtoponym(self) -> bool:
-        # A microtoponym is any mention whose `ner_label` is not `LOC`.
+        """Returns `True` if the `ner_label` is not `LOC`, indicating a microtoponym."""
         return self.ner_label != "LOC"
 
 # Helper class for backwards compatibility with training functions in rel_utils.py
 @pdataclass(frozen=True)
 class TrainingMention(Mention):
-    # The Wikidata ID of the known ("gold standard") toponym, or 'NIL' if not known.
+    """Helper class providing backwards compatibility with training functions in `rel_utils.py`.
+    
+    Attributes:
+        gold (str): The Wikidata ID of the known ("gold standard") toponym, or 'NIL' if not known.
+    """
     gold: str
 
     def from_dict(dict: dict) -> 'TrainingMention':
+        """Constructs a `TrainingMention` instance from a dictionary."""
         if isinstance(dict['gold'], list) and len(dict['gold']) != 1:
             raise ValueError(f"Multiple gold standard toponymn IDs: {dict['gold']}")
         if 'tag' in dict.keys() and 'ner_label' not in dict.keys():
@@ -72,7 +82,11 @@ class TrainingMention(Mention):
 
 @pdataclass(frozen=True)
 class Sentence:
-    # The sentence.
+    """Dataclass representing a sentence.
+    
+    Attributes:
+        sentence (str): The sentence.
+    """
     sentence: str
 
     def __len__(self):
@@ -80,14 +94,19 @@ class Sentence:
 
 @pdataclass(frozen=True)
 class SentenceContext(Sentence):
-    # The preceding sentence context.
+    """Dataclass representing a sentence with (optional) context.
+    
+    Attributes:
+        preceding_sentence (Optional[str]): The preceding sentence (context).
+        following_sentence (Optional[str]): The following sentence (context).
+        sent_idx (Optional[int]): The sentence index (within a block of text). Defaults to None.
+    """
     preceding_sentence: Optional[str]
-    # The following sentence context.
     following_sentence: Optional[str]
-    # Optional sentence index (within a block of text). Defaults to None.
     sent_idx: Optional[int]=None
 
     def from_text(text: str, language: str="en", non_breaking_prefix_file: str=None) -> List['SentenceContext']:
+        """Constructs a list of `SentenceContext` instances from a block of text."""
         splitter = SentenceSplitter(language=language, non_breaking_prefix_file=non_breaking_prefix_file)
         sentences = splitter.split(text)
         return [SentenceContext(s, sentences[i - 1] if i > 0 else None, 
@@ -95,16 +114,19 @@ class SentenceContext(Sentence):
                                 for i, s in enumerate(sentences)]
     
     def from_sentence(sentence: str) -> 'SentenceContext':
+        """Constructs a `SentenceContext` instance from a string."""
         return SentenceContext(sentence, None, None)
     
     # Helper method for the Predictions as_dict method.
     def context_as_list(self) -> List[str]:
+        """Converts this instance to a list of strings."""
         preceding = self.preceding_sentence if self.preceding_sentence is not None else ''
         following = self.following_sentence if self.following_sentence is not None else ''
         return [preceding, following]
 
     # For API deserialisation.
     def from_dict(data: dict) -> Sentence:
+        """Constructs a `SentenceContext` instance from a dictionary."""
         ps = data['preceding_sentence'] if 'preceding_sentence' in data.keys() else None
         fs = data['following_sentence'] if 'following_sentence' in data.keys() else None
         sent_idx = data['sent_idx'] if 'sent_idx' in data.keys() else None
@@ -115,9 +137,13 @@ class SentenceContext(Sentence):
 # Recogniser::run method output type.
 @pdataclass(frozen=True)
 class SentenceMentions:
-    # The sentence.
+    """Dataclass representing toponym mentions in a sentence.
+    
+    Attributes:
+        sentence (Sentence): The sentence.
+        mentions (List[Mention]): A list of toponym mentions, ordered by character offset within the sentence.
+    """
     sentence: Sentence
-    # A list of toponym mentions, ordered by character offset within the sentence.
     mentions: List[Mention]
 
     def __post_init__(self):
@@ -138,17 +164,24 @@ class SentenceMentions:
         return s
 
     def is_empty(self) -> bool:
+        """Returns `True` if the list of toponym mentions is empty."""
         return len(self.mentions) == 0
 
     def len(self) -> int:
+        """Returns the length of the list of toponym mentions."""
         return len(self.mentions)
     
     def exclude_microtoponyms(self) -> 'SentenceMentions':
+        """Returns this `SentenceMentions` instance omitting any microtoponym mentions."""
         mentions = list(filter(lambda m: not m.is_microtoponym(), self.mentions))
         return SentenceMentions(self.sentence, mentions)
     
     # Helper method for backwards compatibility with training functions in `rel_utils.py`.
     def from_list(data: List[Dict]) -> 'SentenceMentions':
+        """Constructs a `SentenceMentions` instance from a list of dictionaries.
+        
+        Helper method for backwards compatibility with training functions in `rel_utils.py`.
+        """
         # The data are assumed to be in the format returned by the 
         # `prepare_initial_data` method in `rel_utils.py`.
         mentions = [TrainingMention.from_dict(d) for d in data]
@@ -157,11 +190,11 @@ class SentenceMentions:
             raise ValueError("Inconsistent sentences.")
         d = data[0]
         context = SentenceContext(d['sentence'], d['context'][0], d['context'][1], d['sent_idx'])
-
         return SentenceMentions(context, mentions)
 
     # For API deserialisation.
     def from_dict(data: Dict) -> 'SentenceMentions':
+        """Constructs a `SentenceMentions` instance from a dictionary."""
         return SentenceMentions(
             sentence=SentenceContext.from_dict(data['sentence']),
             mentions=[Mention.from_dict(d) for d in data['mentions']],
@@ -169,6 +202,7 @@ class SentenceMentions:
 
     # For API deserialisation.
     def from_json(data: List[Dict]) -> List['SentenceMentions']:
+        """Constructs a list of `SentenceMentions` instances from a list of dictionaries."""
         return [SentenceMentions.from_dict(d) for d in data]
 
 
@@ -178,11 +212,14 @@ class SentenceMentions:
 
 @pdataclass(order=True, frozen=True)
 class StringMatch:
-    """Data class representing a potential toponym string match."""
+    """Dataclass representing a potential toponym string match.
+    
+    Attributes:
+        variation (str): The toponym spelling variation.
+        string_similarity (float): String matching similarly score.
+    """
     sort_index: float = field(init=False)
-    # The toponym spelling variation.
     variation: str
-    # String matching similarly score.
     string_similarity: float
 
     def __post_init__(self):
@@ -190,6 +227,7 @@ class StringMatch:
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'StringMatch':
+        """Constructs a `StringMatch` instance from a dictionary."""
         if 'sort_index' in data.keys():
             del data['sort_index']
         if 'wqid_links' in data.keys():
@@ -198,23 +236,30 @@ class StringMatch:
 
 @pdataclass(order=True, frozen=True)
 class StringMatchLinks(StringMatch):
-    """Data class representing a potential toponym string match 
-    with potential Wikidata ID links."""
-    # List of potential Wikidata ID links.
+    """Dataclass representing a potential toponym string match 
+    with potential Wikidata ID links.
+    
+    Attributes:
+        wqid_links (List[str]): List of potential Wikidata ID links.
+    """
     wqid_links: List[str]
 
     def as_string_match(self) -> StringMatch:
+        """Converts this `StringMatchLinks` instance into a `StringMatch` instance."""
         return StringMatch(self.variation, self.string_similarity)
 
 # Ranker::run method output type.
 @pdataclass(frozen=True)
 class CandidateMatches:
-    """Data class representing candidate matches for a toponym."""
-    # The toponym mention in the text.
+    """Dataclass representing candidate matches for a toponym.
+    
+    Attributes:
+        mention (Mention): The toponym mention in the text.
+        ranking_method (str): The string matching method used.
+        matches (List[StringMatchLinks]): A list of potential toponym matches, each with potential Wikidata links.
+    """
     mention: Mention
-    # The string matching method used.
     ranking_method: str
-    # A list of potential toponym matches, each with potential Wikidata links.
     matches: List[StringMatchLinks]
 
     def __post_init__(self):
@@ -226,11 +271,12 @@ class CandidateMatches:
         object.__setattr__(self, 'matches', sorted(self.matches, reverse=True))
 
     def is_empty(self) -> bool:
+        """Returns `True` if the list of toponym matches is empty."""
         return len(self.matches) == 0
 
-    # Returns the StringMatch instance with the given spelling variation
-    # or None if no such match exists.
     def get(self, variation: str) -> StringMatchLinks:
+        """Returns the StringMatch instance with the given spelling variation 
+        or None if no such match exists."""
         for m in self.matches:
             if m.variation == variation:
                 return m
@@ -244,14 +290,18 @@ class CandidateMatches:
 # Base dataclass.
 @pdataclass(frozen=True)
 class WikidataLink:
-    """Data class representing a potential toponym link in Wikidata."""
-    # The Wikidata ID.
+    """Dataclass representing a potential toponym link in Wikidata.
+    
+    Attributes:
+        wqid (str): The Wikidata ID.
+        wkdt_class (Optional[str]): The Wikidata class of this Wikidata entry (if available).
+    """
     wqid: str
-    # The Wikidata class of this Wikidata entry (if available).
     wkdt_class: Optional[str]
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'WikidataLink':
+        """Constructs a `WikidataLink` instance from a dictionary."""
         if 'freq' in data.keys():
             if 'normalized_score' in data.keys():
                 return RelDisambLink(**data)
@@ -260,9 +310,12 @@ class WikidataLink:
     
 @pdataclass(frozen=True)
 class MostPopularLink(WikidataLink):
-    """Data class representing a string match and potential links in 
-    Wikidata under the `mostpopular` linking method."""
-    # The mention-to-wikidata link frequency.
+    """Dataclass representing a string match and potential links in 
+    Wikidata under the `mostpopular` linking method.
+    
+    Attributes:
+        freq (int): The mention-to-wikidata link frequency.
+    """
     freq: int
 
     def __post_init__(self):
@@ -271,15 +324,18 @@ class MostPopularLink(WikidataLink):
 
 @pdataclass(frozen=True)
 class ByDistanceLink(WikidataLink):
-    """Data class representing a string match and potential links in 
-    Wikidata under the `bydistance` linking method."""
-    # The lat-lon coordinates of the link in Wikidata.
+    """Dataclass representing a string match and potential links in 
+    Wikidata under the `bydistance` linking method.
+    
+    Attributes:
+        coords (Optional[Tuple[float, float]]): The lat-lon coordinates of the link in Wikidata.
+        place_of_pub_coords (Optional[Tuple[float, float]]): The lat-lon coordinates of the place of publication.
+        geodist (Optional[float]): The geodesic distance between the wqid and the origin wqid.
+        normalized_score (float): The normalized score from resource `mentions_to_wikidata_normalized.json`.
+    """
     coords: Optional[Tuple[float, float]]
-    # The lat-lon coordinates of the place of publication. 
     place_of_pub_coords: Optional[Tuple[float, float]]
-    # The geodesic distance between the wqid and the origin wqid.
     geodist: Optional[float]
-    # The normalized score from resource `mentions_to_wikidata_normalized.json`.
     normalized_score: float
 
     def __post_init__(self):
@@ -288,11 +344,14 @@ class ByDistanceLink(WikidataLink):
 
 @pdataclass(frozen=True)
 class RelDisambLink(WikidataLink):
-    """Data class representing a string match and potential links in 
-    Wikidata under the `reldisamb` linking method."""
-    # The mention-to-wikidata link frequency.
+    """Dataclass representing a string match and potential links in 
+    Wikidata under the `reldisamb` linking method.
+    
+    Attributes:
+        freq (int): The mention-to-wikidata link frequency.
+        normalized_score (float): The normalized score from resource `mentions_to_wikidata_normalized.json`.
+    """
     freq: int
-    # The normalized score from resource `mentions_to_wikidata_normalized.json`.
     normalized_score: float
 
     def __post_init__(self):
@@ -303,11 +362,14 @@ class RelDisambLink(WikidataLink):
         
 @pdataclass(order=True, frozen=True)
 class CandidateLinks:
-    """Data class representing a collection of potential links in Wikidata for a given string match."""
+    """Dataclass representing a collection of potential links in Wikidata for a given string match.
+    
+    Attributes:
+        string_match (StringMatch): A StringMatch instance.
+        wikidata_links (List[WikidataLink]): A list of candidate WikidataLink instances.
+    """
     sort_index: float = field(init=False)
-    # A StringMatch instance.
     string_match: StringMatch
-    # A list of candidate WikidataLink instances.
     wikidata_links: List[WikidataLink]
 
     def __post_init__(self):
@@ -321,6 +383,7 @@ class CandidateLinks:
         return s
     
     def links_str(self) -> str:
+        """Returns a string representation of the list of Wikidata links (for pretty-printing)."""
         if self.is_empty():
             return "None"
         s = ', '.join(link.wqid for link in self.wikidata_links[:3])
@@ -329,11 +392,12 @@ class CandidateLinks:
         return s
 
     def is_empty(self) -> bool:
+        """Returns `True` if the list of Wikidata links is empty."""
         return not self.wikidata_links
 
-    # Transforms this CandidateLinks instance into a PredictedLinks instance
-    # by attaching disambiguation scores.
     def attach_scores(self, scores: Dict[str, float]) -> 'PredictedLinks':
+        """Transforms this CandidateLinks instance into a PredictedLinks instance 
+        by attaching disambiguation scores."""
         # Check that there is one score for each link.
         if scores.keys() != {link.wqid for link in self.wikidata_links}:
             raise ValueError("Incompatible disambiguation scores.")
@@ -341,6 +405,7 @@ class CandidateLinks:
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'CandidateLinks':
+        """Constructs a `CandidateLinks` instance from a dictionary."""
         if 'disambiguation_scores' in data.keys():
             return PredictedLinks(
                 string_match=StringMatch.from_dict(data['string_match']),
@@ -357,11 +422,15 @@ class CandidateLinks:
 # field in the Candidates dataclass.
 @pdataclass(order=True, frozen=True)
 class PredictedLinks(CandidateLinks):
-    """Data class representing a collection of potential links in Wikidata with scores for each."""
-    # A disambiguation score for each potential link in Wikidata.
+    """Dataclass representing a collection of potential links in Wikidata with scores for each.
+    
+    Attributes:
+        disambiguation_scores (Dict[str, float]): A disambiguation score for each potential link in Wikidata.
+    """
     disambiguation_scores: Dict[str, float]
 
     def links_str(self) -> str:
+        """(Override) Returns a string representation of the list of Wikidata links (for pretty-printing)."""
         if self.is_empty():
             return "None"
         l = [f"{s} ({v})" for s, v in self.cross_cand_scores().items()]
@@ -371,12 +440,14 @@ class PredictedLinks(CandidateLinks):
         return s
     
     def best_disambiguation_score(self) -> float:
+        """Returns the greatest disambiguation score."""
         if self.is_empty():
             return None
         return max(self.disambiguation_scores.values())
     
     # TODO: use min(self.wikidata_links, key=lambda link: link....) if poss.
     def best_wikidata_link(self) -> WikidataLink:
+        """Returns the Wikidata link with the greatest disambiguation score."""
         if self.is_empty():
             return None
         for link in self.wikidata_links:
@@ -384,39 +455,46 @@ class PredictedLinks(CandidateLinks):
                 return link
     
     def best_wqid(self) -> float:
+        """Returns the Wikidata ID of the link with the greatest disambiguation score."""
         if self.is_empty():
             return None
         scores = self.disambiguation_scores
         return max(scores, key=lambda key: scores[key])
 
-    # Returns the top 7 Wikidata links in order of their disambiguation score
-    # (as reported as `cross_cand_score` in the T-Res pipeline output).
     def cross_cand_scores(self, len=7) -> dict:
+        """Returns the top 7 Wikidata links in order of their disambiguation score 
+        (providing backwards compatibility with T-Res pipeline output in previous versions)."""
         scores = {k: round(v, 3) for (k, v) in self.disambiguation_scores.items()}
         return dict(sorted(scores.items(), key=lambda x: x[1], reverse=True)[:len])
     
     # Helper method for the Predictions as_dict method.
     def scores_as_list(self) -> list:
+        """Returns the disambiguation scores as a list.
+
+        Helper method for the Predictions as_dict method."""
         ret = [[k, round(v, 3)] for k, v in self.disambiguation_scores.items()]
         return sorted(ret, key=lambda x: (x[1], x[0]), reverse=True)
 
 # Linker::run method output type.
 @pdataclass(order=True, frozen=True)
 class MentionCandidates:
-    """Data class representing candidate string matches for a toponym, 
-    each with candidate Wikidata links."""
+    """Dataclass representing candidate string matches for a toponym, 
+    each with candidate Wikidata links.
+    
+    Attributes:
+        mention (Mention): The toponym mention in the text.
+        ranking_method (str): The string matching method used.
+        linking_method (str): The linking method used.
+        links (List[CandidateLinks]): A list of CandidateLinks instances, ordered by decreasing string similarity.
+        place_of_pub_wqid (Optional[str]): Place of publication Wikidata ID.
+        place_of_pub (Optional[str]): Place of publication.
+    """
     sort_index: float = field(init=False)
-    # The toponym mention in the text.
     mention: Mention
-    # The string matching method used.
     ranking_method: str
-    # The linking method used.
     linking_method: str
-    # A list of CandidateLinks instances.
     links: List[CandidateLinks]
-    # Place of publication Wikidata ID.
     place_of_pub_wqid: Optional[str]
-    # Place of publication.
     place_of_pub: Optional[str]
 
     def __post_init__(self):
@@ -443,31 +521,36 @@ class MentionCandidates:
         return s
     
     def is_empty(self) -> bool:
+        """Returns `True` if the list of `CandidateLinks` is empty *or* the 
+        `CandidateLinks` instance with the best string match is empty."""
         return len(self.links) == 0 or self.links[0].is_empty()
     
-    # Returns the CandidateLinks instance with the given spelling 
-    # variation, or None if no such match exists.
     def get(self, variation: str) -> Optional[CandidateLinks]:
+        """Returns the CandidateLinks instance with the given spelling variation, 
+        or None if no such match exists."""
         for m in self.links:
             if m.string_match.variation == variation:
                 return m
         return None
     
-    # Returns the CandidateLinks instance whose StringMatch has the highest string similarity.
     def best_match(self) -> Optional[CandidateLinks]:
+        """Returns the CandidateLinks instance whose StringMatch has the highest string similarity,
+        or None if no such match exists."""
         if self.is_empty():
             return None
         # The list of CandidateLinks instances is ordered by decreasing string similarity.
         return self.links[0]
     
     def best_string_match(self) -> Optional[StringMatch]:
+        """Returns the StringMatch instance with the highest string similarity.
+        or None if no such match exists."""
         if self.is_empty():
             return None
         return self.best_match().string_match
 
-    # Returns the Wikidata link with the highest disambiguation score,
-    # associated with the best string match candidate.
     def best_wikidata_link(self) -> Optional[WikidataLink]:
+        """Returns the Wikidata link with the highest disambiguation score, associated with 
+        the best string match candidate, or None if no such match exists."""
         # Get the candidate with highest string similarity.
         best_match = self.best_match()
         if not best_match or best_match.is_empty():
@@ -477,12 +560,14 @@ class MentionCandidates:
         return best_match.best_wikidata_link()
 
     def best_wqid(self) -> Optional[str]:
+        """Returns the Wikidata ID of the best Wikidata Link, or None if no best link exists."""
         best_wikidata_link = self.best_wikidata_link()
         if not best_wikidata_link:
             return None
         return best_wikidata_link.wqid
 
     def best_disambiguation_score(self) -> Optional[float]:
+        """Returns the disambiguation score of the best match, or None if no such match exists."""
         best_match = self.best_match()
         if not best_match or best_match.is_empty():
             return None
@@ -492,6 +577,7 @@ class MentionCandidates:
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'MentionCandidates':
+        """Constructs a `MentionCandidates` instance from a dictionary."""
         place_of_pub_wqid=data['place_of_pub_wqid'] if 'place_of_pub_wqid' in data.keys() and len(data['place_of_pub_wqid']) > 0 else None
         place_of_pub=data['place_of_pub'] if 'place_of_pub' in data.keys() and len(data['place_of_pub']) > 0 else None
         return MentionCandidates(
@@ -509,11 +595,13 @@ class MentionCandidates:
 
 @pdataclass(frozen=True)
 class SentenceCandidates:
-    """Data class representing candidate matches for all toponym mentions 
-    in a sentence."""
-    # The sentence.
+    """Dataclass representing candidate matches for all toponym mentions in a sentence.
+    
+    Attributes:
+        sentence (Sentence): The sentence.
+        candidates (List[MentionCandidates]): List of candidates for each toponym mention in the sentence.
+    """
     sentence: Sentence
-    # List of candidates for each toponym mention in the sentence.
     candidates: List[MentionCandidates]
 
     def __post_init__(self):
@@ -523,12 +611,15 @@ class SentenceCandidates:
             raise ValueError("Inconsistent candidate mentions. Max end char exceeds sentence length.")
 
     def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
+        """Returns `True` if the list of `MentionCandidates` is empty. 
+        If `ignore_empty_candidates` is `True`, only non-empty candidates are considered."""
         if ignore_empty_candidates:
             return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
         return len(self.candidates) == 0
     
     # For API deserialisation.
     def from_dict(data: dict) -> 'SentenceCandidates':
+        """Constructs a `SentenceCandidates` instance from a dictionary."""
         return SentenceCandidates(
             sentence=SentenceContext.from_dict(data['sentence']),
             candidates=[MentionCandidates.from_dict(d) for d in data['candidates']]
@@ -537,9 +628,12 @@ class SentenceCandidates:
 # Pipeline::run_candidate_selection method output type.
 @pdataclass(frozen=True)
 class Candidates:
-    """Data class representing candidate matches for all toponym mentions 
-    in a block of text."""
-    # List of setence candidates for each sentence in the text.
+    """Dataclass representing candidate matches for all toponym mentions 
+    in a block of text.
+    
+    Attributes:
+        sentence_candidates (List[SentenceCandidates]): List of setence candidates for each sentence in the text.
+    """
     sentence_candidates: List[SentenceCandidates]
 
     def __post_init__(self):
@@ -569,6 +663,7 @@ class Candidates:
         return s
     
     def candidates_str(self, candidates: MentionCandidates, pad_mention: int=0, pad_variation: int=0) -> str:
+        """Returns a string representation of a `MentionCandidates` instance (for pretty-printing)."""
         s = f"{candidates.mention.mention.ljust(pad_mention)} => "
         if candidates.best_match():
             s += f"{candidates.best_match().__str__(pad_variation)}"
@@ -577,20 +672,26 @@ class Candidates:
         return s
 
     def candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
+        """Returns all `MentionCandidates` as a list. If `ignore_empty_candidates` is `True`, 
+        only non-empty candidates are considered."""
         if ignore_empty_candidates:
             return [c for sc in self.sentence_candidates for c in sc.candidates]
         return [c for sc in self.sentence_candidates for c in sc.candidates if not c.is_empty()]
 
     def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
+        """Returns `True` if the list of `SentenceCandidates` instances is empty. 
+        If `ignore_empty_candidates` is `True`, only non-empty candidates are considered."""
         if ignore_empty_candidates:
             return len(self.sentence_candidates) == 0 or all([sc.is_empty() for sc in self.sentence_candidates])
         return len(self.candidates()) == 0
     
     def text(self) -> str:
+        """Returns the complete text."""
         return " ".join([scs.sentence.sentence for scs in self.sentence_candidates])
     
     # TODO: unit test needed.
     def sentence_contexts(self) -> List[SentenceContext]:
+        """Returns a list of `SentenceContext` instances."""
         scs = self.sentence_candidates
         return [SentenceContext(sc.sentence.sentence, 
                          scs[i - 1].sentence.sentence if i > 0 else None, 
@@ -598,17 +699,20 @@ class Candidates:
          for i, sc in enumerate(scs)]
 
     def place_of_pub_wqid(self) -> Optional[str]:
+        """Returns the place of publication Wikidata ID, if available."""
         if self.is_empty(ignore_empty_candidates=False):
             return None
         return self.candidates()[0].place_of_pub_wqid
 
     def place_of_pub(self) -> Optional[str]:
+        """Returns the place of publication, if available."""
         if self.is_empty(ignore_empty_candidates=False):
             return None
         return self.candidates()[0].place_of_pub
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'Candidates':
+        """Constructs a `Candidates` instance from a dictionary."""
         sentence_candidates = [SentenceCandidates.from_dict(d) for d in data['sentence_candidates']]
         is_predicted_links = [isinstance(links, PredictedLinks) 
                               for scs in sentence_candidates 
@@ -621,7 +725,7 @@ class Candidates:
 # Pipeline::run_disambiguation method output type.
 @pdataclass(frozen=True)
 class Predictions(Candidates):
-    """Data class representing toponym predictions in text."""
+    """Dataclass representing toponym predictions in text."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -630,15 +734,19 @@ class Predictions(Candidates):
                 raise ValueError("Candidate links must be scored.")
 
     def best_wqids(self) -> List[Optional[str]]:
+        """Returns a list of predicted Wikidata IDs (one per toponym mention)."""
         return [c.best_wqid() for c in self.candidates()]
 
     def best_disambiguation_scores(self) -> List[Optional[float]]:
+        """Returns a list of greatest disambiguation scores (one per toponym mention)."""
         return [c.best_disambiguation_score() for c in self.candidates()]
 
     def apply_rel_disambiguation(
             self, 
             rel_predictions: dict,
             with_publication: bool) -> 'RelPredictions':
+        """Incorporates predictions generated by the REL disambiguation method and
+        returns an instance of the `RelPredictions` subclass."""
         
         # If with_publication is True, drop the "artificial" final toponym mention.
         if with_publication:
@@ -652,8 +760,11 @@ class Predictions(Candidates):
 
         return RelPredictions(self.sentence_candidates, rel_scores)
 
-    # Returns a dictionary containing a toponym mention for the place of publication.
     def place_of_pub_mention(self) -> dict:
+        """Returns a dictionary containing a toponym mention for the place of publication.
+        
+        Helper method for backward compatibility with training functions in `rel_utils.py`.
+        """
         place_of_pub = self.place_of_pub()
         place_of_pub_wqid = self.place_of_pub_wqid()
         if not place_of_pub or not place_of_pub_wqid:
@@ -685,7 +796,7 @@ class Predictions(Candidates):
     # Converts to a dictionary for backwards compatibility with entity_disambiguation.py
     # (similar to the deprecated `format_prediction` method in pipeline.py)
     def as_dict(self, with_publication: bool) -> dict:
-
+        """Converts to a dictionary for backwards compatibility with `entity_disambiguation.py`."""
         d = dict()
         d["linking"] = []
         contexts = self.sentence_contexts()
@@ -723,14 +834,17 @@ class Predictions(Candidates):
 
 @pdataclass(frozen=True)
 class TrainingPredictions(Predictions):
-    """Data class representing toponym predictions for training a REL model."""
+    """Dataclass representing toponym predictions for training a REL model."""
 
     def __post_init__(self):
         super().__post_init__()
 
     # Similar to the as_dict method in Predictions, but now for backward 
     # compatibility with the `prepare_rel_trainset` function in `rel_utils.py`.
-    def as_list(self, with_publication: bool) -> dict:
+    def as_list(self, with_publication: bool) -> List[dict]:
+        """Converts to a list of dictionaries. 
+        
+        Helper method for backwards compatibility with training functions in `rel_utils.py`."""
         l = list()
         for sc in self.sentence_candidates:
             if not isinstance(sc.sentence, SentenceContext):
@@ -765,18 +879,24 @@ class TrainingPredictions(Predictions):
 
 @pdataclass(frozen=True)
 class RelScores:
-    """Data class representing scores produced by the REL entity disambiguation model."""
-    # The toponym mention.
+    """Dataclass representing scores produced by the REL entity disambiguation model.
+    
+    Attributes:
+        mention (str): The toponym mention.
+        scores (Dict[str, float]): REL entity disambiguation scores.
+        confidence (float): REL entity disambiguation confidence score.
+    """
     mention: str
-    # REL entity disambiguation scores.
     scores: Dict[str, float]
-    # REL entity disambiguation confidence score.
     confidence: float
 
 @pdataclass(frozen=True)
 class RelPredictions(Predictions):
-    """Data class representing toponym predictions in text produced by REL entity disambiguation."""
-    # A list of REL entity disambiguation scores.
+    """Dataclass representing toponym predictions in text produced by REL entity disambiguation.
+    
+    Attributes:
+        rel_scores (List[RelScores]): A list of REL entity disambiguation scores.
+    """
     rel_scores: List[RelScores]
 
     def __post_init__(self):
@@ -786,6 +906,9 @@ class RelPredictions(Predictions):
 
     # Override the candidates method to return REL linking predictions.
     def candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
+        """(Override) Returns all `MentionCandidates` as a list, with REL disambiguation 
+        scores determining the predicted Wikidata links. If `ignore_empty_candidates` is `True`, 
+        only non-empty candidates are considered."""
 
         # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
         ret = list()
@@ -807,7 +930,7 @@ class RelPredictions(Predictions):
                 c.place_of_pub))
         return ret
     
-    # Returns the MentionCandidates with their interim disambiguation scores,
-    # that is, the scores obtained before applying the REL disambiguation method.
     def interim_candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
+        """Returns the list of `MentionCandidates` instances with their interim disambiguation 
+        scores, that is, the scores obtained before applying the REL disambiguation method."""
         return super().candidates(ignore_empty_candidates)
