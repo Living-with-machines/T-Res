@@ -50,6 +50,8 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - admonition
+  - codehilite
+  - pymdownx.superfences
   - tables
   - attr_list
   - md_in_html
