@@ -1,3 +1,7 @@
+"""The `t_res.utils.dataclasses` module defines all data structures used within the T-Res pipeline, 
+implemented as Python dataclasses.
+"""
+
 from typing import List, Dict, Tuple, Optional
 from pydantic.dataclasses import dataclass as pdataclass
 from dataclasses import field
