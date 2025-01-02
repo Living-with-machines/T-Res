@@ -1,4 +1,5 @@
-"""The `t_res.utils.dataclasses` module defines all data structures used within the T-Res pipeline, 
+"""
+The `t_res.utils.dataclasses` module defines all data structures used within the T-Res pipeline, 
 implemented as Python dataclasses.
 """
 

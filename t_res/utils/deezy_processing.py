@@ -1,4 +1,5 @@
-"""The `t_res.utils.deezy_processing` module contains utility functions associated 
+"""
+The `t_res.utils.deezy_processing` module contains utility functions associated 
 with training and applying the DeezyMatch model for fuzzy string matching.
 """
 
