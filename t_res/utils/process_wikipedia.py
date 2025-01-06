@@ -1,3 +1,8 @@
+"""
+The `t_res.utils.process_wikipedia` module contains utility functions for handling
+Wikipedia links and page titles.
+"""
+
 import sqlite3
 import urllib.parse
 from typing import Optional

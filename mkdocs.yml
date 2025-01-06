@@ -35,6 +35,8 @@ nav:
       - 'Preprocess Data': reference/utils/preprocess_data.md
       - 'Process Data': reference/utils/process_data.md
       - 'Process Wikipedia': reference/utils/process_wikipedia.md
+      - 'REL e2e': reference/utils/rel_e2e.md
+      - 'REL Utils': reference/utils/rel_utils.md
   - T-Res API:
     - t-res-api/index.md
     - t-res-api/installation.md
