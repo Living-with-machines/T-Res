@@ -11,6 +11,6 @@
 -   [Reference: Process Wikipedia](process_wikipedia.md)
 -   [Reference: Rel E2E](rel_e2e.md)
 -   [Reference: Rel Utils](rel_utils.md)
--   `` `utils.REL `` module <rel/index.rst>`_
+-   [`utils.REL` module](rel)
 
 </div>

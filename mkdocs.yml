@@ -37,6 +37,12 @@ nav:
       - 'Process Wikipedia': reference/utils/process_wikipedia.md
       - 'REL e2e': reference/utils/rel_e2e.md
       - 'REL Utils': reference/utils/rel_utils.md
+      - utils.REL module:
+        - reference/utils/REL/index.md
+        - 'Entity Disambigution': reference/utils/REL/entity_disambiguation.md
+        - 'MulRel Ranker': reference/utils/REL/mulrel_ranker.md
+        - 'Utils': reference/utils/REL/utils.md
+        - 'Vocabulary': reference/utils/REL/vocabulary.md
   - T-Res API:
     - t-res-api/index.md
     - t-res-api/installation.md

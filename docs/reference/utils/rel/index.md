@@ -5,19 +5,19 @@ The scripts included in this module are taken and have been adapted from the [RE
     Reference:
 
     @inproceedings{vanHulst:2020:REL,
-    author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
-    title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
-    booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
-    series =    {SIGIR '20},
-    year =      {2020},
-    publisher = {ACM}
+        author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
+        title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
+        booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+        series =    {SIGIR '20},
+        year =      {2020},
+        publisher = {ACM}
     }
 
 <div class="grid cards" markdown>
 
--   [Reference Utils Rel Entity Disambiguation](entity_disambiguation.md)
--   [Reference Utils Rel Mulrel Ranker](mulrel_ranker.md)
--   [Reference Utils Rel Utils](utils.md)
--   [Reference Utils Rel Vocabulary](vocabulary.md)
+-   [REL Reference: Entity Disambiguation](entity_disambiguation.md)
+-   [REL Reference: MulRel Ranker](mulrel_ranker.md)
+-   [REL Reference: Utils](utils.md)
+-   [REL Reference: Vocabulary](vocabulary.md)
 
 </div>

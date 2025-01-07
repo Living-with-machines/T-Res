@@ -2,7 +2,7 @@
 
 <div class="grid cards" markdown>
 
--   `` `geoparser `` module <geoparser/index.rst>`_
--   `` `utils `` module <utils/index.rst>`_
+-   [`geoparser` module](geoparser)
+-   [`utils` module](utils)
 
 </div>
