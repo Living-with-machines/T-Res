@@ -18,30 +18,26 @@ class Vocabulary:
     """
     A class representing a vocabulary object used for storing references to embeddings.
 
-    .. note::
+    Note: Credit:
+        This function is taken from the [REL: Radboud Entity
+        Linker](https://github.com/informagi/REL/) Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the [permission
+        notice](https://github.com/informagi/REL/blob/main/LICENSE). See the [original 
+        script](https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py) for 
+        more information.
 
-        **Credit:**
+        ```
+        Reference:
 
-        The code for this class and its methods is taken from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github repository: Copyright (c)
-        2020 Johannes Michael van Hulst. See the `permission notice
-        <https://github.com/informagi/REL/blob/main/LICENSE>`_. See `the original script
-        <https://github.com/informagi/REL/blob/main/src/REL/vocabulary.py>`_ for more
-        information.
-
-        ::
-
-            Reference:
-
-            @inproceedings{vanHulst:2020:REL,
+        @inproceedings{vanHulst:2020:REL,
             author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
             title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
             booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
             series =    {SIGIR '20},
             year =      {2020},
             publisher = {ACM}
-            }
-
+        }
+        ```
     """
 
     unk_token = UNK_TOKEN
@@ -70,7 +66,7 @@ class Vocabulary:
                 with ``'0'`` during normalization. Defaults to ``False``.
 
         Returns:
-            str: The normalized token.
+            The normalized token.
         """
         if token in [Vocabulary.unk_token, "<s>", "</s>"]:
             return token
@@ -85,15 +81,12 @@ class Vocabulary:
         else:
             return token
 
-    def add_to_vocab(self, token: str) -> None:
+    def add_to_vocab(self, token: str):
         """
         Add the given token to the vocabulary.
 
         Arguments:
             token (str): The token to be added to the vocabulary.
-
-        Returns:
-            None.
         """
         new_id = len(self.id2word)
         self.id2word.append(token)
@@ -105,7 +98,7 @@ class Vocabulary:
         Get the size of the vocabulary.
 
         Returns:
-            int: The number of words in the vocabulary.
+            The number of words in the vocabulary.
         """
         return len(self.id2word)
 
@@ -117,8 +110,8 @@ class Vocabulary:
             token (str): The token for which to retrieve the ID.
 
         Returns:
-            int: The ID of the token in the vocabulary, or the ID of the
-            unknown token if the token is not found.
+            The ID of the token in the vocabulary, or the ID of the
+                unknown token if the token is not found.
         """
         tok = Vocabulary.normalize(token)
         return self.word2id.get(tok, self.unk_id)
