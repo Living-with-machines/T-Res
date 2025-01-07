@@ -15,9 +15,9 @@ The scripts included in this module are taken and have been adapted from the [RE
 
 <div class="grid cards" markdown>
 
--   [REL Reference: Entity Disambiguation](entity_disambiguation.md)
--   [REL Reference: MulRel Ranker](mulrel_ranker.md)
--   [REL Reference: Utils](utils.md)
--   [REL Reference: Vocabulary](vocabulary.md)
+-   [Entity Disambiguation](entity_disambiguation.md)
+-   [MulRel Ranker](mulrel_ranker.md)
+-   [Utils](utils.md)
+-   [Vocabulary](vocabulary.md)
 
 </div>

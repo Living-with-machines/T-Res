@@ -2,9 +2,9 @@
 
 <div class="grid cards" markdown>
 
--   [Reference: NER](ner.md)
--   [Reference: Ranking](ranking.md)
--   [Reference: Linking](linking.md)
--   [Reference: Pipeline](pipeline.md)
+-   [NER](ner.md)
+-   [Ranking](ranking.md)
+-   [Linking](linking.md)
+-   [Pipeline](pipeline.md)
 
 </div>
