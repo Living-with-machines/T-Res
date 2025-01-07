@@ -1,7 +1,3 @@
-"""
-The `t_res.geoparser.linking` module defines the Linker class structure.
-"""
-
 import json
 import os
 from pathlib import Path
@@ -31,13 +27,13 @@ class Linker:
     Arguments:
         resources_path (str): The path to the linking resources.
         experiments_path (str, optional): The path to the experiments
-            directory. Default is "../experiments/".
+            directory.
         linking_resources (dict, optional): Dictionary containing the
-            necessary linking resources. Defaults to ``dict()`` (an empty
-            dictionary).
+            necessary linking resources.
 
-    This base class should not be instatiated directly. Instead use a subclass
-    constructor.
+    Note:
+        This base class should not be instatiated directly. Instead use a subclass
+            constructor.
     """
     # Class attribute for the name of the linking method.
     method_name: str = None
@@ -60,7 +56,7 @@ class Linker:
         Returns a string representation of the Linker object.
 
         Returns:
-            str: String representation of the Linker object.
+            String representation of the Linker object.
         """
         s = ">>> Entity Linking:\n"
         s += f"    * Method: {self.method_name}\n"
@@ -76,7 +72,7 @@ class Linker:
                 `method_name` argument to specify the desired subclass.
 
         Returns:
-            Linker: A Linker subclass instance.
+            A Linker (subclass) instance.
 
         """
         if not 'method_name' in kwargs.keys():
@@ -92,11 +88,25 @@ class Linker:
         raise ValueError("Invalid linking method: {method_name}")
 
     def wkdt_class(self, wqid: str) -> Optional[str]:
-        """Returns the Wikidata class for the given Wikidata entry, if available."""
+        """
+        Returns the Wikidata class for the given Wikidata entry, if available.
+        
+        Returns:
+            The corresponding Wikidata class if available, otherwise `None`.
+        """
         return self.resources["entity2class"].get(wqid, None)
     
-    def empty_candidates(self, mention: Mention, ranking_method: str, place_of_pub_wqid: str, place_of_pub: str):
-        """Returns an empty `Candidates` instance."""
+    def empty_candidates(self, 
+                         mention: Mention, 
+                         ranking_method: str, 
+                         place_of_pub_wqid: str, 
+                         place_of_pub: str) -> MentionCandidates:
+        """
+        Constructs an empty `MentionCandidates` instance.
+
+        Returns:
+            A `MentionCandidates` instance with an empty list of candidate links.
+        """
         return MentionCandidates(
             mention,
             ranking_method,
@@ -136,7 +146,6 @@ class Linker:
 
         print("*** Linking resources loaded!\n")
 
-    # TODO: docstring
     def run(
             self, 
             matches: CandidateMatches, 
@@ -144,15 +153,15 @@ class Linker:
             place_of_pub: Optional[str]=None,
         ) -> MentionCandidates:
         """
-        Execute the linking process. Each Linker subclass must implement a 
-        linking method by overriding this function.
-
+        Executes the linking process. 
+        
         Arguments:
-            matches: A CandidatesMatches instance.
-            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
+            matches: A `CandidatesMatches` instance containing string matches to be linked.
+            place_of_pub_wqid (Optional[str]): The Wikidata ID of the place of publication.
+            place_of_pub (Optional[str]): The place of publication.
 
         Returns:
-            Candidates: The candidates identified by the linking process.
+            The candidates identified by the linking process.
         """
         if matches.is_empty():
             return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
@@ -169,24 +178,41 @@ class Linker:
             place_of_pub,
         )
     
-    # TODO: docstring
     def wikidata_links(
             self, 
             match: StringMatchLinks,
             place_of_pub_wqid: Optional[str]=None,
             ) -> List[WikidataLink]:
+        """
+        Identifies candidate links in the Wikidata knowledgebase.
+
+        Args:
+            match (StringMatchLinks): The toponym string match to be linked.
+            place_of_pub_wqid (Optional[str], optional): The Wikidata ID of
+                the place of publication, if available.
+
+        Raises:
+            NotImplementedError: If not implemented in a subclass.
+
+        Returns:
+            A list of candidate links in Wikidata.
+
+        Note: 
+            Each Linker subclass must implement a linking algorithm by 
+                overriding the `wikidata_links` method.
+        """
         raise NotImplementedError("Subclass implementation required.")
 
     def disambiguate(self, candidates: List[SentenceCandidates]) -> Predictions:
         """
-        Perform entity disambiguation given a list of already identified
+        Performs entity disambiguation given a list of already identified
         toponyms and selected candidates.
 
         Arguments:
             candidates: A list of SentenceCandidates instances.
 
         Returns:
-            Predictions: A Predictions instance representing the identified and
+            A `Predictions` instance representing the identified and
                 linked toponyms.
         """
         if len(candidates) == 0:
@@ -201,14 +227,21 @@ class Linker:
 
     def disambiguation_scores(self, links: List[WikidataLink], string_similarity: float) -> Dict[str, float]:
         """
-        Compute disambiguation scores for a given list Wikidata links.
+        Computes disambiguation scores for a given list of Wikidata links.
 
         Arguments:
-            links: A list of WikidataLink instances.
-            string_similarity: (Optional) the string similarity score for the candidate match.
+            links: A list of `WikidataLink` instances.
+            string_similarity (float): the string similarity score for the candidate match.
+
+        Raises:
+            NotImplementedError: If not implemented in a subclass.
 
         Returns:
-            dict: A dictionary containing disambiguation scores, keyed by Wikidata ID.
+            A dictionary containing disambiguation scores, keyed by Wikidata ID.
+
+        Note: 
+            Each Linker subclass must implement a linking algorithm by 
+                overriding the `disambiguation_scores` method.
         """
         raise NotImplementedError("Subclass implementation required.")
 
@@ -217,25 +250,37 @@ class MostPopularLinker(Linker):
     An entity linking method that selects the candidate that is most
     popular in the Wikipedia knowledgebase.
 
-    Example:
+    Example: 
+        ```python
+        linker = MostPopularLinker(
+            resources_path="/path/to/resources/",
+            experiments_path="/path/to/experiments/",
+            linking_resources={},
+        )
+        ```
 
-    .. code-block:: python
-
-       linker = MostPopularLinker(
-         resources_path="/path/to/resources/",
-         experiments_path="/path/to/experiments/",
-         linking_resources={},
-       )
     """
     # Override the method_name class attribute.
     method_name: str = "mostpopular"
 
-    # TODO: docstring
     def wikidata_links(
             self, 
             match: StringMatchLinks,
             place_of_pub_wqid: Optional[str]=None,
             ) -> List[WikidataLink]:
+        """
+        Identifies candidate links in the Wikidata knowledgebase.
+
+        Args:
+            match (StringMatchLinks): The toponym string match to be linked.
+            place_of_pub_wqid (Optional[str], optional): The Wikidata ID of
+                the place of publication, if available. **Not used** in this 
+                linking method.
+
+        Returns:
+            A list of candidate links in Wikidata, each of type 
+                [`MostPopularLink`][t_res.utils.dataclasses.MostPopularLink].
+        """
         links = [MostPopularLink(
             wqid=wqid,
             wkdt_class=self.wkdt_class(wqid),
@@ -243,8 +288,18 @@ class MostPopularLinker(Linker):
             for wqid in match.wqid_links]
         return links
 
-    # Computes disambiguation scores for a collection of potential Wikidata links.
     def disambiguation_scores(self, links: List[MostPopularLink], string_similarity=None) -> Dict[str, float]:
+        """
+        Computes disambiguation scores by using the relative mention-to-wikidata 
+        link frequencies as a proxy for popularity of the toponym in Wikidata.
+
+        Arguments:
+            links: A list of `WikidataLink` instances.
+            string_similarity (float): the string similarity score for the candidate match.
+
+        Returns:
+            A dictionary containing disambiguation scores, keyed by Wikidata ID.
+        """
         total = sum([m.freq for m in links])
         return {link.wqid: link.freq / total for link in links}
 
@@ -254,14 +309,13 @@ class ByDistanceLinker(Linker):
     proximity to the place of publication.
 
     Example:
-
-    .. code-block:: python
-
-       linker = ByDistanceLinker(
-         resources_path="/path/to/resources/",
-         experiments_path="/path/to/experiments/",
-         linking_resources={},
-       )
+        ```python
+        linker = ByDistanceLinker(
+            resources_path="/path/to/resources/",
+            experiments_path="/path/to/experiments/",
+            linking_resources={},
+        )
+        ```
     """
     # Override the method_name class attribute.
     method_name: str = "bydistance"
@@ -289,16 +343,32 @@ class ByDistanceLinker(Linker):
         gaz = ""
 
     def wkdt_coords(self, wqid: str) -> Optional[Tuple[float, float]]:
-        """Returns the lat-lon coordinates for the given Wikidata entry, if available."""
+        """
+        Returns the lat-lon coordinates for the given Wikidata entry, if available.
+        
+        Returns:
+            Latitude and longitude coordinates for the given Wikidata entry, if
+                available.
+        """
         return self.resources["wqid_to_coords"].get(wqid, None)
 
-    # TODO: docstring
     def wikidata_links(
             self, 
             match: StringMatchLinks,
             place_of_pub_wqid: Optional[str]=None,
             ) -> List[WikidataLink]:
-        
+        """
+        Identifies candidate links in the Wikidata knowledgebase.
+
+        Args:
+            match (StringMatchLinks): The toponym string match to be linked.
+            place_of_pub_wqid (Optional[str], optional): The Wikidata ID of
+                the place of publication, if available.
+
+        Returns:
+            A list of candidate links in Wikidata, each of type 
+                [`ByDistanceLink`][t_res.utils.dataclasses.ByDistanceLink].
+        """
         origin_coords = self.wkdt_coords(place_of_pub_wqid)
         links = [ByDistanceLink(
             wqid=wqid,
@@ -311,7 +381,20 @@ class ByDistanceLinker(Linker):
             ]) for wqid in match.wqid_links]
         return links
     
-    def haversine(self, origin_coords: Optional[Tuple[float, float]], coords: Optional[Tuple[float, float]]) -> Optional[float]:
+    def haversine(self, 
+                  origin_coords: Optional[Tuple[float, float]], 
+                  coords: Optional[Tuple[float, float]]) -> Optional[float]:
+        """
+        Calculates the great circle distance between two points on Earth's surface.
+
+        Args:
+            origin_coords (Optional[Tuple[float, float]]): coordinates of the origin
+            coords (Optional[Tuple[float, float]]): coordinates of the other point
+
+        Returns:
+            The great circle distance between the points, or `None` if either pair
+                of coordinates is unavailable.
+        """
         if not origin_coords:
             print("Missing place of publication coordinates.")
             return None
@@ -321,7 +404,21 @@ class ByDistanceLinker(Linker):
             # We have one candidate with coordinates in Venus!
             return None
 
-    def disambiguation_scores(self, wikidata_links: List[ByDistanceLink], string_similarity: float) -> Dict[str, float]:
+    def disambiguation_scores(self, 
+                              wikidata_links: List[ByDistanceLink], 
+                              string_similarity: float) -> Dict[str, float]:
+        """
+        Computes disambiguation scores based on the physical proximity of the candidate
+        to the place of publication of the source text, also taking into account the 
+        string similarity of the match and the relative popularity of the Wikidata entry.
+
+        Arguments:
+            links: A list of `WikidataLink` instances.
+            string_similarity (float): the string similarity score for the candidate match.
+
+        Returns:
+            A dictionary containing disambiguation scores, keyed by Wikidata ID.
+        """
         max_on_gb = 1000  # 1000 km, max on GB
         ret = dict()
         for link in wikidata_links:
@@ -340,86 +437,83 @@ class ByDistanceLinker(Linker):
             ret[link.wqid] = final_score
         return ret
     
-# TODO: update docstring.
 class RelDisambLinker(Linker):
     """
-    Linker subclass implementing an entity linking method that selects the 
-    candidate using the Radboud Entity Linker (REL) model.
+    An entity linking method that selects the candidate using the [Radboud 
+    Entity Linker](https://github.com/informagi/REL/) (REL) model.
 
     Arguments:
         resources_path (str): The path to the linking resources.
+        ranker (Ranker): A `Ranker` instance.
         experiments_path (str, optional): The path to the experiments
-            directory. Default is "../experiments/".
-        linking_resources (dict, optional): Dictionary containing the
-            necessary linking resources. Defaults to ``dict()`` (an empty
-            dictionary).
+            directory.
+        linking_resources (dict): Dictionary containing the
+            necessary linking resources.
         overwrite_training (bool): Flag indicating whether to overwrite the
-            training. Defaults to ``False``.
+            training.
         rel_params (dict, optional): Dictionary containing the parameters
             for performing entity disambiguation using the ``reldisamb``
             approach (adapted from the Radboud Entityt Linker, REL).
             For the default settings, see Notes below.
 
     Example:
-
-    .. code-block:: python
-
-       linker = Linker(
-         resources_path="/path/to/resources/",
-         experiments_path="/path/to/experiments/",
-         linking_resources={},
-         overwrite_training=True,
-         rel_params={"with_publication": True, "do_test": True}
-       )
+        ```python
+        linker = Linker(
+            resources_path="/path/to/resources/",
+            ranker=PerfectMatchRanker(resources_path="/path/to/resources/"),
+            experiments_path="/path/to/experiments/",
+            linking_resources={},
+            overwrite_training=True,
+            rel_params={"with_publication": True, "do_test": True}
+        )
+        ```
 
     Note:
-
-        * Note that, in order to instantiate the Linker with the ``reldisamb``
+        Note that, in order to instantiate the Linker with the ``reldisamb``
         method, the Linker needs to be wrapped by a context manager in which
         a connection to the entity embeddings database is established and a
         cursor is created:
 
-        .. code-block:: python
-
-           with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
-             cursor = conn.cursor()
-             mylinker = linking.Linker(
-             method="reldisamb",
-             resources_path="../resources/",
-             experiments_path="../experiments/",
-             linking_resources=dict(),
-             rel_params={
-               "model_path": "../resources/models/disambiguation/",
-               "data_path": "../experiments/outputs/data/lwm/",
-               "training_split": "",
-               "db_embeddings": cursor,
-               "with_publication": wpubl,
-               "without_microtoponyms": wmtops,
-               "do_test": False,
-               "default_publname": "",
-               "default_publwqid": "",
-             },
-             overwrite_training=False,
-           )
+        ```python
+        with sqlite3.connect("../resources/rel_db/embeddings_database.db") as conn:
+            cursor = conn.cursor()
+            linker = RelDisambLinker(
+                resources_path="../resources/",
+                ranker=PerfectMatchRanker(resources_path="../resources/"),
+                experiments_path="../experiments/",
+                linking_resources=dict(),
+                overwrite_training=False,
+                rel_params={
+                    "model_path": "../resources/models/disambiguation/",
+                    "data_path": "../experiments/outputs/data/lwm/",
+                    "training_split": "",
+                    "db_embeddings": cursor,
+                    "with_publication": True,
+                    "without_microtoponyms": True,
+                    "do_test": False,
+                    "default_publname": "",
+                    "default_publwqid": "",
+                },
+            )
+        ```
 
         See below the default settings for ``rel_params``. Note that
         `db_embeddings` defaults to None, but it should be assigned a
         cursor to the entity embeddings database, as described above:
 
-        .. code-block:: python
-
-           rel_params: Optional[dict] = {
-             "model_path": "../resources/models/disambiguation/",
-             "data_path": "../experiments/outputs/data/lwm/",
-             "training_split": "originalsplit",
-             "db_embeddings": None,
-             "with_publication": True,
-             "without_microtoponyms": True,
-             "do_test": False,
-             "default_publname": "United Kingdom",
-             "default_publwqid": "Q145",
-           }
-
+        ```python
+        rel_params: Optional[dict] = {
+            "model_path": "../resources/models/disambiguation/",
+            "data_path": "../experiments/outputs/data/lwm/",
+            "training_split": "originalsplit",
+            "db_embeddings": None,
+            "with_publication": True,
+            "without_microtoponyms": True,
+            "do_test": False,
+            "default_publname": "United Kingdom",
+            "default_publwqid": "Q145",
+        }
+        ```
     """
     # Override the method_name class attribute.
     method_name: str = "reldisamb"
@@ -459,7 +553,7 @@ class RelDisambLinker(Linker):
         Returns a string representation of the Linker object.
 
         Returns:
-            str: String representation of the Linker object.
+            String representation of the Linker object.
         """
         s = super().__str__()
         s += f"    * Overwrite training: {self.overwrite_training}\n"
@@ -475,7 +569,6 @@ class RelDisambLinker(Linker):
         super().load()
         self.train_load_model(split=split)
 
-    # TODO: docstring
     # Override the run method to include handling of REL config parameters.
     def run(
             self, 
@@ -484,15 +577,15 @@ class RelDisambLinker(Linker):
             place_of_pub: Optional[str]=None,
         ) -> MentionCandidates:
         """
-        Execute the linking process. Each Linker subclass must implement a 
-        linking method by overriding this function.
-
+        Executes the linking process. 
+        
         Arguments:
-            matches: A CandidatesMatches instance.
-            origin_wqid (Optional[str]): The Wikidata ID of the place of publication.
+            matches: A `CandidatesMatches` instance containing string matches to be linked.
+            place_of_pub_wqid (Optional[str]): The Wikidata ID of the place of publication.
+            place_of_pub (Optional[str]): The place of publication.
 
         Returns:
-            Candidates: The candidates identified by the linking process.
+            The candidates identified by the linking process.
         """
         # Skip microtoponyms if configured to do so.
         if self.rel_params["without_microtoponyms"]:
@@ -509,12 +602,23 @@ class RelDisambLinker(Linker):
 
         return super().run(matches, place_of_pub_wqid, place_of_pub)
 
-    # TODO: docstring        
     def wikidata_links(
             self, 
             match: StringMatchLinks,
             place_of_pub_wqid: Optional[str]=None,
             ) -> List[WikidataLink]:
+        """
+        Identifies candidate links in the Wikidata knowledgebase.
+
+        Args:
+            match (StringMatchLinks): The toponym string match to be linked.
+            place_of_pub_wqid (Optional[str], optional): The Wikidata ID of
+                the place of publication, if available.
+
+        Returns:
+            A list of candidate links in Wikidata, each of type 
+                [`RelDisambLink`][t_res.utils.dataclasses.RelDisambLink].
+        """
         links = [RelDisambLink(
             wqid=wqid,
             wkdt_class=self.wkdt_class(wqid),
@@ -525,8 +629,21 @@ class RelDisambLinker(Linker):
         return links
 
     # Override the disambiguate method to include REL linking.
-    def disambiguate(self, candidates: List[SentenceCandidates], apply_rel: bool=True) -> Predictions:
+    def disambiguate(self, 
+                     candidates: List[SentenceCandidates], 
+                     apply_rel: bool=True) -> Predictions:
+        """
+        Performs entity disambiguation given a list of already identified
+        toponyms and selected candidates. This method overrides the base
+        class implementation to include REL model linking.
 
+        Arguments:
+            candidates: A list of SentenceCandidates instances.
+
+        Returns:
+            A `Predictions` instance representing the identified and
+                linked toponyms.
+        """
         # Generate interim predictions as inputs to the REL model.
         predictions = super().disambiguate(candidates)
 
@@ -544,8 +661,21 @@ class RelDisambLinker(Linker):
 
     # Computes disambiguation scores for a collection of potential Wikidata links.
     # (Note: this replaces the rank_candidates function from rel_utils.py)
-    def disambiguation_scores(self, links: List[RelDisambLink], string_similarity: float) -> Dict[str, float]:
+    def disambiguation_scores(self, 
+                              links: List[RelDisambLink], 
+                              string_similarity: float) -> Dict[str, float]:
+        """
+        Computes *interim* disambiguation scores (i.e. before applying the REL model) 
+        by taking into account the string similarity of the match and the relative 
+        popularity of the Wikidata entry.
 
+        Arguments:
+            links: A list of `WikidataLink` instances.
+            string_similarity (float): the string similarity score for the candidate match.
+
+        Returns:
+            A dictionary containing disambiguation scores, keyed by Wikidata ID.
+        """
         ret = dict()
         max_cand_freq = max([m.freq for m in links])
         for wikidata_link in links:
@@ -567,11 +697,9 @@ class RelDisambLinker(Linker):
         `entity_disambiguation_model` field.
 
         Arguments:
-            split (str, optional): The split type for training. Defaults to
-                ``"originalsplit"``.
+            split (str, optional): The split type for training.
 
-        .. note::
-
+        Note:
             The training will be skipped if the model already exists and
             ``overwrite_training`` was set to False when initiating the Linker
             object, or if the disambiguation method is unsupervised. The
@@ -579,27 +707,24 @@ class RelDisambLinker(Linker):
             ``do_test`` key's value set to True when initiating the Linker
             object.
 
-        .. note::
+        Note: Credit:
+            This class and its methods are adapted from the [REL: Radboud Entity
+            Linker](https://github.com/informagi/REL/) Github repository:
+            Copyright (c) 2020 Johannes Michael van Hulst. See the [permission
+            notice](https://github.com/informagi/REL/blob/main/LICENSE).
 
-            **Credit:**
+            ```
+            Reference:
 
-            This method is adapted from the `REL: Radboud Entity Linker
-            <https://github.com/informagi/REL/>`_ Github repository:
-            Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
-            notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
-
-            ::
-
-                Reference:
-
-                @inproceedings{vanHulst:2020:REL,
+            @inproceedings{vanHulst:2020:REL,
                 author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
                 title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
                 booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
                 series =    {SIGIR '20},
                 year =      {2020},
                 publisher = {ACM}
-                }
+            }
+            ```
         """
         # Generate ED model name:
         linker_name = self.ranker.method_name

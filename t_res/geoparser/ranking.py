@@ -31,8 +31,9 @@ class Ranker:
             which will be loaded through the Ranker's 
             [load method][t_res.geoparser.ranking.Ranker.load].
 
-    This base class should not be instatiated directly. Instead use a subclass
-    constructor.
+    Note:
+        This base class should not be instatiated directly. Instead use a subclass
+            constructor.
 
     Example:
         ```python
@@ -104,7 +105,7 @@ class Ranker:
 
     def load(self):
         """
-        Load the ranker resources.
+        Loads the ranker resources.
 
         Note:
             This method loads the mentions-to-wikidata and
@@ -177,7 +178,7 @@ class Ranker:
 
     def run(self, mention: Mention) -> CandidateMatches:
         """
-        Execute the ranking process for a given toponym mention.
+        Executes the ranking process for a given toponym mention.
 
         Arguments:
             mention (Mention): An instance of the Mention dataclass 
@@ -212,7 +213,7 @@ class Ranker:
 
     def matches(self, query: str) -> List[StringMatch]:
         """
-        Identify string matching candidates for the given toponym query.
+        Identifies string matching candidates for the given toponym query.
         
         Each Ranker subclass must implement a ranking method by overriding 
         this function.
@@ -250,7 +251,7 @@ class PerfectMatchRanker(Ranker):
 
     def matches(self, query: str) -> List[StringMatch]:
         """
-        Perform perfect matching between a provided toponym (`query`) and the 
+        Performs perfect matching between a provided toponym (`query`) and the 
         altnames in the knowledge base.
 
         Arguments:
@@ -307,7 +308,7 @@ class PartialMatchRanker(PerfectMatchRanker):
 
     def matches(self, query: str) -> List[StringMatch]:
         """
-        Perform partial string matching for a given toponym query.
+        Performs partial string matching for a given toponym query.
 
         Arguments:
             query (str): A toponym to be matched.
@@ -401,7 +402,7 @@ class LevenshteinRanker(PartialMatchRanker):
 
     def matching_score(self, query: str, row: pd.Series) -> float:
         """
-        Calculate the partial string matching score as the Damerau-Levenshtein 
+        Calculates the partial string matching score as the Damerau-Levenshtein 
         distance between a toponym and a row in the dataset.
 
         Arguments:
@@ -576,7 +577,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
 
     def matches(self, query: str) -> List[StringMatch]:
         """
-        Perform DeezyMatch ranking on-the-fly for a given toponym query.
+        Performs DeezyMatch ranking on-the-fly for a given toponym query.
 
         Arguments:
             query (str): A toponym to be matched.
@@ -652,7 +653,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
 
     def train(self):
         """
-        Train a DeezyMatch model. The training will be skipped if the model
+        Trains a DeezyMatch model. The training will be skipped if the model
         already exists and the ``overwrite_training`` key in the
         ``deezy_parameters`` passed when initialising the
         [Ranker][t_res.geoparser.ranking.Ranker] object is set to ``False``. The
