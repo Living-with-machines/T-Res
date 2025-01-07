@@ -6,7 +6,7 @@ import sys
 import time
 from pathlib import Path
 from string import punctuation
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import torch
@@ -31,32 +31,28 @@ class EntityDisambiguation:
     and uses the trained model to predict the most likely entity for each
     mention.
 
-    This class uses a deep learning architecture, specifically the
-    :py:class:`~utils.REL.mulrel_ranker.MulRelRanker` model, for entity
-    disambiguation.
+    This class uses a deep learning architecture, specifically the 
+    [MulRelRanker][t_res.utils.REL.mulrel_ranker.MulRelRanker] model, for 
+    entity disambiguation.
 
-    .. note::
+    Note: Credit:
+        This class and its methods are adapted from the [REL: Radboud Entity
+        Linker](https://github.com/informagi/REL/) Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the [permission
+        notice](https://github.com/informagi/REL/blob/main/LICENSE).
 
-        **Credit:**
+        ```
+        Reference:
 
-        This class and its methods are adapted from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github repository:
-        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
-        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
-
-        ::
-
-            Reference:
-
-            @inproceedings{vanHulst:2020:REL,
+        @inproceedings{vanHulst:2020:REL,
             author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
             title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
             booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
             series =    {SIGIR '20},
             year =      {2020},
             publisher = {ACM}
-            }
-
+        }
+        ```
     """
 
     def __init__(self, db_embs, user_config, reset_embeddings=False):
@@ -121,12 +117,12 @@ class EntityDisambiguation:
                 raise Exception("You cannot train a model and reset the embeddings.")
             self.model = MulRelRanker(self.config, self.device).to(self.device)
 
-    def __get_config(self, user_config):
+    def __get_config(self, user_config) -> dict:
         """
         User configuration that may overwrite default settings.
 
         Returns:
-            dict: The configuration used for entity disambiguation.
+            The configuration used for entity disambiguation.
         """
 
         default_config: Dict[str, Any] = {
@@ -171,9 +167,6 @@ class EntityDisambiguation:
         and entities (``snd``, ``entity``, and ``word``). It also adds the
         unknown token to the vocabulary and retrieves the corresponding embedding
         from the database.
-
-        Returns:
-            None
         """
         self.__batch_embs = {}
 
@@ -195,9 +188,6 @@ class EntityDisambiguation:
     def train(self, org_train_dataset, org_dev_dataset):
         """
         Trains the entity disambiguation model.
-
-        Returns:
-            None.
         """
 
         train_dataset = self.get_data_items(org_train_dataset, "train", predict=False)
@@ -359,10 +349,13 @@ class EntityDisambiguation:
                     break
         self.best_performance = {"f1": best_f1, "p": best_p, "r": best_r}
 
-    def __create_dataset_LR(self, dataset, predictions):
+    def __create_dataset_LR(self, dataset, predictions) -> tuple:
         """
         Creates a dataset for logistic regression, to estimate posterior
         probabilities of the linked entities.
+
+        Returns:
+            A tuple of numpy arrays.
         """
         X = []
         y = []
@@ -392,9 +385,6 @@ class EntityDisambiguation:
         Function that applies LR to get confidence scores for the
         disambiguated entities. Recall should be high, because if
         it is low than we would have ignored a corrrect entity.
-
-        Returns:
-            None
         """
         print(os.path.join(model_path_lr, "lr_model.pkl"))
 
@@ -416,26 +406,26 @@ class EntityDisambiguation:
         with open(path, "wb") as handle:
             pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def predict(self, data):
+    def predict(self, data) -> dict:
         """
         Performs entity disambiguation on the given data. It does not require
         ground truth entities to be present.
 
-        Returns: Predictions and time taken for the ED step.
+        Returns: 
+            Predictions and time taken for the ED step.
         """
         data = self.get_data_items(data, "raw", predict=True)
         predictions, timing = self.__predict(data, include_timing=True, eval_raw=True)
 
         return predictions
 
-    def normalize_scores(self, scores):
+    def normalize_scores(self, scores) -> List[float]:
         """
         Normalizes a list of scores between 0 and 1 by rescaling them and
         computing their ratio over their sum.
 
         Returns:
-            List[float]:
-                A list of normalized scores where each score is the ratio of
+            A list of normalized scores where each score is the ratio of
                 the rescaled score over their sum.
         """
         min_score = min(scores)
@@ -455,7 +445,7 @@ class EntityDisambiguation:
 
         return normalized_scores
 
-    def __compute_cross_cand_confidence(self, scores):
+    def __compute_cross_cand_confidence(self, scores) -> List[List[float]]:
         """
         This function takes a series of numpy arrays of scores and returns
         a list of lists of confidence scores.
@@ -464,12 +454,12 @@ class EntityDisambiguation:
             scores (numpy.ndarray): A numpy array of scores.
 
         Returns:
-            List[List[float]]: A list of lists of confidence scores.
+            A list of lists of confidence scores.
         """
         normalised_scores = [self.normalize_scores(score) for score in scores]
         return normalised_scores
 
-    def __compute_confidence(self, scores, preds):
+    def __compute_confidence(self, scores, preds) -> List[float]:
         """
         Computes confidence scores for the given entity disambiguation outputs
         using logistic regression.
@@ -480,9 +470,7 @@ class EntityDisambiguation:
                 scores.
 
         Returns:
-            List[float]:
-                A list of confidence scores for each entity disambiguation
-                output.
+            A list of confidence scores for each entity disambiguation output.
         """
         X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
         if self.model_lr:
@@ -492,11 +480,12 @@ class EntityDisambiguation:
             confidence_scores = [0.0 for _ in scores]
         return confidence_scores
 
-    def __predict(self, data, include_timing=False, eval_raw=False):
+    def __predict(self, data, include_timing=False, eval_raw=False) -> dict:
         """
         Uses the trained model to make predictions of individual batches (i.e. documents).
 
-        Returns: Predictions and time taken for the ED step
+        Returns: 
+            Predictions and time taken for the ED step
         """
         predictions = {items[0]["doc_name"]: [] for items in data}
         self.model.eval()
@@ -677,12 +666,13 @@ class EntityDisambiguation:
         else:
             return predictions
 
-    def prerank(self, dataset, dname, predict=False):
+    def prerank(self, dataset, dname, predict=False) -> list:
         """
         Responsible for preranking the set of possible candidates using both
         context and p(e|m) scores.
 
-        Returns: Dataset with, by default, max 3 + 4 candidates per mention.
+        Returns: 
+            Dataset with, by default, max 3 + 4 candidates per mention.
         """
         new_dataset = []
         has_gold = 0
@@ -804,9 +794,6 @@ class EntityDisambiguation:
         """
         Responsible for updating the dictionaries with their respective word,
         entity and snd embeddings.
-
-        Returns:
-            None
         """
         embs = embs.to(self.device)
 
@@ -839,9 +826,6 @@ class EntityDisambiguation:
     def __embed_words(self, words_filt, name):
         """
         Responsible for retrieving embeddings using the given sqlite3 database.
-
-        Returns:
-            None.
         """
         embs = rel_utils.get_db_emb(self.db_embs, words_filt, name)
 
@@ -853,12 +837,12 @@ class EntityDisambiguation:
                 self.embeddings["{}_voca".format(name)].add_to_vocab(c)
                 self.__batch_embs[name].append(torch.tensor(e))
 
-    def get_data_items(self, dataset, dname, predict=False):
+    def get_data_items(self, dataset, dname, predict=False) -> list:
         """
         Responsible for formatting the dataset. Triggers the preranking function.
 
         Returns:
-            Preranking function.
+            List returned by the `prerank` method.
         """
 
         data = []
@@ -1070,14 +1054,13 @@ class EntityDisambiguation:
 
         return self.prerank(data, dname, predict)
 
-    def __eval(self, testset, system_pred):
+    def __eval(self, testset, system_pred) -> Tuple[float, float, float, int]:
         """
         Responsible for evaluating data points, which is solely used for the
         local entity disambiguation step.
 
         Returns:
-            Tuple[float, float, float, int]:
-                A tuple containing the F1 score, recall, precision, and the
+            A tuple containing the F1 score, recall, precision, and the
                 number of mentions for which there is no valid candidate.
         """
         gold = []
@@ -1105,21 +1088,19 @@ class EntityDisambiguation:
     def __save(self, path):
         """
         Responsible for storing the trained model during optimisation.
-
-        Returns:
-            None.
         """
         torch.save(self.model.state_dict(), "{}.state_dict".format(path))
         with open("{}.config".format(path), "w") as f:
             json.dump(self.config, f)
 
-    def __load(self, path):
+    def __load(self, path) -> MulRelRanker:
         """
         Responsible for loading a trained model and its respective config. Note
         that this config cannot be overwritten. If required, this behavior may
         be modified in future releases.
 
-        Returns: The loaded trained model.
+        Returns: 
+            The loaded trained model.
         """
         if os.path.exists("{}.config".format(path)):
             with open("{}.config".format(path), "r") as f:
