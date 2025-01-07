@@ -24,28 +24,30 @@ class Ranker:
             (containing Wikidata resources).
         mentions_to_wikidata (dict, optional): An empty dictionary which
             will store the mapping between mentions and Wikidata IDs,
-            which will be loaded through the
-            :py:meth:`~geoparser.ranking.Ranker.load` method.
+            which will be loaded through the Ranker's 
+            [load method][t_res.geoparser.ranking.Ranker.load].
         wikidata_to_mentions (dict, optional): An empty dictionary which
             will store the mapping between Wikidata IDs and mentions,
-            which will be loaded through the
-            :py:meth:`~geoparser.ranking.Ranker.load` method.
+            which will be loaded through the Ranker's 
+            [load method][t_res.geoparser.ranking.Ranker.load].
 
     This base class should not be instatiated directly. Instead use a subclass
     constructor.
 
     Example:
-        >>> # Create a Ranker object:
-        >>> ranker = PerfectMatchRanker(resources_path="/path/to/resources/")
-        >>> # Load resources
-        >>> ranker.load()
-        >>> # Perform candidate selection
-        >>> queries = ['London', 'Paraguay']
-        >>> results = [ranker.run(query) for query in queries]
-        >>> # Print the results
-        >>> print("Candidate Selection Results:")
-        >>> for candidates in results:
-        >>>     print(candidates)
+        ```python
+        # Create a Ranker object:
+        ranker = PerfectMatchRanker(resources_path="/path/to/resources/")
+        # Load resources
+        ranker.load()
+        # Perform candidate selection
+        queries = ['London', 'Paraguay']
+        results = [ranker.matches(query) for query in queries]
+        # Print the results
+        print("Candidate Selection Results:")
+        for matches in results:
+            print(matches)
+        ```
     """
     # Class attribute for the name of the ranking method.
     method_name: str = None
@@ -107,9 +109,8 @@ class Ranker:
         Note:
             This method loads the mentions-to-wikidata and
             wikidata-to-mentions dictionaries from the resources directory,
-            specified when initialising the
-            :py:meth:`~geoparser.ranking.Ranker`. They are required for
-            performing candidate selection and ranking.
+            specified when initialising the [Ranker][t_res.geoparser.ranking.Ranker]. 
+            They are required for performing candidate selection and ranking.
 
             The loaded mentions-to-wikidata dictionary maps a toponym 
             (e.g. ``"London"``) to the Wikidata entities that are
@@ -174,20 +175,21 @@ class Ranker:
         del mentions_to_wikidata_filtered
         del wikidata_to_mentions_filtered
 
-    # TODO: docstring
     def run(self, mention: Mention) -> CandidateMatches:
         """
-        Execute the ranking process for a given toponym query.
+        Execute the ranking process for a given toponym mention.
 
         Arguments:
-            query (str): A toponym to be matched.
+            mention (Mention): An instance of the Mention dataclass 
+                containing a toponym to be matched.
 
         Returns:
-            CandidateMatches: An instance of the CandidateMatches dataclass, 
+            An instance of the CandidateMatches dataclass 
                 containing potential string matches for the given toponym, 
                 each with a list of potential Wikidata ID links.
 
-        Note: the string matches are added to the cache for efficient retrieval.
+        Note: 
+            String matches are added to the cache for efficient retrieval.
         """
         # Use the cache if possible.
         if mention.mention in self.cache:
@@ -222,8 +224,8 @@ class Ranker:
             NotImplementedError: If this method is not overridden in a subclass.
 
         Returns:
-            List[StringMatch]: A list of StringMatch instances, containing
-                potential matches for the given toponym.
+            A list of StringMatch instances containing potential matches for 
+                the given toponym.
         """
         raise NotImplementedError("Subclass implementation required.")
     
@@ -232,28 +234,30 @@ class PerfectMatchRanker(Ranker):
     A ranking method using perfect string matching.
 
     Example:
-        >>> ranker = PerfectMatchRanker(resources_path="/path/to/resources/")
-        >>> ranker.load()
-        >>> queries = ['London', 'Barcelona', 'Bologna']
-        >>> results = [ranker.run(query) for query in queries]
-        >>> # Print the results
-        >>> print("Candidate Selection Results:")
-        >>> for candidates in results:
-        >>>     print(candidates)
+        ```python
+        ranker = PerfectMatchRanker(resources_path="/path/to/resources/")
+        ranker.load()
+        queries = ['London', 'Barcelona', 'Bologna']
+        results = [ranker.matches(query) for query in queries]
+        # Print the results
+        print("Candidate Selection Results:")
+        for matches in results:
+            print(matches)
+        ```
     """
     # Override the method_name class attribute.
     method_name: str = "perfectmatch"
 
     def matches(self, query: str) -> List[StringMatch]:
         """
-        Perform perfect matching between a provided list of toponyms
-        (``queries``) and the altnames in the knowledge base.
+        Perform perfect matching between a provided toponym (`query`) and the 
+        altnames in the knowledge base.
 
         Arguments:
             query: A toponym query (string) to be matched.
 
         Returns:
-            List[StringMatch]: A list of StringMatch instances, containing
+            A list of StringMatch instances, containing
                 potential matches for the given toponym. In the case of 
                 perfect string matching, all candidates have string_similarity 
                 equal to 1.0.
@@ -263,16 +267,6 @@ class PerfectMatchRanker(Ranker):
             mentions_to_wikidata dictionary. If a match is found, it assigns a
             perfect match score of ``1.0`` to the query. Otherwise, an empty
             dictionary is assigned as the list of matches for the query.
-
-        Example:
-            >>> ranker = PerfectMatchRanker(resources_path="...")
-            >>> ranker.load()
-            >>> queries = ['London', 'Barcelona', 'Bologna']
-            >>> results = [ranker.run(query) for query in queries]
-            >>> # Print the results
-            >>> print("Candidate Selection Results:")
-            >>> for candidates in results:
-            >>>     print(candidates)
         """
         if query in self.mentions_to_wikidata:
             return [StringMatch(query, 1.0)]
@@ -287,17 +281,19 @@ class PartialMatchRanker(PerfectMatchRanker):
     before attempting a partial match.
 
     Example:
-        >>> # Create a Ranker object:
-        >>> ranker = PartialMatchRanker(resources_path="/path/to/resources/")
-        >>> # Load resources
-        >>> ranker.load()
-        >>> # Perform candidate selection
-        >>> queries = ['London', 'Paraguay']
-        >>> results = [ranker.run(query) for query in queries]
-        >>> # Print the results
-        >>> print("Candidate Selection Results:")
-        >>> for candidates in results:
-        >>>     print(candidates)
+        ```python
+        # Create a Ranker object:
+        ranker = PartialMatchRanker(resources_path="/path/to/resources/")
+        # Load resources
+        ranker.load()
+        # Perform candidate selection
+        queries = ['London', 'Paraguay']
+        results = [ranker.matches(query) for query in queries]
+        # Print the results
+        print("Candidate Selection Results:")
+        for matches in results:
+            print(matches)
+        ```
     """
     # Override the method_name class attribute.
     method_name: str = "partialmatch"
@@ -317,8 +313,8 @@ class PartialMatchRanker(PerfectMatchRanker):
             query (str): A toponym to be matched.
 
         Returns:
-            List[StringMatch]: A list of StringMatch instances, containing
-                potential matches for the given toponym.
+            A list of StringMatch instances, containing potential matches for 
+                the given toponym.
 
         Note:
             This method identifies candidates via partial string matching. 
@@ -352,17 +348,18 @@ class PartialMatchRanker(PerfectMatchRanker):
                 knowledge base.
 
         Returns:
-            float:
-                The match score indicating the degree of containment,
+            The match score indicating the degree of containment,
                 ranging from ``0.0`` to ``1.0`` (perfect match).
 
         Example:
-            >>> ranker = PartialMatchRanker(...)
-            >>> query = 'apple'
-            >>> row = pd.Series({'mentions': 'Delicious apple'})
-            >>> match_score = ranker.matching_score(query, row)
-            >>> print(match_score)
-            0.3333333333333333
+            ```python
+            ranker = PartialMatchRanker(...)
+            query = 'apple'
+            row = pd.Series({'mentions': 'Delicious apple'})
+            match_score = ranker.matching_score(query, row)
+            print(match_score)
+            > 0.3333333333333333
+            ```
         """
         # Fix strings
         s1 = query.lower()
@@ -385,17 +382,19 @@ class LevenshteinRanker(PartialMatchRanker):
     before attempting a partial match.
 
     Example:
-        >>> # Create a Ranker object:
-        >>> ranker = LevenshteinRanker(resources_path="/path/to/resources/")
-        >>> # Load resources
-        >>> ranker.load()
-        >>> # Perform candidate selection
-        >>> queries = ['London', 'Paraguay']
-        >>> results = [ranker.run(query) for query in queries]
-        >>> # Print the results
-        >>> print("Candidate Selection Results:")
-        >>> for candidates in results:
-        >>>     print(candidates)
+        ```python
+        # Create a Ranker object:
+        ranker = LevenshteinRanker(resources_path="/path/to/resources/")
+        # Load resources
+        ranker.load()
+        # Perform candidate selection
+        queries = ['London', 'Paraguay']
+        results = [ranker.matches(query) for query in queries]
+        # Print the results
+        print("Candidate Selection Results:")
+        for matches in results:
+            print(matches)
+        ```
     """
     # Override the method_name class attribute.
     method_name: str = "levenshtein"
@@ -409,11 +408,10 @@ class LevenshteinRanker(PartialMatchRanker):
             query (str): A toponym identified in a text.
             row (Series): A pandas Series representing a row in the dataset
                 with a "mentions" column, corresponding to an alternate name
-                of an etity in the knowledge base.
+                of an entity in the knowledge base.
 
         Returns:
-            float:
-                The similarity score between the query and the row, ranging
+            The similarity score between the query and the row, ranging
                 from ``0.0`` to ``1.0``.
 
         Note:
@@ -423,12 +421,14 @@ class LevenshteinRanker(PartialMatchRanker):
             by subtracting it from ``1.0``.
 
         Example:
-            >>> ranker = LevenshteinRanker(...)
-            >>> query = 'apple'
-            >>> row = pd.Series({'mentions': 'orange'})
-            >>> similarity = ranker.matching_score(query, row)
-            >>> print(similarity)
-            0.1666666865348816
+            ```python
+            ranker = LevenshteinRanker(...)
+            query = 'apple'
+            row = pd.Series({'mentions': 'orange'})
+            similarity = ranker.matching_score(query, row)
+            print(similarity)
+            > 0.1666666865348816
+            ```
         """
         return 1.0 - normalized_damerau_levenshtein_distance(
             query.lower(), row["mentions"].lower()
@@ -447,12 +447,12 @@ class DeezyMatchRanker(PerfectMatchRanker):
             (containing Wikidata resources).
         mentions_to_wikidata (dict, optional): An empty dictionary which
             will store the mapping between mentions and Wikidata IDs,
-            which will be loaded through the
-            :py:meth:`~geoparser.ranking.Ranker.load` method.
+            which will be loaded through the Ranker's 
+            [load method][t_res.geoparser.ranking.Ranker.load].
         wikidata_to_mentions (dict, optional): An empty dictionary which
             will store the mapping between Wikidata IDs and mentions,
-            which will be loaded through the
-            :py:meth:`~geoparser.ranking.Ranker.load` method.
+            which will be loaded through Ranker's 
+            [load method][t_res.geoparser.ranking.Ranker.load].
         strvar_parameters (dict, optional): Dictionary of string variation
             parameters required to create a DeezyMatch training dataset.
             For the default settings, see Notes below.
@@ -460,16 +460,20 @@ class DeezyMatchRanker(PerfectMatchRanker):
             for model training. For the default settings, see Notes below.
 
     Example:
-
-    .. code-block:: python
-
+        ```python
         ranker = DeezyMatchRanker(resources_path="/path/to/resources/")
+        ranker.load()
+        queries = ['London', 'Shefrield']
+        results = [ranker.matches(query) for query in queries]
+        # Print the results
+        print("Candidate Selection Results:")
+        for matches in results:
+            print(matches)
+        ```
 
     Note:
-        * The default settings for ``strvar_parameters``:
-
-          .. code-block:: python
-
+        - The default settings for ``strvar_parameters``:
+            ```python
             strvar_parameters: Optional[dict] = {
                 # Parameters to create the string pair dataset:
                 "ocr_threshold": 60,
@@ -480,11 +484,10 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 "w2v_ocr_model": "w2v_*_news",
                 "overwrite_dataset": False,
             }
+            ```
 
-        * The default settings for ``deezy_parameters``:
-
-          .. code-block:: python
-
+        - The default settings for ``deezy_parameters``:
+            ```python
             deezy_parameters: Optional[dict] = {
                 "dm_path": str(Path("resources/deezymatch/").resolve()),
                 "dm_cands": "wkdtalts",
@@ -497,6 +500,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 "overwrite_training": False,
                 "do_test": False,
             }
+            ```
     """
     # Override the method_name class attribute.
     method_name: str = "deezymatch"
@@ -549,6 +553,9 @@ class DeezyMatchRanker(PerfectMatchRanker):
         """
         Returns a string representation of the Ranker object, including the 
         method name and DeezyMatch training parameters.
+
+        Returns:
+            A string representation of the Ranker object.
         """
         s = super().__str__()
         s += "    * DeezyMatch details:\n"
@@ -562,11 +569,10 @@ class DeezyMatchRanker(PerfectMatchRanker):
         return s
 
     # Override the base class implementation to optionally train the model.
-    def load(self, train: bool=True) -> dict:
-        ret = super().load()
+    def load(self, train: bool=True):
+        super().load()
         if train or self.deezy_parameters["overwrite_training"]:
             self.train()
-        return ret
 
     def matches(self, query: str) -> List[StringMatch]:
         """
@@ -576,18 +582,8 @@ class DeezyMatchRanker(PerfectMatchRanker):
             query (str): A toponym to be matched.
 
         Returns:
-            List[StringMatch]: A list of StringMatch instances, containing
-                potential matches for the given toponym.
-
-        Example:
-            >>> ranker = DeezyMatchRanker(...)
-            >>> ranker.load()
-            >>> queries = ['London', 'Shefrield']
-            >>> results = [ranker.match_candidates(query) for query in queries]
-            >>> # Print the results
-            >>> print("Candidate Selection Results:")
-            >>> for candidates in results:
-            >>>     print(candidates)
+            A list of StringMatch instances containing potential matches for 
+                the given toponym.
 
         Note:
             This method performs DeezyMatch on-the-fly for the given toponym.
@@ -659,10 +655,10 @@ class DeezyMatchRanker(PerfectMatchRanker):
         Train a DeezyMatch model. The training will be skipped if the model
         already exists and the ``overwrite_training`` key in the
         ``deezy_parameters`` passed when initialising the
-        :py:meth:`~geoparser.ranking.Ranker` object is set to ``False``. The
+        [Ranker][t_res.geoparser.ranking.Ranker] object is set to ``False``. The
         training will be run on test mode if the ``do_test`` key in the
         ``deezy_parameters`` passed when initialising the
-        :py:meth:`~geoparser.ranking.Ranker` object is set to ``True``.
+        [Ranker][t_res.geoparser.ranking.Ranker] object is set to ``True``.
         """
 
         Path(self.deezy_parameters["dm_path"]).mkdir(parents=True, exist_ok=True)
