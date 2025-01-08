@@ -18,6 +18,7 @@ nav:
   - Getting Started:
     - getting-started/index.md
     - getting-started/installation.md
+    - getting-started/resources.md
     - getting-started/complete-tour.md
   - Reference:
     - reference/index.md

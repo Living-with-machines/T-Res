@@ -3,15 +3,11 @@
     --md-primary-fg-color--light: #701F33;
   }
 .md-grid {
-    max-width: 80%;
+    max-width: 87%;
 }
 .md-header__button.md-logo {
     margin: 0;
     /* padding: 0; */
-}
-.md-header__button.md-logo img, .md-header__button.md-logo svg {
-    height: 1.52rem;
-    width: 1.52rem;
 }
 /* prevent selection of prefix and output for console syntax */
 .language-console .gp, .language-console .go {
