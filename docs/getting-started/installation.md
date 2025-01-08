@@ -1,13 +1,15 @@
 # Installing T-Res
 
-If you want to work directly on the codebase, we suggest to install T-Res following these instructions (which have been tested Linux (ubuntu 20.04)).
+If you want to work directly on the codebase, we suggest to install T-Res following these instructions (which have been tested on Linux Ubuntu 20.04).
 
 ## Update the system
 
-First, you need to make sure the system is up to date and all essential libraries are installed.
-
-``` bash
+First, you need to make sure the system is up to date:
+```console
 $ sudo apt update
+```
+and all essential libraries are installed:
+```console
 $ sudo apt install build-essential curl libbz2-dev libffi-dev \
   liblzma-dev libncursesw5-dev libreadline-dev libsqlite3-dev \
   libssl-dev libxml2-dev libxmlsec1-dev llvm make tk-dev wget \

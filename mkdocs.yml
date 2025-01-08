@@ -11,7 +11,8 @@ theme:
     - navigation.instant
     # - toc.integrate
     - navigation.top
-    
+    - content.code.annotation
+    - content.code.copy
 nav:
   - 'T-Res toponym resolution pipeline': index.md
   - Getting Started:
@@ -57,9 +58,10 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.keys
   - admonition
   - codehilite
-  - pymdownx.superfences
   - tables
   - attr_list
   - md_in_html
@@ -71,6 +73,9 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
 
 plugins:
   - search
