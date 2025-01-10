@@ -297,21 +297,40 @@ def test_predict(tmp_path):
             overwrite_training=False,
         )
 
-    mypipe = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
-    predictions = mypipe.run(
+    predictions = geoparser.run(
         "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
         place_of_pub_wqid="Q84",
         place_of_pub="London",
     )
 
     assert isinstance(predictions, Predictions)
-    assert len(predictions.candidates()) == 6
 
-    assert predictions.candidates()[1].best_wqid() in predictions.candidates()[1].best_match().cross_cand_scores().keys()
+    # The microtoponym "Market-Street" is excluded from the predictions:
+    assert len(predictions.candidates()) == 5
+    assert not "Market-Street" in [c.mention.mention for c in predictions.candidates()]
 
-    highest_cross_cand_score = max(predictions.candidates()[1].best_match().cross_cand_scores().values())
+    # Check scores for the first toponym prediction, "Liverpool":
+    candidate = predictions.candidates()[0]
+    assert candidate.best_wqid() in candidate.best_match().cross_cand_scores().keys()
+
+    highest_cross_cand_score = max(candidate.best_match().cross_cand_scores().values())
     assert highest_cross_cand_score == 0.857
 
-    best_disambiguation_score = predictions.candidates()[1].best_match().best_disambiguation_score()
+    best_disambiguation_score = candidate.best_match().best_disambiguation_score()
     assert round(best_disambiguation_score, 3) == highest_cross_cand_score
+
+    # Repeat the test but including microtoponyms.
+    geoparser.linker.rel_params["without_microtoponyms"] = False
+
+    predictions = geoparser.run(
+        "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
+        place_of_pub_wqid="Q84",
+        place_of_pub="London",
+    )
+
+    assert isinstance(predictions, Predictions)
+    # The microtoponym "Market-Street" is included in the predictions:
+    assert len(predictions.candidates()) == 6
+    assert "Market-Street" in [c.mention.mention for c in predictions.candidates()]
