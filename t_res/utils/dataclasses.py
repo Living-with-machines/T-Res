@@ -300,9 +300,11 @@ class WikidataLink:
     Attributes:
         wqid (str): The Wikidata ID.
         wkdt_class (Optional[str]): The Wikidata class of this Wikidata entry (if available).
+        coords (Optional[Tuple[float, float]]): The lat-lon coordinates of the link in Wikidata.
     """
     wqid: str
     wkdt_class: Optional[str]
+    coords: Optional[Tuple[float, float]]
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'WikidataLink':
@@ -333,12 +335,10 @@ class ByDistanceLink(WikidataLink):
     Wikidata under the `bydistance` linking method.
     
     Attributes:
-        coords (Optional[Tuple[float, float]]): The lat-lon coordinates of the link in Wikidata.
         place_of_pub_coords (Optional[Tuple[float, float]]): The lat-lon coordinates of the place of publication.
         geodist (Optional[float]): The geodesic distance between the wqid and the origin wqid.
         normalized_score (float): The normalized score from resource `mentions_to_wikidata_normalized.json`.
     """
-    coords: Optional[Tuple[float, float]]
     place_of_pub_coords: Optional[Tuple[float, float]]
     geodist: Optional[float]
     normalized_score: float

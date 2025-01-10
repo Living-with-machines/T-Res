@@ -96,6 +96,16 @@ class Linker:
         """
         return self.resources["entity2class"].get(wqid, None)
     
+    def wkdt_coords(self, wqid: str) -> Optional[Tuple[float, float]]:
+        """
+        Returns the lat-lon coordinates for the given Wikidata entry, if available.
+        
+        Returns:
+            Latitude and longitude coordinates for the given Wikidata entry, if
+                available.
+        """
+        return self.resources["wqid_to_coords"].get(wqid, None)
+
     def empty_candidates(self, 
                          mention: Mention, 
                          ranking_method: str, 
@@ -143,6 +153,22 @@ class Linker:
             os.path.join(self.resources_path, "wikidata/entity2class.txt"), "r"
         ) as f:
             self.resources["entity2class"] = json.load(f)
+
+        print("  > Loading gazetteer.")
+        gaz = pd.read_csv(
+            os.path.join(self.resources_path, "wikidata/wikidata_gazetteer.csv"),
+            usecols=["wikidata_id", "latitude", "longitude"],
+        )
+        gaz["latitude"] = gaz["latitude"].astype(float)
+        gaz["longitude"] = gaz["longitude"].astype(float)
+        gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
+        wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
+        self.resources["wqid_to_coords"] = wqid_to_coords
+        gaz_ids = set(gaz["wikidata_id"].tolist())
+        # Keep only wikipedia entities in the gazetteer:
+        self.resources["wikidata_locs"] = gaz_ids
+        gaz_ids = ""
+        gaz = ""
 
         print("*** Linking resources loaded!\n")
 
@@ -284,6 +310,7 @@ class MostPopularLinker(Linker):
         links = [MostPopularLink(
             wqid=wqid,
             wkdt_class=self.wkdt_class(wqid),
+            coords=self.wkdt_coords(wqid),
             freq=self.resources["mentions_to_wikidata"][match.variation][wqid]) 
             for wqid in match.wqid_links]
         return links
@@ -319,38 +346,6 @@ class ByDistanceLinker(Linker):
     """
     # Override the method_name class attribute.
     method_name: str = "bydistance"
-
-    def load(self):
-        """
-        Loads the linking resources and assigns them to instance variables.
-        """
-        super().load()
-
-        print("  > Loading gazetteer.")
-        gaz = pd.read_csv(
-            os.path.join(self.resources_path, "wikidata/wikidata_gazetteer.csv"),
-            usecols=["wikidata_id", "latitude", "longitude"],
-        )
-        gaz["latitude"] = gaz["latitude"].astype(float)
-        gaz["longitude"] = gaz["longitude"].astype(float)
-        gaz["coords"] = gaz[["latitude", "longitude"]].to_numpy().tolist()
-        wqid_to_coords = dict(zip(gaz.wikidata_id, gaz.coords))
-        self.resources["wqid_to_coords"] = wqid_to_coords
-        gaz_ids = set(gaz["wikidata_id"].tolist())
-        # Keep only wikipedia entities in the gazetteer:
-        self.resources["wikidata_locs"] = gaz_ids
-        gaz_ids = ""
-        gaz = ""
-
-    def wkdt_coords(self, wqid: str) -> Optional[Tuple[float, float]]:
-        """
-        Returns the lat-lon coordinates for the given Wikidata entry, if available.
-        
-        Returns:
-            Latitude and longitude coordinates for the given Wikidata entry, if
-                available.
-        """
-        return self.resources["wqid_to_coords"].get(wqid, None)
 
     def wikidata_links(
             self, 
@@ -622,6 +617,7 @@ class RelDisambLinker(Linker):
         links = [RelDisambLink(
             wqid=wqid,
             wkdt_class=self.wkdt_class(wqid),
+            coords=self.wkdt_coords(wqid),
             freq=self.resources["mentions_to_wikidata"][match.variation][wqid],
             normalized_score=self.resources["mentions_to_wikidata_normalized"][match.variation][
                 wqid

@@ -86,9 +86,10 @@ def test_candidate_matches():
 
 def test_wikidata_links():
 
-    wikidata_link = MostPopularLink('Q619055', wkdt_class='Q1076486', freq=22)
+    wikidata_link = MostPopularLink('Q619055', wkdt_class='Q1076486', coords=(55.76, -2.01583), freq=22)
     assert wikidata_link.wqid == 'Q619055'
     assert wikidata_link.freq == 22
+    assert wikidata_link.coords == (55.76, -2.01583)
 
     wikidata_link = ByDistanceLink(
         'Q619055', 
@@ -107,6 +108,7 @@ def test_wikidata_links():
     wikidata_link = RelDisambLink(
         'Q619055',
         wkdt_class='Q1076486',
+        coords=(55.76, -2.01583),
         freq=22,
         normalized_score=0.03571428571428571,
     )
@@ -122,12 +124,14 @@ def test_candidate_links():
         RelDisambLink(
             'Q619055',
             wkdt_class='Q1076486',
+            coords=(55.76, -2.01583),
             freq=5,
             normalized_score=0.03571428571428571,
         ),
         RelDisambLink(
             'Q5953687',
             wkdt_class='Q23764314',
+            coords=(55.76, -2.01583),
             freq=33,
             normalized_score=0.22857142857142856,
         ),
@@ -146,11 +150,13 @@ def test_predicted_links():
         MostPopularLink(
             'Q619055', 
             wkdt_class='Q1076486',
+            coords=(55.76, -2.01583),
             freq=5
         ),
         MostPopularLink(
             'Q5953687', 
             wkdt_class='Q23764314',
+            coords=(55.76, -2.01583),
             freq=33,
         ),
     ]
@@ -173,6 +179,7 @@ def test_predicted_links():
     assert predicted_links.best_wikidata_link() == MostPopularLink(
         'Q5953687', 
         wkdt_class='Q23764314',
+        coords=(55.76, -2.01583),
         freq=33
     )
 
