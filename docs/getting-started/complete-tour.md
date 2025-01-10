@@ -1,6 +1,10 @@
 # The complete tour
 
-The T-Res has three main classes: the **Recogniser** class (which performs toponym recognition, which is a named entity recognition task), the **Ranker** class (which performs candidate selection and ranking for the named entities identified by the Recogniser), and the **Linker** class (which selects the most likely candidate from those provided by the Ranker).
+The T-Res codebase contains three main classes: 
+
+ - the **Recogniser** class (which performs toponym recognition, which is a named entity recognition task), 
+ - the **Ranker** class (which performs candidate selection and ranking for the named entities identified by the Recogniser),
+ - the **Linker** class (which selects the most likely candidate from those provided by the Ranker).
 
 An additional class, the **Pipeline**, wraps these three components into one, therefore making it easier for the user to perform end-to-end entity linking.
 
@@ -8,11 +12,11 @@ In the following sections, we provide a complete tour: including an in-depth des
 
 !!! Warning
 
-    Note that, before being able to run the pipeline, you will need to make sure you have all the required resources. Refer to the "[Resources and directory structure](resources.md)" page in the documentation.
+    Before being able to run the pipeline, you will need to make sure you have all the required resources. Refer to the "[Resources & directory structure](resources.md)" page in the documentation.
 
-## The Pipeline
+## Pipeline
 
-The Pipeline wraps the Recogniser, the Ranker and the Linker into one object, to make it easier to use T-Res for end-to-end entity linking.
+The Pipeline wraps the Recogniser, the Ranker and the Linker into one unit, to make it easier to use T-Res for end-to-end entity linking.
 
 ### 1. Instantiate the Pipeline
 
@@ -24,8 +28,8 @@ By default, the Pipeline instantiates:
 
 To instantiate the default T-Res pipeline, do:
 
-``` python
-from geoparser import pipeline
+```python
+from t_res.geoparser import pipeline
 
 geoparser = pipeline.Pipeline(resources_path="../resources/")
 ```
@@ -34,18 +38,18 @@ geoparser = pipeline.Pipeline(resources_path="../resources/")
 
     You should update the resources path argument to reflect your set up.
 
-You can also instantiate a pipeline using a customised Recogniser, Ranker and Linker. To see the different options, refer to the sections on instantiating each of them: `Recogniser <The Recogniser>`{.interpreted-text role="ref"}, `Ranker <The Ranker>`{.interpreted-text role="ref"} and `Linker <The Linker>`{.interpreted-text role="ref"}.
+You can also instantiate a pipeline using a customised Recogniser, Ranker and Linker. To see the different options, refer to the sections on instantiating each of them: [Recogniser](#recogniser), [Ranker](#ranker) and [Linker](#linker).
 
 In order to instantiate a pipeline using a customised Recogniser, Ranker and Linker, just instantiate them beforehand, and then pass them as arguments to the Pipeline, as follows:
 
-``` python
-from geoparser import pipeline, recogniser, ranking, linking
+```python
+from geoparser import pipeline, ner, ranking, linking
 
-myner = recogniser.Recogniser(...)
-myranker = ranking.Ranker(...)
-mylinker = linking.Linker(...)
+recogniser = ner.Recogniser(...)
+ranker = ranking.Ranker(...)
+linker = linking.Linker(...)
 
-geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 ```
 
 !!! Warning
@@ -54,186 +58,121 @@ geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
 
 !!! title "Note"
 
-    If a model needs to be trained, the Pipeline itself will take care of it. Therefore, you should expect that the first time the Pipeline is used (or if you change certain input parameters) T-Res will take long to be ready to be used for prediction, as it will train the models if the approaches require so.
+    If a model needs to be trained, the Pipeline itself will take care of it. Therefore, you should expect that the first time the Pipeline is used (or if you change certain input parameters) T-Res will take some time before it is ready to be used for prediction, as it will train the models if the approaches require so.
 
 ### 2. Use the Pipeline
 
-Once instantiated (and once all the models have been trained or loaded, if needed), the Pipeline can be used to perform end-to-end toponym recognition and linking (given an input text) or to perform each of the three steps individually: (1) toponym recognition given an input text, (2) candidate selection given a toponym or list of toponyms, and (3) toponym disambiguation given the output from the first two steps.
+Once instantiated (and once all the models have been trained or loaded, if needed), the Pipeline can be used to perform end-to-end toponym recognition and linking (given an input text) or to perform each of the three steps individually: 
+
+ 1. toponym recognition given an input text, 
+ 2. candidate selection given a toponym or list of toponyms, and 
+ 3. toponym disambiguation given the output from the first two steps.
 
 #### End-to-end pipeline
 
-The Pipeline can be used to perform end-to-end toponym recognition and linking given an input text, using the `run_sentence()` method (which applies the T-Res pipeline to the input text) or the `run_text()` method (which takes care of splitting a text into sentences, before running `run_sentence()` on each sentence).
+The Pipeline can be used to perform end-to-end toponym recognition and linking given an input text, using the [`run()`][t_res.geoparser.pipeline.Pipeline.run] method (which takes care of splitting a text into sentences, before running the pipeline on each sentence).
 
-See this with examples:
+!!! example "Example: Pipeline `run()` method"
+    ```python
+    output = geoparser.run("Inspector Liddle said: I am an inspector of police, living in the city of Durham.")
+    ```
 
-``` python
-output = geoparser.run_text("Inspector Liddle said: I am an inspector of police, living in the city of Durham.")
-```
+The following parameters are optional:
 
-``` python
-output = geoparser.run_sentence("Inspector Liddle said: I am an inspector of police, living in the city of Durham.")
-```
+-   `place_of_pub_wqid`: The Wikidata ID of the place of publication (e.g. `"Q84"`).
+-   `place_of_pub`: The place of publication associated with the text document as a human-legible string (e.g. `"London"`).
 
-In both cases, the following parameters are optional **[TODO: link to docstrings]**:
+[](){#predictions-output}
 
--   `place`: The place of publication associated with the text document as a human-legible string (e.g. `"London"`). This defaults to `""`.
--   `place_wqid`: The Wikidata ID of the place of publication provided in `place` (e.g. `"Q84"`). This defaults to `""`.
-
-For example:
-
-``` python
-output = geoparser.run_text("Inspector Liddle said: I am an inspector of police, living in the city of Durham.",
-    place="Alston, Cumbria, England",
-    place_wqid="Q2560190"
+!!! example "Example: Pipeline `run()` method including place of publication"
+    ```python
+    output = geoparser.run("Inspector Liddle said: I am an inspector of police, living in the city of Durham.",
+        place_of_pub_wqid="Q2560190",
+        place_of_pub="Alston, Cumbria, England",
     )
+    ```
+
+When printed, the output looks like this:
+```python
+Predictions for text: 'Inspector Liddle said:...city of Durham.':
+    Durham => Durham [1.000]: Q179815 (0.439), Q49229 (0.216), Q23082 (0.071), ...
 ```
 
-The output of this example is the following:
+In the above output, the first line indicates that the this is an instance of the [`Predictions`][t_res.utils.dataclasses.Predictions] dataclass, and includes a snippet of the text that has been processed. Then there is a line for each toponym identified in the text (in this case only one, Durham).
 
-``` json
-[{"mention": "Durham",
-  "ner_score": 0.999,
-  "pos": 74,
-  "sent_idx": 0,
-  "end_pos": 80,
-  "tag": "LOC",
-  "sentence": "Inspector Liddle said: I am an inspector of police, living in the city of Durham.",
-  "prediction": "Q179815",
-  "ed_score": 0.039,
-  "cross_cand_score": {
-    "Q179815": 0.396,
-    "Q23082": 0.327,
-    "Q49229": 0.141,
-    "Q5316459": 0.049,
-    "Q458393": 0.045,
-    "Q17003433": 0.042,
-    "Q1075483": 0.0
-  },
-  "string_match_score": {"Durham": [1.0, ["Q1137286", "Q5316477", "Q752266", "..."]]},
-  "prior_cand_score": {
-    "Q179815": 0.881,
-    "Q49229": 0.522,
-    "Q5316459": 0.457,
-    "Q17003433": 0.455,
-    "Q23082": 0.313,
-    "Q458393": 0.295,
-    "Q1075483": 0.293
-  },
-  "latlon": [54.783333, -1.566667],
-  "wkdt_class": "Q515"}]
+Each of these lines has the following format:
+```bash
+    mention => string_match [string_similarity]: WQID1 (score1), WQID2 (score2), WQID3 (score3), ...
 ```
+where:
+
+ - `mention` is the identified toponym mention, exactly as found in the text
+ - `string_match` is the **best** string match found for the toponym mention
+ - `string_similarity` is the string matching similarity score
+ - `WQID1` is the Wikidata ID of the **best** link found in the knowledgebase
+ - `score1` is the disambiguation score (i.e. confidence) for the link `WQID1`
+ - `WQID2`, `score2` and `WQID3`, `score3` are the IDs and scores for the second- and third-best links, respectively
+ - if present, the ellipsis `...` indicates that additional (poorer) links were identified but are not shown.
+
+Thus, the printed output provides a summary of the toponyms resolved from the given text. To interrogate the output more closely, see the documentation for the [`Predictions`][t_res.utils.dataclasses.Predictions] dataclass for a list of all available methods.
 
 #### Step-by-step pipeline
 
-See how to perform toponym recognition with the Pipeline, with an example:
+**Step 1: Named Entity Recognition.** See how to perform toponym recognition with the Pipeline, with an example:
 
-``` python
-output = geoparser.run_text_recognition(
-    "Inspector Liddle said: I am an inspector of police, living in the city of Durham.",
-    place="Alston, Cumbria, England",
-    place_wqid="Q2560190"
+```python
+mentions = geoparser.run_text_recognition(text="Inspector Liddle said: I am an inspector of police, living in the city of Durham.")
+```
+
+This call produces a list of instances of the [`SentenceMentions`][t_res.utils.dataclasses.SentenceMentions] dataclass, one for each sentence in the text. In this case there is a single sentence. When printed, the result looks like this:
+
+```python
+Toponym mentions for sentence: 'Inspector Liddle said: I am an inspector of police, living in the city of Durham.'
+    Durham LOC chars: 74-80 confidence: 0.999
+```
+
+In the above output there is a line for each toponym mention found in the text (in this case only one, Durham).
+
+Each of these lines has the following format:
+```bash
+    mention => ner_label chars: start-end confidence: string_similarity
+```
+where:
+
+ - `mention` is the identified toponym mention, exactly as found in the text
+ - `ner_label` is the NER label for this mention (e.g. `LOC` indicates this is a location)
+ - `chars: start-end` is the character span of the toponym mention within the sentence
+ - `confidence: string_similarity` is the similarity (confidence) score of the string match.
+
+To interrogate the output more closely, see the documentation for the [`SentenceMentions`][t_res.utils.dataclasses.SentenceMentions] dataclass for a list of all available methods.
+
+
+**Step 2: Candidate Selection.** See how to perform candidate selection given the `mentions` output from the previous step, with an example:
+
+```python
+candidates = geoparser.run_candidate_selection(
+    mentions,
+    place_of_pub_wqid="Q2560190",
+    place_of_pub="Alston, Cumbria, England",
 )
 ```
 
-This is the output for this example:
+This is the printed output for this example:
+```python
+Candidates for text: 'Inspector Liddle said:...city of Durham.':
+    Durham => Durham [1.000]: Q1137286, Q5316477, Q752266, ...
+```
+It is an instance of the [`Candidates`][t_res.utils.dataclasses.Candidates] dataclass, and resembles the output [displayed above][predictions-output] for the [`Predictions`][t_res.utils.dataclasses.Predictions] dataclass (which is a subclass of `Candidates`), except that the entity linking disambiguation scores are omitted, because they have not yet been computed. 
 
-``` json
-[{"mention": "Durham",
-  "context": ["", ""],
-  "candidates": [],
-  "gold": ["NONE"],
-  "ner_score": 0.999,
-  "pos": 74,
-  "sent_idx": 0,
-  "end_pos": 80,
-  "ngram": "Durham",
-  "conf_md": 0.999,
-  "tag": "LOC",
-  "sentence": "Inspector Liddle said: I am an inspector of police, living in the city of Durham.",
-  "place": "Alston, Cumbria, England",
-  "place_wqid": "Q2560190"
-  }]
+**Step 3: Disambiguation.** Finally, see how to perform toponym disambiguation given the output from the two previous steps, with this example:
+
+```python
+predictions = geoparser.run_disambiguation(candidates)
 ```
 
-See how to perform candidate selection given the output from the previous step, with an example:
+This will produce the exact same output as we [obtained above][predictions-output] when running the pipeline end-to-end.
 
-``` python
-ner_output = [
-    {
-        'mention': 'Durham',
-        'context': ['', ''],
-        'candidates': [],
-        'gold': ['NONE'],
-        'ner_score': 0.999,
-        'pos': 74,
-        'sent_idx': 0,
-        'end_pos': 80,
-        'ngram': 'Durham',
-        'conf_md': 0.999,
-        'tag': 'LOC',
-        'sentence': 'Inspector Liddle said: I am an inspector of police, living in the city of Durham.',
-        'place': 'Alston, Cumbria, England',
-        'place_wqid': 'Q2560190'
-    }
-]
-
-cands = geoparser.run_candidate_selection(ner_output)
-```
-
-This is the output for this example:
-
-``` json
-{"Durham":
-    {"Durham":
-        {
-          "Score": 1.0,
-          "Candidates":
-            {
-                "Q1137286": 0.022222222222222223,
-                "Q5316477": 0.3157894736842105,
-                "Q752266": 0.013513513513513514,
-                "Q23082": 0.06484443152079093,
-            }
-        }
-    }
-}
-```
-
-Finally, see how to perform toponym disambiguation given the output from the two previous steps, with an example:
-
-``` python
-ner_output = [
-    {
-        'mention': 'Durham',
-        'context': ['', ''],
-        'candidates': [],
-        'gold': ['NONE'],
-        'ner_score': 0.999,
-        'pos': 74,
-        'sent_idx': 0,
-        'end_pos': 80,
-        'ngram': 'Durham',
-        'conf_md': 0.999,
-        'tag': 'LOC',
-        'sentence': 'Inspector Liddle said: I am an inspector of police, living in the city of Durham.',
-        'place': 'Alston, Cumbria, England',
-        'place_wqid': 'Q2560190'
-    }
-]
-
-cands = {'Durham': {'Durham': {'Score': 1.0,
-                               'Candidates': {
-                                  'Q1137286': 0.022222222222222223,
-                                  'Q5316477': 0.3157894736842105,
-                                  'Q752266': 0.013513513513513514,
-                                  'Q23082': 0.06484443152079093}}}}
-
-disamb_output = geoparser.run_disambiguation(ner_output, cands)
-```
-
-This will return the exact same output as running the pipeline end-to-end.
-
-#### Description of the output
+#### Description of the output - TODO
 
 The output of running the pipeline (both using the end-to-end method or in a step-wise manner, regardless of the methods used for each of the three components), will have the following format:
 
@@ -287,38 +226,60 @@ Description of the fields:
 -   `latlon`: The latitude and longitude coordinates of the predicted entity.
 -   `wkdt_class`: The Wikidata class of the predicted entity.
 
-#### Pipeline recommendations
+### Pipeline recommendations
 
 -   To get started with T-Res, we recommend to start using the default pipeline, as its significantly less complex than the better performing approaches.
-
 -   The default pipeline may not be a bad option if you are planning to perform toponym recognition on modern global clean data. However, take into account that it uses context-agnostic approaches, which often perform quantitavively quite well just because of the higher probability of the most common sense to appear in texts.
-
--   Running T-Res with DeezyMatch for candidate selection and `reldisamb` for entity disambiguation takes considerably longer than using the default pipeline. If you want to run T-Res on a few sentences, you can use the end-to-end `run_text()` or `run_sentence()` methods. If, however, you have a large number of texts on which to run T-Res, then we recommend that you use the step-wise approach. If done efficiently, this can save a lot of time. Using this approach, you should:
+-   Running T-Res with DeezyMatch for candidate selection (by choosing the [DeezyMatchRanker][t_res.geoparser.ranking.DeezyMatchRanker]) and the REL model for entity disambiguation (by choosing the [RelDisambLinker][t_res.geoparser.linking.RelDisambLinker]) leads to considerably longer execution times than using the default pipeline. If you want to run T-Res on a few sentences, you can use the end-to-end pipeline `run()` method. If, however, you have a large number of texts on which to run T-Res, then we recommend you use the step-wise approach. If done efficiently, this can save a lot of time. Using this approach, you should:
 
     1.  Perform toponym recognition on all the texts,
-    2.  Obtain the set of all unique toponyms identified in the full dataset, and perform candidate selection on the unique set of toponyms,
-    3.  Perform toponym disambiguation on a per-text basis, passing as argument the dictionary of candidates returned in the previous step.
+    1.  Obtain the set of all unique toponyms identified in the full dataset, and perform candidate selection on the unique set of toponyms,
+    1.  Perform toponym disambiguation on a per-text basis, passing as argument the dictionary of candidates returned in the previous step.
 
-    See an example, assuming the dataset is in a `CSV` format, with one text per row:
+    See as an example, and assuming the dataset is in a `CSV` format with one text per row, the following:
 
-    ``` python
+    ```python
+    # Load the data: 
+    df = pd.read_pickle("1880-1900-LwM-HMD-subsample.csv") 
+    place_of_pub_wqid = "Q84"
+    place_of_pub = "London" 
+
+    # Instantiate the recogniser, ranker and linker: 
+    recogniser = ner.PretrainedRecogniser(...) 
+    ranker = ranking.DeezyMatchRanker(...) 
+    linker = linking.RelDisambLinker(...)
+
+    # Instantiate the pipeline: 
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
+
+    ############### TODO: needs some major changes as the results are now instances, not JSON ##############
+    ###############       so should (arguably) not be written into the dataframe.             ##############
+
+    # Find mentions for each text in the dataframe: 
+    df["identified_toponyms"] = df.progress_apply(
+        lambda x: geoparser.run_text_recognition(x["text"]), axis=1)
+
+    # Obtain the set of unique mentions in the whole dataset and find their candidates: 
+    all_toponyms = [item for l in df["identified_toponyms"] for item in l] 
+    all_cands = geoparser.run_candidate_selection(
+        all_toponyms,
+        place_of_pub_wqid=place_of_pub_wqid,
+        place_of_pub=place_of_pub,
+    )
+
+    # Disambiguate the mentions for each text in the dataframe, taking as an input
+    # the recognised mentions and the mention-to-candidate dictionaries: 
+    df["identified_toponyms"] = df.progress_apply(
+        lambda x: geoparser.run_disambiguation(all_cands
+            x["identified_toponyms"], 
+            , 
+            place_wqid=wikidata_id, 
+            place=location
+        ), axis=1, 
+    )
     ```
 
-    \# Load the data: df = pd.read_pickle("1880-1900-LwM-HMD-subsample.csv") location = "London" wikidata_id = "Q84"
-
-    \# Instantiate the recogniser, ranker and linker: myner = recogniser.Recogniser(\...) myranker = ranking.Ranker(\...) mylinker = linking.Linker(\...)
-
-    \# Instantiate the pipeline: geoparser = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
-
-    \# Find mentions for each text in the dataframe: nlp_df["identified_toponyms"] = nlp_df.progress_apply( lambda x: geoparser.run_text_recognition( x["text"], place_wqid=wikidata_id, place=location, ), axis=1, )
-
-    \# Obtain the set of unique mentions in the whole dataset and find their candidates: all_toponyms = [item for l in nlp_df["identified_toponyms"] for item in l] all_cands = geoparser.run_candidate_selection(all_toponyms)
-
-    \# Disambiguate the mentions for each text in the dataframe, taking as an input the \# recognised mentions and the mention-to-candidate dictionaries: nlp_df["identified_toponyms"] = nlp_df.progress_apply( lambda x: geoparser.run_disambiguation( x["identified_toponyms"], all_cands, place_wqid=wikidata_id, place=location, ), axis=1, )
-
-[back to top](#top-tour)
-
-## The Recogniser {: #The Recogniser }
+## Recogniser
 
 The Recogniser performs toponym recognition (i.e. geographic named entity recognition), using HuggingFace's `transformers` library. Users can either:
 
@@ -334,7 +295,7 @@ The following notebooks provide examples of both training or loading a NER model
 
 To load an already trained model (both from HuggingFace or a locally stored pre-trained model), you can just instantiate the recogniser as follows:
 
-``` python
+```python
 import recogniser
 
 myner = recogniser.Recogniser(
@@ -345,7 +306,7 @@ myner = recogniser.Recogniser(
 
 For example, in order to load the [Livingwithmachines/toponym-19thC-en](https://huggingface.co/Livingwithmachines/toponym-19thC-en) NER model from the HuggingFace hub, initialise the Recogniser as follows:
 
-``` python
+```python
 import recogniser
 
 myner = recogniser.Recogniser(
@@ -356,7 +317,7 @@ myner = recogniser.Recogniser(
 
 You can also load a model that is stored locally in the same way. For example, let's suppose the user has a NER model stored in the relative location `../resources/models/blb_lwm-ner-fine`. The user could load it as follows (notice that `load_from_hub` should still be True, a better name for this would probably be `load_from_path`):
 
-``` python
+```python
 import recogniser
 
 myner = recogniser.Recogniser(
@@ -367,7 +328,7 @@ myner = recogniser.Recogniser(
 
 Alternatively, you can use the Recogniser to train a new model (and load it, once it's trained). The model will be trained using HuggingFace's `transformers` library. To instantiate the Recogniser for training a new model and loading it once it's trained, you can do it as in the example (see the description of each parameter below):
 
-``` python
+```python
 import recogniser
 
 myner = recogniser.Recogniser(
@@ -403,7 +364,7 @@ Description of the parameters:
 
 Once the Recogniser has been initialised, you can train the model by running:
 
-``` python
+```python
 myner.train()
 ```
 
@@ -413,9 +374,7 @@ Note that if `load_to_hub` is set to `True` or the model already exists (and `ov
 
     Note that this step is already taken care of if you use the T-Res `Pipeline`.
 
-[back to top](#top-tour)
-
-## The Ranker {: #The Ranker }
+## Ranker
 
 The Ranker takes the named entities detected by the Recogniser as input. Given a knowledge base, it ranks the entities names according to their string similarity to the target named entity, and selects a subset of candidates that will be passed on to the next component, the Linker, to do the disambiguation and select the most likely entity.
 
@@ -434,7 +393,7 @@ T-Res provides four different strategies for selecting candidates:
 
 To use the Ranker for exact matching (`perfectmatch`) or fuzzy string matching based either on overlap or Levenshtein distance (`partialmatch` and `levenshtein` respectively), instantiate it as follows, changing the `method` argument accordingly:
 
-``` python
+```python
 from geoparser import ranking
 
 myranker = ranking.Ranker(
@@ -483,7 +442,7 @@ To train a DeezyMatch model from scratch, using an existing string pairs dataset
 
 The Ranker can then be instantiated as follows:
 
-``` python
+```python
 from pathlib import Path
 from geoparser import ranking
 
@@ -555,7 +514,7 @@ To train a DeezyMatch model from scratch, including generating a string pairs da
 
 The Ranker can then be instantiated as follows:
 
-``` python
+```python
 from pathlib import Path
 from geoparser import ranking
 
@@ -618,7 +577,7 @@ Description of the parameters (to learn more, refer to the [DeezyMatch readme](h
 
 The following line of code loads the resources (i.e. the `mentions-to-wikidata_normalized.json` and `wikidata_to_mentions_normalized.json` files into dictionaries). They are required in order to perform candidate selection and ranking, regardless of the Ranker method.
 
-``` python
+```python
 myranker.mentions_to_wikidata = myranker.load_resources()
 ```
 
@@ -630,7 +589,7 @@ myranker.mentions_to_wikidata = myranker.load_resources()
 
 The following line will train a DeezyMatch model, given the arguments specified when instantiating the Ranker.
 
-``` python
+```python
 myranker.train()
 ```
 
@@ -664,14 +623,12 @@ The resulting model will be stored in the specified path. In this case, the resu
 
 In order to use the Ranker to retrieve candidates for a given mention, follow the example. The `find_candidates` Ranker method requires that the input is a list of dictionaries, where the key is always `"mention"` and the value is the toponym in question.
 
-``` python
+```python
 toponym = "Manchefter"
 print(myranker.find_candidates([{"mention": toponym}])[0][toponym])
 ```
 
-[back to top](#top-tour)
-
-## The Linker {: #The Linker }
+## Linker
 
 The Linker takes as input the set of candidates selected by the Ranker and disambiguates them, selecting the best matching entity depending on the approach selected for disambiguation.
 
@@ -700,7 +657,7 @@ We provide two different strategies for disambiguation:
 
 To use the Linker with the `mostpopular` approach, instantiate it as follows:
 
-``` python
+```python
 from geoparser import linking
 
 mylinker = linking.Linker(
@@ -729,7 +686,7 @@ When using the `mostpopular` linking approach, the resources folder should at le
 
 To use the Linker with the `reldisamb` approach, instantiate it as follows:
 
-``` python
+```python
 from geoparser import linking
 
 with sqlite3.connect("resources/rel_db/embeddings_database.db") as conn:
@@ -785,7 +742,7 @@ When using the `reldisamb` linking approach, the resources folder should at leas
 
 The following line of code loads the resources required by the Linker, regardless of the Linker method.
 
-``` python
+```python
 mylinker.linking_resources = mylinker.load_resources()
 ```
 
@@ -797,7 +754,7 @@ mylinker.linking_resources = mylinker.load_resources()
 
 The following line will train an entity disambiguation model, given the arguments specified when instantiating the Linker.
 
-``` python
+```python
 mylinker.rel_params["ed_model"] = mylinker.train_load_model(self.myranker)
 ```
 
