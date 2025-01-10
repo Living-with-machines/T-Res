@@ -544,7 +544,7 @@ def test_modular_deezy_rel(tmp_path):
                 "training_split": "apply",
                 "db_embeddings": cursor,
                 "with_publication": True,
-                "without_microtoponyms": True,
+                "without_microtoponyms": False,
                 "do_test": False,
                 "default_publname": "United Kingdom",
                 "default_publwqid": "Q145",
