@@ -19,7 +19,7 @@ nav:
     - getting-started/index.md
     - getting-started/installation.md
     - getting-started/resources.md
-    - getting-started/complete-tour.md
+    # - getting-started/complete-tour.md # TODO
   - Reference:
     - reference/index.md
     - geoparser module:
@@ -45,13 +45,14 @@ nav:
         - 'MulRel Ranker': reference/utils/REL/mulrel_ranker.md
         - 'Utils': reference/utils/REL/utils.md
         - 'Vocabulary': reference/utils/REL/vocabulary.md
-  - T-Res API:
-    - t-res-api/index.md
-    - t-res-api/installation.md
-    - t-res-api/usage.md
-  - Experiments:
-    - experiments/index.md
-    - experiments/evaluation.md
+  # TODO:
+  # - T-Res API:
+  #   - t-res-api/index.md
+  #   - t-res-api/installation.md
+  #   - t-res-api/usage.md
+  # - Experiments:
+  #   - experiments/index.md
+  #   - experiments/evaluation.md
 
 markdown_extensions:
   - pymdownx.highlight:
