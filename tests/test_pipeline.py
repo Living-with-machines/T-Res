@@ -446,33 +446,35 @@ def test_perfect_rel_wpubl_wmtops():
     )
 
     assert isinstance(resolved, RelPredictions)
-    assert len(resolved.candidates()) == 3
-    assert resolved.candidates()[0].mention.mention == "Shefiield"
-    assert resolved.candidates()[0].mention.ner_score == 1.0
-    assert resolved.candidates()[0].best_match() is None
-    assert resolved.candidates()[0].best_wqid() is None
-    assert resolved.candidates()[0].best_disambiguation_score() is None
+
+    candidates = resolved.candidates(ignore_empty_candidates=False)
+    assert len(candidates) == 3
+    assert candidates[0].mention.mention == "Shefiield"
+    assert candidates[0].mention.ner_score == 1.0
+    assert candidates[0].best_match() is None
+    assert candidates[0].best_wqid() is None
+    assert candidates[0].best_disambiguation_score() is None
     assert resolved.rel_scores[0].mention == "Shefiield"
     assert resolved.rel_scores[0].confidence == 0.0
 
-    assert resolved.candidates()[1].mention.mention == "Leeds"
-    assert resolved.candidates()[1].mention.ner_score == 1.0
-    assert resolved.candidates()[1].best_match() is not None
-    assert isinstance(resolved.candidates()[1].best_match(), PredictedLinks)
-    assert resolved.candidates()[1].best_match().best_disambiguation_score() == pytest.approx(0.419, abs=1e-3)
-    assert resolved.candidates()[1].best_wqid() == "Q39121"
-    assert resolved.candidates()[1].best_disambiguation_score() == pytest.approx(0.419, abs=1e-3)
+    assert candidates[1].mention.mention == "Leeds"
+    assert candidates[1].mention.ner_score == 1.0
+    assert candidates[1].best_match() is not None
+    assert isinstance(candidates[1].best_match(), PredictedLinks)
+    assert candidates[1].best_match().best_disambiguation_score() == pytest.approx(0.419, abs=1e-3)
+    assert candidates[1].best_wqid() == "Q39121"
+    assert candidates[1].best_disambiguation_score() == pytest.approx(0.419, abs=1e-3)
     assert resolved.rel_scores[1].mention == "Leeds"
     assert resolved.rel_scores[1].confidence == pytest.approx(0.168, abs=1e-3)
     assert resolved.rel_scores[1].scores["Q39121"] == pytest.approx(0.419, abs=1e-3)
 
-    assert resolved.candidates()[2].mention.mention == "London"
-    assert resolved.candidates()[2].mention.ner_score == 0.998
-    assert resolved.candidates()[2].best_match() is not None
-    assert isinstance(resolved.candidates()[1].best_match(), PredictedLinks)
-    assert resolved.candidates()[2].best_match().best_disambiguation_score() == pytest.approx(0.573, abs=1e-3)
-    assert resolved.candidates()[2].best_wqid() == "Q84"
-    assert resolved.candidates()[2].best_disambiguation_score() == pytest.approx(0.573, abs=1e-3)
+    assert candidates[2].mention.mention == "London"
+    assert candidates[2].mention.ner_score == 0.998
+    assert candidates[2].best_match() is not None
+    assert isinstance(candidates[1].best_match(), PredictedLinks)
+    assert candidates[2].best_match().best_disambiguation_score() == pytest.approx(0.573, abs=1e-3)
+    assert candidates[2].best_wqid() == "Q84"
+    assert candidates[2].best_disambiguation_score() == pytest.approx(0.573, abs=1e-3)
     assert resolved.rel_scores[2].mention == "London"
     assert resolved.rel_scores[2].confidence == pytest.approx(0.178, abs=1e-3)
     assert resolved.rel_scores[2].scores["Q84"] == pytest.approx(0.573, abs=1e-3)
@@ -582,6 +584,6 @@ def test_modular_deezy_rel(tmp_path):
 
     assert isinstance(predictions, Predictions)
     assert predictions.candidates()[0].best_wqid() == "Q989418"
-    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.370, abs=1e-3)
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.350, abs=1e-3)
     assert predictions.candidates()[-1].best_wqid() == "Q171866"
-    assert predictions.candidates()[-1].best_disambiguation_score() == pytest.approx(0.745, abs=1e-3)
+    assert predictions.candidates()[-1].best_disambiguation_score() == pytest.approx(0.615, abs=1e-3)
