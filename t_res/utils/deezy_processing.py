@@ -1,3 +1,8 @@
+"""
+The `t_res.utils.deezy_processing` module contains utility functions associated 
+with training and applying the DeezyMatch model for fuzzy string matching.
+"""
+
 import glob
 import itertools
 import os
@@ -33,18 +38,16 @@ def obtain_matches(
         sims (list): The list of 100 nearest neighbors from the OCR word2vec
             model.
         fuzz_ratio_threshold (float): The threshold used for
-            `thefuzz.fuzz.ratio <https://github.com/seatgeek/thefuzz#simple-ratio>`.
+            [`thefuzz.fuzz.ratio`](https://github.com/seatgeek/thefuzz#simple-ratio).
             If the nearest neighbor word is an existing English word and the
-            string similarity is below ``fuzz_ratio_threshold``, it is considered
-            a negative match, i.e. not an OCR variation. Defaults to ``70``.
+            string similarity is below `fuzz_ratio_threshold`, it is considered
+            a negative match, i.e. not an OCR variation.
 
     Returns:
-        Tuple[List[str], List[str]]: A tuple that contains two lists:
+        A tuple containing two lists:
 
-            #. The first list consists of *positive* matches for the input
-               word.
-            #. The second list consists of *negative* matches, a list of
-               negative matches for the input word.
+            1. The first list consists of *positive* matches for the input word.
+            1. The second list consists of *negative* matches, a list of negative matches for the input word.
     """
     negative = []
     positive = [word]
@@ -96,7 +99,7 @@ def obtain_matches(
 
 def create_training_set(
     deezy_parameters: dict, strvar_parameters: dict, wikidata_to_mentions: dict
-) -> None:
+):
     """
     Create a training set for DeezyMatch consisting of positive and negative
     string matches.
@@ -115,14 +118,10 @@ def create_training_set(
             parameters required to create a DeezyMatch training dataset.
         wikidata_to_mentions (dict): Mapping between Wikidata IDs and mentions.
 
-    Returns:
-        None.
-
     Note:
         This function creates a new file with the string pairs dataset called
-        ``w2v_ocr_pairs.txt`` inside the folder path defined as ``dm_path`` in
-        the DeezyMatch parameters passed in setting up the ranker passed to
-        this function as ``ranker``.
+        `w2v_ocr_pairs.txt` inside the folder path defined as ``dm_path`` in
+        the DeezyMatch parameters passed to this function.
     """
 
     # Path to the output string pairs dataset:
@@ -253,26 +252,22 @@ def create_training_set(
             fw.write(pm)
 
 
-def train_deezy_model(deezy_parameters: dict, strvar_parameters: dict, wikidata_to_mentions: dict) -> None:
+def train_deezy_model(deezy_parameters: dict, strvar_parameters: dict, wikidata_to_mentions: dict):
     """
-    Train a DeezyMatch model using the provided ``ranker`` parameters and
-    input files.
+    Train a DeezyMatch model using the provided parameters and input files.
 
     This function trains a DeezyMatch model based on the specified parameters
     in the ranker object and the required input files. If the
-    ``overwrite_training`` parameter is set to True or the model does not
+    `overwrite_training` parameter is set to True or the model does not
     exist, the function will train a new DeezyMatch model.
 
     Arguments:
         deezy_parameters (dict): Dictionary of DeezyMatch parameters
             for model training.
 
-    Returns:
-        None
-
     Note:
-        This function returns a DeezyMatch model, stored in the location
-        specified in the DeezyMatch ``input_dfm.yaml`` file.
+        This function writes a DeezyMatch model to disk, in the location
+        specified in the DeezyMatch `input_dfm.yaml` file.
     """
 
     # Read the filepaths:
@@ -313,7 +308,7 @@ def train_deezy_model(deezy_parameters: dict, strvar_parameters: dict, wikidata_
         print("The DeezyMatch model is already trained!")
 
 
-def generate_candidates(deezy_parameters: dict, mentions_to_wikidata: dict) -> None:
+def generate_candidates(deezy_parameters: dict, mentions_to_wikidata: dict):
     """
     Obtain Wikidata candidates (Wikipedia mentions to Wikidata entities) and
     generate their corresponding vectors.
@@ -328,15 +323,11 @@ def generate_candidates(deezy_parameters: dict, mentions_to_wikidata: dict) -> N
             for model training.
         mentions_to_wikidata (dict): Mapping between mentions and Wikidata IDs.
 
-    Returns:
-        None.
-
     Note:
         The function saves the candidates to a file and generates embeddings
         using the DeezyMatch model. The resulting vectors are stored in the
         output directories specified in the DeezyMatch parameters passed to
-        the ranker passed to this function in the ``ranker`` keyword
-        argument.
+        this function.
     """
     deezymatch_outputs_path = deezy_parameters["dm_path"]
     candidates = deezy_parameters["dm_cands"]

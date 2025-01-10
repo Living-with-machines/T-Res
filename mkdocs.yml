@@ -1,0 +1,90 @@
+site_name: T-Res Docs
+site_url: https://living-with-machines.github.io/T-Res
+theme:
+  name: material
+  palette: 
+    scheme: default
+    primary: custom
+  features:
+    - navigation.sections
+    - navigation.footer
+    - navigation.instant
+    # - toc.integrate
+    - navigation.top
+    - content.code.annotation
+    - content.code.copy
+nav:
+  - 'T-Res toponym resolution pipeline': index.md
+  - Getting Started:
+    - getting-started/index.md
+    - getting-started/installation.md
+    - getting-started/resources.md
+    - getting-started/complete-tour.md
+  - Reference:
+    - reference/index.md
+    - geoparser module:
+      - reference/geoparser/index.md
+      - reference/geoparser/ner.md
+      - reference/geoparser/ranking.md
+      - reference/geoparser/linking.md
+      - reference/geoparser/pipeline.md
+    - utils module:
+      - reference/utils/index.md
+      - 'Dataclasses': reference/utils/dataclasses.md
+      - 'Deezy Processing': reference/utils/deezy_processing.md
+      - 'Get Data': reference/utils/get_data.md
+      - 'NER Utils': reference/utils/ner_utils.md
+      - 'Preprocess Data': reference/utils/preprocess_data.md
+      - 'Process Data': reference/utils/process_data.md
+      - 'Process Wikipedia': reference/utils/process_wikipedia.md
+      - 'REL e2e': reference/utils/rel_e2e.md
+      - 'REL Utils': reference/utils/rel_utils.md
+      - utils.REL module:
+        - reference/utils/REL/index.md
+        - 'Entity Disambigution': reference/utils/REL/entity_disambiguation.md
+        - 'MulRel Ranker': reference/utils/REL/mulrel_ranker.md
+        - 'Utils': reference/utils/REL/utils.md
+        - 'Vocabulary': reference/utils/REL/vocabulary.md
+  - T-Res API:
+    - t-res-api/index.md
+    - t-res-api/installation.md
+    - t-res-api/usage.md
+  - Experiments:
+    - experiments/index.md
+    - experiments/evaluation.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.keys
+  - admonition
+  - codehilite
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      toc_depth: 2 # Avoids TOC entries for class methods
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+
+plugins:
+  - search
+  - section-index
+  - autorefs
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_root_toc_entry: false

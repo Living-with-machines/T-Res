@@ -27,8 +27,9 @@ class Recogniser:
     Arguments:
         model_name (str): The name of the NER model.
 
-    This base class should not be instatiated directly. Instead use a subclass
-    constructor.
+    Note:
+        This base class should not be instatiated directly. Instead use a subclass
+            constructor.
     """
 
     def __init__(
@@ -85,7 +86,8 @@ class Recogniser:
             sentence (str): The input sentence.
 
         Returns:
-            SentenceMentions: An instance of the SentenceMentions dataclass.
+            SentenceMentions: An instance of the SentenceMentions dataclass, containing
+                a list of toponym mentions found in the given sentence.
 
         Note:
             Any n-dash characters (``—``) in the provided sentence are
@@ -144,23 +146,22 @@ class Recogniser:
             sentence (str): The input sentence.
 
         Returns:
-            List[dict]:
-                A list of dictionaries representing the predicted named
+            A list of dictionaries representing the predicted named
                 entities. Each dictionary contains the keys ``"word"``,
                 ``"entity"``, ``"score"``, ``"start"`` , and ``"end"``
                 representing the entity text, entity label, confidence
                 score and start and end character position of the text
                 respectively. For example:
 
-                .. code-block:: json
-
-                    {
-                        "word": "From",
-                        "entity": "O",
-                        "score": 0.99975187,
-                        "start": 0,
-                        "end": 4
-                    }
+                ```json
+                {
+                    "word": "From",
+                    "entity": "O",
+                    "score": 0.99975187,
+                    "start": 0,
+                    "end": 4
+                }
+                ```
 
         Note:
             This method takes a sentence as input and uses the NER pipeline to
@@ -206,18 +207,20 @@ class PretrainedRecogniser(Recogniser):
     A pretrained toponym recogniser loaded from HuggingFace.
 
     Example:
-        >>> # Create an instance of the Recogniser class
-        >>> recogniser = PretrainedRecogniser(
-                model_name="Livingwithmachines/toponym-19thC-en",
-            )
+        ```
+        # Create an instance of the PretrainedRecogniser class
+        recogniser = PretrainedRecogniser(
+            model_name="Livingwithmachines/toponym-19thC-en",
+        )
 
-        >>> # Create and load the NER pipeline
-        >>> pipeline = recogniser.create_pipeline()
+        # Create and load the NER pipeline
+        recogniser.load()
 
-        >>> # Predict named entities in a sentence
-        >>> sentence = "I live in London."
-        >>> predictions = recogniser.ner_predict(sentence)
-        >>> print(predictions)
+        # Predict named entities in a sentence
+        sentence = "I live in London."
+        predictions = recogniser.ner_predict(sentence)
+        print(predictions)
+        ```
     """
 
     def model(self) -> str:
@@ -225,7 +228,7 @@ class PretrainedRecogniser(Recogniser):
         Returns the name of the model loaded from HuggingFace.
 
         Returns:
-            str: The name of the pretrained HuggingFace model.
+            The name of the pretrained HuggingFace model.
         """
         return self.model_name
 
@@ -254,30 +257,32 @@ class CustomRecogniser(Recogniser):
             (default: ``False``).
 
     Example:
-        >>> # Create an instance of the Recogniser class
-        >>> recogniser = CustomRecogniser(
-                model_name="ner-model",
-                train_dataset="train.json",
-                test_dataset="test.json",
-                base_model="bert-base-uncased",
-                model_path="/path/to/model/",
-                training_args={
-                    "batch_size": 8,
-                    "num_train_epochs": 10,
-                    "learning_rate": 0.00005,
-                    "weight_decay": 0.0,
-                    },
-                overwrite_training=False,
-                do_test=False,
-            )
+        ```
+        # Create an instance of the CustomRecogniser class
+        recogniser = CustomRecogniser(
+            model_name="ner-model",
+            train_dataset="train.json",
+            test_dataset="test.json",
+            base_model="bert-base-uncased",
+            model_path="/path/to/model/",
+            training_args={
+                "batch_size": 8,
+                "num_train_epochs": 10,
+                "learning_rate": 0.00005,
+                "weight_decay": 0.0,
+                },
+            overwrite_training=False,
+            do_test=False,
+        )
 
-        >>> # Create and load the NER pipeline
-        >>> recogniser.create_pipeline()
+        # Create and load the NER pipeline
+        recogniser.load()
 
-        >>> # Predict named entities in a sentence
-        >>> sentence = "I live in London."
-        >>> predictions = recogniser.ner_predict(sentence)
-        >>> print(predictions)
+        # Predict named entities in a sentence
+        sentence = "I live in London."
+        predictions = recogniser.ner_predict(sentence)
+        print(predictions)
+        ```
     """
 
     def __init__(
@@ -319,7 +324,7 @@ class CustomRecogniser(Recogniser):
         Returns a string representation of the Recogniser object.
 
         Returns:
-            str: String representation of the Recogniser object.
+            A string representation of the Recogniser object.
         """
         s = super().__str__()
         s += f"    * Base model: {self.base_model}\n"
@@ -333,11 +338,11 @@ class CustomRecogniser(Recogniser):
         Returns the path and filename of the trained model.
 
         Returns:
-            str: Path and filename of the trained model
+            The path and filename of the trained model
         """
         return os.path.join(self.model_path, f"{self.model_name}.model")
 
-    # Override the create_pipeline method to train the model if necessary.
+    # Override the load method to train the model if necessary.
     def load(self):
         """
         Creates a Named Entity Recognition (NER) pipeline and assigns it
@@ -365,7 +370,7 @@ class CustomRecogniser(Recogniser):
 
     def train(self):
         """
-        Trains a NER model and saves it under the model path.
+        Trains an NER model and saves it under the model path.
 
         Note:
             Training process is executed, including the
@@ -378,7 +383,7 @@ class CustomRecogniser(Recogniser):
             True when the Recogniser object was initiated.
 
         Credit:
-            This function is adapted from `a HuggingFace tutorial <https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb>`_.
+            This function is adapted from a [HuggingFace tutorial](https://github.com/huggingface/notebooks/blob/master/examples/token_classification.ipynb).
         """
 
         print("*** Training the toponym recognition model...")

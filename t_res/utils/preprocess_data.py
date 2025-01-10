@@ -1,6 +1,7 @@
 """
-This script reads the original data sources and formats them for our
-experiments.
+The `t_res.utils.preprocess_data` module contains utility functions to
+read input datasets from their original sources and format them for 
+use in the T-Res pipeline and in benchmarking experiments.
 """
 
 import glob
@@ -26,16 +27,24 @@ def turn_wikipedia2wikidata(
         wikipedia_path (str): The path to your wikipedia directory.
 
     Returns:
-        Optional[str]:
-            The corresponding Wikidata ID if available, or None if not.
+        The corresponding Wikidata ID if available, otherwise None.
 
-    Example:
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum", "../resources")
-        'Q10285'
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt", "../resources")
-        'Q11768'
-        >>> turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location", "../resources")
-        Warning: invalid_location is not in wikipedia2wikidata, the wkdt_qid will be None.
+    Example: Examples:
+        **Wikipedia title: Colosseum**
+        ```
+        turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Colosseum", "../resources")
+        > 'Q10285'
+        ```
+        **Wikipedia title: Ancient_Egypt**
+        ```
+        turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Ancient_Egypt", "../resources")
+        > 'Q11768'
+        ```
+        **Wikipedia title: Invalid_Location**
+        ```
+        turn_wikipedia2wikidata("https://en.wikipedia.org/wiki/Invalid_Location", "../resources")
+        > 'Warning: invalid_location is not in wikipedia2wikidata, the wkdt_qid will be None.'
+        ```
     """
     if not wikipedia_title == "NIL" and not wikipedia_title == "*":
         wikipedia_title = wikipedia_title.split("/wiki/")[-1]
@@ -69,9 +78,8 @@ def reconstruct_sentences(dTokens: dict) -> dict:
             information and annotations.
 
     Returns:
-        dict:
-            A dictionary mapping sentence IDs to their corresponding
-            reconstructed sentences and character start positions.
+        A dictionary mapping sentence IDs to their corresponding reconstructed sentences 
+            and character start positions.
 
     Note:
         This function takes into account white spaces to ensure character
@@ -167,14 +175,13 @@ def process_lwm_for_ner(tsv_topres_path: str):
             the annotated TSV files.
 
     Returns:
-        pandas.DataFrame:
-            A DataFrame containing the processed LwM data for NER training,
+        A DataFrame containing the processed LwM data for NER training,
             with the following columns:
-
-            - **id**: The unique identifier of each sentence (``<document_id>_
-              <sentence_id>``).
-            - **ner_tags**: A list of NER tags assigned to each token in the
-              sentence.
+            
+            - **id**: The unique identifier of each sentence 
+                (`<document_id>_<sentence_id>`).
+            - **ner_tags**: A list of NER tags assigned to each token in 
+                the sentence.
             - **tokens**: A list of tokens in the sentence.
 
     Note:
@@ -247,7 +254,8 @@ def process_lwm_for_linking(
         gazetteer_ids (list): The set of Wikidata IDs in the gazetteer.
 
     Returns:
-        pandas.DataFrame: A DataFrame with the following columns:
+        A DataFrame with the following columns:
+        
             - ``article_id``: The identifier of the article.
             - ``sentences``: A list of dictionaries containing the sentence
               position and text.
@@ -396,30 +404,14 @@ def aggregate_hipe_entities(entity: dict, lEntities: List[dict]) -> List[dict]:
         lEntities (list): The list of entities to be updated.
 
     Returns:
-        List[dict]
-            The updated list of entities after aggregating the current entity.
+        The updated list of entities after aggregating the current entity.
 
     Example:
-        >>> entity = {
-                "ne_type": "I-LOC",
-                "word": "York",
-                "wkdt_qid": "Q60",
-                "start": 12,
-                "end": 15,
-                "meto_type": "city",
-            }
-        >>> lEntities = [
-                {
-                    "ne_type": "B-LOC",
-                    "word": "New",
-                    "wkdt_qid": "Q60",
-                    "start": 8,
-                    "end": 10,
-                    "meto_type": "city",
-                }
-            ]
-        >>> updated_entities = aggregate_hipe_entities(entity, lEntities)
-        >>> print(updated_entities)
+        ```
+        entity = {"ne_type": "I-LOC", "word": "York", "wkdt_qid": "Q60", "start": 12, "end": 15, "meto_type": "city"}
+        lEntities = [{"ne_type": "B-LOC", "word": "New", "wkdt_qid": "Q60", "start": 8, "end": 10, "meto_type": "city"}]
+        updated_entities = aggregate_hipe_entities(entity, lEntities)
+        print(updated_entities)
         [
             {
                 "ne_type": "B-LOC",
@@ -430,6 +422,7 @@ def aggregate_hipe_entities(entity: dict, lEntities: List[dict]) -> List[dict]:
                 "meto_type": "city",
             }
         ]
+        ```        
 
     Note:
         The function takes an entity and a list of entities and aggregates
@@ -475,7 +468,8 @@ def process_hipe_for_linking(hipe_path: str, gazetteer_ids: List[str]) -> pd.Dat
         gazetteer_ids (List[str]): The set of Wikidata IDs in the gazetteer.
 
     Returns:
-        pandas.DataFrame: A DataFrame with the following columns:
+        A DataFrame with the following columns:
+        
             - ``article_id``: The identifier of the article.
             - ``sentences``: A list of dictionaries containing the sentence
               position and text.
@@ -717,22 +711,23 @@ def process_tsv(filepath: str) -> Tuple[dict, dict]:
         filepath (str): The path to the TSV file.
 
     Returns:
-        tuple: A tuple containing two dictionaries:
-            #. **dMTokens**: A dictionary of tokens with positional
-               information and multi-token annotations. The keys in dTokens
-               are tuples of two elements (the sentence number in the document,
-               and the character position).
+        A tuple containing two dictionaries:
+        
+            1. **dMTokens**: A dictionary of tokens with positional
+                information and multi-token annotations. The keys in dTokens
+                are tuples of two elements (the sentence number in the document,
+                and the character position).
 
-            #. **dTokens**: A dictionary of tokens with positional information,
+            1. **dTokens**: A dictionary of tokens with positional information,
                Wikipedia ID, label, and BIO annotations. The values of dTokens
                are tuples of six elements:
 
-               #. the actual token,
-               #. the wikipedia url,
-               #. the toponym class,
-               #. the sentence number in the document,
-               #. the character position of a token in the document, and
-               #. the character end position of a token in the document.
+                1. the actual token,
+                1. the wikipedia url,
+                1. the toponym class,
+                1. the sentence number in the document,
+                1. the character position of a token in the document, and
+                1. the character end position of a token in the document.
 
     Note:
         This function assumes a specific format and structure of the TSV file.

@@ -1,3 +1,8 @@
+"""
+The `t_res.utils.process_wikipedia` module contains utility functions for handling
+Wikipedia links and page titles.
+"""
+
 import sqlite3
 import urllib.parse
 from typing import Optional
@@ -7,25 +12,31 @@ def make_wikilinks_consistent(url: str) -> str:
     """
     Make the wiki links consistent by performing the following operations:
 
-    #. Convert the URL to lowercase.
-    #. Unquote the URL to decode any percent-encoded characters.
-    #. Replace underscores with spaces if they exist in the unquoted URL.
-    #. Remove any fragment identifier (text after the '#' symbol) if present.
-    #. Quote the modified URL to encode any special characters.
+    1. Convert the URL to lowercase.
+    1. Unquote the URL to decode any percent-encoded characters.
+    1. Replace underscores with spaces if they exist in the unquoted URL.
+    1. Remove any fragment identifier (text after the '#' symbol) if present.
+    1. Quote the modified URL to encode any special characters.
 
     Arguments:
         url (str): The URL to make consistent.
 
     Returns:
-        str: The modified and quoted URL.
+        The modified and quoted URL.
 
-    Example:
-        >>> make_wikilinks_consistent("Python_(programming_language)#Overview")
-        'python%20%28programming%20language%29'
-        >>> make_wikilinks_consistent("Data_science")
-        'data%20science'
-        >>> make_wikilinks_consistent("San_Francisco")
-        'san%20francisco'
+    Example: Examples:
+        ```
+        make_wikilinks_consistent("Python_(programming_language)#Overview")
+        > 'python%20%28programming%20language%29'
+        ```
+        ```
+        make_wikilinks_consistent("Data_science")
+        > 'data%20science'
+        ```
+        ```
+        make_wikilinks_consistent("San_Francisco")
+        > 'san%20francisco'
+        ```
     """
     url = url.lower()
     unquote = urllib.parse.unquote(url)
@@ -42,24 +53,28 @@ def make_wikipedia2wikidata_consisent(entity: str) -> str:
     Make the Wikipedia entity consistent with Wikidata by performing the
     following operations:
 
-    #. Make the wiki links consistent using the 'make_wikilinks_consistent'
-       function.
-    #. Unquote the modified and quoted URL to decode any percent-encoded
-       characters.
-    #. Replace spaces with underscores in the unquoted URL.
+    1. Make the wiki links consistent using the 'make_wikilinks_consistent'
+        function.
+    1. Unquote the modified and quoted URL to decode any percent-encoded
+        characters.
+    1. Replace spaces with underscores in the unquoted URL.
 
     Arguments:
         entity (str): The Wikipedia entity to make consistent.
 
     Returns:
-        str: The modified Wikipedia entity consistent with the
-        wikipedia2wikidata mapper.
+        The modified Wikipedia entity consistent with the wikipedia2wikidata 
+            mapper.
 
-    Example:
-        >>> make_wikipedia2wikidata_consistent("New York City")
-        'new_york_city'
-        >>> make_wikipedia2wikidata_consistent("Data science")
-        'data_science'
+    Example: Examples:
+        ```
+        make_wikipedia2wikidata_consistent("New York City")
+        > 'new_york_city'
+        ```
+        ```
+        make_wikipedia2wikidata_consistent("Data science")
+        > 'data_science'
+        ```
     """
     quoted_entity = make_wikilinks_consistent(entity)
     underscored = urllib.parse.unquote(quoted_entity).replace(" ", "_")
@@ -72,20 +87,19 @@ def title_to_id(
     """
     Given a Wikipedia page title, returns the corresponding Wikidata ID.
     The page title is the last part of a Wikipedia url **unescaped** and spaces
-    replaced by underscores , e.g. for `https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem`,
+    replaced by underscores , e.g. for <https://en.wikipedia.org/wiki/Fermat%27s_Last_Theorem>,
     the title would be `Fermat's_Last_Theorem`.
 
     Arguments:
-        path_to_db: The path to the wikidata2wikipedia db
-        page_title: The page title of the Wikipedia entry, e.g. ``Manatee``.
+        path_to_db (str): The path to the wikidata2wikipedia db
+        page_title (str): The page title of the Wikipedia entry, e.g. ``Manatee``.
 
     Returns:
-        str, optional:
-            If a mapping could be found for ``wiki_page_title``, then returns
-            the mapping, otherwise None.
+        If a mapping could be found for ``wiki_page_title``, then returns
+            the mapping, otherwise `None`.
 
     Credit:
-        This function is adapted from https://github.com/jcklie/wikimapper.
+        This function is adapted from <https://github.com/jcklie/wikimapper>.
     """
 
     with sqlite3.connect(path_to_db) as conn:

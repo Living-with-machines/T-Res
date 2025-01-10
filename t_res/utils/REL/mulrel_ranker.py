@@ -2,36 +2,32 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from typing import Any
 
 class PreRank(torch.nn.Module):
     """
     PreRank class is used for preranking entities for a given mention
     by multiplying entity vectors with word vectors.
 
-    .. note::
-
-        **Credit:**
-
+    Note: Credit:
         This class and its methods are taken (minimally
-        adapted when necessary) from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github repository:
-        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
-        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
+        adapted when necessary) from the [REL: Radboud Entity
+        Linker](https://github.com/informagi/REL/) Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the [permission
+        notice](https://github.com/informagi/REL/blob/main/LICENSE).
 
-        ::
+        ```
+        Reference:
 
-            Reference:
-
-            @inproceedings{vanHulst:2020:REL,
+        @inproceedings{vanHulst:2020:REL,
             author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
             title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
             booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
             series =    {SIGIR '20},
             year =      {2020},
             publisher = {ACM}
-            }
-
+        }
+        ```
     """
 
     def __init__(self, config, embeddings=None):
@@ -41,11 +37,12 @@ class PreRank(torch.nn.Module):
         super(PreRank, self).__init__()
         self.config = config
 
-    def forward(self, token_ids, token_offsets, entity_ids, embeddings):
+    def forward(self, token_ids, token_offsets, entity_ids, embeddings) -> torch.Tensor:
         """
         Multiplies local context words with entity vectors for a given mention.
 
-        Returns: entity scores.
+        Returns: 
+            Entity scores.
         """
 
         sent_vecs = embeddings["word_embeddings_bag"](
@@ -69,50 +66,45 @@ class MulRelRanker(torch.nn.Module):
     """
     The MulRelRanker class implements a neural network model for entity disambiguation.
 
-    .. note::
-
-        **Credit:**
-
+    Note: Credit:
         This class and its methods are taken (minimally
-        adapted when necessary) from the `REL: Radboud Entity
-        Linker <https://github.com/informagi/REL/>`_ Github repository:
-        Copyright (c) 2020 Johannes Michael van Hulst. See the `permission
-        notice <https://github.com/informagi/REL/blob/main/LICENSE>`_.
+        adapted when necessary) from the [REL: Radboud Entity
+        Linker](https://github.com/informagi/REL/) Github repository:
+        Copyright (c) 2020 Johannes Michael van Hulst. See the [permission
+        notice](https://github.com/informagi/REL/blob/main/LICENSE).
         This is based on the ``mulrel-nel`` approach developed by Le and
         Titov (2018), whose original code is available in the
-        `mulrel-nel: Multi-relational Named Entity Linking
-        <https://github.com/lephong/mulrel-nel>`_ Github repository, and
-        on Ganea and Hofmann (2017).
+        [mulrel-nel: Multi-relational Named Entity Linking](https://github.com/lephong/mulrel-nel) 
+        Github repository, and on Ganea and Hofmann (2017).
 
-        ::
+        ```
+        References:
 
-            References:
-
-            @inproceedings{vanHulst:2020:REL,
+        @inproceedings{vanHulst:2020:REL,
             author =    {van Hulst, Johannes M. and Hasibi, Faegheh and Dercksen, Koen and Balog, Krisztian and de Vries, Arjen P.},
             title =     {REL: An Entity Linker Standing on the Shoulders of Giants},
             booktitle = {Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
             series =    {SIGIR '20},
             year =      {2020},
             publisher = {ACM}
-            }
+        }
 
-            @inproceedings{ganea2017deep,
+        @inproceedings{ganea2017deep,
             title={Deep Joint Entity Disambiguation with Local Neural Attention},
             author={Ganea, Octavian-Eugen and Hofmann, Thomas},
             booktitle={Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing},
             pages={2619--2629},
             year={2017}
-            }
+        }
 
-            @inproceedings{le2018improving,
+        @inproceedings{le2018improving,
             title={Improving Entity Linking by Modeling Latent Relations between Mentions},
             author={Le, Phong and Titov, Ivan},
             booktitle={Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
             pages={1595--1604},
             year={2018}
-            }
-
+        }
+        ```
     """
 
     def __init__(self, config, device):
@@ -179,11 +171,12 @@ class MulRelRanker(torch.nn.Module):
         entity_mask,
         embeddings,
         p_e_m=None,
-    ):
+    ) -> Any:
         """
         Computes local entity scores.
 
-        Returns: entity scores.
+        Returns: 
+            Entity scores.
         """
 
         batchsize, n_words = token_ids.size()
@@ -251,14 +244,14 @@ class MulRelRanker(torch.nn.Module):
         p_e_m,
         embeddings,
         gold=None,
-    ):
+    ) -> tuple:
         """
         Responsible for the forward pass of the entity disambiguation model
         and produces a ranking of candidates for a given set of mentions:
 
-        * ctx_layer refers to function f. See Figure 3 in Le and Titov (2018).
-        * ent_scores refers to function q.
-        * score_combine refers to function g.
+        - ctx_layer refers to function f. See Figure 3 in Le and Titov (2018).
+        - ent_scores refers to function q.
+        - score_combine refers to function g.
 
         Returns:
             Ranking of entities per mention.
@@ -445,9 +438,6 @@ class MulRelRanker(torch.nn.Module):
     def regularize(self, max_norm=1):
         """
         Regularizes model parameters.
-
-        Returns:
-            None
         """
         l1_w_norm = self.score_combine_linear_1.weight.norm()
         l1_b_norm = self.score_combine_linear_1.bias.norm()
@@ -471,11 +461,12 @@ class MulRelRanker(torch.nn.Module):
                 self.score_combine_linear_2.bias.data * max_norm / l2_b_norm.data
             )
 
-    def loss(self, scores, true_pos, lamb=1e-7):
+    def loss(self, scores, true_pos, lamb=1e-7) -> torch.Tensor:
         """
         Computes given ranking loss (Equation 7) and adds a regularization term.
 
-        Returns: loss of given batch.
+        Returns: 
+            Loss of given batch.
         """
         loss = F.multi_margin_loss(scores, true_pos, margin=self.config["margin"])
         if self.config["use_local_only"]:

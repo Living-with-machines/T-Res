@@ -3,13 +3,14 @@ from typing import List, Optional
 from sentence_splitter import split_text_into_sentences
 
 from . import ner, ranking, linking
-from ..utils.dataclasses import *
+from ..utils.dataclasses import SentenceContext, SentenceMentions, SentenceCandidates, Candidates, Predictions
 
 class Pipeline:
     """
-    Represents a pipeline for processing a text using natural language
-    processing, including Named Entity Recognition (NER), Ranking, and Linking,
-    to geoparse any entities in the text.
+    The Pipeline class constitutes an end-to-end pipeline for toponym resolution 
+    using natural language processing, including Named Entity Recognition (NER), 
+    candidate ranking, and linking to geolocated entities in the Wikidata 
+    knowledgebase.
 
     Arguments:
         ner (ner.Recogniser, optional): The NER (Named Entity
@@ -24,46 +25,45 @@ class Pipeline:
             For the default settings, see Notes below.
         resources_path (str, optional): The path to your resources directory.
         experiments_path (str, optional): The path to the experiments directory.
-            Default is "../experiments".
 
     Example:
-        >>> # Instantiate the Pipeline object with a default setup
-        >>> pipeline = Pipeline()
+        ```python
+        # Instantiate the Pipeline object with a default setup
+        pipeline = Pipeline()
 
-        >>> # Now you can use the pipeline for processing text or sentences
-        >>> text = "I visited Paris and New York City last summer."
-        >>> processed_data = pipeline.run_text(text)
+        # Now you can use the pipeline for processing text or sentences
+        text = "I visited Paris and New York City last summer."
+        predictions = pipeline.run(text)
+        print(predictions)
 
-        >>> # Access the processed mentions in the document
-        >>> for mention in processed_data:
-        >>>     print(mention)
+        # Access the results for each toponym mention in the text
+        for toponym in predictions.candidates():
+            print(toponym)
+        ```
 
     Note:
-        * The default settings for the ``Recogniser``:
+        The default settings for the ``Recogniser``:
 
-          .. code-block:: python
+        ```python
+        ner.PretrainedRecogniser(
+            model="Livingwithmachines/toponym-19thC-en",
+        )
+        ```
 
-            ner.PretrainedRecogniser(
-                model="Livingwithmachines/toponym-19thC-en",
-            )
+        The default settings for the ``Ranker``:
+        ```python
+        ranking.PerfectMatchRanker(
+            resources_path=resources_path,
+        )
+        ```
 
-        * The default settings for the ``Ranker``:
-
-          .. code-block:: python
-
-            ranking.Ranker(
-                method="perfectmatch",
-                resources_path=resources_path,
-            )
-
-        * The default settings for the ``Linker``:
-
-          .. code-block:: python
-
-            linking.Linker(
-                method="mostpopular",
-                resources_path=resources_path,
-            )
+        The default settings for the ``Linker``:
+        ```python
+        linking.MostPopularLinker(
+            resources_path=resources_path,
+            experiments_path=experiments_path,
+        )
+        ```
     """
 
     def __init__(
@@ -115,6 +115,20 @@ class Pipeline:
             place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None, 
         ) -> Predictions:
+        """
+        Runs the end-to-end pipeline.
+
+        Args:
+            text (str): A block of text.
+            place_of_pub_wqid (Optional[str]): The Wikidata ID of the
+                place of publication of the text, if available.
+            place_of_pub (Optional[str]): The place of publication of
+                the text, if available.
+
+        Returns:
+            Toponyms identified in the text, linked to the Wikidata 
+                knowledgebase.
+        """
 
         mentions = self.run_text_recognition(text)
         candidates = self.run_candidate_selection(mentions, place_of_pub_wqid, place_of_pub)
@@ -123,7 +137,16 @@ class Pipeline:
     ### Modular/stepwise methods:
 
     def run_text_recognition(self, text: str) -> List[SentenceMentions]:
-        """Runs the named entity recognition step of the pipeline."""
+        """
+        Runs the named entity recognition step of the pipeline.
+        
+        Args:
+            text (str): A block of text.
+
+        Returns:
+            A list of `SentenceMentions` instances, one for each sentence in 
+                the text.
+        """
         # Split the text into sentences.
         sentences = SentenceContext.from_text(text, language="en")
         return [self.recogniser.run(sentence.sentence) for sentence in sentences]
@@ -132,8 +155,22 @@ class Pipeline:
             sentence_mentions: List[SentenceMentions], 
             place_of_pub_wqid: Optional[str]=None,
             place_of_pub: Optional[str]=None, 
-        ) ->  Candidates:
-        """Runs the candidate selection step of the pipeline."""
+        ) -> Candidates:
+        """
+        Runs the candidate selection step of the pipeline.
+        
+        Args:
+            sentence_mentions (List[SentenceMentions]): A list of 
+                `SentenceMentions` instances, as produced by the 
+                `run_text_recognition` method. 
+            place_of_pub_wqid (Optional[str]): The Wikidata ID of the
+                place of publication of the text, if available.
+            place_of_pub (Optional[str]): The place of publication of
+                the text, if available.
+
+        Returns:
+            A `Candidates` instance containing toponym candidates.
+        """
         sentence_candidates = list()
         for sms in sentence_mentions:
             matches = [self.ranker.run(mention) for mention in sms.mentions]
@@ -142,5 +179,14 @@ class Pipeline:
         return Candidates(sentence_candidates)
 
     def run_disambiguation(self, candidates: Candidates) -> Predictions:
-        """Runs the entity disambiguation step of the pipeline."""
+        """
+        Runs the entity disambiguation step of the pipeline.
+        
+        Args:
+            candidates (Candidates): A `Candidates` instance, as produced by 
+                the `run_candidate_selection` method. 
+
+        Returns:
+            A `Predictions` instance containing linked toponym predictions.
+        """
         return self.linker.disambiguate(candidates.sentence_candidates)
