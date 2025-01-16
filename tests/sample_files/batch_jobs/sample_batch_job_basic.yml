@@ -1,0 +1,9 @@
+
+recogniser:
+  method_name: pretrained
+  model_name: Livingwithmachines/toponym-19thC-en
+ranker:
+  method_name: perfectmatch
+linker:
+  method_name: mostpopular
+batch_size: 10
