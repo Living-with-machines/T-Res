@@ -85,7 +85,7 @@ class Linker:
             return ByDistanceLinker(**kwargs)
         if method_name == 'reldisamb':
             return RelDisambLinker(**kwargs)
-        raise ValueError("Invalid linking method: {method_name}")
+        raise ValueError(f"Invalid linking method: {method_name}")
 
     def wkdt_class(self, wqid: str) -> Optional[str]:
         """
@@ -582,11 +582,6 @@ class RelDisambLinker(Linker):
         Returns:
             The candidates identified by the linking process.
         """
-        # Skip microtoponyms if configured to do so.
-        if self.rel_params["without_microtoponyms"]:
-            if matches.mention.is_microtoponym():
-                return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
-
         # If configured to link "with publication" (i.e. with an additional sentence
         # containing an artificial mention of the place of publication), use default 
         # values for place_of_pub_wqid and place_of_pub unless they are already populated.
@@ -594,6 +589,11 @@ class RelDisambLinker(Linker):
             if not (place_of_pub_wqid and place_of_pub):
                 place_of_pub_wqid = self.rel_params["default_publwqid"]
                 place_of_pub = self.rel_params["default_publname"]
+
+        # Skip microtoponyms if configured to do so.
+        if self.rel_params["without_microtoponyms"]:
+            if matches.mention.is_microtoponym():
+                return self.empty_candidates(matches.mention, matches.ranking_method, place_of_pub_wqid, place_of_pub)
 
         return super().run(matches, place_of_pub_wqid, place_of_pub)
 
