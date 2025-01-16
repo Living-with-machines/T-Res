@@ -101,7 +101,7 @@ class Ranker:
             return LevenshteinRanker(**kwargs)
         if method_name == 'deezymatch':
             return DeezyMatchRanker(**kwargs)
-        raise ValueError("Invalid ranking method: {method_name}")
+        raise ValueError(f"Invalid ranking method: {method_name}")
 
     def load(self):
         """
