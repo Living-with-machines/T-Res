@@ -622,6 +622,16 @@ class SentenceCandidates:
             return len(self.candidates) == 0 or all([c.is_empty() for c in self.candidates])
         return len(self.candidates) == 0
     
+    def remove_microtoponyms(self):
+        """Removes any `MentionCandidates` instances in the `candidates` list that
+        refer to a microtoponym mention."""
+        indices = [i for i, c in enumerate(self.candidates) if c.mention.is_microtoponym()]
+        if not indices:
+            return self
+        indices.sort(reverse=True)
+        for i in indices:
+            del self.candidates[i]
+
     # For API deserialisation.
     def from_dict(data: dict) -> 'SentenceCandidates':
         """Constructs a `SentenceCandidates` instance from a dictionary."""
