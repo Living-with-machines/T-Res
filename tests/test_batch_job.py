@@ -80,16 +80,12 @@ def test_next_batch_range(tmp_path):
     assert len(batch_job.input_data.index) == 49
 
     assert batch_job.batches_processed == 0
-    assert batch_job.next_batch_range() == (0, 10)
+    assert batch_job.next_batch_range() == (0, 20)
     batch_job.batches_processed = 1
-    assert batch_job.next_batch_range() == (10, 20)
+    assert batch_job.next_batch_range() == (20, 40)
     batch_job.batches_processed = 2
-    assert batch_job.next_batch_range() == (20, 30)
-    batch_job.batches_processed = 3
-    assert batch_job.next_batch_range() == (30, 40)
-    batch_job.batches_processed = 4
     assert batch_job.next_batch_range() == (40, 49)
-    batch_job.batches_processed = 5
+    batch_job.batches_processed = 3
     assert batch_job.next_batch_range() is None
 
     config['batch_size'] = 0
@@ -114,6 +110,7 @@ def test_run_batch_job(tmp_path):
 
     batch_job = sample_batch_job(config, tmp_path)
     batch_job.load()
+    
     batch_job.run()
 
     # assert os.path.isdir(os.path.join(tmp_path, batch_job.run_path))
@@ -121,6 +118,7 @@ def test_run_batch_job(tmp_path):
 
     # assert os.path.isfile(batch_job.log_file)
 
+    # Check the pickled results.
     pickle_file = os.path.join(batch_job.run_path, BatchJob.predictions_pickle)
     assert os.path.isfile(pickle_file)
 
@@ -139,3 +137,10 @@ def test_run_batch_job(tmp_path):
     assert predictions[0].place_of_pub_wqid() == "Q1077003"
     assert predictions[0].place_of_pub() == "Nantwich, Cheshire, England"
 
+    # Check the CSV results.
+    assert os.path.isfile(batch_job.results_file())
+    with open(batch_job.results_file(), 'r') as f:
+        results = pd.read_csv(f)
+
+    assert list(results.columns)[-1] == batch_job.predictions_colname
+    print(results)

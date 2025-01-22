@@ -5,6 +5,7 @@ import json
 import argparse
 import logging
 import pickle
+import importlib
 from math import ceil
 from datetime import datetime
 from pathlib import Path
@@ -66,13 +67,17 @@ def validate_config(config: dict):
     if missing_keys:
         raise ValueError(f"Missing config key(s): {missing_keys}")
 
+# TODO: add error handling around run_batch so the whole job does not fail on a single error.
 class BatchJob:
     """
     A wrapper for the Pipeline class for efficient & convenient processing 
     of large datasets.
     """
+    
+    text_colname = 'text'
 
     predictions_pickle = 'predictions.pkl'
+    predictions_colname = 'predictions'
 
     place_of_pub_wqid_key = 'place_of_pub_wqid'
     place_of_pub_key = 'place_of_pub'
@@ -118,7 +123,7 @@ class BatchJob:
             return SingletonBatchJob(**kwargs)
         if batch_size > 1:
             return LimitedBatchJob(**kwargs)
-        raise ValueError(f"Invalid batch_size: {batch_size}")
+        raise ValueError(f'Invalid batch_size: {batch_size}')
 
     def load(self):
 
@@ -126,24 +131,35 @@ class BatchJob:
         self.construct_pipeline()
 
         # Read input data & drop rows with empty text.
-        self.input_data = pd.read_csv(self.input_file).dropna(subset=["text"])
+        self.input_data = pd.read_csv(self.input_file)
+        if not self.text_colname in self.input_data.columns:
+            raise ValueError(f'Input data must contain a column named "{self.text_colname}"')
+        self.input_data.dropna(subset=[self.text_colname])
 
         # Read place of publication information into a dictionary.
         if self.place_of_pub_file:
 
-            place_of_pub_data = {}
+            place_of_pub_data = dict()
             for i, row in pd.read_csv(self.place_of_pub_file).iterrows():
-                place_of_pub_data[row["NLP"]] = {
-                    self.place_of_pub_wqid_key: row["Wikidata ID"], 
-                    self.place_of_pub_key: row["location"]
+                place_of_pub_data[row['NLP']] = {
+                    self.place_of_pub_wqid_key: row['Wikidata ID'],
+                    self.place_of_pub_key: row['location']
                 }
             self.place_of_pub_data = place_of_pub_data
 
+            # Handle the case where x["NLP"] is not found in place_of_pub_data.
+            def place_of_pub_for_nlp(nlp: str):
+                if nlp in place_of_pub_data.keys():
+                    return place_of_pub_data[nlp]
+                return {
+                    self.place_of_pub_wqid_key: "", 
+                    self.place_of_pub_key: ""
+                }
+
             self.place_of_pub_series = self.input_data.apply(
-                lambda x: place_of_pub_data[x["NLP"]],
+                lambda x: place_of_pub_for_nlp(x['NLP']),
                 axis=1,
             )
-
         else:
             self.place_of_pub_data = None
 
@@ -191,6 +207,7 @@ class BatchJob:
 
         print(">>>> Running T-Res batch job >>>>")
         self.logger.info(f'Starting T-Res batch job...')
+        self.logger.info(f'T-Res version: {importlib.metadata.version("t_res")}')
         self.logger.info(f'Input data file: {self.input_file}')
         if self.place_of_pub_file:
             self.logger.info(f'Place of publication data file: {self.place_of_pub_file}')
@@ -223,9 +240,7 @@ class BatchJob:
         with open(os.path.join(self.run_path, self.predictions_pickle), 'wb') as f:
             pickle.dump(predictions, f)
 
-        # TODO NEXT: Save main results in a copy of the input spreadsheet
-        # Decide how those results should look (see UK-France sample results for a hint but try to improve)
-        self.save_results()
+        self.save_results(predictions)
 
         # TODO: tidy up (remove intermediate files, unless configured to keep them).
         self.logger.info('Batch job finished successfully.')
@@ -242,6 +257,7 @@ class BatchJob:
             self.logger.info(f'Running batch {self.batches_processed + 1}. Items {r[0]}-{r[1]}')
             print(f'Batch {self.batches_processed + 1} of {self.count_batches()}:')
             predictions_list.append(self.run_batch(next_batch))
+
         return pd.concat(predictions_list)
 
     def run_batch(self, batch) -> pd.Series:
@@ -262,7 +278,7 @@ class BatchJob:
         print('NER...')
         tick = datetime.now()
         result = batch.progress_apply(
-            lambda x: ner_or_none(x["text"]),
+            lambda x: ner_or_none(x[self.text_colname]),
             axis=1,
         )
         tock = datetime.now() 
@@ -297,11 +313,36 @@ class BatchJob:
         self.logger.info(f'Disambiguation execution time: {tock - tick}')
         return result
 
-    def save_results(self):
+    def save_results(self, predictions: pd.Series):
+        """
+        Write the results to a CSV file.
 
-        results_str = ''
-        # TODO.
-        return
+        Args:
+            predictions (Series): A pandas Series containing an instance of
+                the `Predictions` dataclass for each row in the input data.
+        """
+        results_column = predictions.apply(lambda x: x.summary_dict())
+        results = pd.concat([self.input_data, results_column.rename(self.predictions_colname)], axis=1)
+
+        results.to_csv(self.results_file(), index=False)
+        self.logger.info(f'Results written to {self.results_file()}')
+
+    def results_file(self) -> str:
+        _, input_filename = os.path.split(self.input_file)
+        prefix, _ = os.path.splitext(input_filename)
+        suffix = '_' + self.config[RECOGNISER_KEY]['method_name']
+        suffix += '-' + self.config[RANKER_KEY]['method_name']
+        suffix += '-' + self.config[LINKER_KEY]['method_name']
+        if self.config[LINKER_KEY]['method_name'] == 'reldisamb':
+            if self.config[LINKER_KEY]['rel_params']['with_publication']:
+                suffix += '-withpub'
+            else:
+                suffix += '-nopub'
+            if self.config[LINKER_KEY]['rel_params']['without_microtoponyms']:
+                suffix += '-nomicro'
+            else:
+                suffix += '-withmicro'
+        return os.path.join(self.run_path, prefix + suffix + ".csv")
 
     def next_batch_range(self) -> Optional[Tuple[int, int]]:
         """
@@ -360,7 +401,10 @@ class SingletonBatchJob(BatchJob):
 
         print('Running end-to-end pipeline...')
         return self.input_data.progress_apply(
-            lambda x: self.pipe.run(x["text"]),
+            lambda x: self.pipe.run(
+                x[self.text_colname],
+                place_of_pub_wqid=self.place_of_pub_series[x.name][self.place_of_pub_wqid_key],
+                place_of_pub=self.place_of_pub_series[x.name][self.place_of_pub_key],
+            ),
             axis=1,
         )
-
