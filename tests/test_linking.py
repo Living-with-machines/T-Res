@@ -362,5 +362,7 @@ def test_linking_by_distance():
     sentence_candidates = SentenceCandidates(Sentence(sentence), [candidates])
     predictions = linker.disambiguate([sentence_candidates])
 
-    assert predictions.is_empty()
+    # If empty candidates are ignored, the set of predictions is empty:
+    assert predictions.is_empty(ignore_empty_candidates=True)
+    # If empty candidates are not ignored, the set of predictions is not empty:
     assert not predictions.is_empty(ignore_empty_candidates=False)

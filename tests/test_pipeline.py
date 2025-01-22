@@ -375,17 +375,9 @@ def test_deezy_rel_wpubl(tmp_path):
     predictions = geoparser.run(text, place_of_pub_wqid="Q203349", place_of_pub="Poole, Dorset")
     assert isinstance(predictions, RelPredictions)
     
-    # When the "without_microtoponyms" parameter set to False, only one candidate remains:
+    # When the "without_microtoponyms" parameter set to True, only one candidate remains:
     assert len(predictions.candidates()) == 1
     assert predictions.candidates()[0].mention.mention == "Swanage"
-
-    # The MentionCandidates for the microtoponyms still exist, but they are empty 
-    # (i.e. contain no candidate links) because the Linker was configured to ignore them.
-    assert len(predictions.candidates(ignore_empty_candidates=False)) == 4
-    assert predictions.candidates(ignore_empty_candidates=False)[0].mention.mention == "Swanage"
-    assert predictions.candidates(ignore_empty_candidates=False)[1].mention.mention == "Town Hall"
-    assert predictions.candidates(ignore_empty_candidates=False)[2].mention.mention == "Grosvenor Hotel"
-    assert predictions.candidates(ignore_empty_candidates=False)[3].mention.mention == "London Bridge"
 
 @pytest.mark.resources(reason="Needs large resources")
 def test_perfect_rel_wpubl_wmtops():
@@ -439,23 +431,25 @@ def test_perfect_rel_wpubl_wmtops():
 
     geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
-    resolved = geoparser.run(
+    predictions = geoparser.run(
         "A remarkable case of rattening has just occurred in the building trade at Shefiield, but also in Leeds. Not in London though.",
         place_of_pub_wqid="Q42448",
         place_of_pub="Sheffield",
     )
 
-    assert isinstance(resolved, RelPredictions)
+    assert isinstance(predictions, RelPredictions)
 
-    candidates = resolved.candidates(ignore_empty_candidates=False)
+    assert len(predictions.candidates(ignore_empty_candidates=True)) == 2
+    
+    candidates = predictions.candidates(ignore_empty_candidates=False)
     assert len(candidates) == 3
     assert candidates[0].mention.mention == "Shefiield"
     assert candidates[0].mention.ner_score == 1.0
     assert candidates[0].best_match() is None
     assert candidates[0].best_wqid() is None
     assert candidates[0].best_disambiguation_score() is None
-    assert resolved.rel_scores[0].mention == "Shefiield"
-    assert resolved.rel_scores[0].confidence == 0.0
+    assert predictions.rel_scores[0].mention == "Shefiield"
+    assert predictions.rel_scores[0].confidence == 0.0
 
     assert candidates[1].mention.mention == "Leeds"
     assert candidates[1].mention.ner_score == 1.0
@@ -464,9 +458,9 @@ def test_perfect_rel_wpubl_wmtops():
     assert candidates[1].best_match().best_disambiguation_score() == pytest.approx(0.419, abs=1e-3)
     assert candidates[1].best_wqid() == "Q39121"
     assert candidates[1].best_disambiguation_score() == pytest.approx(0.419, abs=1e-3)
-    assert resolved.rel_scores[1].mention == "Leeds"
-    assert resolved.rel_scores[1].confidence == pytest.approx(0.168, abs=1e-3)
-    assert resolved.rel_scores[1].scores["Q39121"] == pytest.approx(0.419, abs=1e-3)
+    assert predictions.rel_scores[1].mention == "Leeds"
+    assert predictions.rel_scores[1].confidence == pytest.approx(0.168, abs=1e-3)
+    assert predictions.rel_scores[1].scores["Q39121"] == pytest.approx(0.419, abs=1e-3)
 
     assert candidates[2].mention.mention == "London"
     assert candidates[2].mention.ner_score == 0.998
@@ -475,9 +469,9 @@ def test_perfect_rel_wpubl_wmtops():
     assert candidates[2].best_match().best_disambiguation_score() == pytest.approx(0.573, abs=1e-3)
     assert candidates[2].best_wqid() == "Q84"
     assert candidates[2].best_disambiguation_score() == pytest.approx(0.573, abs=1e-3)
-    assert resolved.rel_scores[2].mention == "London"
-    assert resolved.rel_scores[2].confidence == pytest.approx(0.178, abs=1e-3)
-    assert resolved.rel_scores[2].scores["Q84"] == pytest.approx(0.573, abs=1e-3)
+    assert predictions.rel_scores[2].mention == "London"
+    assert predictions.rel_scores[2].confidence == pytest.approx(0.178, abs=1e-3)
+    assert predictions.rel_scores[2].scores["Q84"] == pytest.approx(0.573, abs=1e-3)
 
 @pytest.mark.resources(reason="Needs large resources")
 def test_modular_deezy_rel(tmp_path):

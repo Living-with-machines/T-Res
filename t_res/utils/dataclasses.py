@@ -690,15 +690,21 @@ class Candidates:
         """Returns all `MentionCandidates` as a list. If `ignore_empty_candidates` is `True`, 
         only non-empty candidates are considered."""
         if ignore_empty_candidates:
-            return [c for sc in self.sentence_candidates for c in sc.candidates]
-        return [c for sc in self.sentence_candidates for c in sc.candidates if not c.is_empty()]
+            return [c for sc in self.sentence_candidates for c in sc.candidates if not c.is_empty()]
+        return [c for sc in self.sentence_candidates for c in sc.candidates]
+
+    def sentences(self, ignore_empty_candidates: bool=True) -> List[str]:
+        """Returns the sentence corresponding to each `MentionCandidates` instance that
+        is returned by the `candidates` method."""
+        if ignore_empty_candidates:
+            return [(sc.sentence.sentence, c)[0] for sc in self.sentence_candidates 
+                    for c in sc.candidates if not c.is_empty()]
+        return [sc.sentence.sentence for sc in self.sentence_candidates]
 
     def is_empty(self, ignore_empty_candidates: bool=True) -> bool:
         """Returns `True` if the list of `SentenceCandidates` instances is empty. 
         If `ignore_empty_candidates` is `True`, only non-empty candidates are considered."""
-        if ignore_empty_candidates:
-            return len(self.sentence_candidates) == 0 or all([sc.is_empty() for sc in self.sentence_candidates])
-        return len(self.candidates()) == 0
+        return len(self.candidates(ignore_empty_candidates)) == 0
     
     def text(self) -> str:
         """Returns the complete text."""
@@ -850,8 +856,28 @@ class Predictions(Candidates):
         # (NB: Replaces add_publication from rel_utils.py):
         if with_publication and not self.is_empty(ignore_empty_candidates=False):
             d["linking"].append(self.place_of_pub_mention())
+
         return d
     
+    def summary_dict(self) -> List[dict]:
+        l = list()
+        for c, s in zip(self.candidates(ignore_empty_candidates=True), 
+                        self.sentences(ignore_empty_candidates=True)):
+            d = {
+                'mention': c.mention.mention,
+                'sentence': s,
+                'start_char': c.mention.start_char,
+                'end_char': c.mention.end_char(),
+                'ner_label': c.mention.ner_label,
+                'ner_score': c.mention.ner_score,
+                'prediction': c.best_wqid(),
+                'toponym_match': c.best_string_match().variation,
+                'string_similarity': c.best_string_match().string_similarity,
+                'disambiguation_score': c.best_disambiguation_score(),
+            }
+            l.append(d)
+        return l
+
 @pdataclass(frozen=True)
 class TrainingPredictions(Predictions):
     """Dataclass representing toponym predictions for training a REL model."""
@@ -922,9 +948,10 @@ class RelPredictions(Predictions):
     rel_scores: List[RelScores]
 
     def __post_init__(self):
-        if len(self.rel_scores) != len(super().candidates()):
+        count_candidates = len(super().candidates(ignore_empty_candidates=False))
+        if len(self.rel_scores) != count_candidates:
             raise ValueError(f"""Expected one RelScores instance per linked toponym mention.
-                             Got {len(self.rel_scores)} instances and {len(super().candidates())} mentions.""")
+                             Got {len(self.rel_scores)} instances and {count_candidates} mentions.""")
 
     # Override the candidates method to return REL linking predictions.
     def candidates(self, ignore_empty_candidates: bool=True) -> List[MentionCandidates]:
@@ -934,7 +961,7 @@ class RelPredictions(Predictions):
 
         # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
         ret = list()
-        for c, rs in zip(super().candidates(), self.rel_scores):
+        for c, rs in zip(super().candidates(ignore_empty_candidates), self.rel_scores):
             if c.is_empty():
                 if not ignore_empty_candidates:
                     ret.append(c)
