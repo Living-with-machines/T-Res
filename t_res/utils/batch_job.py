@@ -278,16 +278,13 @@ class BatchJob:
     def run_batch_ner(self, batch) -> pd.Series:
 
         # Define function to discard sentences not containing toponym mentions.
-        def ner_or_none(text):
-            mentions = self.pipe.run_text_recognition(text)
-            return [sm for sm in mentions if not sm.is_empty()]
+        def run_ner(row):
+            self.logger.debug(f'Running NER on text:\n{row[self.text_colname]}')
+            return [sm for sm in self.pipe.run_text_recognition(row[self.text_colname]) if not sm.is_empty()]
 
         print('NER...')
         tick = datetime.now()
-        result = batch.progress_apply(
-            lambda x: ner_or_none(x[self.text_colname]),
-            axis=1,
-        )
+        result = batch.progress_apply(run_ner, axis=1)
         tock = datetime.now() 
         self.logger.info(f'NER execution time: {tock - tick}')
         return result
@@ -406,12 +403,16 @@ class SingletonBatchJob(BatchJob):
     # Override the `run_batches` method to run the pipeline end-to-end.
     def run_batches(self) -> pd.Series:
 
+        def run(row):
+            if self.config[LOG_LEVEL_KEY] == 'DEBUG':
+                self.logger.debug(f'Running pipeline on text:\n{row[self.text_colname]}')
+                self.logger.debug(f'Place of publication ID:{self.place_of_pub_series[row.name][self.place_of_pub_wqid_key]}')
+                self.logger.debug(f'Place of publication:\n{self.place_of_pub_series[row.name][self.place_of_pub_key]}')
+            self.pipe.run(
+                row[self.text_colname],
+                place_of_pub_wqid=self.place_of_pub_series[row.name][self.place_of_pub_wqid_key],
+                place_of_pub=self.place_of_pub_series[row.name][self.place_of_pub_key],
+            )
+
         print('Running end-to-end pipeline...')
-        return self.input_data.progress_apply(
-            lambda x: self.pipe.run(
-                x[self.text_colname],
-                place_of_pub_wqid=self.place_of_pub_series[x.name][self.place_of_pub_wqid_key],
-                place_of_pub=self.place_of_pub_series[x.name][self.place_of_pub_key],
-            ),
-            axis=1,
-        )
+        return self.input_data.progress_apply(run, axis=1)
