@@ -6,6 +6,7 @@ from transformers.pipelines.token_classification import TokenClassificationPipel
 
 from t_res.geoparser import ner
 from t_res.utils import ner_utils
+from t_res.utils.dataclasses import SentenceMentions
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -165,3 +166,13 @@ def test_aggregate_mentions():
             mentions[0]["mention"]
         )
     assert mentions[0]["mention"] in sentence
+
+def test_nan_input():
+    recogniser = ner.PretrainedRecogniser(
+        model_name="Livingwithmachines/toponym-19thC-en",
+    )
+    recogniser.load()
+    sentence = float('nan')
+    mentions = recogniser.run(sentence)
+    assert isinstance(mentions, SentenceMentions)
+

@@ -117,6 +117,7 @@ class Recogniser:
             replaced with a comma (``,``) to handle parsing issues related to
             the n-dash in OCR from historical newspapers.
         """
+        sentence = str(sentence)
         if len(sentence) <= 1:
             return SentenceMentions(Sentence(sentence), [])
 
