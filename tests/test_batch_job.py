@@ -69,6 +69,21 @@ def test_static_constructor():
     assert isinstance(batch_job, LimitedBatchJob)
     assert batch_job.batch_size == 10
 
+    # Check default logging level.
+    assert batch_job.config[LOG_LEVEL_KEY] == 'INFO'
+
+    config = sample_config_basic()
+    config['log_level'] = 'DEBUG'
+
+    batch_job = BatchJob.new(
+        batch_size=config[BATCH_SIZE_KEY],
+        config=config, 
+        input_file=input_file,
+        resources_path=resources_path,
+        results_path=results_path,
+    )
+    assert batch_job.config[LOG_LEVEL_KEY] == 'DEBUG'
+
 @pytest.mark.resources(reason="Needs large resources")
 def test_next_batch_range(tmp_path):
     config = sample_config_basic()

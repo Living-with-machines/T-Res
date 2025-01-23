@@ -21,6 +21,7 @@ RECOGNISER_KEY = 'recogniser'
 RANKER_KEY = 'ranker'
 LINKER_KEY = 'linker'
 BATCH_SIZE_KEY = 'batch_size'
+LOG_LEVEL_KEY = 'log_level'
 
 def run():
     parser = argparse.ArgumentParser(description='Run a T-Res batch job.')
@@ -66,6 +67,9 @@ def validate_config(config: dict):
     missing_keys = keys.difference(config.keys())
     if missing_keys:
         raise ValueError(f"Missing config key(s): {missing_keys}")
+    if LOG_LEVEL_KEY in config.keys():
+        if not config[LOG_LEVEL_KEY] in {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}:
+            raise ValueError(f'Invalid log_level config parameter: {config[LOG_LEVEL_KEY]}')
 
 # TODO: add error handling around run_batch so the whole job does not fail on a single error.
 class BatchJob:
@@ -91,6 +95,9 @@ class BatchJob:
         place_of_pub_file: Optional[str]=None,
     ):
 
+        # Set the default logging level.
+        if not LOG_LEVEL_KEY in config.keys():
+            config[LOG_LEVEL_KEY] = 'INFO'
         self.config = config
         self.config_str = json.dumps(config, indent=4)
         self.resources_path = resources_path
@@ -199,10 +206,10 @@ class BatchJob:
         logging.basicConfig(
             filename=self.log_file, 
             encoding='utf-8', 
-            level=logging.INFO,
             format='%(asctime)s %(message)s',
             datefmt='%m/%d/%Y %H:%M:%S',
         )
+        logger.setLevel(self.config[LOG_LEVEL_KEY])
         self.logger = logger
 
         print(">>>> Running T-Res batch job >>>>")
