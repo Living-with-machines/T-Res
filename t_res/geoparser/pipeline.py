@@ -148,6 +148,7 @@ class Pipeline:
                 the text.
         """
         # Split the text into sentences.
+        text = str(text)
         sentences = SentenceContext.from_text(text, language="en")
         return [self.recogniser.run(sentence.sentence) for sentence in sentences]
     
