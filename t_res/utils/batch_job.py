@@ -220,13 +220,13 @@ class BatchJob:
         self.logger.info(f'Input data file: {self.input_file}')
         if self.place_of_pub_file:
             self.logger.info(f'Place of publication data file: {self.place_of_pub_file}')
+            if self.missing_place_of_pub_data:
+                self.logger.warning(f'Missing place of publication data for the \
+                                    following NLPs:\n{self.missing_place_of_pub_data}')
+            else:
+                self.logger.info('Place of publication data found for all NLPs in the input data')
         self.logger.info(f'Results will be written to: {self.results_path}')
         self.logger.info(f'Resources will be read from: {self.resources_path}')
-        if self.missing_place_of_pub_data:
-            self.logger.warning(f'Missing place of publication data for the \
-                                following NLPs:\n{self.missing_place_of_pub_data}')
-        else:
-            self.logger.info('Place of publication data found for all NLPs in the input data')
         self.logger.info(f'Config:\n{self.config_str}')
 
     def timestamp(self) -> str:
