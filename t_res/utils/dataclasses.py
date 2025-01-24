@@ -863,6 +863,9 @@ class Predictions(Candidates):
         l = list()
         for c, s in zip(self.candidates(ignore_empty_candidates=True), 
                         self.sentences(ignore_empty_candidates=True)):
+            disambiguation_score = c.best_disambiguation_score()
+            if disambiguation_score:
+                disambiguation_score = round(disambiguation_score, 3)
             d = {
                 'mention': c.mention.mention,
                 'sentence': s,
@@ -873,7 +876,7 @@ class Predictions(Candidates):
                 'prediction': c.best_wqid(),
                 'toponym_match': c.best_string_match().variation,
                 'string_similarity': c.best_string_match().string_similarity,
-                'disambiguation_score': c.best_disambiguation_score(),
+                'disambiguation_score': disambiguation_score,
             }
             l.append(d)
         return l

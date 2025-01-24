@@ -155,9 +155,12 @@ class BatchJob:
             self.place_of_pub_data = place_of_pub_data
 
             # Handle the case where x["NLP"] is not found in place_of_pub_data.
+            self.missing_place_of_pub_data = list()
             def place_of_pub_for_nlp(nlp: str):
                 if nlp in place_of_pub_data.keys():
                     return place_of_pub_data[nlp]
+                if not nlp in self.missing_place_of_pub_data:
+                    self.missing_place_of_pub_data.append(nlp)
                 return {
                     self.place_of_pub_wqid_key: "", 
                     self.place_of_pub_key: ""
@@ -206,7 +209,7 @@ class BatchJob:
         logging.basicConfig(
             filename=self.log_file, 
             encoding='utf-8', 
-            format='%(asctime)s %(message)s',
+            format='%(asctime)s %(levelname)s %(message)s',
             datefmt='%m/%d/%Y %H:%M:%S',
         )
         logger.setLevel(self.config[LOG_LEVEL_KEY])
@@ -220,6 +223,11 @@ class BatchJob:
             self.logger.info(f'Place of publication data file: {self.place_of_pub_file}')
         self.logger.info(f'Results will be written to: {self.results_path}')
         self.logger.info(f'Resources will be read from: {self.resources_path}')
+        if self.missing_place_of_pub_data:
+            self.logger.warning(f'Missing place of publication data for the \
+                                following NLPs:\n{self.missing_place_of_pub_data}')
+        else:
+            self.logger.info('Place of publication data found for all NLPs in the input data')
         self.logger.info(f'Config:\n{self.config_str}')
 
     def timestamp(self) -> str:
@@ -297,8 +305,8 @@ class BatchJob:
         result = pd.DataFrame(mentions_series).progress_apply(
             lambda x: self.pipe.run_candidate_selection(
                 x[0],
-                place_of_pub_wqid=self.place_of_pub_series[x.name][self.place_of_pub_wqid_key],
-                place_of_pub=self.place_of_pub_series[x.name][self.place_of_pub_key],
+                place_of_pub_wqid=self.place_of_pub_wqid(x.name),
+                place_of_pub=self.place_of_pub(x.name),
             ),
             axis=1,
         )
@@ -316,6 +324,36 @@ class BatchJob:
         tock = datetime.now() 
         self.logger.info(f'Disambiguation execution time: {tock - tick}')
         return result
+
+    def place_of_pub_wqid(self, row_index: int) -> str:
+        """
+        Gets the place of publication Wikidata ID for a given row of the input data file.
+        Returns an empty string if no place of publication information is available.
+
+        Args:
+            row_index (int): The row index in the input data file.
+
+        Returns:
+            str: The place of publication Wikidata ID, if available, otherwise an empty string.
+        """
+        if self.place_of_pub_file:
+            return self.place_of_pub_series[row_index][self.place_of_pub_wqid_key]
+        return ""
+
+    def place_of_pub(self, row_index: int) -> str:
+        """
+        Gets the place of publication for a given row of the input data file.
+        Returns an empty string if no place of publication information is available.
+
+        Args:
+            row_index (int): The row index in the input data file.
+
+        Returns:
+            str: The place of publication, if available, otherwise an empty string.
+        """
+        if self.place_of_pub_file:
+            return self.place_of_pub_series[row_index][self.place_of_pub_key]
+        return ""
 
     def save_results(self, predictions: pd.Series):
         """
@@ -406,12 +444,12 @@ class SingletonBatchJob(BatchJob):
         def run(row):
             if self.config[LOG_LEVEL_KEY] == 'DEBUG':
                 self.logger.debug(f'Running pipeline on text:\n{row[self.text_colname]}')
-                self.logger.debug(f'Place of publication ID:{self.place_of_pub_series[row.name][self.place_of_pub_wqid_key]}')
-                self.logger.debug(f'Place of publication:\n{self.place_of_pub_series[row.name][self.place_of_pub_key]}')
+                self.logger.debug(f'Place of publication ID:{self.place_of_pub_wqid(row.name)}')
+                self.logger.debug(f'Place of publication:\n{self.place_of_pub(row.name)}')
             self.pipe.run(
                 row[self.text_colname],
-                place_of_pub_wqid=self.place_of_pub_series[row.name][self.place_of_pub_wqid_key],
-                place_of_pub=self.place_of_pub_series[row.name][self.place_of_pub_key],
+                place_of_pub_wqid=self.place_of_pub_wqid(row.name),
+                place_of_pub=self.place_of_pub(row.name),
             )
 
         print('Running end-to-end pipeline...')
