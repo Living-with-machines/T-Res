@@ -680,6 +680,8 @@ class RelDisambLinker(Linker):
             A dictionary containing disambiguation scores, keyed by Wikidata ID.
         """
         ret = dict()
+        if not links:
+            return ret
         max_cand_freq = max([m.freq for m in links])
         for wikidata_link in links:
 
