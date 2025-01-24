@@ -144,21 +144,20 @@ class BatchJob:
         self.input_data.dropna(subset=[self.text_colname])
 
         # Read place of publication information into a dictionary.
+        self.place_of_pub_data = dict()
+        self.missing_place_of_pub_data = list()
         if self.place_of_pub_file:
 
-            place_of_pub_data = dict()
             for i, row in pd.read_csv(self.place_of_pub_file).iterrows():
-                place_of_pub_data[row['NLP']] = {
+                self.place_of_pub_data[row['NLP']] = {
                     self.place_of_pub_wqid_key: row['Wikidata ID'],
                     self.place_of_pub_key: row['location']
                 }
-            self.place_of_pub_data = place_of_pub_data
 
             # Handle the case where x["NLP"] is not found in place_of_pub_data.
-            self.missing_place_of_pub_data = list()
             def place_of_pub_for_nlp(nlp: str):
-                if nlp in place_of_pub_data.keys():
-                    return place_of_pub_data[nlp]
+                if nlp in self.place_of_pub_data.keys():
+                    return self.place_of_pub_data[nlp]
                 if not nlp in self.missing_place_of_pub_data:
                     self.missing_place_of_pub_data.append(nlp)
                 return {
