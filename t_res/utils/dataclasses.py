@@ -723,13 +723,13 @@ class Candidates:
         """Returns the place of publication Wikidata ID, if available."""
         if self.is_empty(ignore_empty_candidates=False):
             return None
-        return self.candidates()[0].place_of_pub_wqid
+        return self.candidates(ignore_empty_candidates=False)[0].place_of_pub_wqid
 
     def place_of_pub(self) -> Optional[str]:
         """Returns the place of publication, if available."""
         if self.is_empty(ignore_empty_candidates=False):
             return None
-        return self.candidates()[0].place_of_pub
+        return self.candidates(ignore_empty_candidates=False)[0].place_of_pub
 
     # For API deserialisation.
     def from_dict(data: dict) -> 'Candidates':
