@@ -664,11 +664,17 @@ class RelDisambLinker(Linker):
             ValueError("Entity disambiguation model not yet loaded. Call `load` method.")
 
         # Apply the REL model to the interim predictions.
-        rel_predictions = self.entity_disambiguation_model.predict(
+        rel_predictions_dict = self.entity_disambiguation_model.predict(
             predictions.as_dict(self.rel_params["with_publication"]))
 
         # Incorporate the REL model predictions.
-        return predictions.apply_rel_disambiguation(rel_predictions, self.rel_params["with_publication"])
+        rel_predictions = predictions.apply_rel_disambiguation(rel_predictions_dict, self.rel_params["with_publication"])
+    
+        # Take into account the `predict_place_of_pub` config parameter.
+        if self.rel_params['predict_place_of_publication']:
+            rel_predictions.predict_place_of_publication()
+
+        return rel_predictions
 
     # Computes disambiguation scores for a collection of potential Wikidata links.
     # (Note: this replaces the rank_candidates function from rel_utils.py)

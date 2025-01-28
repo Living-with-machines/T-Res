@@ -479,7 +479,7 @@ class PredictedLinks(CandidateLinks):
         Helper method for the Predictions as_dict method."""
         ret = [[k, round(v, 3)] for k, v in self.disambiguation_scores.items()]
         return sorted(ret, key=lambda x: (x[1], x[0]), reverse=True)
-
+    
 # Linker::run method output type.
 @pdataclass(order=True, frozen=True)
 class MentionCandidates:
@@ -994,3 +994,13 @@ class RelPredictions(Predictions):
         """Returns the list of `MentionCandidates` instances with their interim disambiguation 
         scores, that is, the scores obtained before applying the REL disambiguation method."""
         return super().candidates(ignore_empty_candidates)
+
+    def predict_place_of_publication(self):
+        """Sets the disambiguation scores of the place of publication to 1.0, if such a score exists."""
+        place_of_pub_wqid = self.place_of_pub_wqid()
+        for rs in self.rel_scores:
+            # If the place of publication is not in the list of scored candidates, do nothing.
+            if not place_of_pub_wqid in rs.scores.keys():
+                return
+            rs.scores[place_of_pub_wqid] = 1.0
+
