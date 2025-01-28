@@ -640,14 +640,14 @@ class RelDisambLinker(Linker):
             A `Predictions` instance representing the identified and
                 linked toponyms.
         """
-        # Remove any (empty) microtoponym candidates if configured to do so.
-        if self.rel_params["without_microtoponyms"]:
-            micro_candidates = [sc for sc in candidates for c in sc.candidates if c.mention.is_microtoponym()]
-            for sc in micro_candidates:
-                sc.remove_microtoponyms()
-
         # Generate prior predictions as inputs to the REL model.
         predictions = super().disambiguate(candidates)
+
+        # Remove any microtoponyms from the predictions, if configured to do so.
+        if self.rel_params["without_microtoponyms"]:
+            micro_candidates = [sc for sc in predictions.sentence_candidates for c in sc.candidates if c.mention.is_microtoponym()]
+            for sc in micro_candidates:
+                sc.remove_microtoponyms()
 
         if not apply_rel:
             return predictions

@@ -398,7 +398,7 @@ class CandidateLinks:
 
     def is_empty(self) -> bool:
         """Returns `True` if the list of Wikidata links is empty."""
-        return not self.wikidata_links
+        return len(self.wikidata_links) == 0
 
     def attach_scores(self, scores: Dict[str, float]) -> 'PredictedLinks':
         """Transforms this CandidateLinks instance into a PredictedLinks instance 
@@ -666,7 +666,7 @@ class Candidates:
         if self.is_empty():
             s += "\n    None"
             return s
-        mention_candidates = self.candidates()
+        mention_candidates = self.candidates(ignore_empty_candidates = False)
         def len_variation(c: MentionCandidates) -> int:
             if c.best_match():
                 return len(c.best_match().string_match.variation)
@@ -964,15 +964,23 @@ class RelPredictions(Predictions):
 
         # Construct equivalent Candidate instances but with the REL scores in the PredictedLinks.
         ret = list()
-        for c, rs in zip(super().candidates(ignore_empty_candidates), self.rel_scores):
+        for c, rs in zip(super().candidates(ignore_empty_candidates=False), self.rel_scores):
+
+            # Check that the mention in the RelScores instance matches that in the candidate.
+            if rs.mention != c.mention.mention:
+                raise ValueError(f"Inconsistent toponym mentions in RelScores ({rs.mention}) and candidate ({c.mention.mention})")
+
             if c.is_empty():
                 if not ignore_empty_candidates:
                     ret.append(c)
                 continue
+
             predicted_links = c.best_match()
+            
             # Get the list of WikidataLink instances for which REL scores are available.
             wikidata_links = [wl for wl in predicted_links.wikidata_links if wl.wqid in rs.scores.keys()]
             links = [PredictedLinks(predicted_links.string_match, wikidata_links, rs.scores)]
+            
             ret.append(MentionCandidates(
                 c.mention, 
                 c.ranking_method, 
