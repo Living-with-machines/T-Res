@@ -526,20 +526,28 @@ class RelDisambLinker(Linker):
         super().__init__(resources_path, experiments_path, linking_resources)
 
         self.overwrite_training = overwrite_training
-        if rel_params is None:
-            rel_params = {
-                "model_path": os.path.join(resources_path, "models/disambiguation/"),
-                "data_path": os.path.join(experiments_path, "outputs/data/lwm/"),
-                "training_split": "originalsplit",
-                "db_embeddings": None,  # The cursor to the embeddings database.
-                "with_publication": True,
-                "without_microtoponyms": True,
-                "do_test": False,
-                "default_publname": "United Kingdom",
-                "default_publwqid": "Q145",
-            }
 
-        self.rel_params = rel_params
+        # Default linking parameters:
+        params = {
+            "model_path": os.path.join(resources_path, "models/disambiguation/"),
+            "data_path": os.path.join(experiments_path, "outputs/data/lwm/"),
+            "training_split": "originalsplit",
+            "db_embeddings": None,  # The cursor to the embeddings database.
+            "with_publication": True,
+            "predict_place_of_publication": True,
+            "combined_score": True,
+            "without_microtoponyms": True,
+            "do_test": False,
+            "default_publname": "United Kingdom",
+            "default_publwqid": "Q145",
+        }
+        if not rel_params is None:
+            if not set(rel_params) <= set(params):
+                raise ValueError("Invalid REL config parameters.")
+            # Update the default parameters with any given parameters.
+            params.update(rel_params)
+
+        self.rel_params = params
         self.ranker = ranker
         self.entity_disambiguation_model = None
 

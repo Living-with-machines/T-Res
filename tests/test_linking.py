@@ -37,7 +37,7 @@ def test_init():
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
-        rel_params={'param': 'value'},
+        rel_params={'with_publication': False},
         overwrite_training=True,
     )
 
@@ -46,18 +46,60 @@ def test_init():
     assert linker.resources_path  == "path/to/resources/"
     assert linker.experiments_path  == "path/to/experiments/"
     assert linker.resources['resource'] == 'value'
-    assert linker.rel_params['param'] == 'value'
+    assert linker.rel_params['with_publication'] == False
     assert linker.overwrite_training
 
     linker = RelDisambLinker(
         resources_path="path/to/resources/",
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
-        rel_params={'param': 'value'},
+        rel_params={'with_publication': False},
         linking_resources={'resource': 'value'},
     )
 
     assert not linker.overwrite_training
+
+    # Test default REL linker parameters
+
+    # Invalid parameter raises ValueError:
+    with pytest.raises(ValueError):
+        linker = RelDisambLinker(
+            resources_path="path/to/resources/",
+            ranker=ranking.PerfectMatchRanker("path/to/resources/"),
+            experiments_path="path/to/experiments/",
+            rel_params={'invalid_param': 'value'},
+            linking_resources={'resource': 'value'},
+        )
+
+    linker = RelDisambLinker(
+        resources_path="path/to/resources/",
+        ranker=ranking.PerfectMatchRanker("path/to/resources/"),
+        experiments_path="path/to/experiments/",
+        linking_resources={'resource': 'value'},
+    )
+
+    # Expect default parameter values:
+    assert linker.rel_params['with_publication'] == True
+    assert linker.rel_params['do_test'] == False
+    assert linker.rel_params["without_microtoponyms"] == True
+    
+
+    linker = RelDisambLinker(
+        resources_path="path/to/resources/",
+        ranker=ranking.PerfectMatchRanker("path/to/resources/"),
+        experiments_path="path/to/experiments/",
+        rel_params={
+            'with_publication': False,
+            'do_test': True,
+        },
+        linking_resources={'resource': 'value'},
+    )
+
+    # Default parameter values are overridden:
+    assert linker.rel_params['with_publication'] == False
+    assert linker.rel_params['do_test'] == True
+    # Unspecified parameters have default values:
+    assert linker.rel_params["without_microtoponyms"] == True
 
 def test_new():
     # Test Linker construction via string parameters.
