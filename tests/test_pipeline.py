@@ -221,6 +221,8 @@ def test_deezy_rel_wpubl_wmtops(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": True,
                 "do_test": False,
                 "default_publname": "United Kingdom",
@@ -348,6 +350,8 @@ def test_deezy_rel_wpubl(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": False,
                 "do_test": False,
                 "default_publname": "United Kingdom",
@@ -516,6 +520,7 @@ def test_perfect_rel_predict_place_of_pub():
                 "db_embeddings": cursor,
                 "with_publication": True,
                 "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": True,
                 "do_test": True,
                 "default_publname": "United Kingdom",
@@ -552,6 +557,92 @@ def test_perfect_rel_predict_place_of_pub():
     # With "predict_place_of_publication" set to True, the correct Stockton is predicted
     # because the place of publication is the favoured candidate:
     assert predictions.candidates()[0].best_wqid() == "Q989418"
+
+@pytest.mark.resources(reason="Needs large resources")
+def test_perfect_rel_combined_score():
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path=model_path,
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 1,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,  # Set to True if you want to overwrite model if existing
+        do_test=False,  # Set to True if you want to train on test mode
+    )
+
+    # --------------------------------------
+    # Instantiate the ranker:
+    ranker = ranking.PerfectMatchRanker(
+        resources_path=os.path.join(current_dir, "../resources/"),
+        mentions_to_wikidata=dict(),
+        wikidata_to_mentions=dict(),
+    )
+
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
+        linker = linking.RelDisambLinker(
+            resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
+            linking_resources=dict(),
+            rel_params={
+                "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/"),
+                "training_split": "originalsplit",
+                "db_embeddings": cursor,
+                "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": False,
+                "without_microtoponyms": True,
+                "do_test": True,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+                "reference_separation": ((49.956739, -8.17751), (60.87, 1.762973)),
+            },
+            overwrite_training=False,
+        )
+
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
+
+    predictions = geoparser.run(
+        "A remarkable case of rattening has just occurred in the building trade at Stockton, but also in Leeds.",
+        place_of_pub_wqid="Q39121",
+        place_of_pub="Leeds, West Yorkshire, England",
+    )
+
+    assert isinstance(predictions, RelPredictions)
+    assert len(predictions.candidates()) == 2
+
+    # With "combined_score" set to False, the wrong Stockton is predicted:
+    assert predictions.candidates()[0].best_wqid() != "Q989418"
+    assert predictions.candidates()[0].best_wqid() == "Q49240"
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.225, abs=1e-3)
+
+    geoparser.linker.rel_params["combined_score"] = True
+
+    predictions = geoparser.run(
+        "A remarkable case of rattening has just occurred in the building trade at Stockton, but also in Leeds.",
+        place_of_pub_wqid="Q39121",
+        place_of_pub="Leeds, West Yorkshire, England",
+    )
+
+    assert isinstance(predictions, RelPredictions)
+    assert len(predictions.candidates()) == 2
+
+    # With "combined_score" set to True, the correct Stockton is predicted
+    # because the disambiguation score for the previous best candidate
+    # is curtailed by the combined score:
+    assert predictions.candidates()[0].best_wqid() == "Q989418"
+    assert predictions.candidates()[0].best_disambiguation_score() == pytest.approx(0.21, abs=1e-3)
 
 @pytest.mark.resources(reason="Needs large resources")
 def test_modular_deezy_rel(tmp_path):
@@ -620,6 +711,8 @@ def test_modular_deezy_rel(tmp_path):
                 "training_split": "apply",
                 "db_embeddings": cursor,
                 "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": False,
                 "do_test": False,
                 "default_publname": "United Kingdom",

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-
+import sqlite3
+from math import exp
 import numpy as np
 import pytest
 
@@ -408,3 +409,43 @@ def test_linking_by_distance():
     assert predictions.is_empty(ignore_empty_candidates=True)
     # If empty candidates are not ignored, the set of predictions is not empty:
     assert not predictions.is_empty(ignore_empty_candidates=False)
+
+@pytest.mark.resources(reason="Needs large resources")
+def test_proximity():
+
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
+        linker = RelDisambLinker(
+            resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranking.PerfectMatchRanker(os.path.join(current_dir, "../resources/")),
+            linking_resources=dict(),
+            rel_params={
+                "model_path": os.path.join(current_dir, "../resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir, "sample_files/experiments/outputs/data/lwm/"),
+                "training_split": "apply",
+                "db_embeddings": cursor,
+                "with_publication": True,
+                "without_microtoponyms": False,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+                "reference_separation": ((49.956739, -8.17751), (60.87, 1.762973)),
+            },
+        )
+    linker.load()
+
+    place_of_pub_wqid = "Q203349" # Poole, Doset
+    wqid = "Q503331" # Dorchester, Dorset
+
+    print(linker.wkdt_coords(place_of_pub_wqid))
+    print(linker.wkdt_coords(wqid))
+
+    result = linker.proximity(linker.wkdt_coords(place_of_pub_wqid), linker.wkdt_coords(wqid))
+
+    # Distance from Poole to Dorchester is ~31km
+    d = 31.0
+    # Reference distance is ~1362km
+    reference_d = 1362.0
+
+    assert result == pytest.approx(exp(-(d/reference_d)**2), abs=1e-4)
+

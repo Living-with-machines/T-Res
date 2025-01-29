@@ -381,9 +381,14 @@ class BatchJob:
         suffix += '-' + self.config[LINKER_KEY]['method_name']
         if self.config[LINKER_KEY]['method_name'] == 'reldisamb':
             if self.config[LINKER_KEY]['rel_params']['with_publication']:
-                suffix += '-withpub'
+                if self.config[LINKER_KEY]['rel_params']['predict_place_of_publication']:
+                    suffix += '-predictpub'
+                else:
+                    suffix += '-withpub'
             else:
                 suffix += '-nopub'
+            if self.config[LINKER_KEY]['rel_params']['combined_score']:
+                suffix += '-combined'
             if self.config[LINKER_KEY]['rel_params']['without_microtoponyms']:
                 suffix += '-nomicro'
             else:

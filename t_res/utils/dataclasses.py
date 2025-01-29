@@ -348,15 +348,13 @@ class ByDistanceLink(WikidataLink):
             raise ValueError("normalized_score must be an float.")
 
 @pdataclass(frozen=True)
-class RelDisambLink(WikidataLink):
+class RelDisambLink(MostPopularLink):
     """Dataclass representing a string match and potential links in 
     Wikidata under the `reldisamb` linking method.
     
     Attributes:
-        freq (int): The mention-to-wikidata link frequency.
         normalized_score (float): The normalized score from resource `mentions_to_wikidata_normalized.json`.
     """
-    freq: int
     normalized_score: float
 
     def __post_init__(self):
@@ -994,13 +992,3 @@ class RelPredictions(Predictions):
         """Returns the list of `MentionCandidates` instances with their interim disambiguation 
         scores, that is, the scores obtained before applying the REL disambiguation method."""
         return super().candidates(ignore_empty_candidates)
-
-    def predict_place_of_publication(self):
-        """Sets the disambiguation scores of the place of publication to 1.0, if such a score exists."""
-        place_of_pub_wqid = self.place_of_pub_wqid()
-        for rs in self.rel_scores:
-            # If the place of publication is not in the list of scored candidates, do nothing.
-            if not place_of_pub_wqid in rs.scores.keys():
-                return
-            rs.scores[place_of_pub_wqid] = 1.0
-
