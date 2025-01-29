@@ -362,7 +362,12 @@ class BatchJob:
             predictions (Series): A pandas Series containing an instance of
                 the `Predictions` dataclass for each row in the input data.
         """
-        results_column = predictions.apply(lambda x: x.summary_dict())
+        def summarise(p):
+            if not p:
+                return list()
+            return p.summary_dict()
+        
+        results_column = predictions.apply(summarise)
         results = pd.concat([self.input_data, results_column.rename(self.predictions_colname)], axis=1)
 
         results.to_csv(self.results_file(), index=False)
