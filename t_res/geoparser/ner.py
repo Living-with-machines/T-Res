@@ -52,6 +52,29 @@ class Recogniser:
         s += f"    * Model: {self.model()}\n"
         return s
 
+    def new(**kwargs) -> 'Recogniser':
+        """
+        Static constructor.
+
+        Args:
+            kwargs (dict): A dictionary of keyword arguments matching the
+                arguments to a subclass __init__ constructor, plus a
+                `method_name` argument to specify the desired subclass.
+
+        Returns:
+            A Recogniser (subclass) instance.
+
+        """
+        if not 'method_name' in kwargs.keys():
+            raise ValueError("Expected `method_name` keyword argument.")
+        method_name = kwargs['method_name']
+        del kwargs['method_name']
+        if method_name == 'pretrained':
+            return PretrainedRecogniser(**kwargs)
+        if method_name == 'custom':
+            return CustomRecogniser(**kwargs)
+        raise ValueError(f"Invalid NER method: {method_name}")
+
     def model(self) -> str:
         """
         Returns the ``model`` parameter to be passed to the Pipeline factory 
@@ -94,6 +117,7 @@ class Recogniser:
             replaced with a comma (``,``) to handle parsing issues related to
             the n-dash in OCR from historical newspapers.
         """
+        sentence = str(sentence)
         if len(sentence) <= 1:
             return SentenceMentions(Sentence(sentence), [])
 
