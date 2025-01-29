@@ -125,7 +125,7 @@ class Linker:
             print("Missing place of publication coordinates.")
             return None
         try:
-            return haversine(origin_coords, coords)
+            return haversine(origin_coords, coords, normalize=True)
         except ValueError:
             # We have one candidate with coordinates in Venus!
             print(f"Failed to compute haversine distance from {origin_coords} to {coords}")

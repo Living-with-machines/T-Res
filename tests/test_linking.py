@@ -437,9 +437,6 @@ def test_proximity():
     place_of_pub_wqid = "Q203349" # Poole, Doset
     wqid = "Q503331" # Dorchester, Dorset
 
-    print(linker.wkdt_coords(place_of_pub_wqid))
-    print(linker.wkdt_coords(wqid))
-
     result = linker.proximity(linker.wkdt_coords(place_of_pub_wqid), linker.wkdt_coords(wqid))
 
     # Distance from Poole to Dorchester is ~31km
@@ -449,3 +446,9 @@ def test_proximity():
 
     assert result == pytest.approx(exp(-(d/reference_d)**2), abs=1e-4)
 
+    # Test with specific coordinates that require normalization.
+    origin_coords = [53.067, -2.522]
+    coords = [-24.84, 340.47]
+
+    result = linker.proximity(origin_coords, coords)
+    assert result == pytest.approx(0, abs=1e-10)
