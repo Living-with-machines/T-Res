@@ -128,6 +128,7 @@ class Linker:
             return haversine(origin_coords, coords)
         except ValueError:
             # We have one candidate with coordinates in Venus!
+            print(f"Failed to compute haversine distance from {origin_coords} to {coords}")
             return None
 
     def empty_candidates(self, 
