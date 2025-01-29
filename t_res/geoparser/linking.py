@@ -786,11 +786,12 @@ class RelDisambLinker(MostPopularLinker):
         Returns:
             Optional[float]: _description_
         """
-        if not origin_coords:
-            return None
         if not coords:
             return None
         distance = self.haversine(origin_coords, coords)
+        # Handle caught error in the haversine method.
+        if not distance:
+            return None
         return exp(-(distance/self.reference_distance)**2)
 
     def train_load_model(self, split: Optional[str] = "originalsplit"):
