@@ -358,8 +358,7 @@ class RelDisambLink(MostPopularLink):
     normalized_score: float
 
     def __post_init__(self):
-        if not isinstance(self.freq, int):
-            raise ValueError("freq must be an integer.")
+        super().__post_init__()
         if not isinstance(self.normalized_score, float):
             raise ValueError("normalized_score must be an float.")
         

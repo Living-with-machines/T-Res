@@ -455,7 +455,7 @@ class SingletonBatchJob(BatchJob):
                 self.logger.debug(f'Running pipeline on text:\n{row[self.text_colname]}')
                 self.logger.debug(f'Place of publication ID:{self.place_of_pub_wqid(row.name)}')
                 self.logger.debug(f'Place of publication:\n{self.place_of_pub(row.name)}')
-            self.pipe.run(
+            return self.pipe.run(
                 row[self.text_colname],
                 place_of_pub_wqid=self.place_of_pub_wqid(row.name),
                 place_of_pub=self.place_of_pub(row.name),
