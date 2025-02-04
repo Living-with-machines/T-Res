@@ -85,7 +85,7 @@ class Recogniser:
         """
         raise NotImplementedError("Subclass implementation required.")
 
-    def load(self):
+    def load(self, device: Optional[str]=None):
         """
         Creates a Named Entity Recognition (NER) pipeline and assigns it
         to the ``pipe`` attribute.
@@ -97,7 +97,7 @@ class Recogniser:
         """
 
         print("*** Creating and loading a NER pipeline.")
-        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[])
+        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[], device=device)
 
     # The run method combines `ner_predict` with the `aggregate_mentions`
     # function from `ner_utils.py` (eventually making those redundant).
@@ -279,6 +279,7 @@ class CustomRecogniser(Recogniser):
             trained model (default: ``False``).
         do_test (bool, optional): Whether to train in test mode
             (default: ``False``).
+        device (str, optional): GPU device name (default: ``None``).
 
     Example:
         ```
@@ -325,6 +326,7 @@ class CustomRecogniser(Recogniser):
         },
         overwrite_training: Optional[bool] = False,
         do_test: Optional[bool] = False,
+        device: Optional[str] = None,
     ):
         """
         Initialises a Recogniser object.
@@ -338,6 +340,7 @@ class CustomRecogniser(Recogniser):
         self.training_args = training_args
         self.overwrite_training = overwrite_training
         self.do_test = do_test
+        self.device = device
 
         # Add "_test" to the model name if do_test is True.
         if self.do_test:
@@ -390,7 +393,7 @@ class CustomRecogniser(Recogniser):
         else:
             self.train()
 
-        super().load()
+        super().load(self.device)
 
     def train(self):
         """

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import pytest
+import torch
 
 from transformers.pipelines.token_classification import TokenClassificationPipeline
 
@@ -9,6 +10,30 @@ from t_res.utils import ner_utils
 from t_res.utils.dataclasses import SentenceMentions
 
 current_dir = Path(__file__).parent.resolve()
+
+def test_load_device(tmp_path):
+    model_path = os.path.join(tmp_path,"ner_test.model")
+
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.has_mps else "cpu"
+
+    recogniser = ner.CustomRecogniser(
+        model_name="ner_test",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        base_model="Livingwithmachines/bert_1760_1900", 
+        model_path=f"{tmp_path}/",
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,
+        do_test=False,
+        device=device,
+    )
+
+    assert recogniser.device == device
 
 @pytest.mark.train(reason="Trains an NER model")
 def test_ner_local_train(tmp_path):
@@ -31,8 +56,6 @@ def test_ner_local_train(tmp_path):
     )
     assert os.path.exists(model_path) is False
     recogniser.train()
-    print(model_path)
-    print(os.listdir(tmp_path))
     assert os.path.exists(model_path) is True
 
 @pytest.mark.resources(reason="Needs large model file")
