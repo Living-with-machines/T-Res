@@ -33,12 +33,17 @@ def test_init():
     )
 
     # Test the extra parameters in the RelDisambLinker
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     linker = RelDisambLinker(
         resources_path="path/to/resources/",
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
-        rel_params={'with_publication': False},
+        rel_params={
+            'with_publication': False,
+            'device': device,
+        },
         overwrite_training=True,
     )
 
@@ -48,6 +53,7 @@ def test_init():
     assert linker.experiments_path  == "path/to/experiments/"
     assert linker.resources['resource'] == 'value'
     assert linker.rel_params['with_publication'] == False
+    assert linker.rel_params['device'] == device
     assert linker.overwrite_training
 
     linker = RelDisambLinker(

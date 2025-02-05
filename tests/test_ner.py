@@ -12,9 +12,8 @@ from t_res.utils.dataclasses import SentenceMentions
 current_dir = Path(__file__).parent.resolve()
 
 def test_load_device(tmp_path):
-    model_path = os.path.join(tmp_path,"ner_test.model")
 
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.has_mps else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     recogniser = ner.CustomRecogniser(
         model_name="ner_test",

@@ -63,7 +63,7 @@ class EntityDisambiguation:
         self.config = self.__get_config(user_config)
 
         # Use CPU if cuda is not available:
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = self.config["device"]
         self.prerank_model = None
         self.model = None
         self.reset_embeddings = reset_embeddings
@@ -128,6 +128,7 @@ class EntityDisambiguation:
         default_config: Dict[str, Any] = {
             "mode": user_config["mode"],
             "model_path": user_config["model_path"],
+            "device": user_config["device"],
             "prerank_ctx_window": 50,
             "keep_p_e_m": 4,
             "keep_ctx_ent": 3,

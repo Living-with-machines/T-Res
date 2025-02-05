@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import numpy as np
+import torch
 from datasets import load_dataset, load_metric
 from transformers import (
     AutoModelForTokenClassification,
@@ -26,6 +27,7 @@ class Recogniser:
 
     Arguments:
         model_name (str): The name of the NER model.
+        device (str, optional): GPU device name (default: ``None``).
 
     Note:
         This base class should not be instatiated directly. Instead use a subclass
@@ -35,11 +37,15 @@ class Recogniser:
     def __init__(
         self,
         model_name: str,
+        device: Optional[str]=None,
     ):
         """
         Initialises a Recogniser object.
         """
         self.model_name = model_name
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
 
     def __str__(self) -> str:
         """
@@ -85,7 +91,7 @@ class Recogniser:
         """
         raise NotImplementedError("Subclass implementation required.")
 
-    def load(self, device: Optional[str]=None):
+    def load(self):
         """
         Creates a Named Entity Recognition (NER) pipeline and assigns it
         to the ``pipe`` attribute.
@@ -97,7 +103,7 @@ class Recogniser:
         """
 
         print("*** Creating and loading a NER pipeline.")
-        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[], device=device)
+        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[], device=self.device)
 
     # The run method combines `ner_predict` with the `aggregate_mentions`
     # function from `ner_utils.py` (eventually making those redundant).
@@ -279,7 +285,6 @@ class CustomRecogniser(Recogniser):
             trained model (default: ``False``).
         do_test (bool, optional): Whether to train in test mode
             (default: ``False``).
-        device (str, optional): GPU device name (default: ``None``).
 
     Example:
         ```
@@ -326,12 +331,12 @@ class CustomRecogniser(Recogniser):
         },
         overwrite_training: Optional[bool] = False,
         do_test: Optional[bool] = False,
-        device: Optional[str] = None,
+        device: Optional[str]=None,
     ):
         """
         Initialises a Recogniser object.
         """
-        super().__init__(model_name)
+        super().__init__(model_name, device)
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
         self.pipe = pipe
@@ -340,7 +345,6 @@ class CustomRecogniser(Recogniser):
         self.training_args = training_args
         self.overwrite_training = overwrite_training
         self.do_test = do_test
-        self.device = device
 
         # Add "_test" to the model name if do_test is True.
         if self.do_test:
@@ -393,7 +397,7 @@ class CustomRecogniser(Recogniser):
         else:
             self.train()
 
-        super().load(self.device)
+        super().load()
 
     def train(self):
         """

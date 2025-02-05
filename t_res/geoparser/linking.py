@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
+import torch
 from haversine import haversine
 from math import exp
 from tqdm import tqdm
@@ -548,8 +549,9 @@ class RelDisambLinker(MostPopularLinker):
             "default_publname": "United Kingdom",
             "default_publwqid": "Q145",
             "reference_separation": ((49.956739, -8.17751), (60.87, 1.762973)),
+            "device": "cuda" if torch.cuda.is_available() else "cpu"
         }
-        if not rel_params is None:
+        if rel_params is not None:
             if not set(rel_params) <= set(params):
                 raise ValueError("Invalid REL config parameters.")
             # Update the default parameters with any given parameters.
@@ -889,6 +891,7 @@ class RelDisambLinker(MostPopularLinker):
             config_rel = {
                 "mode": "train",
                 "model_path": os.path.join(linker_name, "model"),
+                "device": self.rel_params["device"],
             }
 
             # Instantiate the entity disambiguation model:
@@ -908,6 +911,7 @@ class RelDisambLinker(MostPopularLinker):
             config_rel = {
                 "mode": "eval",
                 "model_path": os.path.join(linker_name, "model"),
+                "device": self.rel_params["device"],
             }
 
             model = entity_disambiguation.EntityDisambiguation(
