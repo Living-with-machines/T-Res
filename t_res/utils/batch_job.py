@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Optional, Tuple
 from tqdm import tqdm
 
+from sentence_splitter import SentenceSplitter
+from datasets import Dataset
+from transformers.pipelines.pt_utils import KeyDataset
 import pandas as pd
 import sqlite3
 
@@ -284,14 +287,21 @@ class BatchJob:
 
     def run_batch_ner(self, batch) -> pd.Series:
 
-        # Define function to discard sentences not containing toponym mentions.
-        def run_ner(row):
-            self.logger.debug(f'Running NER on text:\n{row[self.text_colname]}')
-            return [sm for sm in self.pipe.run_text_recognition(row[self.text_colname]) if not sm.is_empty()]
-
         print('NER...')
         tick = datetime.now()
+
+        splitter = SentenceSplitter(language='en', non_breaking_prefix_file=None)
+        def run_ner(row):
+            # Create a HuggingFace Dataset instance from the list of sentences (to leverage GPU).
+            sentences = splitter.split(row[self.text_colname])
+            dataset = Dataset.from_pandas(pd.DataFrame({'text': sentences}))
+            # Call the recogniser pipeline on the dataset.
+            ner_predictions = self.pipe.recogniser.pipe(KeyDataset(dataset, 'text'))
+            # Return a list of SentenceMentions instances.
+            return [self.pipe.recogniser.post_process(p, s) for p, s in zip(ner_predictions, sentences)]
+
         result = batch.progress_apply(run_ner, axis=1)
+
         tock = datetime.now() 
         self.logger.info(f'NER execution time: {tock - tick}')
         return result

@@ -139,11 +139,18 @@ class Recogniser:
         if not hasattr(self, 'pipe'):
             raise ValueError("Missing NER pipeline. Try calling the load() method.")
         ner_preds = self.pipe(sentence)
+        return self.post_process(ner_preds, sentence)
+
+    def post_process(self, ner_predictions, sentence: str) -> SentenceMentions:
+
+        sentence = str(sentence)
+        if len(sentence) <= 1:
+            return SentenceMentions(Sentence(sentence), [])
 
         # Post-process the predictions, fixing potential grouping errors:
         lEntities = []
         predictions = []
-        for pred_ent in ner_preds:
+        for pred_ent in ner_predictions:
             pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = pred_ent["entity"]
             pred_ent = ner_utils.fix_capitalization(pred_ent, sentence)
@@ -165,7 +172,6 @@ class Recogniser:
 
         mentions = [Mention.from_dict(m) for m in mentions]
         return SentenceMentions(Sentence(sentence), mentions=mentions)
-
 
     # Deprecated: use the `run` method instead.
     def ner_predict(self, sentence: str) -> List[dict]:
