@@ -849,7 +849,7 @@ class RelDisambLinker(MostPopularLinker):
 
         if self.overwrite_training == True or not Path(linker_name).is_dir() or len(os.listdir(linker_name)) == 0:
             print(
-                "The entity disambiguation model does not exist or overwrite_training is set to True."
+                f"The entity disambiguation model {Path(linker_name)} does not exist or overwrite_training is set to True."
             )
 
             print("Creating the dataset.")
