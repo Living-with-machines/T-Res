@@ -541,7 +541,7 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 "ranking_metric": "faiss",
                 "selection_threshold": 50,
                 "num_candidates": 1,
-                "verbose": False,
+                "verbose": True,
                 # DeezyMatch training:
                 "overwrite_training": False,
                 "do_test": False,
