@@ -186,6 +186,9 @@ class BatchJob:
         # Fill in linking parameters in the case of a REL Linker.
         if self.config[LINKER_KEY]['method_name'] == 'reldisamb':
             self.config[LINKER_KEY]['ranker'] = ranker
+            if 'rel_params' not in self.config[LINKER_KEY].keys():
+                print("No `rel_params` configuration parameter found for REL linking. Using defaults.")
+                self.config[LINKER_KEY]['rel_params'] = dict()
             rel_params = self.config[LINKER_KEY]['rel_params']
             rel_params['do_test'] = False
             rel_params['model_path'] = os.path.join(self.resources_path, "models/disambiguation/")
