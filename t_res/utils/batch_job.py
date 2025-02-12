@@ -297,8 +297,9 @@ class BatchJob:
             dataset = Dataset.from_pandas(pd.DataFrame({'text': sentences}))
             # Call the recogniser pipeline on the dataset.
             ner_predictions = self.pipe.recogniser.pipe(KeyDataset(dataset, 'text'))
-            # Return a list of SentenceMentions instances.
-            return [self.pipe.recogniser.post_process(p, s) for p, s in zip(ner_predictions, sentences)]
+            # Return a list of non-empty SentenceMentions instances.
+            sms = [self.pipe.recogniser.post_process(p, s) for p, s in zip(ner_predictions, sentences)]
+            return [sm for sm in sms if not sm.is_empty()]
 
         result = batch.progress_apply(run_ner, axis=1)
 
