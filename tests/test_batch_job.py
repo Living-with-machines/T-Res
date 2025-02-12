@@ -86,6 +86,7 @@ def test_static_constructor():
     )
     assert batch_job.config[LOG_LEVEL_KEY] == 'DEBUG'
 
+@pytest.mark.resources(reason="Needs large resources")
 def test_config(tmp_path):
     input_file = os.path.join(current_dir, './sample_files/batch_jobs/1880-1900-LwM-HMD-subsample50.csv')
     resources_path = os.path.join(current_dir, '../resources/')
