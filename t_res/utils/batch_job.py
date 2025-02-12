@@ -295,8 +295,12 @@ class BatchJob:
 
         splitter = SentenceSplitter(language='en', non_breaking_prefix_file=None)
         def run_ner(row):
+            # Handle the case of empty text.
+            text = str(row[self.text_colname])
+            if len(text) <= 1:
+                return list()
             # Create a HuggingFace Dataset instance from the list of sentences (to leverage GPU).
-            sentences = splitter.split(row[self.text_colname])
+            sentences = splitter.split(text)
             dataset = Dataset.from_pandas(pd.DataFrame({'text': sentences}))
             # Call the recogniser pipeline on the dataset.
             ner_predictions = self.pipe.recogniser.pipe(KeyDataset(dataset, 'text'))
