@@ -530,25 +530,30 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 "overwrite_dataset": False,
             }
 
-        if deezy_parameters is None:
-            deezy_parameters = {
-                # Paths and filenames of DeezyMatch models and data:
-                "dm_path": os.path.join(resources_path, "deezymatch/"),
-                "dm_cands": "wkdtalts",
-                "dm_model": "w2v_ocr",
-                "dm_output": "deezymatch_on_the_fly",
-                # Ranking measures:
-                "ranking_metric": "faiss",
-                "selection_threshold": 50,
-                "num_candidates": 1,
-                "verbose": True,
-                # DeezyMatch training:
-                "overwrite_training": False,
-                "do_test": False,
-            }
+        # Default DeezyMatch parameters:
+        deezy_params = {
+            # Paths and filenames of DeezyMatch models and data:
+            "dm_path": os.path.join(resources_path, "deezymatch/"),
+            "dm_cands": "wkdtalts",
+            "dm_model": "w2v_ocr",
+            "dm_output": "deezymatch_on_the_fly",
+            # Ranking measures:
+            "ranking_metric": "faiss",
+            "selection_threshold": 50,
+            "num_candidates": 1,
+            "verbose": False,
+            # DeezyMatch training:
+            "overwrite_training": False,
+            "do_test": False,
+        }
+        if deezy_parameters is not None:
+            if not set(deezy_parameters) <= set(deezy_params):
+                raise ValueError("Invalid REL config parameters.")
+            # Update the default parameters with any given parameters.
+            deezy_params.update(deezy_parameters)
 
         self.strvar_parameters = strvar_parameters
-        self.deezy_parameters = deezy_parameters
+        self.deezy_parameters = deezy_params
 
     def __str__(self) -> str:
         """

@@ -8,6 +8,25 @@ from t_res.utils.dataclasses import *
 
 current_dir = Path(__file__).parent.resolve()
 
+def test_init():
+
+    # Test the default parameters.
+    ranker = DeezyMatchRanker(
+        resources_path=os.path.join(current_dir,"../resources/")
+    )
+    assert not ranker.deezy_parameters['verbose']
+    assert not ranker.deezy_parameters['overwrite_training']
+    assert not ranker.deezy_parameters['do_test']
+
+    # Test that default parameters are overridden if passed explicitly.
+    ranker = DeezyMatchRanker(
+        resources_path=os.path.join(current_dir,"../resources/"),
+        deezy_parameters = {'verbose': True, 'do_test': True}
+    )
+    assert ranker.deezy_parameters['verbose']
+    assert not ranker.deezy_parameters['overwrite_training']
+    assert ranker.deezy_parameters['do_test']
+
 def test_new():
     # Test Ranker construction via string parameters.
 
