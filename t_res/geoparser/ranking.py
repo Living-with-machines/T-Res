@@ -620,10 +620,6 @@ class DeezyMatchRanker(PerfectMatchRanker):
             f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
         )
 
-        print(f"candidate_scenario: {candidate_scenario}")
-        print(f"pretrained_model_path: {pretrained_model_path}")
-        print(f"pretrained_vocab_path: {pretrained_vocab_path}")
-
         deezy_result = candidate_ranker(
             candidate_scenario=candidate_scenario,
             query=query,
