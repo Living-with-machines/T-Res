@@ -568,6 +568,13 @@ class MentionCandidates:
             return None
         return best_wikidata_link.wqid
 
+    def best_coords(self) -> Optional[Tuple[float, float]]:
+        """Returns the lat-long coordinates of the best Wikidata Link, or None if no best link exists."""
+        best_wikidata_link = self.best_wikidata_link()
+        if not best_wikidata_link:
+            return None
+        return best_wikidata_link.coords
+
     def best_disambiguation_score(self) -> Optional[float]:
         """Returns the disambiguation score of the best match, or None if no such match exists."""
         best_match = self.best_match()
@@ -755,6 +762,10 @@ class Predictions(Candidates):
         """Returns a list of predicted Wikidata IDs (one per toponym mention)."""
         return [c.best_wqid() for c in self.candidates()]
 
+    def best_coords(self) -> List[Optional[Tuple[float, float]]]:
+        """Returns a list of predicted lat-long coordinates (one per toponym mention)."""
+        return [c.best_coords() for c in self.candidates()]
+    
     def best_disambiguation_scores(self) -> List[Optional[float]]:
         """Returns a list of greatest disambiguation scores (one per toponym mention)."""
         return [c.best_disambiguation_score() for c in self.candidates()]
