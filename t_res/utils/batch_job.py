@@ -235,6 +235,7 @@ class BatchJob:
         self.logger.info(f'Resources will be read from: {self.resources_path}')
         self.logger.info(f'Config:\n{self.config_str}')
 
+        self.logger.info(f'Recogniser device: {self.pipe.recogniser.device}')
         if isinstance(self.pipe.linker, linking.RelDisambLinker):
             self.logger.info(f'REL Linker device: {self.pipe.linker.entity_disambiguation_model.device}')
 
