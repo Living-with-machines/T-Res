@@ -126,6 +126,7 @@ def test_load_data(tmp_path):
 
 
 @pytest.mark.resources(reason="Needs large resources")
+@pytest.mark.train(reason="Trains an NER model")
 def test_apply(tmp_path):
     
     recogniser = ner.CustomRecogniser(

@@ -19,6 +19,7 @@ import pandas as pd
 import sqlite3
 
 from t_res.geoparser import ner, ranking, linking, pipeline
+from t_res.utils.dataclasses import Candidates, SentenceCandidates
 
 RECOGNISER_KEY = 'recogniser'
 RANKER_KEY = 'ranker'
@@ -322,6 +323,7 @@ class BatchJob:
 
         print('Candidate selection...')
         tick = datetime.now()
+
         # Convert to a data frame to access the row index via the `name` field.
         result = pd.DataFrame(mentions_series).progress_apply(
             lambda x: self.pipe.run_candidate_selection(
@@ -331,6 +333,7 @@ class BatchJob:
             ),
             axis=1,
         )
+
         tock = datetime.now() 
         self.logger.info(f'Candidate Selection execution time: {tock - tick}')
         return result

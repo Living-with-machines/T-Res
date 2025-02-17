@@ -228,4 +228,3 @@ def test_run_batch_job(tmp_path):
         results = pd.read_csv(f)
 
     assert list(results.columns)[-1] == batch_job.predictions_colname
-    print(results)

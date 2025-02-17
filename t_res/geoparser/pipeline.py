@@ -174,7 +174,7 @@ class Pipeline:
         """
         sentence_candidates = list()
         for sms in sentence_mentions:
-            matches = [self.ranker.run(mention) for mention in sms.mentions]
+            matches = self.ranker.run(sms.mentions)
             candidates = [self.linker.run(m, place_of_pub_wqid, place_of_pub) for m in matches]
             sentence_candidates.append(SentenceCandidates(sms.sentence, candidates))
         return Candidates(sentence_candidates)
