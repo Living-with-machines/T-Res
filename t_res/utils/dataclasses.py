@@ -882,6 +882,7 @@ class Predictions(Candidates):
                 'ner_label': c.mention.ner_label,
                 'ner_score': c.mention.ner_score,
                 'prediction': c.best_wqid(),
+                'predicted_coordinates': c.best_coords(),
                 'toponym_match': c.best_string_match().variation,
                 'string_similarity': c.best_string_match().string_similarity,
                 'disambiguation_score': disambiguation_score,
@@ -960,7 +961,7 @@ class CombinedScores(RelScores):
         confidence (float): REL entity disambiguation confidence score.
     """
     rel_scores: Dict[str, float]
-    
+
 @pdataclass(frozen=True)
 class RelPredictions(Predictions):
     """Dataclass representing toponym predictions in text produced by REL entity disambiguation.
