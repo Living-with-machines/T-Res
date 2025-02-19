@@ -451,10 +451,17 @@ def test_proximity():
     reference_d = 1362.0
 
     assert result == pytest.approx(exp(-(d/reference_d)**2), abs=1e-4)
+    assert result == pytest.approx(0.999, abs=1e-3)
 
     # Test with specific coordinates that require normalization.
     origin_coords = [53.067, -2.522]
     coords = [-24.84, 340.47]
 
     result = linker.proximity(origin_coords, coords)
-    assert result == pytest.approx(0, abs=1e-10)
+    assert result < 1.0e-10
+
+    # Test with toponym 'Penrith'
+    coords = [54.6648, -2.7548]
+    result = linker.proximity(origin_coords, coords)
+    assert result == pytest.approx(0.98302, abs=1e-5)
+

@@ -18,7 +18,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-from ..utils.dataclasses import Mention, MentionCandidates, StringMatchLinks, WikidataLink, MostPopularLink, ByDistanceLink, RelDisambLink, CandidateMatches, CandidateLinks, SentenceCandidates, Predictions, RelPredictions
+from ..utils.dataclasses import Mention, MentionCandidates, StringMatchLinks, WikidataLink, MostPopularLink, ByDistanceLink, RelDisambLink, CandidateMatches, CandidateLinks, SentenceCandidates, Predictions, RelPredictions, CombinedScores
 
 class Linker:
     """
@@ -761,8 +761,8 @@ class RelDisambLinker(MostPopularLinker):
                 return rel_score
             return rel_score * max(popularity, proximity)
 
-        # Iterate over the mention candidates and their corresponding REL scores.
-        for mc, rs in zip(rel_predictions.candidates(ignore_empty_candidates=False), rel_predictions.rel_scores):
+        # Iterate over the mention candidates (and their corresponding REL scores by the same index).
+        for i, mc in enumerate(rel_predictions.candidates(ignore_empty_candidates=False)):
             # Iterate over the predicted Wikidata links.
             for cl in mc.links:
                 # Compute popularity and proximity scores for all Wikidata links.
@@ -772,9 +772,16 @@ class RelDisambLinker(MostPopularLinker):
                 proximity = {wqid: self.proximity(
                     origin_coords=self.wkdt_coords(place_of_pub_wqid),
                     coords=self.wkdt_coords(wqid)) for wqid in wqids}
-                combined = {wqid: combined_score(rs.scores[wqid], popularity[wqid], proximity[wqid]) for wqid in wqids}
-                # Update the REL scores.
-                rs.scores.update(combined)
+                # Compute the combined scores.
+                rs = rel_predictions.rel_scores[i]
+                combined_scores = {wqid: combined_score(rs.scores[wqid], popularity[wqid], proximity[wqid]) for wqid in wqids}
+                # Update the REL predictions (retaining the original REL scores).
+                rel_predictions.rel_scores[i] = CombinedScores(
+                    mention=rs.mention,
+                    scores=combined_scores,
+                    confidence=rs.confidence,
+                    rel_scores=rs.scores,
+                    )
 
     def proximity(self, 
                   origin_coords: Optional[Tuple[float, float]], 

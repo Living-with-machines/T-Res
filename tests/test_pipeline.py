@@ -785,3 +785,116 @@ Beech-street, London."""
     assert len(predictions.candidates(ignore_empty_candidates=False)) == 5
     assert all([not c.mention.is_microtoponym() for c in predictions.candidates(ignore_empty_candidates=False)])
     assert len(predictions.candidates(ignore_empty_candidates=True)) == 4
+
+@pytest.mark.resources(reason="Needs large resources")
+def test_combined_score(tmp_path):
+
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        pipe=None,
+        base_model="khosseini/bert_1760_1900",  # Base model to fine-tune
+        model_path=model_path,
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 1,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,  # Set to True if you want to overwrite model if existing
+        do_test=False,  # Set to True if you want to train on test mode
+    )
+
+    # --------------------------------------
+    # Instantiate the ranker:
+    ranker = ranking.DeezyMatchRanker(
+        resources_path=os.path.join(current_dir, "../resources/"),
+        mentions_to_wikidata=dict(),
+        wikidata_to_mentions=dict(),
+        strvar_parameters={
+            # Parameters to create the string pair dataset:
+            "ocr_threshold": 60,
+            "top_threshold": 85,
+            "min_len": 5,
+            "max_len": 15,
+            "w2v_ocr_path": str(tmp_path),
+            "w2v_ocr_model": "w2v_1800s_news",
+            "overwrite_dataset": False,
+        },
+        deezy_parameters={
+            # Paths and filenames of DeezyMatch models and data:
+            "dm_path": os.path.join(current_dir, "../resources/deezymatch/"),
+            "dm_cands": "wkdtalts",
+            "dm_model": "w2v_ocr",
+            "dm_output": "deezymatch_on_the_fly",
+            # Ranking measures:
+            "ranking_metric": "faiss",
+            "selection_threshold": 50,
+            "num_candidates": 1,
+            "verbose": False,
+            # DeezyMatch training:
+            "overwrite_training": False,
+            "do_test": False,
+        },
+    )
+
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
+        linker = linking.RelDisambLinker(
+            resources_path=os.path.join(current_dir,"../resources/"),
+            ranker=ranker,
+            linking_resources=dict(),
+            rel_params={
+                "db_embeddings": cursor,
+                "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": True,
+                "without_microtoponyms": False,
+            },
+            overwrite_training=False,
+        )
+
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
+
+    text = """There was very little to choose between the play of the two teams, and why the Penrith forwards did not bang the ball out of the scrummage during the quarter of an hour they had the Aspatria men penned within their "25," and their backs having the assistance of the wind to kick with, was a puzzler to me, and why the backs didn't kick more during the second half was another puzzler."""
+
+    place_of_pub = "Carlisle, Cumbria, England"
+    place_of_pub_wqid = "Q192896"
+
+    predictions = geoparser.run(text, place_of_pub_wqid, place_of_pub)
+
+    assert isinstance(predictions, RelPredictions)
+    assert len(predictions.rel_scores) == 1
+    combined_scores = predictions.rel_scores[0]
+
+    # Check that Penrith, Australia is the REL prediction but Penrith, Cumbria 
+    # is the prediction *after* applying the combined score.
+
+    # Penrith, Cumbria is Q798906, latlon (54.6648, -2.7548).
+    assert predictions.best_wqids()[0] == 'Q798906'
+    assert predictions.best_coords()[0] == (54.6648, -2.7548)
+
+    # Combined scores:
+    assert combined_scores.scores['Q798906'] == pytest.approx(0.26184, 1e-4)
+    assert combined_scores.scores['Q798906'] == max(combined_scores.scores.values())
+    # REL scores:
+    assert combined_scores.rel_scores['Q798906'] == pytest.approx(0.26195, 1e-4)
+    assert combined_scores.rel_scores['Q798906'] != max(combined_scores.scores.values())
+
+    # Penrith, Australia is Q385155, latlon (-33.751111, 150.694167).
+    assert combined_scores.scores['Q385155'] == pytest.approx(0.15684, 1e-4)
+    assert combined_scores.scores['Q385155'] != max(combined_scores.scores.values())
+
+    assert combined_scores.rel_scores['Q385155'] == pytest.approx(0.39417, 1e-4)
+    assert combined_scores.rel_scores['Q385155'] == max(combined_scores.rel_scores.values())
+
+    # print("combined scores:")
+    # for k, v in sorted(combined_scores.scores.items(), key=lambda item: item[1], reverse=True):
+    #     print(f'{k}: {v}')
+    # print("REL scores:")
+    # for k, v in sorted(combined_scores.rel_scores.items(), key=lambda item: item[1], reverse=True):
+    #     print(f'{k}: {v}')

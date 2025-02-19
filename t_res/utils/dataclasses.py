@@ -950,6 +950,18 @@ class RelScores:
     confidence: float
 
 @pdataclass(frozen=True)
+class CombinedScores(RelScores):
+    """Dataclass representing combined scores produced by combining REL scores with 
+    proximity and popularity measures.
+    
+    Attributes:
+        mention (str): The toponym mention.
+        scores (Dict[str, float]): REL entity disambiguation scores.
+        confidence (float): REL entity disambiguation confidence score.
+    """
+    rel_scores: Dict[str, float]
+    
+@pdataclass(frozen=True)
 class RelPredictions(Predictions):
     """Dataclass representing toponym predictions in text produced by REL entity disambiguation.
     
