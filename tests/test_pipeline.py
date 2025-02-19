@@ -898,3 +898,31 @@ def test_combined_score(tmp_path):
     # print("REL scores:")
     # for k, v in sorted(combined_scores.rel_scores.items(), key=lambda item: item[1], reverse=True):
     #     print(f'{k}: {v}')
+
+    # Re-run the same test but omitting place of publication info, so the default is used (UK).
+    predictions = geoparser.run(text)
+
+    assert isinstance(predictions, RelPredictions)
+    assert len(predictions.rel_scores) == 1
+    combined_scores = predictions.rel_scores[0]
+
+    # Check that Penrith, Australia is the REL prediction but Penrith, Cumbria 
+    # is the prediction *after* applying the combined score.
+
+    # Penrith, Cumbria is Q798906, latlon (54.6648, -2.7548).
+    assert predictions.best_wqids()[0] == 'Q798906'
+    assert predictions.best_coords()[0] == (54.6648, -2.7548)
+
+    # Combined scores:
+    assert combined_scores.scores['Q798906'] == pytest.approx(0.29257, 1e-4)
+    assert combined_scores.scores['Q798906'] == max(combined_scores.scores.values())
+    # REL scores:
+    assert combined_scores.rel_scores['Q798906'] == pytest.approx(0.29295, 1e-4)
+    assert combined_scores.rel_scores['Q798906'] != max(combined_scores.scores.values())
+
+    # Penrith, Australia is Q385155, latlon (-33.751111, 150.694167).
+    assert combined_scores.scores['Q385155'] == pytest.approx(0.12602, 1e-4)
+    assert combined_scores.scores['Q385155'] != max(combined_scores.scores.values())
+
+    assert combined_scores.rel_scores['Q385155'] == pytest.approx(0.316710, 1e-4)
+    assert combined_scores.rel_scores['Q385155'] == max(combined_scores.rel_scores.values())
