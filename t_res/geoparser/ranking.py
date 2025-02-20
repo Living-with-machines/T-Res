@@ -176,57 +176,72 @@ class Ranker:
         del mentions_to_wikidata_filtered
         del wikidata_to_mentions_filtered
 
-    def run(self, mention: Mention) -> CandidateMatches:
+    def run(self, mentions: List[Mention]) -> List[CandidateMatches]:
         """
-        Executes the ranking process for a given toponym mention.
+        Executes the ranking process for a given list of toponym mentions.
 
         Arguments:
-            mention (Mention): An instance of the Mention dataclass 
-                containing a toponym to be matched.
+            mentions (List[Mention]): A list of instances of the Mention 
+                dataclass cntaining toponyms to be matched.
 
         Returns:
-            An instance of the CandidateMatches dataclass 
-                containing potential string matches for the given toponym, 
-                each with a list of potential Wikidata ID links.
+            A list of instances of the CandidateMatches dataclass 
+                containing potential string matches for each toponym.
 
         Note: 
             String matches are added to the cache for efficient retrieval.
         """
-        # Use the cache if possible.
-        if mention.mention in self.cache:
-            return CandidateMatches(mention, self.method_name, self.cache[mention.mention])
-        
-        # Get the list of candidate string matches for this query.
-        string_matches = self.matches(mention.mention)
+        r = range(len(mentions))
+
+        # Identify which mentions are in the cache.
+        cache_hits = {i: CandidateMatches(mentions[i], self.method_name, self.cache[mentions[i].mention]) 
+                      for i in r if mentions[i].mention in self.cache}
+
+        uncached_indices = list(set(r).difference(set(cache_hits.keys())))
+        uncached_indices.sort()
+        uncached_mentions = [mentions[i].mention for i in uncached_indices]
+        uncached_string_matches = self.matches(uncached_mentions)
+
+        if len(uncached_string_matches) != len(uncached_mentions):
+            raise ValueError(f"Got {len(uncached_string_matches)} lists of matches from {len(uncached_mentions)} queries.")
+
+        dict_string_matches = {uncached_indices[i]: uncached_string_matches[i] for i in range(len(uncached_indices))}
 
         # Get the potential Wikidata links for each string match.
-        matches = []
-        for match in string_matches:
-            wqid_links = list(self.mentions_to_wikidata.get(match.variation, dict()).keys())
-            matches.append(StringMatchLinks(match.variation, match.string_similarity, wqid_links))
+        all_candidates = list()
+        for i in r:
+            if i in cache_hits.keys():
+                all_candidates.append(cache_hits[i])
+            else:
+                matches = list()
+                for match in dict_string_matches[i]:
+                    wqid_links = list(self.mentions_to_wikidata.get(match.variation, dict()).keys())
+                    matches.append(StringMatchLinks(match.variation, match.string_similarity, wqid_links))
 
-        candidates = CandidateMatches(mention, self.method_name, matches)
+                candidates = CandidateMatches(mentions[i], self.method_name, matches)
+                all_candidates.append(candidates)
 
-        # Update the cache.
-        self.cache[mention.mention] = matches
-        return candidates
+                # Update the cache.
+                self.cache[mentions[i].mention] = matches
 
-    def matches(self, query: str) -> List[StringMatch]:
+        return all_candidates
+
+    def matches(self, queries: List[str]) -> List[List[StringMatch]]:
         """
-        Identifies string matching candidates for the given toponym query.
+        Identifies string matching candidates for each of the given toponym queries.
         
         Each Ranker subclass must implement a ranking method by overriding 
         this function.
 
         Args:
-            query (str): A toponym to be matched.
+            queries (List[str]): A list of toponyms to be matched.
 
         Raises:
             NotImplementedError: If this method is not overridden in a subclass.
 
         Returns:
-            A list of StringMatch instances containing potential matches for 
-                the given toponym.
+            A list of lists of StringMatch instances containing potential 
+                matches for each given toponym.
         """
         raise NotImplementedError("Subclass implementation required.")
     
@@ -249,7 +264,10 @@ class PerfectMatchRanker(Ranker):
     # Override the method_name class attribute.
     method_name: str = "perfectmatch"
 
-    def matches(self, query: str) -> List[StringMatch]:
+    def matches(self, queries: List[str]) -> List[List[StringMatch]]:
+        return [self.match_query(query) for query in queries]
+
+    def match_query(self, query: str) -> List[StringMatch]:
         """
         Performs perfect matching between a provided toponym (`query`) and the 
         altnames in the knowledge base.
@@ -273,7 +291,7 @@ class PerfectMatchRanker(Ranker):
             return [StringMatch(query, 1.0)]
         # If no match exists, assign an empty list to matches. 
         return list()
-    
+
 class PartialMatchRanker(PerfectMatchRanker):
     """
     A ranking method using partial string matching. 
@@ -306,7 +324,7 @@ class PartialMatchRanker(PerfectMatchRanker):
         pandarallel.initialize(nb_workers=10)
         os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-    def matches(self, query: str) -> List[StringMatch]:
+    def match_query(self, query: str) -> List[StringMatch]:
         """
         Performs partial string matching for a given toponym query.
 
@@ -322,7 +340,7 @@ class PartialMatchRanker(PerfectMatchRanker):
             If a perfect match exists, partial matching is skipped.
         """
         # First attempt a perfect string match.
-        candidates = super().matches(query)
+        candidates = super().match_query(query)
         if candidates:
             return candidates
         
@@ -530,25 +548,31 @@ class DeezyMatchRanker(PerfectMatchRanker):
                 "overwrite_dataset": False,
             }
 
-        if deezy_parameters is None:
-            deezy_parameters = {
-                # Paths and filenames of DeezyMatch models and data:
-                "dm_path": os.path.join(resources_path, "deezymatch/"),
-                "dm_cands": "wkdtalts",
-                "dm_model": "w2v_ocr",
-                "dm_output": "deezymatch_on_the_fly",
-                # Ranking measures:
-                "ranking_metric": "faiss",
-                "selection_threshold": 50,
-                "num_candidates": 1,
-                "verbose": False,
-                # DeezyMatch training:
-                "overwrite_training": False,
-                "do_test": False,
-            }
+        # Default DeezyMatch parameters:
+        deezy_params = {
+            # Paths and filenames of DeezyMatch models and data:
+            "dm_path": os.path.join(resources_path, "deezymatch/"),
+            "dm_cands": "wkdtalts",
+            "dm_model": "w2v_ocr",
+            "dm_output": "deezymatch_on_the_fly",
+            # Ranking measures:
+            "ranking_metric": "faiss",
+            "selection_threshold": 50,
+            "num_candidates": 1,
+            "search_size": 3,
+            "verbose": False,
+            # DeezyMatch training:
+            "overwrite_training": False,
+            "do_test": False,
+        }
+        if deezy_parameters is not None:
+            if not set(deezy_parameters) <= set(deezy_params):
+                raise ValueError(f"Invalid REL config parameters: {set(deezy_parameters).difference(set(deezy_params))}.")
+            # Update the default parameters with any given parameters.
+            deezy_params.update(deezy_parameters)
 
         self.strvar_parameters = strvar_parameters
-        self.deezy_parameters = deezy_parameters
+        self.deezy_parameters = deezy_params
 
     def __str__(self) -> str:
         """
@@ -575,16 +599,16 @@ class DeezyMatchRanker(PerfectMatchRanker):
         if train or self.deezy_parameters["overwrite_training"]:
             self.train()
 
-    def matches(self, query: str) -> List[StringMatch]:
+    def matches(self, queries: List[str]) -> List[List[StringMatch]]:
         """
-        Performs DeezyMatch ranking on-the-fly for a given toponym query.
+        Performs DeezyMatch ranking on-the-fly for given toponym queries.
 
         Arguments:
-            query (str): A toponym to be matched.
+            queries (List[str]): A list of toponyms to be matched.
 
         Returns:
-            A list of StringMatch instances containing potential matches for 
-                the given toponym.
+            A list of lists of StringMatch instances containing potential 
+                matches for each of the given toponyms.
 
         Note:
             This method performs DeezyMatch on-the-fly for the given toponym.
@@ -600,11 +624,19 @@ class DeezyMatchRanker(PerfectMatchRanker):
         dm_output = self.deezy_parameters["dm_output"]
 
         # First attempt a perfect string match.
-        candidates = super().matches(query)
-        if candidates:
-            return candidates
+        r = range(len(queries))
+
+        perfect_matches = dict()
+        for i in r:
+            matches = super().match_query(queries[i])
+            if matches:
+                perfect_matches[i] = matches
+
+        # If perfect string matches are found for all queries, return them.
+        if set(perfect_matches.keys()) == set(r):
+            return list(perfect_matches.values())
         
-        # Seek fuzzy string matches.
+        # Seek fuzzy string matches for those queries not perfectly matched.
         candidate_scenario = os.path.join(
             dm_path, "combined", dm_cands + "_" + dm_model
         )
@@ -615,9 +647,13 @@ class DeezyMatchRanker(PerfectMatchRanker):
             f"{dm_path}", "models", f"{dm_model}", f"{dm_model}" + ".vocab"
         )
 
+        unmatched_indices = list(set(r).difference(set(perfect_matches.keys())))
+        unmatched_indices.sort()
+        unmatched_queries = {i: queries[i] for i in unmatched_indices}
+
         deezy_result = candidate_ranker(
             candidate_scenario=candidate_scenario,
-            query=query,
+            query=list(unmatched_queries.values()),
             ranking_metric=self.deezy_parameters["ranking_metric"],
             selection_threshold=self.deezy_parameters["selection_threshold"],
             num_candidates=self.deezy_parameters["num_candidates"],
@@ -628,28 +664,42 @@ class DeezyMatchRanker(PerfectMatchRanker):
             pretrained_vocab_path=pretrained_vocab_path,
         )
 
-        if len(deezy_result.index) != 1:
-            raise Exception(f"DeezyMatch result contains {len(deezy_result.index)} rows. Expected 1.")
-        row = deezy_result.iloc[0]
+        if len(deezy_result.index) != len(unmatched_queries):
+            raise Exception(f"DeezyMatch result contains {len(deezy_result.index)} rows. Expected {len(unmatched_queries)}.")
 
-        # Reverse cosine distance to cosine similarity:
-        returned_cands = dict()
-        if self.deezy_parameters["ranking_metric"] == "faiss":
-            returned_cands = row["faiss_distance"]
-            returned_cands = {
-                k: (
-                    self.deezy_parameters["selection_threshold"]
-                    - returned_cands[k]
-                )
-                / self.deezy_parameters["selection_threshold"]
-                for k in returned_cands
-            }
-        else:
-            returned_cands = row["cosine_dist"]
-            returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
+        # Map deezy results into the range r.
+        rows = {unmatched_indices[i]: deezy_result.iloc[i] for i in range(len(unmatched_indices))}
 
-        matches = [StringMatch(k, v) for (k, v) in returned_cands.items()]
-        return matches
+        all_matches = list()
+        for i in r:
+            if i in perfect_matches.keys():
+                all_matches.append(perfect_matches[i])
+            else:
+                row = rows[i]
+
+                # Reverse cosine distance to cosine similarity:
+                returned_cands = dict()
+                if self.deezy_parameters["ranking_metric"] == "faiss":
+                    returned_cands = row["faiss_distance"]
+                    returned_cands = {
+                        k: (
+                            self.deezy_parameters["selection_threshold"]
+                            - returned_cands[k]
+                        )
+                        / self.deezy_parameters["selection_threshold"]
+                        for k in returned_cands
+                    }
+                else:
+                    returned_cands = row["cosine_dist"]
+                    returned_cands = {k: 1 - returned_cands[k] for k in returned_cands}
+
+                matches = [StringMatch(k, v) for (k, v) in returned_cands.items()]
+                all_matches.append(matches)
+
+        if len(all_matches) != len(queries):
+            raise ValueError(f'Found {len(all_matches)} lists of matches for {len(queries)} queries')
+        
+        return all_matches
 
     def train(self):
         """

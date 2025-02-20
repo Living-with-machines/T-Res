@@ -12,10 +12,14 @@ from pathlib import Path
 from typing import Optional, Tuple
 from tqdm import tqdm
 
+from sentence_splitter import SentenceSplitter
+from datasets import Dataset
+from transformers.pipelines.pt_utils import KeyDataset
 import pandas as pd
 import sqlite3
 
 from t_res.geoparser import ner, ranking, linking, pipeline
+from t_res.utils.dataclasses import Candidates, SentenceCandidates
 
 RECOGNISER_KEY = 'recogniser'
 RANKER_KEY = 'ranker'
@@ -183,6 +187,9 @@ class BatchJob:
         # Fill in linking parameters in the case of a REL Linker.
         if self.config[LINKER_KEY]['method_name'] == 'reldisamb':
             self.config[LINKER_KEY]['ranker'] = ranker
+            if 'rel_params' not in self.config[LINKER_KEY].keys():
+                print("No `rel_params` configuration parameter found for REL linking. Using defaults.")
+                self.config[LINKER_KEY]['rel_params'] = dict()
             rel_params = self.config[LINKER_KEY]['rel_params']
             rel_params['do_test'] = False
             rel_params['model_path'] = os.path.join(self.resources_path, "models/disambiguation/")
@@ -228,6 +235,10 @@ class BatchJob:
         self.logger.info(f'Results will be written to: {self.results_path}')
         self.logger.info(f'Resources will be read from: {self.resources_path}')
         self.logger.info(f'Config:\n{self.config_str}')
+
+        self.logger.info(f'Recogniser device: {self.pipe.recogniser.device}')
+        if isinstance(self.pipe.linker, linking.RelDisambLinker):
+            self.logger.info(f'REL Linker device: {self.pipe.linker.entity_disambiguation_model.device}')
 
     def timestamp(self) -> str:
         return self.start_time.strftime('%Y-%m-%d_%H-%M-%S')
@@ -284,14 +295,26 @@ class BatchJob:
 
     def run_batch_ner(self, batch) -> pd.Series:
 
-        # Define function to discard sentences not containing toponym mentions.
-        def run_ner(row):
-            self.logger.debug(f'Running NER on text:\n{row[self.text_colname]}')
-            return [sm for sm in self.pipe.run_text_recognition(row[self.text_colname]) if not sm.is_empty()]
-
         print('NER...')
         tick = datetime.now()
+
+        splitter = SentenceSplitter(language='en', non_breaking_prefix_file=None)
+        def run_ner(row):
+            # Handle the case of empty text.
+            text = str(row[self.text_colname])
+            if len(text) <= 1:
+                return list()
+            # Create a HuggingFace Dataset instance from the list of sentences (to leverage GPU).
+            sentences = splitter.split(text)
+            dataset = Dataset.from_pandas(pd.DataFrame({'text': sentences}))
+            # Call the recogniser pipeline on the dataset.
+            ner_predictions = self.pipe.recogniser.pipe(KeyDataset(dataset, 'text'))
+            # Return a list of non-empty SentenceMentions instances.
+            sms = [self.pipe.recogniser.post_process(p, s) for p, s in zip(ner_predictions, sentences)]
+            return [sm for sm in sms if not sm.is_empty()]
+
         result = batch.progress_apply(run_ner, axis=1)
+
         tock = datetime.now() 
         self.logger.info(f'NER execution time: {tock - tick}')
         return result
@@ -300,6 +323,7 @@ class BatchJob:
 
         print('Candidate selection...')
         tick = datetime.now()
+
         # Convert to a data frame to access the row index via the `name` field.
         result = pd.DataFrame(mentions_series).progress_apply(
             lambda x: self.pipe.run_candidate_selection(
@@ -309,6 +333,7 @@ class BatchJob:
             ),
             axis=1,
         )
+
         tock = datetime.now() 
         self.logger.info(f'Candidate Selection execution time: {tock - tick}')
         return result
@@ -381,9 +406,14 @@ class BatchJob:
         suffix += '-' + self.config[LINKER_KEY]['method_name']
         if self.config[LINKER_KEY]['method_name'] == 'reldisamb':
             if self.config[LINKER_KEY]['rel_params']['with_publication']:
-                suffix += '-withpub'
+                if self.config[LINKER_KEY]['rel_params']['predict_place_of_publication']:
+                    suffix += '-predictpub'
+                else:
+                    suffix += '-withpub'
             else:
                 suffix += '-nopub'
+            if self.config[LINKER_KEY]['rel_params']['combined_score']:
+                suffix += '-combined'
             if self.config[LINKER_KEY]['rel_params']['without_microtoponyms']:
                 suffix += '-nomicro'
             else:
@@ -450,7 +480,7 @@ class SingletonBatchJob(BatchJob):
                 self.logger.debug(f'Running pipeline on text:\n{row[self.text_colname]}')
                 self.logger.debug(f'Place of publication ID:{self.place_of_pub_wqid(row.name)}')
                 self.logger.debug(f'Place of publication:\n{self.place_of_pub(row.name)}')
-            self.pipe.run(
+            return self.pipe.run(
                 row[self.text_colname],
                 place_of_pub_wqid=self.place_of_pub_wqid(row.name),
                 place_of_pub=self.place_of_pub(row.name),

@@ -5,6 +5,8 @@ import pandas as pd
 from t_res.utils.batch_job import *
 from t_res.utils.dataclasses import Predictions
 
+from t_res.geoparser import ranking, linking
+
 current_dir = Path(__file__).parent.resolve()
 
 def sample_config_basic():
@@ -85,6 +87,74 @@ def test_static_constructor():
     assert batch_job.config[LOG_LEVEL_KEY] == 'DEBUG'
 
 @pytest.mark.resources(reason="Needs large resources")
+def test_config(tmp_path):
+    input_file = os.path.join(current_dir, './sample_files/batch_jobs/1880-1900-LwM-HMD-subsample50.csv')
+    resources_path = os.path.join(current_dir, '../resources/')
+    results_path = os.path.join(current_dir, '../results/')
+
+    # Test default REL parameters
+    config = sample_config_basic()
+    config['linker'] = {'method_name': 'reldisamb'}
+    batch_job = BatchJob.new(
+        batch_size=config[BATCH_SIZE_KEY],
+        config=config, 
+        input_file=input_file,
+        resources_path=resources_path,
+        results_path=results_path,
+    )
+    batch_job.construct_pipeline()
+    assert isinstance(batch_job.pipe.linker, linking.RelDisambLinker)
+    assert batch_job.pipe.linker.rel_params['predict_place_of_publication']
+
+    # Test non-default REL parameters.
+    config = sample_config_basic()
+    config['linker'] = {'method_name': 'reldisamb',
+                        'rel_params': {
+                            'predict_place_of_publication': False
+                        }}
+    batch_job = BatchJob.new(
+        batch_size=config[BATCH_SIZE_KEY],
+        config=config, 
+        input_file=input_file,
+        resources_path=resources_path,
+        results_path=results_path,
+    )
+    batch_job.construct_pipeline()
+    assert isinstance(batch_job.pipe.linker, linking.RelDisambLinker)
+    assert not batch_job.pipe.linker.rel_params['predict_place_of_publication']
+
+    # Test default DeezyMatch parameters.
+    config = sample_config_basic()
+    config['ranker'] = {'method_name': 'deezymatch'}
+    batch_job = BatchJob.new(
+        batch_size=config[BATCH_SIZE_KEY],
+        config=config, 
+        input_file=input_file,
+        resources_path=resources_path,
+        results_path=results_path,
+    )
+    batch_job.construct_pipeline()
+    assert isinstance(batch_job.pipe.ranker, ranking.DeezyMatchRanker)
+    assert not batch_job.pipe.ranker.deezy_parameters['verbose']
+
+    # Test non-default DeezyMatch parameters.
+    config = sample_config_basic()
+    config['ranker'] = {'method_name': 'deezymatch',
+                        'deezy_parameters': {
+                            'verbose': True
+                        }}
+    batch_job = BatchJob.new(
+        batch_size=config[BATCH_SIZE_KEY],
+        config=config, 
+        input_file=input_file,
+        resources_path=resources_path,
+        results_path=results_path,
+    )
+    batch_job.construct_pipeline()
+    assert isinstance(batch_job.pipe.ranker, ranking.DeezyMatchRanker)
+    assert batch_job.pipe.ranker.deezy_parameters['verbose']
+
+@pytest.mark.resources(reason="Needs large resources")
 def test_next_batch_range(tmp_path):
     config = sample_config_basic()
 
@@ -158,4 +228,3 @@ def test_run_batch_job(tmp_path):
         results = pd.read_csv(f)
 
     assert list(results.columns)[-1] == batch_job.predictions_colname
-    print(results)

@@ -348,20 +348,17 @@ class ByDistanceLink(WikidataLink):
             raise ValueError("normalized_score must be an float.")
 
 @pdataclass(frozen=True)
-class RelDisambLink(WikidataLink):
+class RelDisambLink(MostPopularLink):
     """Dataclass representing a string match and potential links in 
     Wikidata under the `reldisamb` linking method.
     
     Attributes:
-        freq (int): The mention-to-wikidata link frequency.
         normalized_score (float): The normalized score from resource `mentions_to_wikidata_normalized.json`.
     """
-    freq: int
     normalized_score: float
 
     def __post_init__(self):
-        if not isinstance(self.freq, int):
-            raise ValueError("freq must be an integer.")
+        super().__post_init__()
         if not isinstance(self.normalized_score, float):
             raise ValueError("normalized_score must be an float.")
         
@@ -479,7 +476,7 @@ class PredictedLinks(CandidateLinks):
         Helper method for the Predictions as_dict method."""
         ret = [[k, round(v, 3)] for k, v in self.disambiguation_scores.items()]
         return sorted(ret, key=lambda x: (x[1], x[0]), reverse=True)
-
+    
 # Linker::run method output type.
 @pdataclass(order=True, frozen=True)
 class MentionCandidates:
@@ -570,6 +567,13 @@ class MentionCandidates:
         if not best_wikidata_link:
             return None
         return best_wikidata_link.wqid
+
+    def best_coords(self) -> Optional[Tuple[float, float]]:
+        """Returns the lat-long coordinates of the best Wikidata Link, or None if no best link exists."""
+        best_wikidata_link = self.best_wikidata_link()
+        if not best_wikidata_link:
+            return None
+        return best_wikidata_link.coords
 
     def best_disambiguation_score(self) -> Optional[float]:
         """Returns the disambiguation score of the best match, or None if no such match exists."""
@@ -758,6 +762,10 @@ class Predictions(Candidates):
         """Returns a list of predicted Wikidata IDs (one per toponym mention)."""
         return [c.best_wqid() for c in self.candidates()]
 
+    def best_coords(self) -> List[Optional[Tuple[float, float]]]:
+        """Returns a list of predicted lat-long coordinates (one per toponym mention)."""
+        return [c.best_coords() for c in self.candidates()]
+    
     def best_disambiguation_scores(self) -> List[Optional[float]]:
         """Returns a list of greatest disambiguation scores (one per toponym mention)."""
         return [c.best_disambiguation_score() for c in self.candidates()]
@@ -874,6 +882,7 @@ class Predictions(Candidates):
                 'ner_label': c.mention.ner_label,
                 'ner_score': c.mention.ner_score,
                 'prediction': c.best_wqid(),
+                'predicted_coordinates': c.best_coords(),
                 'toponym_match': c.best_string_match().variation,
                 'string_similarity': c.best_string_match().string_similarity,
                 'disambiguation_score': disambiguation_score,
@@ -940,6 +949,18 @@ class RelScores:
     mention: str
     scores: Dict[str, float]
     confidence: float
+
+@pdataclass(frozen=True)
+class CombinedScores(RelScores):
+    """Dataclass representing combined scores produced by combining REL scores with 
+    proximity and popularity measures.
+    
+    Attributes:
+        mention (str): The toponym mention.
+        scores (Dict[str, float]): REL entity disambiguation scores.
+        confidence (float): REL entity disambiguation confidence score.
+    """
+    rel_scores: Dict[str, float]
 
 @pdataclass(frozen=True)
 class RelPredictions(Predictions):

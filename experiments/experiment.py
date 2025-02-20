@@ -283,7 +283,7 @@ class Experiment:
         mentions = [Mention.from_dict(d) for d in mentions]
 
         # Pass the mentions to the Ranker run method.
-        cands = [self.ranker.run(m) for m in mentions]
+        cands = self.ranker.run(mentions)
 
         # Get Wikidata candidates
         wk_cands = dict()
@@ -837,8 +837,8 @@ class Experiment:
                             if len(sentence_mentions.mentions) != 1:
                                 raise Exception("Expected precisely one mention.")
 
-                            matches = self.ranker.run(sentence_mentions.mentions[0])
-                            candidates = self.linker.run(matches, prediction["place_wqid"], prediction["place"])
+                            matches = self.ranker.run([sentence_mentions.mentions[0]])
+                            candidates = self.linker.run(matches[0], prediction["place_wqid"], prediction["place"])
                             sentence_candidates = SentenceCandidates(sentence_mentions.sentence, [candidates])
                             pred = self.linker.disambiguate([sentence_candidates])
 

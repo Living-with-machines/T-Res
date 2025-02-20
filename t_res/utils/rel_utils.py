@@ -328,7 +328,7 @@ def prepare_rel_trainset(
 
     sentence_candidates = list()
     for k in rel_json.keys():
-        matches = [ranker.run(mention) for mention in sentence_mentions[k].mentions]
+        matches = ranker.run(sentence_mentions[k].mentions)
         candidates = [linker.run(m, rel_json[k][0]["place_wqid"], rel_json[k][0]["place"]) for m in matches]
         sentence_candidates.append(SentenceCandidates(sentence_mentions[k].sentence, candidates))
 

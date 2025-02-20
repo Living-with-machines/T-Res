@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-
+import sqlite3
+from math import exp
 import numpy as np
 import pytest
 
@@ -32,12 +33,17 @@ def test_init():
     )
 
     # Test the extra parameters in the RelDisambLinker
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     linker = RelDisambLinker(
         resources_path="path/to/resources/",
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
         linking_resources={'resource': 'value'},
-        rel_params={'param': 'value'},
+        rel_params={
+            'with_publication': False,
+            'device': device,
+        },
         overwrite_training=True,
     )
 
@@ -46,18 +52,61 @@ def test_init():
     assert linker.resources_path  == "path/to/resources/"
     assert linker.experiments_path  == "path/to/experiments/"
     assert linker.resources['resource'] == 'value'
-    assert linker.rel_params['param'] == 'value'
+    assert linker.rel_params['with_publication'] == False
+    assert linker.rel_params['device'] == device
     assert linker.overwrite_training
 
     linker = RelDisambLinker(
         resources_path="path/to/resources/",
         ranker=ranking.PerfectMatchRanker("path/to/resources/"),
         experiments_path="path/to/experiments/",
-        rel_params={'param': 'value'},
+        rel_params={'with_publication': False},
         linking_resources={'resource': 'value'},
     )
 
     assert not linker.overwrite_training
+
+    # Test default REL linker parameters
+
+    # Invalid parameter raises ValueError:
+    with pytest.raises(ValueError):
+        linker = RelDisambLinker(
+            resources_path="path/to/resources/",
+            ranker=ranking.PerfectMatchRanker("path/to/resources/"),
+            experiments_path="path/to/experiments/",
+            rel_params={'invalid_param': 'value'},
+            linking_resources={'resource': 'value'},
+        )
+
+    linker = RelDisambLinker(
+        resources_path="path/to/resources/",
+        ranker=ranking.PerfectMatchRanker("path/to/resources/"),
+        experiments_path="path/to/experiments/",
+        linking_resources={'resource': 'value'},
+    )
+
+    # Expect default parameter values:
+    assert linker.rel_params['with_publication'] == True
+    assert linker.rel_params['do_test'] == False
+    assert linker.rel_params["without_microtoponyms"] == True
+    
+
+    linker = RelDisambLinker(
+        resources_path="path/to/resources/",
+        ranker=ranking.PerfectMatchRanker("path/to/resources/"),
+        experiments_path="path/to/experiments/",
+        rel_params={
+            'with_publication': False,
+            'do_test': True,
+        },
+        linking_resources={'resource': 'value'},
+    )
+
+    # Default parameter values are overridden:
+    assert linker.rel_params['with_publication'] == False
+    assert linker.rel_params['do_test'] == True
+    # Unspecified parameters have default values:
+    assert linker.rel_params["without_microtoponyms"] == True
 
 def test_new():
     # Test Linker construction via string parameters.
@@ -366,3 +415,53 @@ def test_linking_by_distance():
     assert predictions.is_empty(ignore_empty_candidates=True)
     # If empty candidates are not ignored, the set of predictions is not empty:
     assert not predictions.is_empty(ignore_empty_candidates=False)
+
+@pytest.mark.resources(reason="Needs large resources")
+def test_proximity():
+
+    with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
+        cursor = conn.cursor()
+        linker = RelDisambLinker(
+            resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranking.PerfectMatchRanker(os.path.join(current_dir, "../resources/")),
+            linking_resources=dict(),
+            rel_params={
+                "model_path": os.path.join(current_dir, "../resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir, "sample_files/experiments/outputs/data/lwm/"),
+                "training_split": "apply",
+                "db_embeddings": cursor,
+                "with_publication": True,
+                "without_microtoponyms": False,
+                "do_test": False,
+                "default_publname": "United Kingdom",
+                "default_publwqid": "Q145",
+                "reference_separation": ((49.956739, -8.17751), (60.87, 1.762973)),
+            },
+        )
+    linker.load()
+
+    place_of_pub_wqid = "Q203349" # Poole, Doset
+    wqid = "Q503331" # Dorchester, Dorset
+
+    result = linker.proximity(linker.wkdt_coords(place_of_pub_wqid), linker.wkdt_coords(wqid))
+
+    # Distance from Poole to Dorchester is ~31km
+    d = 31.0
+    # Reference distance is ~1362km
+    reference_d = 1362.0
+
+    assert result == pytest.approx(exp(-(d/reference_d)**2), abs=1e-4)
+    assert result == pytest.approx(0.999, abs=1e-3)
+
+    # Test with specific coordinates that require normalization.
+    origin_coords = [53.067, -2.522]
+    coords = [-24.84, 340.47]
+
+    result = linker.proximity(origin_coords, coords)
+    assert result < 1.0e-10
+
+    # Test with toponym 'Penrith'
+    coords = [54.6648, -2.7548]
+    result = linker.proximity(origin_coords, coords)
+    assert result == pytest.approx(0.98302, abs=1e-5)
+

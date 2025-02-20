@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
-import pytest
+import torch
 
 from t_res.geoparser import ner, ranking, linking, pipeline
 from t_res.utils import rel_utils
@@ -112,6 +112,8 @@ def test_train(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": False,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": True,
                 "do_test": True,
             },
@@ -202,6 +204,8 @@ def test_load_eval_model(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": False,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": False,
                 "do_test": True,
             },
@@ -225,6 +229,9 @@ def test_load_eval_model(tmp_path):
     # Train a linking model if needed:
     linker.train_load_model()
     assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    assert linker.entity_disambiguation_model.device == device
 
 @pytest.mark.resources(reason="Needs large resources")
 def test_predict(tmp_path):
@@ -291,6 +298,8 @@ def test_predict(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": True,
                 "do_test": False,
             },

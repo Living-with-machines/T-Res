@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import numpy as np
+import torch
 from datasets import load_dataset, load_metric
 from transformers import (
     AutoModelForTokenClassification,
@@ -26,6 +27,7 @@ class Recogniser:
 
     Arguments:
         model_name (str): The name of the NER model.
+        device (str, optional): GPU device name (default: ``None``).
 
     Note:
         This base class should not be instatiated directly. Instead use a subclass
@@ -35,11 +37,15 @@ class Recogniser:
     def __init__(
         self,
         model_name: str,
+        device: Optional[str]=None,
     ):
         """
         Initialises a Recogniser object.
         """
         self.model_name = model_name
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
 
     def __str__(self) -> str:
         """
@@ -97,7 +103,7 @@ class Recogniser:
         """
 
         print("*** Creating and loading a NER pipeline.")
-        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[])
+        self.pipe = pipeline("ner", model=self.model(), ignore_labels=[], device=self.device)
 
     # The run method combines `ner_predict` with the `aggregate_mentions`
     # function from `ner_utils.py` (eventually making those redundant).
@@ -133,11 +139,18 @@ class Recogniser:
         if not hasattr(self, 'pipe'):
             raise ValueError("Missing NER pipeline. Try calling the load() method.")
         ner_preds = self.pipe(sentence)
+        return self.post_process(ner_preds, sentence)
+
+    def post_process(self, ner_predictions, sentence: str) -> SentenceMentions:
+
+        sentence = str(sentence)
+        if len(sentence) <= 1:
+            return SentenceMentions(Sentence(sentence), [])
 
         # Post-process the predictions, fixing potential grouping errors:
         lEntities = []
         predictions = []
-        for pred_ent in ner_preds:
+        for pred_ent in ner_predictions:
             pred_ent["score"] = float(pred_ent["score"])
             pred_ent["entity"] = pred_ent["entity"]
             pred_ent = ner_utils.fix_capitalization(pred_ent, sentence)
@@ -159,7 +172,6 @@ class Recogniser:
 
         mentions = [Mention.from_dict(m) for m in mentions]
         return SentenceMentions(Sentence(sentence), mentions=mentions)
-
 
     # Deprecated: use the `run` method instead.
     def ner_predict(self, sentence: str) -> List[dict]:
@@ -325,11 +337,12 @@ class CustomRecogniser(Recogniser):
         },
         overwrite_training: Optional[bool] = False,
         do_test: Optional[bool] = False,
+        device: Optional[str]=None,
     ):
         """
         Initialises a Recogniser object.
         """
-        super().__init__(model_name)
+        super().__init__(model_name, device)
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
         self.pipe = pipe

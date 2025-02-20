@@ -5,7 +5,9 @@ from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
+import torch
 from haversine import haversine
+from math import exp
 from tqdm import tqdm
 
 tqdm.pandas()
@@ -16,7 +18,7 @@ np.random.seed(RANDOM_SEED)
 from ..utils import rel_utils
 from ..utils.REL import entity_disambiguation
 from . import ranking
-from ..utils.dataclasses import Mention, MentionCandidates, StringMatchLinks, WikidataLink, MostPopularLink, ByDistanceLink, RelDisambLink, CandidateMatches, CandidateLinks, SentenceCandidates, Predictions
+from ..utils.dataclasses import Mention, MentionCandidates, StringMatchLinks, WikidataLink, MostPopularLink, ByDistanceLink, RelDisambLink, CandidateMatches, CandidateLinks, SentenceCandidates, Predictions, RelPredictions, CombinedScores
 
 class Linker:
     """
@@ -105,6 +107,30 @@ class Linker:
                 available.
         """
         return self.resources["wqid_to_coords"].get(wqid, None)
+
+    def haversine(self, 
+                  origin_coords: Optional[Tuple[float, float]], 
+                  coords: Optional[Tuple[float, float]]) -> Optional[float]:
+        """
+        Calculates the great circle distance between two points on Earth's surface.
+
+        Args:
+            origin_coords (Optional[Tuple[float, float]]): coordinates of the origin
+            coords (Optional[Tuple[float, float]]): coordinates of the other point
+
+        Returns:
+            The great circle distance between the points, or `None` if either pair
+                of coordinates is unavailable.
+        """
+        if not origin_coords:
+            print("Missing place of publication coordinates.")
+            return None
+        try:
+            return haversine(origin_coords, coords, normalize=True)
+        except ValueError:
+            # We have one candidate with coordinates in Venus!
+            print(f"Failed to compute haversine distance from {origin_coords} to {coords}")
+            return None
 
     def empty_candidates(self, 
                          mention: Mention, 
@@ -270,7 +296,7 @@ class Linker:
                 overriding the `disambiguation_scores` method.
         """
         raise NotImplementedError("Subclass implementation required.")
-
+    
 class MostPopularLinker(Linker):
     """
     An entity linking method that selects the candidate that is most
@@ -376,29 +402,6 @@ class ByDistanceLinker(Linker):
             ]) for wqid in match.wqid_links]
         return links
     
-    def haversine(self, 
-                  origin_coords: Optional[Tuple[float, float]], 
-                  coords: Optional[Tuple[float, float]]) -> Optional[float]:
-        """
-        Calculates the great circle distance between two points on Earth's surface.
-
-        Args:
-            origin_coords (Optional[Tuple[float, float]]): coordinates of the origin
-            coords (Optional[Tuple[float, float]]): coordinates of the other point
-
-        Returns:
-            The great circle distance between the points, or `None` if either pair
-                of coordinates is unavailable.
-        """
-        if not origin_coords:
-            print("Missing place of publication coordinates.")
-            return None
-        try:
-            return haversine(origin_coords, coords)
-        except ValueError:
-            # We have one candidate with coordinates in Venus!
-            return None
-
     def disambiguation_scores(self, 
                               wikidata_links: List[ByDistanceLink], 
                               string_similarity: float) -> Dict[str, float]:
@@ -432,10 +435,14 @@ class ByDistanceLinker(Linker):
             ret[link.wqid] = final_score
         return ret
     
-class RelDisambLinker(Linker):
+class RelDisambLinker(MostPopularLinker):
     """
     An entity linking method that selects the candidate using the [Radboud 
     Entity Linker](https://github.com/informagi/REL/) (REL) model.
+
+    This is a subclass of the MostPopularLinker so that the disambiguation
+    score based on Wikidata popularity may be used to compute a combined 
+    disambiguation score (if configured to do so).
 
     Arguments:
         resources_path (str): The path to the linking resources.
@@ -507,6 +514,7 @@ class RelDisambLinker(Linker):
             "do_test": False,
             "default_publname": "United Kingdom",
             "default_publwqid": "Q145",
+            "reference_separation": ((49.956739, -8.17751), (60.87, 1.762973))
         }
         ```
     """
@@ -526,22 +534,35 @@ class RelDisambLinker(Linker):
         super().__init__(resources_path, experiments_path, linking_resources)
 
         self.overwrite_training = overwrite_training
-        if rel_params is None:
-            rel_params = {
-                "model_path": os.path.join(resources_path, "models/disambiguation/"),
-                "data_path": os.path.join(experiments_path, "outputs/data/lwm/"),
-                "training_split": "originalsplit",
-                "db_embeddings": None,  # The cursor to the embeddings database.
-                "with_publication": True,
-                "without_microtoponyms": True,
-                "do_test": False,
-                "default_publname": "United Kingdom",
-                "default_publwqid": "Q145",
-            }
 
-        self.rel_params = rel_params
+        # Default linking parameters:
+        params = {
+            "model_path": os.path.join(resources_path, "models/disambiguation/"),
+            "data_path": os.path.join(experiments_path, "outputs/data/lwm/"),
+            "training_split": "originalsplit",
+            "db_embeddings": None,  # The cursor to the embeddings database.
+            "with_publication": True,
+            "predict_place_of_publication": True,
+            "combined_score": True,
+            "without_microtoponyms": True,
+            "do_test": False,
+            "default_publname": "United Kingdom",
+            "default_publwqid": "Q145",
+            "reference_separation": ((49.956739, -8.17751), (60.87, 1.762973)),
+            "device": "cuda" if torch.cuda.is_available() else "cpu"
+        }
+        if rel_params is not None:
+            if not set(rel_params) <= set(params):
+                raise ValueError("Invalid REL config parameters.")
+            # Update the default parameters with any given parameters.
+            params.update(rel_params)
+
+        self.rel_params = params
         self.ranker = ranker
         self.entity_disambiguation_model = None
+
+        reference_separation = self.rel_params['reference_separation']
+        self.reference_distance  = self.haversine(reference_separation[0], reference_separation[1])
 
     def __str__(self) -> str:
         """
@@ -656,11 +677,21 @@ class RelDisambLinker(Linker):
             ValueError("Entity disambiguation model not yet loaded. Call `load` method.")
 
         # Apply the REL model to the interim predictions.
-        rel_predictions = self.entity_disambiguation_model.predict(
+        rel_predictions_dict = self.entity_disambiguation_model.predict(
             predictions.as_dict(self.rel_params["with_publication"]))
 
         # Incorporate the REL model predictions.
-        return predictions.apply_rel_disambiguation(rel_predictions, self.rel_params["with_publication"])
+        rel_predictions = predictions.apply_rel_disambiguation(rel_predictions_dict, self.rel_params["with_publication"])
+    
+        # Take into account the `predict_place_of_pub` config parameter.
+        if self.rel_params['predict_place_of_publication']:
+            self.predict_place_of_publication(rel_predictions)
+
+        # Take into account the `combined_score` config parameter.
+        if self.rel_params['combined_score']:
+            self.apply_combined_score(rel_predictions)
+
+        return rel_predictions
 
     # Computes disambiguation scores for a collection of potential Wikidata links.
     # (Note: this replaces the rank_candidates function from rel_utils.py)
@@ -695,6 +726,82 @@ class RelDisambLinker(Linker):
             ret[wikidata_link.wqid] = score
 
         return ret
+
+    def predict_place_of_publication(self, rel_predictions: RelPredictions):
+        """
+        Sets the disambiguation scores for the place of publication to 1.0 inside the given 
+        REL predictions, provided the place of publication is known and exists as a candidate link.
+
+        Arguments:
+            rel_predictions: An instance of the `RelPredictions` dataclass.
+        """
+        place_of_pub_wqid = rel_predictions.place_of_pub_wqid()
+        if not place_of_pub_wqid:
+            return
+        for rs in rel_predictions.rel_scores:
+            # If the place of publication is not in the list of scored candidates, do nothing.
+            if not place_of_pub_wqid in rs.scores.keys():
+                return
+            rs.scores[place_of_pub_wqid] = 1.0
+
+    def apply_combined_score(self, rel_predictions: RelPredictions):
+        """
+        Updates all disambiguation scores in the given REL predictions by 
+        combining the REL score with place of publication information, if known.
+
+        Arguments:
+            rel_predictions: An instance of the `RelPredictions` dataclass.
+        """
+        place_of_pub_wqid = rel_predictions.place_of_pub_wqid()
+        if not place_of_pub_wqid:
+            return
+        
+        def combined_score(rel_score, popularity, proximity):
+            if not proximity:
+                return rel_score
+            return rel_score * max(popularity, proximity)
+
+        # Iterate over the mention candidates (and their corresponding REL scores by the same index).
+        for i, mc in enumerate(rel_predictions.candidates(ignore_empty_candidates=False)):
+            # Iterate over the predicted Wikidata links.
+            for cl in mc.links:
+                # Compute popularity and proximity scores for all Wikidata links.
+                wqids = [wl.wqid for wl in cl.wikidata_links]
+                # Use the MostPopularLinker superclass to compute popularity.
+                popularity = super().disambiguation_scores(cl.wikidata_links)
+                proximity = {wqid: self.proximity(
+                    origin_coords=self.wkdt_coords(place_of_pub_wqid),
+                    coords=self.wkdt_coords(wqid)) for wqid in wqids}
+                # Compute the combined scores.
+                rs = rel_predictions.rel_scores[i]
+                combined_scores = {wqid: combined_score(rs.scores[wqid], popularity[wqid], proximity[wqid]) for wqid in wqids}
+                # Update the REL predictions (retaining the original REL scores).
+                rel_predictions.rel_scores[i] = CombinedScores(
+                    mention=rs.mention,
+                    scores=combined_scores,
+                    confidence=rs.confidence,
+                    rel_scores=rs.scores,
+                    )
+
+    def proximity(self, 
+                  origin_coords: Optional[Tuple[float, float]], 
+                  coords: Optional[Tuple[float, float]]) -> Optional[float]:
+        """Computes the proximity measure between pairs of lat-long coordinates.
+
+        Args:
+            origin_coords (Optional[Tuple[float, float]]): _description_
+            coords (Optional[Tuple[float, float]]): _description_
+
+        Returns:
+            Optional[float]: _description_
+        """
+        if not coords:
+            return None
+        distance = self.haversine(origin_coords, coords)
+        # Handle caught error in the haversine method.
+        if not distance:
+            return None
+        return exp(-(distance/self.reference_distance)**2)
 
     def train_load_model(self, split: Optional[str] = "originalsplit"):
         """
@@ -749,7 +856,7 @@ class RelDisambLinker(Linker):
 
         if self.overwrite_training == True or not Path(linker_name).is_dir() or len(os.listdir(linker_name)) == 0:
             print(
-                "The entity disambiguation model does not exist or overwrite_training is set to True."
+                f"The entity disambiguation model {Path(linker_name)} does not exist or overwrite_training is set to True."
             )
 
             print("Creating the dataset.")
@@ -791,6 +898,7 @@ class RelDisambLinker(Linker):
             config_rel = {
                 "mode": "train",
                 "model_path": os.path.join(linker_name, "model"),
+                "device": self.rel_params["device"],
             }
 
             # Instantiate the entity disambiguation model:
@@ -810,6 +918,7 @@ class RelDisambLinker(Linker):
             config_rel = {
                 "mode": "eval",
                 "model_path": os.path.join(linker_name, "model"),
+                "device": self.rel_params["device"],
             }
 
             model = entity_disambiguation.EntityDisambiguation(
