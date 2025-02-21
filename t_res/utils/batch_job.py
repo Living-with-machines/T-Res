@@ -84,6 +84,7 @@ class BatchJob:
     
     text_colname = 'text'
 
+    predictions_csv = 'predictions.csv'
     predictions_pickle = 'predictions.pkl'
     predictions_colname = 'predictions'
 
@@ -392,11 +393,21 @@ class BatchJob:
                 return list()
             return p.summary_dict()
         
-        results_column = predictions.apply(summarise)
-        results = pd.concat([self.input_data, results_column.rename(self.predictions_colname)], axis=1)
+        # Write an extra column alongside the CSV input data.
+        predictions_column = predictions.apply(summarise)
+        results = pd.concat([self.input_data, predictions_column.rename(self.predictions_colname)], axis=1)
 
         results.to_csv(self.results_file(), index=False)
         self.logger.info(f'Results written to {self.results_file()}')
+
+        # Write a new CSV file containing one row per toponym prediction.
+        predictions_list = predictions_column.tolist()
+        flat_predictions_list = [p for predictions in predictions_list for p in predictions]
+        predictions_df = pd.DataFrame(flat_predictions_list)
+
+        predictions_file = os.path.join(self.run_path, self.predictions_csv)
+        predictions_df.to_csv(predictions_file, index=False)
+        self.logger.info(f'Predictions written to {predictions_file}')
 
     def results_file(self) -> str:
         _, input_filename = os.path.split(self.input_file)

@@ -535,6 +535,7 @@ class MentionCandidates:
                 return m
         return None
     
+    # TODO: rename as best_links.
     def best_match(self) -> Optional[CandidateLinks]:
         """Returns the CandidateLinks instance whose StringMatch has the highest string similarity,
         or None if no such match exists."""
@@ -868,6 +869,7 @@ class Predictions(Candidates):
         return d
     
     def summary_dict(self) -> List[dict]:
+        """Returns a summary prediction for each toponym mention as a list of dictionaries."""
         l = list()
         for c, s in zip(self.candidates(ignore_empty_candidates=True), 
                         self.sentences(ignore_empty_candidates=True)):
