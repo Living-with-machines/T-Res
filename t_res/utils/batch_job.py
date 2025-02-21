@@ -83,6 +83,7 @@ class BatchJob:
     """
     
     text_colname = 'text'
+    nlp_colname = 'NLP'
 
     predictions_csv = 'predictions.csv'
     predictions_pickle = 'predictions.pkl'
@@ -154,7 +155,7 @@ class BatchJob:
         if self.place_of_pub_file:
 
             for i, row in pd.read_csv(self.place_of_pub_file).iterrows():
-                self.place_of_pub_data[row['NLP']] = {
+                self.place_of_pub_data[row[self.nlp_colname]] = {
                     self.place_of_pub_wqid_key: row['Wikidata ID'],
                     self.place_of_pub_key: row['location']
                 }
@@ -171,7 +172,7 @@ class BatchJob:
                 }
 
             self.place_of_pub_series = self.input_data.apply(
-                lambda x: place_of_pub_for_nlp(x['NLP']),
+                lambda x: place_of_pub_for_nlp(x[self.nlp_colname]),
                 axis=1,
             )
         else:
@@ -402,7 +403,11 @@ class BatchJob:
 
         # Write a new CSV file containing one row per toponym prediction.
         predictions_list = predictions_column.tolist()
+
         flat_predictions_list = [p for predictions in predictions_list for p in predictions]
+        # Include the index of the corresponding row of the input CSV file.
+        flat_predictions_list = [dict(p, **{'input_row_index': i}) for i, predictions 
+                                 in enumerate(predictions_list) for p in predictions]
         predictions_df = pd.DataFrame(flat_predictions_list)
 
         predictions_file = os.path.join(self.run_path, self.predictions_csv)
