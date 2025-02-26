@@ -535,7 +535,6 @@ class MentionCandidates:
                 return m
         return None
     
-    # TODO: rename as best_links.
     def best_match(self) -> Optional[CandidateLinks]:
         """Returns the CandidateLinks instance whose StringMatch has the highest string similarity,
         or None if no such match exists."""
