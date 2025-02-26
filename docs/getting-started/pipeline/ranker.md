@@ -11,7 +11,15 @@ T-Res provides four different strategies for selecting candidates:
 -   `levenshtein` retrieves candidates from the knowledge base if there is a fuzzy match between the query and the candidate names, based on levenshtein distance. Therefore, mention "Wiltshrre" would still return the candidates for "Wiltshire". This method is often quite accurate when it comes to OCR variations, but it is very slow.
 -   `deezymatch` retrieves candidates from the knowledge base if there is a fuzzy match between the query and the candidate names, based on similarity between [DeezyMatch](https://github.com/Living-with-machines/DeezyMatch) embeddings. It is significantly more complex than the other methods to set up from scratch, and you will need to train a DeezyMatch model (which takes about two hours), but once it is set up, it is the fastest approach (except for `perfectmatch`).
 
-**TODO:** insert Ranker class diagram here.
+## Ranker Classes
+
+To perform candidate selection with T-Res you must first construct an instance of the `Ranker` class, as explained in [Section 1](#1-instantiate-the-ranker) below. The following diagram shows the class structure, with the abstract base class `Ranker` in green and its four concrete subclasses in orange. When constructing an instance, choose the appropriate subclass for your candidate selection method.
+
+It can be seen that all subclasses extend the `PerfectMatchRanker` class. This is because every ranking method begins by attempting to find a perfect string match in the Wikidata knowledgebase. Only if this attempt is unsuccessful will a more flexible string matching method be attempted.
+
+&nbsp;
+
+![Ranker classes](../../assets/ranker-classes.svg){ width="560" } 
 
 ## 1. Instantiate the Ranker
 

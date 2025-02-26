@@ -5,12 +5,20 @@ The Recogniser performs toponym recognition (i.e. geographic named entity recogn
 1.  Load an existing model (either directly downloading a model from the HuggingFace hub or loading a locally stored NER model), or
 2.  Fine-tune a new model on top of a base model and loading it, or directly load it if it is already pre-trained.
 
-The following notebooks provide examples of both training or loading a NER model using the Recogniser, and using it for detecting entities:
+!!! example "Recogniser example notebooks"
 
-    ./examples/train_use_ner_model.ipynb
-    ./examples/load_use_ner_model.ipynb
+    The following notebooks provide examples of both training or loading a NER model using the Recogniser, and using it for detecting entities:
 
-**TODO:** insert Recogniser class diagram here.
+        ./examples/train_use_ner_model.ipynb
+        ./examples/load_use_ner_model.ipynb
+
+## Recogniser Classes
+
+To perform toponym recognition with T-Res you must first construct an instance of the `Recogniser` class, as explained in [Section 1](#1-instantiate-the-recogniser) below. The following diagram shows the class structure, with the abstract base class `Recogniser` in green and its two concrete subclasses in orange. When constructing an instance, choose the appropriate subclass for your NER model.
+
+&nbsp;
+
+![Recogniser classes](../../assets/recogniser-classes.svg){ width="560" } 
 
 ## 1. Instantiate the Recogniser
 

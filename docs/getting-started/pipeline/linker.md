@@ -21,7 +21,13 @@ We provide two different strategies for disambiguation:
         with Local Neural Attention." In Proceedings of the 2017 Conference on
         Empirical Methods in Natural Language Processing, pp. 2619-2629. 2017.
 
-**TODO:** insert Linker class diagram here.
+## Linker Classes
+
+To perform candidate linking and disambiguation with T-Res you must first construct an instance of the `Linker` class, as explained in [Section 1](#1-instantiate-the-linker) below. The following diagram shows the class structure, with the abstract base class `Linker` in green and its three concrete subclasses in orange. When constructing an instance, choose the appropriate subclass for your candidate selection method.
+
+&nbsp;
+
+![Linker classes](../../assets/linker-classes.svg){ width="560" } 
 
 ## 1. Instantiate the Linker
 

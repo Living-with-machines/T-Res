@@ -8,13 +8,23 @@ The T-Res codebase contains three main classes:
 
 An additional class, the **Pipeline**, wraps these three components into one, therefore making it easier for the user to perform end-to-end entity linking.
 
-**TODO:** insert class diagram here (just show the Pipeline as composed of a Recogniser, Ranker and Linker)
-
 Here we provide a step-by-step guide to instantiating and using the T-Res Pipeline. We recommend that you first try to run T-Res using the default pipeline, and then change it according to your needs.
 
 !!! Warning
 
     Before being able to run the pipeline, you will need to make sure you have all the required resources. Refer to the "[Resources & directory structure](resources.md)" page in the documentation.
+
+## Pipeline Class
+
+To perform toponym resolution with the T-Res pipeline you must first construct an instance of the `Pipeline` class, as explained in [Section 1](#1-instantiate-the-pipeline) below. The following diagram shows the class structure, which consists of a single `Pipeline` class which is composed of a [`Recogniser`](recogniser.md), [`Ranker`](ranker.md) and [`Linker`](linker.md) instance.
+
+The `run` method executes the end-to-end pipeline. The result of this is equivalent to running the three steps separately using the methods `run_text_recognition`, `run_candidate_selection` and `run_disambiguation`.
+
+&nbsp;
+
+<figure markdown="1">
+![Pipeline class](../../assets/pipeline-classes.svg){ width="260" } 
+</figure>
 
 ## 1. Instantiate the Pipeline
 
