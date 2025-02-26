@@ -134,3 +134,5 @@ To run the hooks on all files, you can do:
 ```console
 $ poetry run pre-commit run --all-files
 ```
+
+&nbsp;

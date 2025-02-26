@@ -19,7 +19,13 @@ nav:
     - getting-started/index.md
     - getting-started/installation.md
     - getting-started/resources.md
-    # - getting-started/complete-tour.md # TODO
+    - getting-started/data-structures.md
+    - T-Res pipeline:
+      - getting-started/pipeline/index.md
+      - getting-started/pipeline/recogniser.md
+      - getting-started/pipeline/ranker.md
+      - getting-started/pipeline/linker.md
+    - getting-started/batch-jobs.md
   - Reference:
     - reference/index.md
     - geoparser module:

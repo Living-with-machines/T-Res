@@ -1,4 +1,4 @@
-# Resources & directory structure
+# Resources & file structure
 
 T-Res requires several resources to work. Some resources can be downloaded and loaded directly from the web. Others will need to be generated, following the instructions provided in this section. In this page, we describe the format of the files that are required by T-Res, therefore also giving the user the option to use their own resources (adapted to T-Res).
 
@@ -433,3 +433,5 @@ T-Res/
 ```
 
 A question mark (`?`) is used to indicate resources which are only required for some approaches (for example, the `rel_db/embeddings_database.db` file is only required by the REL-based disambiguation approaches). Note that an asterisk (`*`) next to the resource means that the path can be changed when instantiating the T-Res objects, and a plus sign (`+`) if the name of the file can be changed in the instantiation.
+
+&nbsp;
