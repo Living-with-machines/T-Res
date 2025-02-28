@@ -82,3 +82,6 @@ markers = [
     "train: tests which train a model",
     "app: tests which require access to the HTTP API"
 ]
+
+[tool.setuptools]
+packages = ["t_res"]
