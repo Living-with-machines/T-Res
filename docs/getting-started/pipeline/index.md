@@ -182,7 +182,7 @@ predictions = geoparser.run_disambiguation(candidates)
 
 This will produce the exact same output as we [obtained above][predictions-output] when running the pipeline end-to-end.
 
-#### Description of the output - TODO
+#### Description of the output
 
 The output of running the pipeline (both using the end-to-end method or in a step-wise manner, regardless of the methods used for each of the three components), will have the following format:
 
@@ -245,48 +245,5 @@ Description of the fields:
     1.  Perform toponym recognition on all the texts,
     1.  Obtain the set of all unique toponyms identified in the full dataset, and perform candidate selection on the unique set of toponyms,
     1.  Perform toponym disambiguation on a per-text basis, passing as argument the dictionary of candidates returned in the previous step.
-
-    See as an example, and assuming the dataset is in a `CSV` format with one text per row, the following:
-
-    ```python
-    # Load the data: 
-    df = pd.read_pickle("1880-1900-LwM-HMD-subsample.csv") 
-    place_of_pub_wqid = "Q84"
-    place_of_pub = "London" 
-
-    # Instantiate the recogniser, ranker and linker: 
-    recogniser = ner.PretrainedRecogniser(...) 
-    ranker = ranking.DeezyMatchRanker(...) 
-    linker = linking.RelDisambLinker(...)
-
-    # Instantiate the pipeline: 
-    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
-
-    ############### TODO: needs some major changes as the results are now instances, not JSON ##############
-    ###############       so should (arguably) not be written into the dataframe.             ##############
-
-    # Find mentions for each text in the dataframe: 
-    df["identified_toponyms"] = df.progress_apply(
-        lambda x: geoparser.run_text_recognition(x["text"]), axis=1)
-
-    # Obtain the set of unique mentions in the whole dataset and find their candidates: 
-    all_toponyms = [item for l in df["identified_toponyms"] for item in l] 
-    all_cands = geoparser.run_candidate_selection(
-        all_toponyms,
-        place_of_pub_wqid=place_of_pub_wqid,
-        place_of_pub=place_of_pub,
-    )
-
-    # Disambiguate the mentions for each text in the dataframe, taking as an input
-    # the recognised mentions and the mention-to-candidate dictionaries: 
-    df["identified_toponyms"] = df.progress_apply(
-        lambda x: geoparser.run_disambiguation(all_cands
-            x["identified_toponyms"], 
-            , 
-            place_wqid=wikidata_id, 
-            place=location
-        ), axis=1, 
-    )
-    ```
 
 &nbsp;

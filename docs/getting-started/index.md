@@ -4,6 +4,8 @@
 
 -   [Installing T-Res](installation.md)
 -   [Resources and directory structure](resources.md)
--   [The complete tour](complete-tour.md)
+-   [T-Res data structures](data-structures.md)
+-   [T-Res pipeline](pipeline/index.md)
+-   [Batch jobs](batch-jobs.md)
 
 </div>
