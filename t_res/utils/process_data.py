@@ -1,3 +1,7 @@
+"""
+The `t_res.utils.process_data` module contains utility functions for data processing.
+"""
+
 import json
 import os
 import sys
@@ -8,15 +12,13 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 import pandas as pd
 from tqdm import tqdm
 
-from . import ner
-
-if TYPE_CHECKING:
-    from ..geoparser import recogniser
+from . import ner_utils
+from ..geoparser import ner
 
 
 def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
     """
-    Evaluate a string expression using :py:func:`ast.literal_eval`. If
+    Evaluate a string expression using `ast.literal_eval`. If
     the evaluation succeeds, the result is returned. If a ``ValueError``
     occurs during evaluation, the provided ``in_case`` value is returned
     instead.
@@ -24,18 +26,19 @@ def eval_with_exception(str2parse: str, in_case: Optional[Any] = "") -> Any:
     Arguments:
         str2parse (str): The string expression to be evaluated.
         in_case (Any, optional): The value to return in case of a
-            ``ValueError``. Defaults to ``""``.
+            ``ValueError``.
 
     Returns:
-        Any:
-            The evaluated result if successful, or the ``in_case`` value if an
+        The evaluated result if successful, or the ``in_case`` value if an
             error occurs.
 
-    Example:
-        >>> eval_with_exception("[1, 2, 3]")
-        [1, 2, 3]
-        >>> process_data.eval_with_exception(None, [])
-        []
+    Example: Examples:
+        ```
+        eval_with_exception("[1, 2, 3]")
+        > [1, 2, 3]
+        eval_with_exception(None, [])
+        > []
+        ```
     """
     try:
         return literal_eval(str2parse)
@@ -50,19 +53,19 @@ def prepare_sents(df: pd.DataFrame) -> Tuple[dict, dict, dict]:
     Returns:
         Tuple[dict, dict, dict]: A tuple consisting of three dictionaries:
 
-            #. ``dSentences``: A dictionary in which we keep, for each article/
+            1. ``dSentences``: A dictionary in which we keep, for each article/
                sentence (expressed as e.g. ``"10732214_1"``, where
                ``"10732214"`` is the article_id and ``"1"`` is the order of
                the sentence in the article), the full original unprocessed
                sentence.
-            #. ``dAnnotated``: A dictionary in which we keep, for each article/
+            1. ``dAnnotated``: A dictionary in which we keep, for each article/
                sentence, an inner dictionary mapping the position of an
                annotated named entity (i.e. its start and end character, as a
                tuple, as the key) and another tuple as its value, which
                consists of: the type of named entity (such as ``LOC`` or
                ``BUILDING``, the mention, and its annotated link), all
                extracted from the gold standard.
-            #. ``dMetadata``: A dictionary in which we keep, for each article/
+            1. ``dMetadata``: A dictionary in which we keep, for each article/
                sentence, its metadata: ``place`` (of publication), ``year``,
                ``ocr_quality_mean``, ``ocr_quality_sd``, ``publication_title``,
                ``publication_code``, and ``place_wqid`` (Wikidata ID of the
@@ -153,6 +156,7 @@ def align_gold(predictions: List[dict], annotations: dict) -> List[dict]:
               ``"O"``).
             - ``link`` (str): The predicted entity link (initially set to
               ``"O"``).
+
         annotations (dict): A dictionary where the keys are tuples
             representing the start and end positions of gold standard
             detections in a sentence, and the values are tuples containing the
@@ -161,8 +165,7 @@ def align_gold(predictions: List[dict], annotations: dict) -> List[dict]:
             ``"Q335322"``).
 
     Returns:
-        List[dict]:
-            A list of dictionaries representing the aligned gold standard
+        A list of dictionaries representing the aligned gold standard
             labels. Each dictionary contains the same keys as the predictions:
 
             - ``start`` (int): The start position of the aligned token.
@@ -202,13 +205,11 @@ def postprocess_predictions(
     Postprocess predictions to be used later in the pipeline.
 
     Arguments:
-        predictions (list): the output of the
-            :py:meth:`geoparser.recogniser.Recogniser.ner_predict` method,
+        predictions (list): the output of the 
+            [Recogniser][t_res.geoparser.ner.Recogniser] `ner_predict` method,
             where, given a sentence, a list of dictionaries is returned, where
             each dictionary corresponds to a recognised token, e.g.:
-
-            .. code-block:: json
-
+                ```json
                 {
                     "entity": "O",
                     "score": 0.99975187,
@@ -216,22 +217,23 @@ def postprocess_predictions(
                     "start": 0,
                     "end": 4
                 }
+                ```
 
-        gold_positions (list): the output of the
-            :py:func:`utils.process_data.align_gold` function, which
+        gold_positions (list): the output of the 
+            [align_gold][t_res.utils.process_data.align_gold] function, which
             aligns the gold standard text to the tokenisation performed by the
             named entity recogniser, to enable assessing the performance of
             the NER and linking steps.
 
     Returns:
-        dict: A dictionary with three key-value pairs:
+        A dictionary with three key-value pairs:
 
-            #. ``sentence_preds`` is mapped to the list of lists
-               representation of ``predictions``,
-            #. ``sentence_trues`` is mapped to the list of lists
-               representation of 'gold_positions', and
-            #. ``sentence_skys`` is the same as ``sentence_trues``, but with
-               empty link.
+            1. ``sentence_preds`` is mapped to the list of lists
+                    representation of ``predictions``,
+            1. ``sentence_trues`` is mapped to the list of lists
+                    representation of 'gold_positions', and
+            1. ``sentence_skys`` is the same as ``sentence_trues``, but with
+                    empty link.
     """
     postprocessed_sentence = dict()
     sentence_preds = [
@@ -253,10 +255,9 @@ def postprocess_predictions(
     return postprocessed_sentence
 
 
-# TODO/typing: set ``myner: recogniser.Recogniser`` here, but creates problem with Sphinx currently
 def ner_and_process(
-    dSentences: dict, dAnnotated: dict, myner
-) -> Tuple[dict, dict, dict, dict, dict]:
+    dSentences: dict, dAnnotated: dict, recogniser: ner.Recogniser
+) -> Tuple[dict, dict, dict, dict, dict, dict]:
     """
     Perform named entity recognition in the LwM way, and postprocess the
     output to prepare it for the experiments.
@@ -272,95 +273,93 @@ def ner_and_process(
             key) and another tuple as its value, which consists of: the type
             of named entity (such as ``LOC`` or ``BUILDING``, the mention, and
             its annotated link), all extracted from the gold standard.
-        myner (recogniser.Recogniser): a Recogniser object, for NER.
+        recogniser (ner.Recogniser): a Recogniser object, for NER.
 
     Returns:
-        Tuple[dict, dict, dict, dict, dict]:
-            A tuple consisting of five dictionaries:
+        A tuple consisting of six dictionaries:
 
-            #. **dPreds**: A dictionary where the NER predictions are stored,
-               where the key is the sentence_id (i.e. ``article_id + "_" +
-               sentence_pos``) and the value is a list of lists, where each
-               element corresponds to one token in a sentence, for example:
+            1. **dPreds**: A dictionary where the NER predictions are stored,
+                where the key is the sentence_id (i.e. ``article_id + "_" +
+                sentence_pos``) and the value is a list of lists, where each
+                element corresponds to one token in a sentence, for example:
 
-               .. code-block:: json
+                ```json
+                    ["From", "O", "O", 0, 4, 0.999826967716217]
+                ```
+                ...where the the elements by their position are:
 
-                   ["From", "O", "O", 0, 4, 0.999826967716217]
+                1. the token,
+                1. the NER tag,
+                1. the link to wikidata, set to ``"O"`` for now because we haven't
+                    performed linking yet,
+                1. the starting character of the token,
+                1. the end character of the token, and
+                1. the NER prediction score.
 
-               ...where the the elements by their position are:
+                This dictionary is stored as a JSON file in the ``outputs/data``
+                folder, with the suffix ``_ner_predictions.json``.
 
-               #. the token,
-               #. the NER tag,
-               #. the link to wikidata, set to ``"O"`` for now because we haven't
-                  performed linking yet,
-               #. the starting character of the token,
-               #. the end character of the token, and
-               #. the NER prediction score.
+            1. **dTrues**: A dictionary where the gold standard named entities
+                are stored, which has the same format as **dPreds** above, but
+                with the manually annotated data instead of the predictions.
 
-               This dictionary is stored as a JSON file in the ``outputs/data``
-               folder, with the suffix ``_ner_predictions.json``.
+                This dictionary is stored as a JSON file in the ``outputs/data``
+                folder, with the suffix ``_gold_standard.json``.
 
-            #. **dTrues**: A dictionary where the gold standard named entities
-               are stored, which has the same format as **dPreds** above, but
-               with the manually annotated data instead of the predictions.
+            1. **dSkys**: A dictionary where the skyline will be stored, for
+                the linking experiments. At this point, it will be the same as
+                **dPreds**, without the NER prediction score. During linking, it
+                will be filled with the gold standard entities when these have
+                been retrieved using candidates.
 
-               This dictionary is stored as a JSON file in the ``outputs/data``
-               folder, with the suffix ``_gold_standard.json``.
+                This dictionary is stored as a JSON file in the ``outputs/data``
+                folder, with the suffix ``_ner_skyline.json``.
 
-            #. **dSkys**: A dictionary where the skyline will be stored, for
-               the linking experiments. At this point, it will be the same as
-               **dPreds**, without the NER prediction score. During linking, it
-               will be filled with the gold standard entities when these have
-               been retrieved using candidates.
+            1. **gold_tokenization**: A dictionary where the gold standard
+                entities are stored, and keys represent ``sentence_id`` (i.e.
+                ``article_id + "_" + sentence_pos``) and the values are lists of
+                dictionaries, each looking like this:
 
-               This dictionary is stored as a JSON file in the ``outputs/data``
-               folder, with the suffix ``_ner_skyline.json``.
+                ```json
+                {
+                    "entity": "B-LOC",
+                    "score": 1.0,
+                    "word": "Unitec",
+                    "start": 193,
+                    "end": 199,
+                    "link": "B-Q30"
+                }
+                ```
 
-            #. **gold_tokenization**: A dictionary where the gold standard
-               entities are stored, and keys represent ``sentence_id`` (i.e.
-               ``article_id + "_" + sentence_pos``) and the values are lists of
-               dictionaries, each looking like this:
+                This dictionary is stored as a JSON file in the ``outputs/data``
+                folder, with the suffix ``_gold_positions.json``.
 
-               .. code-block:: json
+            1. **dMentionsPred**: A dictionary of detected mentions but not
+                yet linked mentions, for example:
 
-                   {
-                       "entity": "B-LOC",
-                       "score": 1.0,
-                       "word": "Unitec",
-                       "start": 193,
-                       "end": 199,
-                       "link": "B-Q30"
-                   }
+                ```json
+                {
+                    "sn83030483-1790-03-03-a-i0001_9": [
+                        {
+                            "mention": "Unitec ? States",
+                            "start_offset": 38,
+                            "end_offset": 40,
+                            "start_char": 193,
+                            "end_char": 206,
+                            "ner_score": 0.79,
+                            "ner_label": "LOC",
+                            "entity_link": "O"
+                        }
+                    ],
+                }
+                ```
 
-               This dictionary is stored as a JSON file in the ``outputs/data``
-               folder, with the suffix ``_gold_positions.json``.
+                This dictionary is stored as a JSON file in the ``outputs/data``
+                folder, with the suffix ``_pred_mentions.json``.
 
-            #. **dMentionsPred**: A dictionary of detected mentions but not
-               yet linked mentions, for example:
-
-               .. code-block:: json
-
-                   {
-                       "sn83030483-1790-03-03-a-i0001_9": [
-                           {
-                               "mention": "Unitec ? States",
-                               "start_offset": 38,
-                               "end_offset": 40,
-                               "start_char": 193,
-                               "end_char": 206,
-                               "ner_score": 0.79,
-                               "ner_label": "LOC",
-                               "entity_link": "O"
-                           }
-                       ],
-                   }
-
-               This dictionary is stored as a JSON file in the ``outputs/data``
-               folder, with the suffix ``_pred_mentions.json``.
-
-            #. **dMentionsGold**: A dictionary consisting of gold standard
-               mentions, analogous to the dictionary of detected mentions, but
-               with the gold standard ``ner_label`` and ``entity_link``.
+            1. **dMentionsGold**: A dictionary consisting of gold standard
+                mentions, analogous to the dictionary of detected mentions, but
+                with the gold standard ``ner_label`` and ``entity_link``.
     """
     gold_tokenization = dict()
     dPreds = dict()
@@ -371,17 +370,17 @@ def ner_and_process(
     for sent_id in tqdm(list(dSentences.keys())):
         sent = dSentences[sent_id]
         annotations = dAnnotated[sent_id]
-        predictions = myner.ner_predict(sent)
+        predictions = recogniser.ner_predict(sent)
         gold_positions = align_gold(predictions, annotations)
         sentence_postprocessing = postprocess_predictions(predictions, gold_positions)
         dPreds[sent_id] = sentence_postprocessing["sentence_preds"]
         dTrues[sent_id] = sentence_postprocessing["sentence_trues"]
         dSkys[sent_id] = sentence_postprocessing["sentence_skys"]
         gold_tokenization[sent_id] = gold_positions
-        dMentionsPred[sent_id] = ner.aggregate_mentions(
+        dMentionsPred[sent_id] = ner_utils.aggregate_mentions(
             sentence_postprocessing["sentence_preds"], "pred"
         )
-        dMentionsGold[sent_id] = ner.aggregate_mentions(
+        dMentionsGold[sent_id] = ner_utils.aggregate_mentions(
             sentence_postprocessing["sentence_trues"], "gold"
         )
 
@@ -410,7 +409,12 @@ def update_with_linking(ner_predictions: dict, link_predictions: pd.Series) -> d
             link_predictions[lp]["token_start"], link_predictions[lp]["token_end"] + 1
         ):
             position_ner = resulting_preds[x][1][:2]
-            resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+            # TODO: improve handling of empty Wikidata predictions:
+            # resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+            if link_predictions[lp]["pred_wqid"]:
+                resulting_preds[x][2] = position_ner + link_predictions[lp]["pred_wqid"]
+            else:
+                resulting_preds[x][2] = position_ner
     return resulting_preds
 
 
@@ -524,7 +528,7 @@ def store_for_scorer(
     scenario_name: str,
     dresults: dict,
     articles_test: List[str],
-) -> None:
+):
     """
     Stores the results in the required format for evaluation using the CLEF-HIPE scorer.
 
@@ -535,15 +539,12 @@ def store_for_scorer(
         articles_test (list): A list of sentences that are part of the split used
             for evaluating the performance in the provided experiment.
 
-    Returns:
-        None.
-
     Note:
         The function also creates a TSV file with the results in the Conll
         format required by the scorer.
 
-        For more information about the CLEF-HIPE scorer, see
-        https://github.com/impresso/CLEF-HIPE-2020-scorer.
+        For more information, see the 
+            [CLEF-HIPE scorer project](https://github.com/impresso/CLEF-HIPE-2020-scorer).
     """
     # Bundle 2 associated tasks: NERC-coarse and NEL
     with open(

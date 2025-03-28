@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
 from t_res.geoparser import pipeline
+from t_res.utils.dataclasses import SentenceMentions, Candidates
 
 os.environ["APP_CONFIG_NAME"] = "t-res_deezy_reldisamb-wpubl-wmtops"
 
@@ -21,21 +22,24 @@ pipeline_config = config_mod.CONFIG
 geoparser = pipeline.Pipeline(**pipeline_config)
 
 
-class APIQuery(BaseModel):
+class RecognitionAPIQuery(BaseModel):
     text: str
-    place: Optional[Union[str, None]] = None
-    place_wqid: Optional[Union[str, None]] = None
 
 
 class CandidatesAPIQuery(BaseModel):
-    toponyms: List[dict]
+    sentence_mentions: List[dict]
+    place_of_pub_wqid: Optional[str] = None
+    place_of_pub: Optional[str] = None
 
 
 class DisambiguationAPIQuery(BaseModel):
-    dataset: List[dict]
-    wk_cands: dict
-    place: Optional[Union[str, None]] = None
-    place_wqid: Optional[Union[str, None]] = None
+    candidates: dict
+
+
+class PipelineAPIQuery(BaseModel):
+    text: str
+    place_of_pub_wqid: Optional[str] = None
+    place_of_pub: Optional[str] = None
 
 
 app_config_name = os.environ["APP_CONFIG_NAME"]
@@ -54,72 +58,50 @@ async def read_root(request: Request):
         "worker_id": os.getpid(),
     }
 
-
-@app.get("/test")
-async def test_pipeline():
-    resolved = geoparser.run_sentence(
-        "Harvey, from London;Thomas and Elizabeth, Barnett.",
-        place="Manchester",
-        place_wqid="Q18125",
-    )
-
-    return resolved
-
-
-@app.get("/resolve_sentence")
-async def run_sentence(api_query: APIQuery, request_id: Union[str, None] = None):
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_sentence(
-        api_query.text, place=place, place_wqid=place_wqid
-    )
-
-    return resolved
-
-
-@app.get("/resolve_full_text")
-async def run_text(api_query: APIQuery):
-
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    resolved = geoparser.run_text(api_query.text, place=place, place_wqid=place_wqid)
-
-    return resolved
-
-
 @app.get("/run_ner")
-async def run_ner(api_query: APIQuery):
-
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
+async def run_ner(api_query: RecognitionAPIQuery):
     ner_output = geoparser.run_text_recognition(
-        api_query.text, place=place, place_wqid=place_wqid
+        api_query.text
     )
-
     return ner_output
-
 
 @app.get("/run_candidate_selection")
 async def run_candidate_selection(cand_api_query: CandidatesAPIQuery):
-
-    wk_cands = geoparser.run_candidate_selection(cand_api_query.toponyms)
-    return wk_cands
-
+    sentence_mentions = SentenceMentions.from_json(cand_api_query.sentence_mentions)
+    candidates = geoparser.run_candidate_selection(
+        sentence_mentions,
+        place_of_pub_wqid=cand_api_query.place_of_pub_wqid,
+        place_of_pub=cand_api_query.place_of_pub,
+        )
+    return candidates
 
 @app.get("/run_disambiguation")
 async def run_disambiguation(api_query: DisambiguationAPIQuery):
-    place = "" if api_query.place is None else api_query.place
-    place_wqid = "" if api_query.place_wqid is None else api_query.place_wqid
-    disamb_output = geoparser.run_disambiguation(
-        api_query.dataset, api_query.wk_cands, place, place_wqid
-    )
-    return disamb_output
+    candidates = Candidates.from_dict(api_query.candidates)
+    predictions = geoparser.run_disambiguation(candidates)
+    return predictions
 
+@app.get("/run_pipeline")
+async def run_pipeline(api_query: PipelineAPIQuery):
+    predictions = geoparser.run(
+        text=api_query.text,
+        place_of_pub_wqid=api_query.place_of_pub_wqid,
+        place_of_pub=api_query.place_of_pub,
+    )
+    return predictions
+
+@app.get("/test")
+async def test_pipeline():
+    predictions = geoparser.run(
+        "Harvey, from London;Thomas and Elizabeth, Barnett.",
+        place_of_pub_wqid="Q18125",
+        place_of_pub="Manchester",
+    )
+    return predictions
 
 @app.get("/health")
 async def healthcheck():
     return {"status": "ok"}
-
 
 if __name__ == "__main__":
     # poetry run uvicorn app.run_local_app:app --port 8123

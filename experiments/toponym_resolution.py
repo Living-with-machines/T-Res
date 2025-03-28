@@ -7,7 +7,7 @@ from pathlib import Path
 import experiment
 import pandas as pd
 
-from t_res.geoparser import linking, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -64,8 +64,8 @@ for exp_param in experiments:
 
     # --------------------------------------
     # Instantiate the recogniser:
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-" + granularity,
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-" + granularity,
         train_dataset=str(current_dir)
         + "/outputs/data/lwm/ner_"
         + granularity
@@ -92,42 +92,17 @@ for exp_param in experiments:
         },  # Training arguments: you can change them. These are selected based on: https://github.com/dbmdz/clef-hipe/tree/main/experiments/clef-hipe-2022#topres19th
         overwrite_training=False,  # Set to True if you want to overwrite an existing model with the same name.
         do_test=False,  # Set to True if you want to perform the training on test mode (the string "_test" will be appended to your model name).
-        load_from_hub=False,  # Whether the model should be loaded from the HuggingFace hub
     )
 
     # --------------------------------------
     # Instantiate the ranker:
-    myranker = ranking.Ranker(
-        method=cand_select_method,
-        resources_path=resources_dir,
-        mentions_to_wikidata=dict(),
-        wikidata_to_mentions=dict(),
-        strvar_parameters={
-            # Parameters to create the string pair dataset:
-            "ocr_threshold": 60,
-            "top_threshold": 85,
-            "min_len": 5,
-            "max_len": 15,
-            "w2v_ocr_path": os.path.join(resources_dir, "models/w2v/"),
-            "w2v_ocr_model": "w2v_*_news",
-            "overwrite_dataset": False,
-        },
-        deezy_parameters={
-            # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(resources_dir, "deezymatch/"),
-            "dm_cands": "wkdtalts",
-            "dm_model": "w2v_ocr",
-            "dm_output": "deezymatch_on_the_fly",
-            # Ranking measures:
-            "ranking_metric": "faiss",
-            "selection_threshold": 50,
-            "num_candidates": 1,
-            "verbose": False,
-            # DeezyMatch training:
-            "overwrite_training": False,
-            "do_test": False,
-        },
-    )
+    kwargs = {
+        'method_name': cand_select_method, 
+        'resources_path': resources_dir
+        }
+    # If deezymatch ranking is selected, use the default parameters,
+    # so no `strvar_parameters` or `deezy_parameters` are needed in the kwargs.
+    ranker = ranking.Ranker.new(**kwargs)
 
     # --------------------------------------
     # Instantiate the linker:
@@ -135,23 +110,27 @@ for exp_param in experiments:
         os.path.join(resources_dir, "rel_db/embeddings_database.db")
     ) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method=top_res_method,
-            resources_path=resources_dir,
-            linking_resources=dict(),
-            rel_params={
-                "model_path": os.path.join(resources_dir, "models/disambiguation/"),
-                "data_path": os.path.join(current_dir, "outputs/data/lwm/"),
-                "training_split": "",
-                "db_embeddings": cursor,
-                "with_publication": wpubl,
-                "without_microtoponyms": wmtops,
-                "do_test": False,
-                "default_publname": "",
-                "default_publwqid": "",
-            },
-            overwrite_training=False,
-        )
+        rel_params={
+            "model_path": os.path.join(resources_dir, "models/disambiguation/"),
+            "data_path": os.path.join(current_dir, "outputs/data/lwm/"),
+            "training_split": "",
+            "db_embeddings": cursor,
+            "with_publication": wpubl,
+            "without_microtoponyms": wmtops,
+            "do_test": False,
+            "default_publname": "",
+            "default_publwqid": "",
+            }
+        kwargs = {
+            'method_name': top_res_method, 
+            'resources_path': resources_dir
+        }
+        # Only include the `rel_params` if the linking method is `reldisamb`.
+        if top_res_method == 'reldisamb':
+            kwargs['ranker'] = ranker
+            kwargs['rel_params'] = rel_params
+            
+        linker = linking.Linker.new(**kwargs)
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -160,9 +139,9 @@ for exp_param in experiments:
         data_path=os.path.join(current_dir, "outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=os.path.join(current_dir, "outputs/results/"),
-        myner=myner,
-        myranker=myranker,
-        mylinker=mylinker,
+        recogniser=recogniser,
+        ranker=ranker,
+        linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split=test_scenario,  # "dev" while experimenting, "test" when running final experiments.
@@ -172,28 +151,26 @@ for exp_param in experiments:
 
     # Print experiment information:
     print(myexperiment)
-    print(myner)
-    print(myranker)
-    print(mylinker)
+    print(recogniser)
+    print(ranker)
+    print(linker)
 
     # -----------------------------------------
     # NER training and creating pipeline:
     # Train the NER models if needed:
-    myner.train()
+    recogniser.train()
     # Load the NER pipeline:
-    myner.pipe = myner.create_pipeline()
+    recogniser.pipe = recogniser.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
-    # Load the resources:
-    myranker.mentions_to_wikidata = myranker.load_resources()
-    # Train a DeezyMatch model if needed:
-    myranker.train()
+    # Load the resources (and train a DeezyMatch model if needed):
+    ranker.load()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.linking_resources = mylinker.load_resources()
+    linker.load()
 
     # -----------------------------------------
     # Prepare experiment:

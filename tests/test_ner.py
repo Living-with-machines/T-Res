@@ -1,19 +1,22 @@
 import os
 from pathlib import Path
 import pytest
+import torch
 
 from transformers.pipelines.token_classification import TokenClassificationPipeline
 
-from t_res.geoparser import recogniser
-from t_res.utils import ner
+from t_res.geoparser import ner
+from t_res.utils import ner_utils
+from t_res.utils.dataclasses import SentenceMentions
 
 current_dir = Path(__file__).parent.resolve()
 
-def test_ner_local_train(tmp_path):
-    model_path = os.path.join(tmp_path,"ner_test.model")
-    
-    myner = recogniser.Recogniser(
-        model="ner_test",
+def test_load_device(tmp_path):
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    recogniser = ner.CustomRecogniser(
+        model_name="ner_test",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         base_model="Livingwithmachines/bert_1760_1900", 
@@ -26,21 +29,41 @@ def test_ner_local_train(tmp_path):
         },
         overwrite_training=False,
         do_test=False,
-        load_from_hub=False,
+        device=device,
+    )
+
+    assert recogniser.device == device
+
+@pytest.mark.train(reason="Trains an NER model")
+def test_ner_local_train(tmp_path):
+    model_path = os.path.join(tmp_path,"ner_test.model")
+    
+    recogniser = ner.CustomRecogniser(
+        model_name="ner_test",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        base_model="Livingwithmachines/bert_1760_1900", 
+        model_path=f"{tmp_path}/",
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,
+        do_test=False,
     )
     assert os.path.exists(model_path) is False
-    myner.train()
-    print(model_path)
-    print(os.listdir(tmp_path))
+    recogniser.train()
     assert os.path.exists(model_path) is True
 
-@pytest.mark.skip(reason="Needs large model file")
+@pytest.mark.resources(reason="Needs large model file")
 def test_ner_predict():
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         base_model="Livingwithmachines/bert_1760_1900", 
@@ -53,56 +76,94 @@ def test_ner_predict():
         },
         overwrite_training=False,
         do_test=False,
-        load_from_hub=False, # Whether the final model should be loaded from the HuggingFace hub"
     )
-    myner.pipe = myner.create_pipeline()
-    assert isinstance(myner.pipe, TokenClassificationPipeline)
+    recogniser.load()
+    assert isinstance(recogniser.pipe, TokenClassificationPipeline)
 
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
-    predictions = myner.ner_predict(sentence)
+    predictions = recogniser.ner_predict(sentence)
     assert isinstance(predictions, list)
     assert len(predictions) == 15
     assert predictions[13] == {'entity': 'B-LOC', 'score': pytest.approx(0.9996446371078491, abs=1e-3), 'word': 'Sheffield', 'start': 74, 'end': 83}
 
     # Test that ner_predict() can handle hyphens
     sentence = "- I grew up in Plymouth—Kingston."
-    predictions = myner.ner_predict(sentence)
+    predictions = recogniser.ner_predict(sentence)
     assert predictions[0]["word"] == "-"
     assert predictions[6]["word"] == ","
 
+@pytest.mark.resources(reason="Needs large model file")
+def test_run():
+    model_path = os.path.join(current_dir, "../resources/models/")
+    assert os.path.isdir(model_path) is True
+
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
+        train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
+        test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
+        base_model="Livingwithmachines/bert_1760_1900", 
+        model_path=model_path,
+        training_args={
+            "batch_size": 8,
+            "num_train_epochs": 10,
+            "learning_rate": 0.00005,
+            "weight_decay": 0.0,
+        },
+        overwrite_training=False,
+        do_test=False,
+    )
+    recogniser.load()
+    assert isinstance(recogniser.pipe, TokenClassificationPipeline)
+
+    sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield, but also in Leeds."
+    result = recogniser.run(sentence)
+
+    assert result.sentence.sentence == sentence
+
+    assert result.len() == 2
+    assert result.mentions[0].mention == "Sheffield"
+    assert result.mentions[0].start_offset == 13
+    assert result.mentions[0].end_offset == 13
+    assert result.mentions[0].start_char == 74
+    assert result.mentions[0].end_char() == 83
+
+    assert result.mentions[1].mention == "Leeds"
+    assert result.mentions[1].start_offset == 18
+    assert result.mentions[1].end_offset == 18
+    assert result.mentions[1].start_char == 97
+    assert result.mentions[1].end_char() == 102
+
+    sentence = ', thence to Emery Down,crowing to Minesteed Manor ; he ther tacked back to Notherwood, and from thence back again to the Manor, where, after a brilliant run (Arnie hour and forty-five minutes, Reynold was compelled to succumb to his pursuers. '
+    result = recogniser.run(sentence)
 
 def test_ner_from_hub():
-    myner = recogniser.Recogniser(
-        model="Livingwithmachines/toponym-19thC-en",
-        load_from_hub=True,
+    recogniser = ner.PretrainedRecogniser(
+        model_name="Livingwithmachines/toponym-19thC-en",
     )
-    myner.train()
-    myner.pipe = myner.create_pipeline()
-    assert isinstance(myner.pipe, TokenClassificationPipeline)
+    recogniser.load()
+    assert isinstance(recogniser.pipe, TokenClassificationPipeline)
     
     sentence = "A remarkable case of rattening has just occurred in the building trade at Sheffield."
-    predictions = myner.ner_predict(sentence)
+    predictions = recogniser.ner_predict(sentence)
     assert isinstance(predictions, list)
     assert len(predictions) == 15
     assert predictions[13] == {'entity': 'B-LOC', 'score': pytest.approx(0.9996446371078491, abs=1e-3), 'word': 'Sheffield', 'start': 74, 'end': 83}
 
-
 def test_aggregate_mentions():
-    myner = recogniser.Recogniser(
-        model="Livingwithmachines/toponym-19thC-en",
-        load_from_hub=True,
+    recogniser = ner.PretrainedRecogniser(
+        model_name="Livingwithmachines/toponym-19thC-en",
     )
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
     
     sentence = "I grew up in Bologna, a city near Florence, but way more interesting."
-    predictions = myner.ner_predict(sentence)
+    predictions = recogniser.ner_predict(sentence)
     # Process predictions:
     procpreds = [
         [x["word"], x["entity"], "O", x["start"], x["end"]]
         for x in predictions
     ]
     # Aggregate mentions:
-    mentions = ner.aggregate_mentions(procpreds, "pred")
+    mentions = ner_utils.aggregate_mentions(procpreds, "pred")
     assert len(mentions) == 2
     assert mentions[1]["mention"] == "Florence"
     assert mentions[0] == {'mention': 'Bologna', 'start_offset': 4, 'end_offset': 4, 'start_char': 13, 'end_char': 20, 'ner_score': 20.0, 'ner_label': 'LOC', 'entity_link': 'O'}
@@ -112,14 +173,14 @@ def test_aggregate_mentions():
     assert mentions[0]["mention"] in sentence
 
     sentence = "ARMITAGE, DEM’TIST, may be consulted dally, from 9 a.m., till 8 p.m., at his residence, 95, STAMFORP-9TKEET, Ashton-cnder-Ltne."
-    predictions = myner.ner_predict(sentence)
+    predictions = recogniser.ner_predict(sentence)
     # Process predictions:
     procpreds = [
         [x["word"], x["entity"], "O", x["start"], x["end"]]
         for x in predictions
     ]
     # Aggregate mentions:
-    mentions = ner.aggregate_mentions(procpreds, "pred")
+    mentions = ner_utils.aggregate_mentions(procpreds, "pred")
     assert len(mentions) == 2
     assert mentions[1]["mention"] == "Ashton-cnder-Ltne"
     assert mentions[0] == {'mention': 'STAMFORP-9TKEET', 'start_offset': 31, 'end_offset': 33, 'start_char': 92, 'end_char': 107, 'ner_score': 102.667, 'ner_label': 'STREET', 'entity_link': 'O'}
@@ -127,3 +188,13 @@ def test_aggregate_mentions():
             mentions[0]["mention"]
         )
     assert mentions[0]["mention"] in sentence
+
+def test_nan_input():
+    recogniser = ner.PretrainedRecogniser(
+        model_name="Livingwithmachines/toponym-19thC-en",
+    )
+    recogniser.load()
+    sentence = float('nan')
+    mentions = recogniser.run(sentence)
+    assert isinstance(mentions, SentenceMentions)
+

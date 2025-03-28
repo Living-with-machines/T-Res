@@ -11,7 +11,7 @@ current_dir = Path(__file__).parent.resolve()
 sys.path.insert(0, os.path.join(current_dir,"../"))
 from experiments import experiment
 
-from t_res.geoparser import linking, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking
 
 def test_experiments_wrong_dataset_path(tmp_path):
     with pytest.raises(SystemExit) as cm:
@@ -20,9 +20,9 @@ def test_experiments_wrong_dataset_path(tmp_path):
             data_path="wrong_path/",
             dataset_df=pd.DataFrame(),
             results_path=str(tmp_path),
-            myner="test",
-            myranker="test",
-            mylinker="test",
+            recogniser="test",
+            ranker="test",
+            linker="test",
             test_split="dev",
         )
 
@@ -32,6 +32,7 @@ def test_experiments_wrong_dataset_path(tmp_path):
     )
 
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_load_data(tmp_path):
     data = pd.read_csv(os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"), sep="\t")
     ids = set()
@@ -42,8 +43,8 @@ def test_load_data(tmp_path):
         for sent in sents:
             ids.add(str(article_id) + "_" + str(sent["sentence_pos"]))
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -57,29 +58,25 @@ def test_load_data(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  
     )
 
     # Instantiate the ranker:
-    myranker = ranking.Ranker(
-        method="perfectmatch",
+    ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.Linker(
-        method="mostpopular",
+    linker = linking.MostPopularLinker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
 
-    myranker.mentions_to_wikidata = myranker.load_resources()
-    myranker.train()
+    # Load the resources (and train a DeezyMatch model if needed):
+    ranker.load()
 
-    mylinker.linking_resources = mylinker.load_resources()
+    linker.load()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -88,9 +85,9 @@ def test_load_data(tmp_path):
         data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=str(tmp_path),
-        myner=myner,
-        myranker=myranker,
-        mylinker=mylinker,
+        recogniser=recogniser,
+        ranker=ranker,
+        linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split="test",  # "dev" while experimenting, "test" when running final experiments.
@@ -128,31 +125,12 @@ def test_load_data(tmp_path):
         assert len(not_empty_dMentionsPred) == len(not_empty_dCandidates)
 
 
-def test_wrong_ranker_method(tmp_path):
-    ranker = ranking.Ranker(
-        # wrong naming: it should be perfectmatch
-        method="perfect_match",
-        resources_path=os.path.join(current_dir,"sample_files/resources/"),
-    )
-
-    exp = experiment.Experiment(
-        dataset="lwm",
-        data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
-        dataset_df=pd.DataFrame(),
-        results_path=str(tmp_path),
-        myner="test",
-        myranker=ranker,
-        mylinker="test",
-    )
-    with pytest.raises(SystemExit) as cm:
-        exp.prepare_data()
-    assert cm.value.code == 0
-
-
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.resources(reason="Needs large resources")
+@pytest.mark.train(reason="Trains an NER model")
 def test_apply(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+    
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -166,29 +144,25 @@ def test_apply(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  
     )
 
     # Instantiate the ranker:
-    myranker = ranking.Ranker(
-        method="perfectmatch",
+    ranker = ranking.PerfectMatchRanker(
         resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
     # --------------------------------------
     # Instantiate the linker:
-    mylinker = linking.Linker(
-        method="mostpopular",
-        resources_path=os.path.join(current_dir,"../resources/"),
+    linker = linking.MostPopularLinker(
+        resources_path=os.path.join(current_dir,"sample_files/resources/"),
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
 
-    myranker.mentions_to_wikidata = myranker.load_resources()
-    myranker.train()
+    # Load the resources (and train a DeezyMatch model if needed):
+    ranker.load()
 
-    mylinker.linking_resources = mylinker.load_resources()
+    linker.load()
 
     # --------------------------------------
     # Instantiate the experiment:
@@ -197,9 +171,9 @@ def test_apply(tmp_path):
         data_path=os.path.join(current_dir,"sample_files/experiments/outputs/data/"),
         dataset_df=pd.DataFrame(),
         results_path=str(tmp_path),
-        myner=myner,
-        myranker=myranker,
-        mylinker=mylinker,
+        recogniser=recogniser,
+        ranker=ranker,
+        linker=linker,
         overwrite_processing=False,  # If True, do data processing, else load existing processing, if exists.
         processed_data=dict(),  # Dictionary where we'll keep the processed data for the experiments.
         test_split="apply",  # "dev" while experimenting, "test" when running final experiments.

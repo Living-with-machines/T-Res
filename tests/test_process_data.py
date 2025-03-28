@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from t_res.geoparser import recogniser
+from t_res.geoparser import ner
 from t_res.utils import process_data
 
 current_dir = Path(__file__).parent.resolve()
@@ -64,9 +64,11 @@ def test_prepare_sents():
     assert len([x for x, y in dMetadata.items() if len(y) == 0]) == 0
 
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_align_gold(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -80,11 +82,9 @@ def test_align_gold(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -97,7 +97,7 @@ def test_align_gold(tmp_path):
         if "3580760_2" == sent_id:
             sent = dSentences[sent_id]
             annotations = dAnnotated[sent_id]
-            predictions = myner.ner_predict(sent)
+            predictions = recogniser.ner_predict(sent)
             gold_positions = process_data.align_gold(predictions, annotations)
 
             I_elements = [
@@ -121,9 +121,11 @@ def test_align_gold(tmp_path):
     assert len(empty_list) == 0
 
 
+@pytest.mark.train(reason="Trains an NER model")
 def test_ner_and_process(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",
+
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
         test_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_dev.json"),
         pipe=None,
@@ -137,11 +139,9 @@ def test_ner_and_process(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,  # Bool: True if model is in HuggingFace hub
     )
 
-    myner.train()
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
 
     dataset_df = pd.read_csv(
         os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/linking_df_split.tsv"),
@@ -157,7 +157,7 @@ def test_ner_and_process(tmp_path):
         gold_tokenization,
         dMentionsPred,
         dMentionsGold,
-    ) = process_data.ner_and_process(dSentences, dAnnotated, myner)
+    ) = process_data.ner_and_process(dSentences, dAnnotated, recogniser)
 
     B_els = [
         [z for z in range(len(y)) if "B-" in y[z]["entity"]]

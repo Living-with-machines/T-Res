@@ -2,13 +2,14 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 
 import pandas as pd
 from tqdm import tqdm
 
-from t_res.geoparser import linking, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking
 from t_res.utils import process_data, rel_utils
+from t_res.utils.dataclasses import SentenceMentions, SentenceCandidates, Mention
 
 
 class Experiment:
@@ -25,10 +26,10 @@ class Experiment:
             be stored. If it does not exist, it will be created.
         dataset_df (pandas.DataFrame): The dataframe representing the
             resulting, preprocessed, dataset.
-        myner (recogniser.Recogniser): An instance of the NER model to use.
-        myranker (ranking.Ranker): An instance of the candidate ranking model
+        ner (recogniser.Recogniser): An instance of the NER model to use.
+        ranker (ranking.Ranker): An instance of the candidate ranking model
             to use.
-        mylinker (linking.Linker): An instance of the linking model to use.
+        linker (linking.Linker): An instance of the linking model to use.
         overwrite_processing (bool, optional): Whether to overwrite the
             processed data if it already exists (default is ``True``).
         processed_data (dict, optional): A dictionary to store the processed
@@ -48,9 +49,9 @@ class Experiment:
         data_path: str,
         results_path: str,
         dataset_df: pd.DataFrame,
-        myner: recogniser.Recogniser,
-        myranker: ranking.Ranker,
-        mylinker: linking.Linker,
+        recogniser: ner.Recogniser,
+        ranker: ranking.Ranker,
+        linker: linking.Linker,
         overwrite_processing: Optional[bool] = True,
         processed_data: Optional[dict] = dict(),
         test_split: Optional[str] = "",
@@ -63,9 +64,9 @@ class Experiment:
         self.dataset = dataset
         self.data_path = data_path
         self.results_path = results_path
-        self.myner = myner
-        self.myranker = myranker
-        self.mylinker = mylinker
+        self.recogniser = recogniser
+        self.ranker = ranker
+        self.linker = linker
         self.overwrite_processing = overwrite_processing
         self.dataset_df = dataset_df
         self.processed_data = processed_data
@@ -119,14 +120,14 @@ class Experiment:
             dict: A dictionary where the processed data is stored.
         """
 
-        output_path = os.path.join(self.data_path, self.dataset, self.myner.model)
+        output_path = os.path.join(self.data_path, self.dataset, self.recogniser.model_name)
 
         # Add the candidate experiment info to the path:
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+        cand_approach = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
+            cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
 
         output_processed_data = dict()
@@ -168,19 +169,6 @@ class Experiment:
 
         # ----------------------------------
         # Coherence checks:
-        # Some scenarios do not make sense. Warn and exit:
-        if self.myranker.method not in [
-            "perfectmatch",
-            "partialmatch",
-            "levenshtein",
-            "deezymatch",
-        ]:
-            print(
-                "\n!!! Coherence check failed. "
-                "This is because the candidate ranking method does not exist.\n"
-            )
-            sys.exit(0)
-
         # ----------------------------------
         # If data is processed and overwrite is set to False, then do nothing,
         # otherwise process the data.
@@ -201,7 +189,7 @@ class Experiment:
         # Parse with NER in the LwM way
         print("\nPerform NER with our model:")
         output_lwm_ner = process_data.ner_and_process(
-            dSentences, dAnnotated, self.myner
+            dSentences, dAnnotated, self.recogniser
         )
 
         dPreds = output_lwm_ner[0]
@@ -223,10 +211,7 @@ class Experiment:
         # Obtain candidates per sentence:
         for sentence_id in tqdm(dMentionsPred):
             pred_mentions_sent = dMentionsPred[sentence_id]
-            (
-                wk_cands,
-                self.myranker.already_collected_cands,
-            ) = self.myranker.find_candidates(pred_mentions_sent)
+            wk_cands = self.find_candidates(pred_mentions_sent)
             dCandidates[sentence_id] = wk_cands
 
         # -------------------------------------------
@@ -249,6 +234,71 @@ class Experiment:
 
         return self.processed_data
 
+    # Method retained from a previous version of the Ranker, for backwards
+    # compatibility (specifically, to support the prepare_data method).
+    def find_candidates(self, mentions: List[dict]) -> dict:
+        """
+        Find candidates for the given mentions using the selected ranking
+        method.
+
+        Arguments:
+            mentions (list): A list of predicted mentions as dictionaries.
+
+        Returns:
+            dict: A dictionary that maps each original mention to a
+               sub-dictionary, where the sub-dictionary maps the mention
+               variations to a sub-sub-dictionary with two keys: ``"Score"``
+               (the string matching similarity score) and ``"Candidates"``
+               (a dictionary containing the Wikidata candidates, where the
+               key is the Wikidata ID and value is the the relative mention-
+               to-wikidata frequency).
+
+               The variation is found by the candidate ranker in the knowledge
+               base, and for each variation, the candidate ranking score and
+               the candidates from Wikidata are provided. E.g. for mention
+               "Guadaloupe" in sentence "sn83030483-1790-03-31-a-i0004_1", the
+               candidates will show as follows:
+
+               .. code-block:: json
+
+                  {
+                    "Guadaloupe": {
+                        "Score": 1.0,
+                        "Candidates": {
+                            "Q17012": 0.003935458480913026,
+                            "Q3153836": 0.07407407407407407
+                        }
+                    }
+                }
+
+        Note:
+            This method takes a list of mentions and finds candidates for each
+            mention using the selected Ranker instance.
+
+            The method returns a dictionary that maps each original mention to
+            a sub-dictionary containing the mention variations as keys and
+            their corresponding Wikidata match scores as values.
+        """
+        # Extract the mentions
+        mentions = [Mention.from_dict(d) for d in mentions]
+
+        # Pass the mentions to the Ranker run method.
+        cands = self.ranker.run(mentions)
+
+        # Get Wikidata candidates
+        wk_cands = dict()
+        for cand in cands:
+            wk_cands[cand.mention.mention] = dict()
+            for match in cand.matches:
+                found_cands = self.ranker.mentions_to_wikidata.get(match.variation, dict())
+                if found_cands:
+                    wk_cands[cand.mention.mention][cand.mention.mention] = {
+                        "Score": match.string_similarity,
+                        "Candidates": found_cands,
+                    }
+
+        return wk_cands
+    
     def store_processed_data(
         self,
         preds: dict,
@@ -295,14 +345,14 @@ class Experiment:
         """
         data_path = self.data_path
         dataset = self.dataset
-        model_name = self.myner.model
+        model_name = self.recogniser.model_name
         output_path = data_path + dataset + "/" + model_name
 
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+        cand_approach = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
+            cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
 
         # Store NER predictions using a specific NER model:
@@ -374,11 +424,11 @@ class Experiment:
         dMetadata = self.processed_data["dMetadata"]
         dCandidates = self.processed_data["dCandidates"]
 
-        cand_approach = self.myranker.method
-        if self.myranker.method == "deezymatch":
-            cand_approach += "+" + str(self.myranker.deezy_parameters["num_candidates"])
+        cand_approach = self.ranker.method_name
+        if self.ranker.method_name == "deezymatch":
+            cand_approach += "+" + str(self.ranker.deezy_parameters["num_candidates"])
             cand_approach += "+" + str(
-                self.myranker.deezy_parameters["selection_threshold"]
+                self.ranker.deezy_parameters["selection_threshold"]
             )
 
         rows = []
@@ -466,9 +516,9 @@ class Experiment:
             data=rows,
         )
 
-        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.myner.model}_{cand_approach}')}")
+        print(f"Saving to {os.path.join(self.data_path,self.dataset,f'{self.recogniser.model_name}_{cand_approach}')}")
         output_path = (
-            os.path.join(self.data_path,self.dataset,f"{self.myner.model}_{cand_approach}")
+            os.path.join(self.data_path,self.dataset,f"{self.recogniser.model_name}_{cand_approach}")
         )
 
 
@@ -540,7 +590,7 @@ class Experiment:
 
         scenario_name = ""
         if task == "ner":
-            scenario_name += task + "_" + self.myner.model + "_"
+            scenario_name += task + "_" + self.recogniser.model_name + "_"
 
             # Store predictions results formatted for CLEF-HIPE scorer:
             preds_name = "preds"
@@ -560,24 +610,24 @@ class Experiment:
             )
 
         if task == "linking":
-            scenario_name += task + "_" + self.myner.model + "_"
-            cand_approach = self.myranker.method
-            if self.myranker.method == "deezymatch":
+            scenario_name += task + "_" + self.recogniser.model_name + "_"
+            cand_approach = self.ranker.method_name
+            if self.ranker.method_name == "deezymatch":
                 cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["num_candidates"]
+                    self.ranker.deezy_parameters["num_candidates"]
                 )
                 cand_approach += "+" + str(
-                    self.myranker.deezy_parameters["selection_threshold"]
+                    self.ranker.deezy_parameters["selection_threshold"]
                 )
             scenario_name += cand_approach + "_" + how_split + "_"
 
-            link_approach = self.mylinker.method
-            if self.mylinker.method == "reldisamb":
-                if self.mylinker.rel_params["with_publication"]:
+            link_approach = self.linker.method_name
+            if self.linker.method_name == "reldisamb":
+                if self.linker.rel_params["with_publication"]:
                     link_approach += "+wpubl"
-                if self.mylinker.rel_params["without_microtoponyms"]:
+                if self.linker.rel_params["without_microtoponyms"]:
                     link_approach += "+wmtops"
-                if self.mylinker.rel_params["do_test"]:
+                if self.linker.rel_params["do_test"]:
                     link_approach += "_test"
 
             # Store predictions results formatted for CLEF-HIPE scorer:
@@ -672,11 +722,6 @@ class Experiment:
             # Get ids of articles in each split:
             test_article_ids = list(test_original.article_id.astype(str))
 
-            # Train a linking model if needed (it requires myranker to generate potential
-            # candidates to the training set):
-            print("Train EL model using:", split)
-            linking_model = self.mylinker.train_load_model(self.myranker, split=split)
-
             # Dictionary of sentences:
             # {k1 : {k2 : v}}, where k1 is article id, k2 is
             # sentence pos, and v is the sentence text.
@@ -722,9 +767,9 @@ class Experiment:
                 prediction["sentence"] = mention_data["sentence"]
                 prediction["place"] = mention_data["place"]
                 prediction["place_wqid"] = mention_data["place_wqid"]
-                if self.mylinker.method == "reldisamb":
+                if self.linker.method_name == "reldisamb":
                     if (
-                        self.mylinker.rel_params["without_microtoponyms"]
+                        self.linker.rel_params["without_microtoponyms"]
                         and mention_data["pred_ner_label"] != "LOC"
                     ):
                         prediction["candidates"] = dict()
@@ -734,20 +779,30 @@ class Experiment:
                     mentions_dataset[sentence_id] = [prediction]
                 all_cands.update({prediction["mention"]: prediction["candidates"]})
 
-            if self.mylinker.method == "reldisamb":
+            if self.linker.method_name == "reldisamb":
                 rel_resolved = dict()
                 for sentence_id in mentions_dataset:
                     article_dataset = {sentence_id: mentions_dataset[sentence_id]}
+
+                    dict_mentions = [{"candidates": wk, "place_wqid": None} for wk in all_cands.values()]
+                    all_cands = {d["candidates"].mention : self.linker.run(d) for d in dict_mentions}
+
                     article_dataset = rel_utils.rank_candidates(
                         article_dataset,
                         all_cands,
-                        self.mylinker.linking_resources["mentions_to_wikidata"],
+                        # self.linker.linking_resources["mentions_to_wikidata"],
                     )
-                    if self.mylinker.rel_params["with_publication"]:
+                    if self.linker.rel_params["with_publication"]:
                         # If "publ", add an artificial publication entry:
                         article_dataset = rel_utils.add_publication(article_dataset)
+
+                    # Train a linking model if needed (it requires ranker to generate potential
+                    # candidates to the training set):
+                    print("Train EL model using:", split)
+                    linking_model = self.linker.train_load_model(self.ranker, split=split)
+
                     predicted = linking_model.predict(article_dataset)
-                    if self.mylinker.rel_params["with_publication"]:
+                    if self.linker.rel_params["with_publication"]:
                         # ... and if "publ", now remove the artificial publication entry!
                         predicted[sentence_id].pop()
                     for i in range(len(predicted[sentence_id])):
@@ -774,21 +829,30 @@ class Experiment:
                     ):
                         prediction = mention
 
-                        if self.mylinker.method in ["mostpopular", "bydistance"]:
-                            # Run entity linking per mention:
-                            selected_cand = self.mylinker.run(
-                                {
-                                    "candidates": prediction["candidates"],
-                                    "place_wqid": prediction["place_wqid"],
-                                }
-                            )
-                            prediction["prediction"] = selected_cand[0]
-                            prediction["ed_score"] = round(selected_cand[1], 3)
+                        if self.linker.method_name in ["mostpopular", "bydistance"]:
+
+                            # Convert `prediction` dictionary into a Predictions instance.
+                            sentence_mentions = SentenceMentions.from_list([prediction])
+
+                            if len(sentence_mentions.mentions) != 1:
+                                raise Exception("Expected precisely one mention.")
+
+                            matches = self.ranker.run([sentence_mentions.mentions[0]])
+                            candidates = self.linker.run(matches[0], prediction["place_wqid"], prediction["place"])
+                            sentence_candidates = SentenceCandidates(sentence_mentions.sentence, [candidates])
+                            pred = self.linker.disambiguate([sentence_candidates])
+
+                            if pred.candidates() and pred.candidates()[0].best_match():
+                                prediction["ed_score"] = round(pred.candidates()[0].best_match().best_disambiguation_score(), 3)
+                                prediction["prediction"] = pred.candidates()[0].best_wqid()
+                            else:
+                                prediction["ed_score"] = None
+                                prediction["prediction"] = None
 
                 to_append.append(
                     [
                         prediction["prediction"],
-                        round(prediction["ed_score"], 3),
+                        prediction["ed_score"]
                     ]
                 )
 

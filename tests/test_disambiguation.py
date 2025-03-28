@@ -5,15 +5,16 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
-import pytest
+import torch
 
-from t_res.geoparser import linking, pipeline, ranking, recogniser
+from t_res.geoparser import ner, ranking, linking, pipeline
 from t_res.utils import rel_utils
 from t_res.utils.REL import entity_disambiguation
+from t_res.utils.dataclasses import Predictions
 
 current_dir = Path(__file__).parent.resolve()
 
-@pytest.mark.skip(reason="Needs embeddings database")
+@pytest.mark.resources(reason="Needs embeddings database")
 def test_embeddings():
     """
     Test embeddings are loaded correctly.
@@ -45,13 +46,14 @@ def test_embeddings():
         embs = rel_utils.get_db_emb(cursor, mentions, "entity")
         assert embs == [None]
 
-@pytest.mark.skip(reason="Needs large resources")
+@pytest.mark.train(reason="Trains a DeezyMatch model")
+@pytest.mark.resources(reason="Needs large resources")
 def test_train(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="ner_test",  # NER model name prefix (will have suffixes appended)
+    recogniser = ner.CustomRecogniser(
+        model_name="ner_test",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
@@ -65,11 +67,9 @@ def test_train(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
     )
 
-    myranker = ranking.Ranker(
-        method="deezymatch",
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -102,9 +102,9 @@ def test_train(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir, "../resources/models/disambiguation/"),
@@ -112,6 +112,8 @@ def test_train(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": False,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": True,
                 "do_test": True,
             },
@@ -120,35 +122,30 @@ def test_train(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    # Train the NER models if needed:
-    myner.train()
-    # Load the NER pipeline:
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
-    # Load the resources:
-    myranker.mentions_to_wikidata = myranker.load_resources()
-    # Train a DeezyMatch model if needed:
-    myranker.train()
+    # Load the resources (and train a DeezyMatch model if needed):
+    ranker.load()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.linking_resources = mylinker.load_resources()
-    # Train a linking model if needed (it requires myranker to generate potential
-    # candidates to the training set):
-    mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
+    linker.load()
 
-    assert isinstance(mylinker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
+    # Train a linking model if needed:
+    linker.train_load_model()
+    assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
     # assert expected performance on test set
-    assert mylinker.rel_params["ed_model"].best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
+    assert linker.entity_disambiguation_model.best_performance["f1"] == pytest.approx(0.8571428571428571, abs=1e-6)
 
-@pytest.mark.skip(reason="Needs embeddings database")
+@pytest.mark.train(reason="Trains an NER model")
+@pytest.mark.resources(reason="Needs embeddings database")
 def test_load_eval_model(tmp_path):
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
@@ -162,12 +159,10 @@ def test_load_eval_model(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
     )
 
-    myranker = ranking.Ranker(
-        method="deezymatch",
-        resources_path=os.path.join(current_dir,"../resources/"),
+    ranker = ranking.DeezyMatchRanker(
+        resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
         strvar_parameters={
@@ -182,7 +177,7 @@ def test_load_eval_model(tmp_path):
         },
         deezy_parameters={
             # Paths and filenames of DeezyMatch models and data:
-            "dm_path": os.path.join(current_dir,"../resources/deezymatch"),
+            "dm_path": os.path.join(current_dir, "../resources/deezymatch"),
             "dm_cands": "wkdtalts",
             "dm_model": "w2v_ocr",
             "dm_output": "deezymatch_on_the_fly",
@@ -199,16 +194,18 @@ def test_load_eval_model(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
-            resources_path=os.path.join(current_dir,"../resources/"),
+        linker = linking.RelDisambLinker(
+            resources_path=os.path.join(current_dir, "sample_files/resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
-                "model_path": os.path.join(current_dir,"sample_files/resources/models/disambiguation/"),
-                "data_path": os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm"),
+                "model_path": os.path.join(current_dir, "sample_files/resources/models/disambiguation/"),
+                "data_path": os.path.join(current_dir, "sample_files/experiments/outputs/data/lwm"),
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": False,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": False,
                 "do_test": True,
             },
@@ -217,35 +214,32 @@ def test_load_eval_model(tmp_path):
 
     # -----------------------------------------
     # NER training and creating pipeline:
-    # Train the NER models if needed:
-    myner.train()
-    # Load the NER pipeline:
-    myner.pipe = myner.create_pipeline()
+    recogniser.load()
 
     # -----------------------------------------
     # Ranker loading resources and training a model:
-    # Load the resources:
-    myranker.mentions_to_wikidata = myranker.load_resources()
-    # Train a DeezyMatch model if needed:
-    myranker.train()
+    # Load the resources (and train a DeezyMatch model if needed):
+    ranker.load()
 
     # -----------------------------------------
     # Linker loading resources:
     # Load linking resources:
-    mylinker.linking_resources = mylinker.load_resources()
-    # Train a linking model if needed (it requires myranker to generate potential
-    # candidates to the training set):
-    mylinker.rel_params["ed_model"] = mylinker.train_load_model(myranker)
+    linker.load()
 
-    assert isinstance(mylinker.rel_params["ed_model"], entity_disambiguation.EntityDisambiguation)
+    # Train a linking model if needed:
+    linker.train_load_model()
+    assert isinstance(linker.entity_disambiguation_model, entity_disambiguation.EntityDisambiguation)
 
-@pytest.mark.skip(reason="Needs large resources")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    assert linker.entity_disambiguation_model.device == device
+
+@pytest.mark.resources(reason="Needs large resources")
 def test_predict(tmp_path):
     model_path = os.path.join(current_dir, "../resources/models/")
     assert os.path.isdir(model_path) is True
 
-    myner = recogniser.Recogniser(
-        model="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
+    recogniser = ner.CustomRecogniser(
+        model_name="blb_lwm-ner-fine",  # NER model name prefix (will have suffixes appended)
         pipe=None,  # We'll store the NER pipeline here
         base_model="khosseini/bert_1760_1900",  # Base model to fine-tune (from huggingface)
         train_dataset=os.path.join(current_dir,"sample_files/experiments/outputs/data/lwm/ner_fine_train.json"),
@@ -259,11 +253,9 @@ def test_predict(tmp_path):
         },
         overwrite_training=False,  # Set to True if you want to overwrite model if existing
         do_test=False,  # Set to True if you want to train on test mode
-        load_from_hub=False,
     )
 
-    myranker = ranking.Ranker(
-        method="deezymatch",
+    ranker = ranking.DeezyMatchRanker(
         resources_path=os.path.join(current_dir, "../resources/"),
         mentions_to_wikidata=dict(),
         wikidata_to_mentions=dict(),
@@ -296,9 +288,9 @@ def test_predict(tmp_path):
 
     with sqlite3.connect(os.path.join(current_dir, "../resources/rel_db/embeddings_database.db")) as conn:
         cursor = conn.cursor()
-        mylinker = linking.Linker(
-            method="reldisamb",
+        linker = linking.RelDisambLinker(
             resources_path=os.path.join(current_dir, "../resources/"),
+            ranker=ranker,
             linking_resources=dict(),
             rel_params={
                 "model_path": os.path.join(current_dir,"../resources/models/disambiguation/"),
@@ -306,25 +298,48 @@ def test_predict(tmp_path):
                 "training_split": "originalsplit",
                 "db_embeddings": cursor,
                 "with_publication": True,
+                "predict_place_of_publication": False,
+                "combined_score": False,
                 "without_microtoponyms": True,
                 "do_test": False,
             },
             overwrite_training=False,
         )
 
-    mypipe = pipeline.Pipeline(myner=myner, myranker=myranker, mylinker=mylinker)
+    geoparser = pipeline.Pipeline(recogniser=recogniser, ranker=ranker, linker=linker)
 
-    predictions = mypipe.run_text(
+    predictions = geoparser.run(
         "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
-        place="London",
-        place_wqid="Q84",
+        place_of_pub_wqid="Q84",
+        place_of_pub="London",
     )
-    assert isinstance(predictions,list)
-    assert len(predictions) == 6
 
-    assert predictions[1]["prediction"] in predictions[1]["cross_cand_score"]
+    assert isinstance(predictions, Predictions)
 
-    highest_cross_cand_score = max(
-        predictions[1]["cross_cand_score"], key=predictions[1]["cross_cand_score"].get
+    # The microtoponym "Market-Street" is excluded from the predictions:
+    assert len(predictions.candidates()) == 5
+    assert not "Market-Street" in [c.mention.mention for c in predictions.candidates()]
+
+    # Check scores for the first toponym prediction, "Liverpool":
+    candidate = predictions.candidates()[0]
+    assert candidate.best_wqid() in candidate.best_match().cross_cand_scores().keys()
+
+    highest_cross_cand_score = max(candidate.best_match().cross_cand_scores().values())
+    assert highest_cross_cand_score == 0.857
+
+    best_disambiguation_score = candidate.best_match().best_disambiguation_score()
+    assert round(best_disambiguation_score, 3) == highest_cross_cand_score
+
+    # Repeat the test but including microtoponyms.
+    geoparser.linker.rel_params["without_microtoponyms"] = False
+
+    predictions = geoparser.run(
+        "I live on Market-Street in Liverpool. I don't live in Manchester but in Allerton, near Liverpool. There was an adjourned meeting of miners in Ashton-cnder-Lyne.",
+        place_of_pub_wqid="Q84",
+        place_of_pub="London",
     )
-    assert predictions[1]["prediction"] == highest_cross_cand_score
+
+    assert isinstance(predictions, Predictions)
+    # The microtoponym "Market-Street" is included in the predictions:
+    assert len(predictions.candidates()) == 6
+    assert "Market-Street" in [c.mention.mention for c in predictions.candidates()]

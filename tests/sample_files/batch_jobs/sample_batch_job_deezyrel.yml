@@ -1,0 +1,16 @@
+
+recogniser:
+  method_name: pretrained
+  model_name: Livingwithmachines/toponym-19thC-en
+ranker:
+  method_name: deezymatch
+linker:
+  method_name: reldisamb
+  rel_params:
+    with_publication: True
+    predict_place_of_publication: True
+    combined_score: True
+    without_microtoponyms: True
+    default_publname: United Kingdom
+    default_publwqid: Q145
+batch_size: 0

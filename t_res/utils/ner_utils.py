@@ -1,14 +1,19 @@
+"""
+The `t_res.utils.ner_utils` module contains utility functions associated 
+with named entity recognition (NER) model training and inference.
+"""
+
 from collections import namedtuple
 from typing import List, Literal, NamedTuple, Tuple, Union
 
-from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast, tokenization_utils_base
 
 
 def training_tokenize_and_align_labels(
     examples: dict,
     tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast],
     label_encoding_dict: dict,
-):
+) -> tokenization_utils_base.BatchEncoding:
     """
     Tokenize and align labels during training.
 
@@ -25,16 +30,15 @@ def training_tokenize_and_align_labels(
         tokenizer (Union[PreTrainedTokenizer, PreTrainedTokenizerFast]): A
             transformers tokenizer object, which is the tokenizer of the base
             model.
-        label_encoding_dict (Dict): A dictionary mapping NER labels to label
-            IDs, from ``label2id`` in
-            :py:meth:`~geoparser.recogniser.Recogniser.train`.
+        label_encoding_dict (Dict): A dictionary mapping NER labels to label IDs, 
+            from `label2id` in the [CustomRecogniser][t_res.geoparser.ner.CustomRecogniser] 
+            `train` method.
 
     Returns:
-        transformers.tokenization_utils_base.BatchEncoding:
-            The tokenized inputs with aligned labels.
-
+        The tokenized inputs with aligned labels as a `transformers.tokenization_utils_base.BatchEncoding` instance.
+            
     Credit:
-        This function is adapted from `HuggingFace <https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py>`_.
+        This function is adapted from [HuggingFace](https://github.com/huggingface/transformers/blob/main/examples/pytorch/token-classification/run_ner.py).
     """
     label_all_tokens = True
     tokenized_inputs = tokenizer(
@@ -194,8 +198,8 @@ def aggregate_mentions(
     Arguments:
         predictions (List[List]): A list of token predictions, where each
             token prediction is represented as a list of values. For details
-            on each of those tuples, see
-            :py:meth:`~utils.ner.collect_named_entities`.
+            on each of those tuples, see the NER Utils function 
+            [collect_named_entities][t_res.utils.ner_utils.collect_named_entities].
         setting (Literal["pred", "gold"]): The setting for aggregation:
 
             - If set to ``"pred"``, the function aggregates predicted mentions.

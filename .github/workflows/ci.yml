@@ -35,7 +35,7 @@ jobs:
           python -m poetry config virtualenvs.in-project true
 
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache
         with:
           path: .venv
@@ -53,4 +53,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          poetry run pytest
+          poetry run pytest tests

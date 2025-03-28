@@ -1,0 +1,17 @@
+:root {
+    --md-primary-fg-color:        #701F33;
+    --md-primary-fg-color--light: #701F33;
+  }
+.md-grid {
+    max-width: 87%;
+}
+.md-header__button.md-logo {
+    margin: 0;
+    /* padding: 0; */
+}
+/* prevent selection of prefix and output for console syntax */
+.language-console .gp, .language-console .go {
+    user-select: none;
+    -webkit-user-select: none; /* Chrome/Safari */
+    -ms-user-select: none; /* IE10+ */
+}
